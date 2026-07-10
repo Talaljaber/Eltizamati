@@ -80,6 +80,13 @@ The UI must render the limited view + missing-field list (US-009 AC-4). **The en
 ## 6. Consistency check (BR-CALC-017)
 On manual entry, if user-provided installment deviates > 2% from the computed level payment, emit a non-blocking `dataConsistencyNotice` ("may include fees or a different convention"). Never auto-correct user data.
 
+## 6b. Classification & presentation rules
+
+| ID | Rule |
+|----|------|
+| BR-CALC-013 | A **contract-designed balloon** (`contractualBalloon` field, a contract fact) and a **detected residual balance** (engine projection) are distinct concepts: distinct fields, distinct copy (TERM-011 vs TERM-012), and a contractual balloon never triggers the "unplanned residual" insight framing. |
+| BR-CALC-014 | Presentation precision: `official`/`userEntered` values render at 3 dp (JOD); `estimate` values render rounded to whole JOD with "≈" prefix + estimate badge + confidence; full-precision estimate values are shown only in SCR-EXPLAIN. Resolves CON-06 (3-dp mandate vs no-fake-precision). |
+
 ## 7. Confidence semantics (attached to every result)
 
 | Level | Meaning | Display consequence |

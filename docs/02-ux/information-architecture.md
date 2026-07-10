@@ -54,4 +54,4 @@ flowchart TD
 
 ## 4. Screen inventory index
 
-Full specifications with states: `screen-inventory.md`. Count: 22 screens/routes for MVP (incl. modals), 3 stretch.
+Full specifications with states: `screen-inventory.md`. Count: 26 MVP screen specifications (the three obligation-detail variants share one route per NAV-2; modals included), 3 stretch.
