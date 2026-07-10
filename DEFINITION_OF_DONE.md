@@ -8,11 +8,13 @@
 5. `pnpm check` green; review checklist applied; docs/ids updated in the same PR.
 6. No new `ASSUMPTION:` left unrecorded in the assumptions registry.
 
-## Milestone-level (M0–M6)
+## Milestone-level (M0–M8)
 1. Milestone exit demo performed on a physical Android device (not only emulator).
 2. Arabic walkthrough of everything new; content issues filed or fixed.
 3. Risk register re-scored; scope table deltas recorded in `mvp-scope.md` history.
 4. Security verification checklist items relevant to the milestone pass.
+5. (M6 only) RLS ownership-isolation tests (pgTAP) green before any multi-user data path is demoed; no real personal data stored until RES-003 (PDPL) is cleared.
+6. (Backend/auth milestones) the scripted demo spine still runs in airplane mode — verify the added surface did not become a demo dependency (mvp-scope §5a).
 
 ## Demo-ready (pre-judging gate — all of `mvp-scope.md §5` plus)
 1. Preview APK built ≥48h early, installed on primary + backup device; full script rehearsed ×3, once in airplane mode, once in Arabic.

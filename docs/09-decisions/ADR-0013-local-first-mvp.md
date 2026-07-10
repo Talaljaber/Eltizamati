@@ -1,6 +1,7 @@
 # ADR-0013 — Data Topology: Local-Only MVP; Server-Authoritative + Read Cache at P1
 
-- **Status:** Accepted · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Medium (the planned P1 work *is* the reversal)
+- **Status:** Accepted, **amended by ADR-0016** · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Medium (the planned P1 work *is* the reversal)
+- **⚠ Amended by ADR-0016 (2026-07-10):** the server-authoritative + read-cache topology below is **activated in the build (M6)** for authenticated accounts, not deferred to P1. SQLite remains the **system of record for demo mode**, which stays the airplane-mode demo path — so "offline support by construction" still holds for the demo. The cloud path runs behind the same repository seam; derived data still never syncs (recomputed — INV-5). Multi-device sync *queue* remains P1.
 
 ## Context & forces
 SRC-1 §28 demands offline read access, no silent merges, and a defined sync model — while §37.4 bans enterprise complexity. Bidirectional sync is the single largest accidental-complexity reservoir available to this project. The MVP has exactly one device and zero server data.

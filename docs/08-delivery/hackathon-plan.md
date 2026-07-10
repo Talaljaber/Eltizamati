@@ -1,6 +1,16 @@
 # Hackathon Delivery Plan
 
-**Sizing caveat:** exact hackathon dates/duration unknown (GAP-02 / RES-001). The plan is expressed as ordered milestones with cut lines, not a calendar — compress by cutting from the bottom of each milestone's "polish" items, never by cutting tests on the engine.
+**Timeline (updated 2026-07-10):** the hackathon runs **~3 weeks** solo + AI (corrects the earlier unknown-duration assumption; GAP-02 partially closed, exact judging rules still RES-001). Below is a **week-mapped** plan. The governing rule is unchanged: **compress by cutting from the bottom (week-3 depth), never by cutting engine tests or the demo spine.**
+
+**The one hard sequencing rule:** the money-shot spine — dashboard → rate change → residual → explanation → scenario — must be **green and airplane-mode-safe by the end of week 2** (through M4). Everything in week 3 (backend, auth, notifications, card simulator, hardening) is **additive and cuttable**; none of it may become a demo dependency (mvp-scope §5a).
+
+## 0. Three-week calendar (indicative)
+
+| Week | Focus | Milestones | Exit state |
+|------|-------|-----------|-----------|
+| **1** | Foundation + data + dashboard; engine kickoff in parallel | M0, M1 (M3 formulas started against `packages/domain`) | Bilingual populated dashboard on device |
+| **2** | Detail screens + **the engine + scenario** ⭐ | M2, **M3, M4** | **Demo spine green in airplane mode, AR+EN** |
+| **3** | Depth off the critical path, then harden | M5, **M6 (backend/identity), M7 (engagement)**, M8 | Preview APK, real backend demonstrable, rehearsed |
 
 ## 1. Milestones (each independently demoable — vertical slices)
 
@@ -28,11 +38,20 @@ SCR-OBL-DETAIL-LOAN (unknown-field handling) · SCR-PAY-LIST + SCR-RATE-HIST · 
 SCR-OBL-ADD-TYPE/FORM (3 kinds, consistency notice BR-CALC-017) · SCR-PAY-ADD, SCR-RATE-ADD (validations) · SCR-SET complete (language, erase-all + test, reset demo, acknowledgments) · SCR-DATA-STATUS.
 **Exit demo:** judge's own loan entered live in <2 minutes.
 
-### M6 — Hardening & demo polish
-Full AR walkthrough fixes (RES-009 review applied) · empty/error state sweep · Maestro demo-spine flows (EN+AR) green · a11y pass (labels, targets, contrast) · performance on demo device · security checklist · preview APK on 2 devices · demo script rehearsed ×3.
+### M6 — Backend & identity (week 3; off the critical demo path) ⭐ new
+Supabase project + `/supabase` migrations deployed (schema already lockstepped with Drizzle — docs/05) · RLS policies from the first migration + pgTAP tests (NFR-SEC-002, FR-AUTH-006) · email auth: sign-up/verify/sign-in/reset/session (FR-AUTH-001) · SecureStore tokens · biometric app-lock (FR-AUTH-004) · versioned consent records server-backed (FR-AUTH-002) · account deletion + audit (FR-AUTH-003) · repository swap demo↔cloud behind the existing provider seam (no domain changes) · **consent-gated connect flow against the labeled-mock CRIF/Open-Banking provider** (FR-AUTH-005, FR-ONB-004) — Splash→Auth→Consent→Retrieve→Classify→Dashboard runs end-to-end against the mock.
+**Exit demo:** create a real account, record consent, connect the mock source, see the unified profile persist to Supabase with RLS — *shown as a secondary beat; the scripted demo still runs in demo mode.*
+**Cut line:** if week 3 is short, ship auth+consent+RLS without the mock-connect flow; if shorter, defer the whole milestone — the local-first MVP stands alone.
 
-### Stretch queue (only after M6, in order)
-S1 card payoff simulator (US-013, `cardPayoff.v1` + TV-6xx) → S2 local due reminders → S3 JSON export → S4 duplicate payment detection → S5 Supabase deploy (auth + cloud persistence; only if all else is polished — it changes the demo risk profile, discuss before doing).
+### M7 — Engagement depth (week 3)
+`cardPayoff.v1` + TV-6xx + card payoff simulator UI (FR-SIM-004, US-013) · local payment-due notifications (FR-NTF-001; permission UX, quiet hours, content-minimized) · user-defined threshold insight + reminder-day settings (FR-INS-001, FR-SET-006) · duplicate-payment detection (FR-PAY-004) · "two numbers" comparison hero on loan detail (SRC-4) + cumulative extra-interest on the rate timeline.
+**Exit demo:** the card simulator and a scheduled reminder both work; loan detail leads with the two-numbers comparison.
+
+### M8 — Hardening & demo polish (week 3 close)
+Full AR walkthrough fixes (RES-009 review applied) · empty/error state sweep · Maestro demo-spine flows (EN+AR) green · a11y pass (labels, targets, contrast) · performance on demo device · security checklist (incl. auth/RLS/consent surfaces) · preview APK on 2 devices · demo script rehearsed ×3 (incl. the airplane-mode run).
+
+### Stretch queue (only after M8, in order)
+S1 JSON export (US, `FR-SET-004`) → S2 saved scenarios (FR-SIM-005) → S3 phone OTP factor (FR-AUTH-007) → S4 real CRIF/OB sandbox provider *if access is confirmed* (RES-002).
 
 ## 2. Dependency graph
 
@@ -42,11 +61,14 @@ flowchart LR
     M1 --> M3
     M3 --> M4X
     M2 --> M5
-    M4X --> M6
+    M4X --> M8
     M5 --> M6
+    M5 --> M7
+    M6 --> M8
+    M7 --> M8
     M3 -.TV-30x finance sign-off.-> FIN[Finance teammates]
 ```
-M3 (engine) can start against `packages/domain` as soon as M1's domain core exists — it has no UI dependency. If solo time-slicing: interleave M2 (UI-heavy) with M3 (logic-heavy) to avoid burnout on either.
+M3 (engine) can start against `packages/domain` as soon as M1's domain core exists — it has no UI dependency. If solo time-slicing: interleave M2 (UI-heavy) with M3 (logic-heavy) to avoid burnout on either. **M6 (backend) depends only on M5's repository/schema surface, not on the engine or the demo spine — it runs as an independent week-3 track and is the first thing cut if time is short.**
 
 ## 3. Traceability matrix (Phase-5 consistency check — MVP features)
 
@@ -67,19 +89,28 @@ M3 (engine) can start against `packages/domain` as soon as M1's domain core exis
 | Education | FR-EDU-001..004 | — | SCR-LEARN* | content format | key-coverage | M2/M6 |
 | Settings/erase | FR-SET-001..003/005 | US-010/011 | SCR-SET | — | absence test | M5 |
 | Data status | FR-DATA-003 | — | SCR-DATA-STATUS | provider registry | RNTL | M5 |
+| Auth & session | FR-AUTH-001/006 | US-014* | SCR-AUTH-* | RLS policies | RNTL + pgTAP | M6 |
+| Consent records | FR-AUTH-002/005 | — | SCR-CONSENT | consent versioning | unit + RNTL | M6 |
+| Account deletion | FR-AUTH-003 | — | SCR-SET | erasure + audit | integration | M6 |
+| Mock connect flow | FR-ONB-004, FR-AUTH-005 | US-015* | SCR-CONNECT | provider contract (mock) | RNTL + Maestro | M6 |
+| Card payoff sim | FR-SIM-004 | US-013 | SCR-SIM-CARD | cardPayoff.v1, INV-* | TV-6xx + Maestro | M7 |
+| Local notifications | FR-NTF-001, FR-SET-006 | — | SCR-SET | scheduling + quiet hours | integration | M7 |
+| Duplicate detection | FR-PAY-004 | US-005 | SCR-PAY-ADD | dedup rule | unit + RNTL | M7 |
 
-(Every MVP FR appears; FR-PAY-004/FR-SET-004/FR-SIM-004/005/FR-NTF-001 are S-scope by design.)
+(*US-014/015 to be added to `user-stories.md` when M6 UI is specced; the FRs and screens are the binding contract meanwhile.)
+(Every MVP FR now appears; only FR-SET-004/FR-SIM-005/FR-AUTH-007/FR-NTF-002 remain out of MVP by design.)
 
 ## 4. Demo script (5 minutes) & fallbacks
 
 1. *(20s)* Hook: "Omar has three obligations at three institutions. His bank raised his rate 14 months ago. His installment never changed. He thinks that's fine." Open app (Arabic), dashboard: totals, three cards, one amber insight.
 2. *(60s)* Open loan → rate timeline → "installment unchanged" insight → impact screen: ≈ residual at maturity, ≈ added cost, "less of each payment reduces principal". Tap a figure → explanation: sources, formula version, assumptions — *"every number in this app can defend itself."*
 3. *(60s)* "What can I do?" → scenario +50 JOD → side-by-side: residual gone, N months earlier, ≈ X JOD saved → bank-questions checklist.
-4. *(45s)* Honesty beat: data-source screen — "demo data, manual entry today; CRIF/Open Banking are contracts we've designed, not connections we fake." Show Murabaha detail — "contract-aware, not word-swapped."
-5. *(45s)* Switch to English live (RTL→LTR flip). Optionally add a judge's loan manually.
-6. *(30s)* Close: architecture slide (engine isolation, tests, provenance) + post-hackathon path.
+4. *(45s)* Honesty beat: data-source screen — "demo data and manual entry today; CRIF/Open Banking are contracts we've built against a **labeled mock** — real access is a regulatory step, not a fake connection." Show Murabaha detail — "contract-aware, not word-swapped."
+5. *(30s)* **Secondary depth beat (optional, only if stable):** create a real account, record consent, connect the mock source → unified profile persists to Supabase with RLS. *"The local demo you just saw is the same app running offline; signed in, it's a real backend with proper auth and consent."* — then return to demo mode for anything else.
+6. *(45s)* Switch to English live (RTL→LTR flip). Optionally add a judge's loan manually.
+7. *(30s)* Close: architecture slide (engine isolation, tests, provenance, RLS-from-first-migration) + post-hackathon path.
 
-**Fallbacks:** APK on 2 devices + airplane mode (kills network risk) · pre-reset demo state before going on stage (FR-SET-005) · screen-recording of the full flow as last resort · if a screen breaks, the flow is re-enterable from dashboard at every step (no wizard lock-in).
+**Fallbacks:** the scripted spine (beats 1–3) runs entirely on **local/demo data in airplane mode** — network, auth, and backend are never on the critical path (mvp-scope §5a). Beat 5 is the only network-touching beat and is **droppable without harming the story.** APK on 2 devices · pre-reset demo state before going on stage (FR-SET-005) · screen-recording of the full flow as last resort · every screen is re-enterable from the dashboard (no wizard lock-in).
 
 ## 5. Post-hackathon roadmap pointer
-See `roadmap-and-risks.md` (P1: Supabase/auth/consent/sync → P2: providers → P3: notifications/analytics).
+See `roadmap-and-risks.md`. Note: the three-week build **pulls forward** the P1 backend/auth/consent work (now in MVP via M6). The post-hackathon roadmap therefore shifts to: **P1 = real providers** (CRIF/Open Banking sandbox → production, replacing the mock behind the unchanged contract) + phone OTP + sync-queue for multi-device → **P2 = push notifications/analytics** → **P3 = additional obligation types (Ijara/Musharakah), household/white-label.**

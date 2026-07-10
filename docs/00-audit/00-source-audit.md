@@ -10,27 +10,27 @@
 |----|----------|------|-----------|
 | SRC-1 | `ELTIZAMATI_MASTER_BRIEF.md` v1.0 | Authoritative product source | ✅ Yes (`docs/99-sources/`) |
 | SRC-2 | `FABLE_5_ARCHITECT_PROMPT.md` | Engineering expectations / process contract | ✅ Yes (`docs/99-sources/`) |
-| SRC-3 | Existing architecture document (PDF) | Supporting evidence | ❌ **Not supplied** |
-| SRC-4 | Existing UI blueprint (HTML) | Supporting evidence | ❌ **Not supplied** |
+| SRC-3 | `Eltizamati_Complete_Architecture_and_Flow.pdf` | Supporting evidence | ✅ **Supplied 2026-07-10** — delta-audited (§7) |
+| SRC-4 | UI blueprint (HTML, branded "Wadeh/واضح") | Supporting evidence | ✅ **Supplied 2026-07-10** — delta-audited (§7) |
 | SRC-5 | Existing pitch deck | Supporting evidence | ❌ **Not supplied** |
 
 ---
 
-## 1. Missing Source Documents (Material Gap)
+## 1. Source Documents — Status
 
-The task description referenced an existing architecture document, UI blueprint, and pitch deck. **None of these were present in the session uploads or the repository** (the repository was empty at audit time). Consequences:
+SRC-3 (architecture PDF) and SRC-4 (UI blueprint HTML) were **supplied on 2026-07-10**, after the initial knowledge base was written. They have now been delta-audited — results in **§7**. SRC-5 (pitch deck) remains outstanding. Consequences of the original absence, now closed:
 
-1. This audit's conflict detection covers SRC-1 vs SRC-2 and *internal* contradictions within SRC-1 only.
-2. The knowledge base was built treating SRC-1 as the sole product truth, which is consistent with its declared authority ("Treat mockups and early documents as evidence and inspiration, not unquestionable truth").
-3. **Action required (owner: Talal):** supply SRC-3/4/5. Then run the delta-audit checklist below. Until then, any idea that existed only in those documents is *not represented* in this knowledge base.
+1. The initial KB was built treating SRC-1 as the sole product truth, consistent with its declared authority ("Treat mockups and early documents as evidence and inspiration, not unquestionable truth").
+2. The §7 delta-audit confirms the KB is consistent with the supplied documents; SRC-3/4 required **scope and timeline changes** (three-week build; auth/backend/notifications/card-simulator promoted) but **no reversal of any load-bearing architectural decision**.
+3. **Action still open (owner: Talal):** supply SRC-5 (deck), then re-run the checklist below against it.
 
-### Delta-audit checklist for SRC-3/4/5 (when supplied)
+### Delta-audit checklist (completed for SRC-3/4 on 2026-07-10; re-run for SRC-5)
 
-- [ ] Screen inventory: diff against `docs/02-ux/screen-inventory.md`; any screen present only in the blueprint is *proposed*, not confirmed.
-- [ ] Navigation: diff against the IA decision in `docs/02-ux/information-architecture.md` (this KB recommends 3 tabs, not 4 — see DEC-002).
-- [ ] Any financial formula, number, or rate example in the deck: verify against `docs/03-domain/financial-calculation-spec.md`; deck examples are marketing illustrations until validated.
-- [ ] Any integration claim (CRIF, Open Banking) shown as "live" in the deck: must be re-labeled per BR-PROV rules (no fake integrations).
-- [ ] Any tech-stack statement in the old architecture PDF: superseded by ADR-0001…ADR-0015 unless it raises a new force not considered there — in that case, open a new ADR, do not silently edit existing ones.
+- [x] Screen inventory: diffed against `docs/02-ux/screen-inventory.md`; screens present only in a blueprint are *proposed*, not confirmed. (SRC-3 balloon Overview/Timeline/Solution + SRC-4 "two numbers" adopted as enrichments — §7.)
+- [x] Navigation: diffed against `docs/02-ux/information-architecture.md`. SRC-3 proposes 6 tabs, SRC-4 proposes 4; **DEC-002's 3 tabs retained** (§7 rationale). SRC-3 and SRC-4 also conflict with *each other*.
+- [x] Any financial formula/number/rate example: SRC-3 (311→349 JOD) and SRC-4 (30,000 loan, 310.900, 4.5→6.5%, gap 3,840) are **marketing illustrations**; the finance-validated canonical seed (TV-30x) governs — no deck numbers adopted.
+- [x] Integration claims: SRC-3 shows CRIF+Open Banking as "live/primary". **Re-labeled per BR-PROV rules** — kept as mock/sandbox provider; now built as a real consent→connect→retrieve flow against a *labeled mock* (§7 items 1–2).
+- [x] Tech-stack statements: SRC-3 asserts no stack; nothing supersedes ADR-0001…0015. The one new architectural force (three-week timeline enabling backend activation) is recorded in **ADR-0016**, not by editing existing ADRs.
 
 ---
 
@@ -111,7 +111,7 @@ All 18 open questions in §36 were converted into tracked items — none were si
 | GAP-05 | No legal review of Jordan PDPL (Law 24/2023) obligations, disclaimers wording, or CBJ boundaries for financial information services. | Consent text and disclaimers are drafts. | Flagged legal-validation items; nothing in-app claims advice. RES-003. |
 | GAP-06 | No target device/OS floor. | Build config ambiguity. | Assumed Android 8.0+/iOS 15.5+ (current Expo SDK defaults) — ASM-007. |
 | GAP-07 | Early settlement rules for Islamic contracts (ibra'/rebate policies) are institution-specific and undocumented. | Cannot simulate Islamic early settlement honestly. | Islamic simulation excluded from MVP; read-only + education instead. BR-CALC-020. |
-| GAP-08 | SRC-3/4/5 absent entirely (see §1). | Unknown unknowns from prior exploration. | Delta-audit checklist above. |
+| GAP-08 | ~~SRC-3/4/5 absent entirely~~ **Partially closed 2026-07-10**: SRC-3/4 supplied and delta-audited (§7). SRC-5 (deck) still absent. | Reduced to deck-only. | §7 results; re-run §1 checklist on SRC-5 when supplied. |
 
 ---
 
@@ -130,3 +130,47 @@ All 18 open questions in §36 were converted into tracked items — none were si
 SRC-1 is an unusually complete brief: mission, constraints, and quality bar are clear and internally consistent at the level of intent. Its weaknesses are (a) MVP over-breadth, (b) absent financial-convention facts (which it honestly flags), and (c) a handful of scope contradictions listed above — all resolvable by decision, none by invention. No non-negotiable was weakened; two were re-interpreted for the local-first MVP (CON-08, CON-09) with explicit documentation.
 
 **Proceed to Phase 2 (Product Clarification): approved.**
+
+---
+
+## 7. SRC-3 / SRC-4 Delta-Audit Results (2026-07-10)
+
+**Trigger:** SRC-3 (`Eltizamati_Complete_Architecture_and_Flow.pdf`) and SRC-4 (UI blueprint HTML, branded "Wadeh/واضح") supplied after the KB was written; corrected fact that the hackathon runs **~3 weeks**, not a compressed day.
+
+**Headline:** SRC-3 describes the **broad, integrated** vision (CRIF-primary + Open Banking live, full auth/consent, 6 tabs, notification engine). SRC-4 describes a **sharp, single-loan** blueprint (manual, offline-first, 4 tabs). **They conflict with each other.** The current KB sits deliberately between them and already resolves the tension. Neither document contradicts the load-bearing decisions — **finance-engine isolation, provider abstraction, domain model, error taxonomy, and Arabic/RTL foundation stand unchanged.** The changes SRC-3/4 + the three-week correction *do* justify are **scope promotions and a calendarised roadmap**, recorded in `mvp-scope.md`, `functional-requirements.md`, `hackathon-plan.md`, `readiness-review.md`, `decision-memo.md`, and **ADR-0016**.
+
+### 7.1 Classification of SRC-3 capabilities
+
+| # | SRC-3 capability / flow | Class | Disposition |
+|---|---|---|---|
+| 1 | CRIF Jordan as **primary** source | Deferred (mock) → upgraded | Kept labeled mock; built as a **real consent→connect→retrieve flow against a mock CRIF provider** (not "coming soon"). |
+| 2 | Open Banking live updates | Deferred (mock) | Sandbox provider contract unchanged (ADR-0009). |
+| 3 | Auth (SignIn/SignUp/Forgot, email verify, phone OTP, biometrics) | **Promoted to MVP (partial)** | Email auth + session + reset + biometric lock in MVP; **phone OTP stays P1** (SMS cost). Demo mode remains stage path. ADR-0016. |
+| 4 | Consent (Terms/Privacy/CRIF/Open Banking) | **Promoted to MVP** | Versioned server-backed consent records + per-provider consent gating the mock connect. |
+| 5 | Unified 'My Obligations' dashboard | Covered | FR-OBL-001/002, SCR-HOME. |
+| 6 | Adaptive Islamic UI ("layout identical") | Covered + intentionally changed | Terminology map covered (BR-TERM-001); **"layout identical" rejected** — contract-correct sections, no rate-recalc UI (§7.7, BR-CALC-020). |
+| 7 | Conventional loan dashboard | Covered | FR-OBL-003, FR-RATE-*, FR-CALC-*, FR-SIM-001. |
+| 8 | Balloon impact (Overview/Timeline/Solution, "Recommended Payment", action plan) | Covered + intentionally changed | Covered by SCR-RATE-IMPACT + SCR-EXPLAIN + scenario + bank-questions. **"Recommended Payment" reframed** as "the payment that restores your original trajectory" (recommendation boundary, PRIN-5/§17.3/DEC-004). 3-section structure + causal chain adopted as enrichment. |
+| 9 | Islamic financing dashboard | Covered | FR-OBL-004, BR-CALC-020 (contract-aware). |
+| 10 | Credit-card dashboard + simulator + smart insights | Covered (display) + **promoted (simulator)** | Payoff simulator Stretch→MVP (FR-SIM-004); "smart insights" = rules-based (DEC-004). |
+| 11 | Payments page (type branches) | Covered + **promoted** | Per-obligation history + branch; **duplicate detection promoted** (FR-PAY-004). |
+| 12 | Plan page (loan/Islamic/card) | Covered + **partly rejected** | Loan+card planners covered/promoted; **Islamic early-settlement simulation excluded** (ibra' discretionary, GAP-07). |
+| 13 | Education engine (adaptive) | Covered | FR-EDU-*. |
+| 14 | Notification engine | Covered (insights) + **promoted (local notifications)** | Insights center covers all rules; **local scheduled reminders promoted** (FR-NTF-001); **push/FCM stays LATER**. |
+| 15 | 6-tab nav + "Explore Financing Options" | Intentionally changed + **rejected** | 3 tabs retained (DEC-002); Notifications = header icon+center. **"Explore Financing Options" rejected** — violates "does not recommend products/lenders" non-goal (§5.3, DEC-005). |
+| 16 | Splash→Auth→Consent→Retrieve→Classify→Dashboard flow | Covered + **promoted** | Buildable end-to-end as a real secondary path; demo mode stays primary on stage. |
+
+### 7.2 Classification of SRC-4 (Wadeh) items
+
+| SRC-4 item | Class | Disposition |
+|---|---|---|
+| Brand "Wadeh / واضح" | **Rejected** | Name superseded by Eltizamati (SRC-1 authoritative). Recorded as an observation; no product change. |
+| Single-loan, manual, offline-first, no-account-to-start | Covered / validates | Confirms local-first + manual + demo (ADR-0012/0013). |
+| 4 tabs (Home/Pay/Rates/Plan) | Intentionally changed | 3 tabs; Rates & Pay contextual (DEC-002). |
+| **"Two numbers" hero** (bank says vs you'll actually pay) | **Missing → adopt** | Adopt as hero of loan-detail / residual-impact (official balance vs projected true cost — provenance-perfect). |
+| Surprise-gap **threshold slider** + **reminder day** | **Promoted** | Fold into settings + local notifications; user-defined threshold insight (§18.1). |
+| Cumulative "accumulated extra interest" total | Covered + enrich | Adopt cumulative-extra display on the rate timeline. |
+
+### 7.3 What did NOT change (guardrail check)
+
+Confirmed unchanged by this delta-audit: ADR-0001 (Expo/TS), ADR-0007 (engine isolation), ADR-0008 (obligation subtypes), ADR-0009 (provider abstraction), ADR-0010 (i18n/RTL), ADR-0014 (error taxonomy), the domain model, and the honesty/provenance rules. The demo remains **airplane-mode-safe on local/demo data**; the backend is a real but *secondary* capability off the critical demo path.

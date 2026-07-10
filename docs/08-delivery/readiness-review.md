@@ -2,6 +2,8 @@
 
 **Date:** 2026-07-10 · **Verdict: READY to begin M0**, with the blockers/dependencies below tracked (none block M0–M2).
 
+**Amendment 2026-07-10 (SRC-3/4 delta-audit + three-week timeline):** SRC-3/4 supplied and audited (`00-audit/00-source-audit.md §7`); source completeness upgraded 🟡→🟢 (deck still pending). Scope expanded for a three-week build (auth, Supabase backend, consent records, local notifications, card simulator, duplicate detection, mock-connect flow — ADR-0016), all as **week-3 work off the critical demo path**. The M0 first slice and the demo-spine sequencing are **unchanged**. New guardrail: the scripted demo stays airplane-mode-safe (mvp-scope §5a).
+
 ## 1. Readiness scorecard
 
 | Dimension | Score | Evidence / gap |
@@ -12,9 +14,10 @@
 | Architecture decisions | 🟢 | ADR-0001…0015 with alternatives + reversal costs |
 | UX specification | 🟢 | IA, 22 screens with states, design-system contracts, content rules |
 | Security/privacy | 🟢 | Threat model with accepted-risk honesty; controls mechanized where possible |
-| Delivery plan | 🟢 | Milestones with exit demos, cut lines, demo script + fallbacks |
-| Source completeness | 🟡 | SRC-3/4/5 never supplied — delta-audit checklist ready (`00-source-audit.md §1`) |
-| External validations | 🟡 | RES-001 (judging rules), RES-009 (Arabic review), TV-30x sign-off outstanding |
+| Delivery plan | 🟢 | Three-week calendar (M0–M8) with exit demos, cut lines, demo script + fallbacks |
+| Source completeness | 🟢 | SRC-3/4 supplied and delta-audited (`00-source-audit.md §7`); only SRC-5 (deck) outstanding |
+| Backend/auth readiness | 🟢 (with caveat) | Schema + RLS + auth/consent already designed (docs/05, docs/06, ADR-0002/0016); M6 is activation, not design. **Caveat:** first real network/auth surface in the project — treat M6 as the highest new-integration risk after the engine |
+| External validations | 🟡 | RES-001 (judging rules), RES-009 (Arabic review), RES-003 (PDPL — now more weight since real accounts + consent ship), TV-30x sign-off outstanding |
 | Team workflow for non-devs | 🟢 | Vectors as JSON + content files + decision memo = teammate-editable surfaces |
 
 ## 2. Blockers & their owners (none block starting)
@@ -22,10 +25,12 @@
 | Item | Blocks | Owner |
 |------|--------|-------|
 | TV-30x expected values (finance spreadsheet) | M3 *exit* | Finance teammates (structure ready) |
-| RES-009 Arabic native review | M6 demo freeze | Product teammate |
+| RES-009 Arabic native review | M8 demo freeze | Product teammate |
 | RES-001 judging rules | final scope trim | Talal |
 | RES-010 pre-work permissibility | repo usage at event | Talal (**check first**) |
-| DEC-001…004 sign-off | nothing (defaults apply) | Team |
+| RES-003 PDPL/consent legal review | M6 (real accounts + consent now ship) — elevated from post-demo | Talal + legal teammate |
+| RES-002 real CRIF/OB access | only affects the *real* provider (mock ships regardless) | Talal |
+| DEC-001…005 sign-off | nothing (defaults apply) | Team |
 
 ## 3. Assumptions permitted for the prototype
 ASM-003/005/007/008/009/011 (registry `assumptions-validation-backlog.md`) — each surfaces in-product as assumption notes where user-visible. Production gate: none may remain unvalidated.

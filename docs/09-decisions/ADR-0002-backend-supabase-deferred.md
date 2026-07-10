@@ -4,6 +4,7 @@
 - **Date:** 2026-07-10
 - **Confidence:** High for "no backend in MVP"; Medium-High for Supabase as the P1 platform (revalidate at P1 start against then-current options)
 - **Reversal cost:** MVP part — none (nothing deployed). P1 platform — Medium (schema is plain Postgres; auth/RLS/Edge Functions are the Supabase-specific surfaces; repositories isolate supabase-js).
+- **⚠ Amended by ADR-0016 (2026-07-10):** the three-week timeline moved the backend from "deployed post-hackathon" to **deployed during the build (M6) as a secondary track**. The Supabase *platform choice below is unchanged*; only the timing of activation moves earlier. The demo still runs with no backend on its critical path.
 
 ## Context & forces
 The demo path needs zero network (NFR-REL-001, demo risk); production needs auth, consent records, server-side authorization (§35.8), and a server home for provider secrets (§35.7). Solo dev: minimize operated infrastructure. Relational, RLS-capable storage fits the domain (obligations/payments/rate periods are relational to the bone).

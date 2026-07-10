@@ -11,6 +11,8 @@ Jordan-first, MENA-ready mobile app for tracking and *understanding* loans, Isla
 **Phase: engineering knowledge base complete — implementation not yet started.**
 The repository currently contains the full documentation and decision system that any engineer or AI agent needs to build the product without additional context. First implementation milestone: **M0** (see below).
 
+**Update (2026-07-10):** the supporting architecture doc (SRC-3) and UI blueprint (SRC-4) were supplied and [delta-audited](docs/00-audit/00-source-audit.md). With the hackathon confirmed at **~3 weeks**, scope expanded to include **email auth, Supabase backend + RLS, versioned consent, local notifications, the card payoff simulator, and a labeled-mock connect flow** — all as week-3 work **off the critical demo path** (the scripted demo stays airplane-mode-safe). See [ADR-0016](docs/09-decisions/ADR-0016-backend-auth-activation.md), the [3-week plan](docs/08-delivery/hackathon-plan.md), and [MVP scope](docs/01-requirements/mvp-scope.md). No load-bearing architectural decision changed.
+
 ## Quick links
 
 | I want to… | Go to |
@@ -26,7 +28,7 @@ The repository currently contains the full documentation and decision system tha
 
 ## Stack (decided — rationale in `docs/09-decisions/`)
 
-Expo (React Native) + TypeScript strict · pnpm monorepo (`apps/mobile` + `packages/{domain, finance-engine, demo-data}`) · Expo Router · TanStack Query + Zustand · expo-sqlite + Drizzle (local-first MVP; fully offline demo) · i18next (Arabic/English, RTL from day one) · decimal.js-backed `Money`/`Rate` value objects · Vitest + fast-check / Jest + RNTL / Maestro · GitHub Actions + EAS Build · Sentry. Supabase (Postgres + RLS + Auth + Edge Functions) is the designed post-hackathon backend — schema ships in `/supabase`, deployment is deliberately deferred.
+Expo (React Native) + TypeScript strict · pnpm monorepo (`apps/mobile` + `packages/{domain, finance-engine, demo-data}`) · Expo Router · TanStack Query + Zustand · expo-sqlite + Drizzle (system of record for the offline demo) · i18next (Arabic/English, RTL from day one) · decimal.js-backed `Money`/`Rate` value objects · Vitest + fast-check / Jest + RNTL / Maestro · GitHub Actions + EAS Build · Sentry. **Supabase (Postgres + RLS + Auth + Edge Functions) is activated during the three-week build (M6, ADR-0016)** as a real secondary capability — email auth, versioned consent, cloud persistence with RLS-from-first-migration — while the scripted demo runs local-first in airplane mode. CRIF/Open Banking ship as a **labeled mock** (real access is post-hackathon).
 
 ## Local setup
 

@@ -1,10 +1,12 @@
 # MVP Scope — Hackathon Build
 
-**Decision basis:** `docs/00-audit/01-critique-and-recommendations.md` (sharp story over broad shell). The MVP proves **one memorable flow end-to-end with defensible math**, staged on a credible multi-obligation dashboard.
+**Decision basis:** `docs/00-audit/01-critique-and-recommendations.md` (sharp story over broad shell) + the **SRC-3/4 delta-audit** (`00-audit/00-source-audit.md §7`). The MVP proves **one memorable flow end-to-end with defensible math**, staged on a credible multi-obligation dashboard.
+
+**Timeline basis (updated 2026-07-10):** the hackathon runs **~3 weeks**, not a compressed day. This makes it realistic to promote **authentication, Supabase backend activation, consent records, local notifications, the card payoff simulator, duplicate-payment detection, and a real mock-provider connect flow** into MVP — *provided* the money-shot spine (rate-change → residual → scenario) is green by end of week 2 and **the scripted demo stays airplane-mode-safe on local/demo data.** The backend is a real, demonstrable *secondary* capability, never a demo dependency (ADR-0016).
 
 ## 1. The one-line MVP
 
-> A fully offline, bilingual (AR/EN, RTL-correct) Android app where a demo borrower sees all obligations in one dashboard, opens a variable-rate loan, sees the rate-change timeline and a projected residual balance explained honestly, and runs an extra-payment scenario that visibly restores the trajectory — with every number labeled by source and confidence.
+> A bilingual (AR/EN, RTL-correct) Android app where a demo borrower sees all obligations in one dashboard, opens a variable-rate loan, sees the rate-change timeline and a projected residual balance explained honestly, and runs an extra-payment scenario that visibly restores the trajectory — with every number labeled by source and confidence. It **also** supports real accounts (email auth + versioned consent + cloud persistence with RLS) and a consent-gated connect flow against a **labeled mock** CRIF/Open-Banking provider — while the demo itself runs fully offline.
 
 ## 2. Scope table
 
@@ -26,16 +28,23 @@
 | Contextual education (tap-a-term) + Learn tab + bank-questions checklist | ✅ | | | |
 | Settings: language, erase data, reset demo, acknowledgments | ✅ | | | |
 | Data-source status screen (honest mock labeling) | ✅ | | | |
-| Card payoff simulator | | ✅ | | |
-| Duplicate payment detection | | ✅ | | |
-| Local payment-due notifications | | ✅ | | |
+| **Card payoff simulator** (`cardPayoff.v1`) | ✅ | | | |
+| **Duplicate payment detection** | ✅ | | | |
+| **Local payment-due notifications** (OS-scheduled, content-minimized) | ✅ | | | |
+| **User-defined gap/threshold insight + reminder-day setting** (from SRC-4) | ✅ | | | |
+| **Email authentication (Supabase): sign-up/in, email verify, password reset, session mgmt** | ✅ | | | |
+| **Versioned consent records (ToS, Privacy, disclaimer, per-provider) — server-backed** | ✅ | | | |
+| **Biometric app-lock (local)** | ✅ | | | |
+| **Supabase deploy: cloud persistence, RLS-from-first-migration, account deletion + audit** | ✅ | | | |
+| **Consent-gated connect flow against a LABELED MOCK CRIF/Open-Banking provider** | ✅ | | | |
+| **"Two numbers" comparison hero on loan detail** (official balance vs projected true cost) | ✅ | | | |
 | JSON export | | ✅ | | |
 | Saved scenarios | | ✅ | | |
-| Supabase deploy: auth, consent records, cloud persistence, RLS | | (only if MVP done early) | ✅ | |
+| Phone OTP as a second auth factor | | | ✅ | |
 | Ijara + Diminishing Musharakah read-only types | | | ✅ | |
 | Generic read-only facility type | | | ✅ | |
-| CRIF / Open Banking sandbox provider | | | ✅ (if access) | |
-| Push notifications | | | | ✅ |
+| CRIF / Open Banking **real/sandbox** provider (mock ships in MVP) | | | ✅ (if access) | |
+| Push notifications (FCM/APNs, server-triggered) | | | | ✅ |
 | Household sharing, white-label, coaches | | | | ✅ |
 | OCR import, payment initiation, LLM advice | | | | ❌ never as scoped (see not-build) |
 
@@ -43,9 +52,10 @@
 
 | Item | Reason |
 |------|--------|
-| Real/implied CRIF or Open Banking integration in demo | No confirmed access (RES-002); non-negotiable honesty rule |
-| Real authentication in demo path | DEC-001; removes top demo risk; adds no story value |
-| Push notification infra | Needs backend + device tokens; insights center delivers the value |
+| Real/implied CRIF or Open Banking integration (a *labeled mock* connect flow ships; real access stays P1) | No confirmed access (RES-002); non-negotiable honesty rule |
+| Auth on the **scripted demo path** (auth ships and is demonstrable, but the stage flow runs demo mode) | DEC-001 (amended by ADR-0016); keeps the demo airplane-mode-safe |
+| Push notification infra (FCM/APNs) — local scheduled notifications *do* ship | Needs device tokens + server triggers; local reminders deliver the MVP value |
+| Phone OTP | SMS provider + cost; email verification covers MVP identity (P1) |
 | Remote education CMS | Static versioned content suffices; repo PRs are the CMS |
 | Product analytics platform | Privacy-first posture; Sentry only; event taxonomy documented for later |
 | Feature-flag service | Typed local config module; one developer |
@@ -66,12 +76,21 @@ Institutions are fictional-but-plausible; demo banner states "Demonstration data
 
 ## 5. MVP acceptance (Definition of Demo-Ready)
 
-1. Full flow (onboard → dashboard → loan detail → rate timeline → residual insight → explanation → scenario → bank questions) works in airplane mode, in Arabic and English, on the demo Android device.
+1. **Demo spine (critical path):** full flow (onboard → dashboard → loan detail → rate timeline → residual insight → explanation → scenario → bank questions) works **in airplane mode**, in Arabic and English, on the demo Android device.
 2. Every displayed derived figure traces to a passing test vector.
-3. Provenance/estimate badges visible on all material figures; demo banner always present.
+3. Provenance/estimate badges visible on all material figures; demo banner always present in demo mode.
 4. No crash across the scripted demo + 10-minute free exploration.
 5. `pnpm check` green; engine coverage gate met; repo README accurate for judges reading code.
+6. **Secondary capability (off critical path):** a real account can be created (email auth), consent recorded (versioned), data persisted to Supabase with RLS enforced, and a consent-gated connect run against the labeled-mock provider — demonstrable on request, never required by the scripted demo. If any of this is not green by the demo freeze, it is cut without touching items 1–5.
+
+## 5a. Demo-safety invariant (non-negotiable)
+
+The scripted demo **must never depend on the network, auth, or the backend.** Backend/auth/mock-connect are shown as "and it also does this" beats. This preserves the reliability posture of the original local-first MVP while adding the depth the three-week timeline and SRC-3 justify.
 
 ## 6. Change control
 
 Scope moves between columns only by explicit decision recorded in this file's history (git) with a one-line rationale. Anything added to MVP must name what it displaces.
+
+### Change history
+
+- **2026-07-10 — SRC-3/4 delta-audit + three-week timeline correction (ADR-0016).** Promoted to MVP: email auth, versioned consent records, biometric lock, Supabase deploy + RLS + account deletion, labeled-mock connect flow, local payment-due notifications, user-defined threshold insight + reminder-day setting, card payoff simulator, duplicate-payment detection, "two numbers" loan-detail hero. **What it displaces:** nothing on the demo spine — all promotions are additive week-3 work off the critical path; if week-3 time is short, they are cut back toward the original local-first MVP (which remains fully demo-ready on its own). Rejected: "Explore Financing Options" (DEC-005). Unchanged: real CRIF/OB access, phone OTP, push/FCM, Islamic early-settlement simulation stay out of MVP.

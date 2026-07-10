@@ -5,11 +5,9 @@
 ---
 
 ## DEC-001 — Authentication scope for the hackathon build
-- **Decision needed:** ship the demo with local demo-mode only (no sign-in), or implement Supabase auth for the event.
-- **Why it matters:** changes the demo's opening 30 seconds, its failure modes (network/auth on stage), and where ~2–3 days of effort go.
-- **Recommendation:** demo-mode only. Auth adds zero story value for judges, adds the top demo risk, and the full auth/consent design is already specified for P1 (nothing is lost). SRC-1 itself lists this as an open question and allows "a clear demo-mode boundary" (§32.2).
-- **Alternatives:** (a) full Supabase auth — costs M5/M6 polish time; (b) fake login screen — dishonest, rejected on principle.
-- **Default:** demo-mode only.
+- **AMENDED 2026-07-10 (ADR-0016 / SRC-3 delta-audit + three-week timeline).** Original decision was demo-mode-only because the timeline was assumed short and auth was the top demo risk. With **~3 weeks** confirmed and SRC-3 centering auth/consent, the decision is now: **ship both.** Email auth + versioned consent + RLS-backed persistence are built in week 3 (M6) as a **real secondary capability**, while **demo mode remains the on-stage scripted path** (airplane-mode-safe). This captures the depth without reintroducing the demo risk the original decision avoided.
+- **Why it still matters:** the guardrail is that auth/backend must never sit on the critical demo path (mvp-scope §5a). A fake login screen remains rejected on principle.
+- **Revised default:** demo-mode is the demo path; auth ships as a demonstrable secondary beat, cuttable if week 3 is short.
 
 ## DEC-002 — Information architecture: 3 tabs, Plan contextual
 - **Decision needed:** accept Home/Obligations/Learn with the scenario planner entered from obligation detail (dropping SRC-1 §11's global Plan tab).
@@ -18,12 +16,9 @@
 - **Alternatives:** 4 tabs with Plan-as-picker; 4 tabs with Plan defaulting to largest obligation.
 - **Default:** adopt 3 tabs. Reversal cost: trivially low.
 
-## DEC-003 — Notifications: in-app insights center for MVP
-- **Decision needed:** accept that MVP "notifications" = in-app insights center (+ optional local reminders as stretch), no push.
-- **Why it matters:** SRC-1 §18 specifies a full notification system; team may expect visible push in the demo.
-- **Recommendation:** adopt. Push needs backend + tokens + permission UX for no additional demo insight; the insights center demonstrates the intelligence layer (which is the impressive part) and its deep links are reused by push later unchanged.
-- **Alternatives:** local scheduled notifications in the scripted demo (possible as stretch S2 — cheap, partial effect); full FCM (rejected for MVP).
-- **Default:** adopt.
+## DEC-003 — Notifications: in-app insights center + local scheduled reminders for MVP
+- **AMENDED 2026-07-10.** Original: insights center only, local reminders as stretch. With three weeks, **local scheduled payment-due notifications are promoted into MVP** (FR-NTF-001, M7) alongside the insights center — cheap in Expo, and SRC-3's notification engine expects them. **Push/FCM stays LATER** (needs backend triggers + tokens; the insights center + local reminders deliver the MVP value, and their deep links are reused by push later unchanged).
+- **Default:** adopt (insights center + local reminders in MVP; no push).
 
 ## DEC-004 — "Smart repayment tips": rules-based only, post-MVP; no LLM-generated advice in-app
 - **Decision needed:** confirm that any future "tips" feature is deterministic rules over the user's own data, and that no generative-AI-authored financial guidance ships in-app.
@@ -32,9 +27,16 @@
 - **Alternatives:** LLM-drafted, human-reviewed static education content (acceptable — that's authorship tooling, not runtime advice); runtime LLM tips (rejected).
 - **Default:** adopt the boundary.
 
+## DEC-005 — "Explore Financing Options" (from SRC-3) rejected for all near-term scope
+- **Decision needed:** confirm the SRC-3 "Explore Financing Options" secondary feature stays out.
+- **Why it matters:** it is a product/lender-comparison surface. Presenting financing options edges directly into "recommend a specific lender or financial product as the best choice" — an explicit **non-goal** (SRC-1 §5.3) and a violation of the recommendation boundary (§17.3, DEC-004).
+- **Recommendation:** reject for MVP and P1. If ever built, it must be strictly neutral, non-promotional, clearly labeled as information (not advice), and legal-reviewed — a distinct future decision, not a scope creep.
+- **Default:** reject.
+
 ---
 
 ## For awareness (decided, no approval needed — flag within 1 week if you disagree)
+- **Scope expanded for the confirmed three-week timeline (ADR-0016):** auth, Supabase backend + RLS, consent records, local notifications, card payoff simulator, duplicate detection, and a labeled-mock connect flow promoted to MVP as week-3 work off the demo spine. CRIF/Open Banking remain **mock** (real access is P1, RES-002). Details in `mvp-scope.md` change history and `00-source-audit.md §7`.
 - Second obligation type (Murabaha) promoted from "if time permits" to Must (CON-01 resolution) — it's cheap and proves the domain model.
 - Estimates render rounded with ≈, not at 3 dp (CON-06 resolution, BR-CALC-014).
 - Education content is bundled/static; teammates edit via repo PRs (critique §2.6).

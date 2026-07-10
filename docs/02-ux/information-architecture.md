@@ -52,6 +52,14 @@ flowchart TD
 - **Payments** as a tab was already (correctly) conditioned on evidence in SRC-1; the same evidentiary bar removed Plan.
 - Insights center as a header icon (not tab): its unread badge is the attention mechanism; frequency doesn't justify tab real estate in MVP. Revisit both post-MVP with usage data (documented trigger: if scenario usage per session > 1.5× obligation-detail visits, promote Plan).
 
+## 3a. SRC-3 / SRC-4 delta note (2026-07-10)
+
+The supplied architecture doc (SRC-3) proposes **6 tabs** (Home, Obligations, Payments, Plan, Learn, Notifications); the UI blueprint (SRC-4, "Wadeh") proposes **4** (Home, Pay, Rates, Plan). They disagree with each other. **DEC-002's 3 tabs are retained** — §3's reasoning already covers Payments and Plan as contextual, and the same "one dominant purpose per screen" test applies. Specifically:
+- **Notifications** stays a header icon + full-screen center (SCR-INS-CENTER), not a tab — even though local notifications now ship in MVP (FR-NTF-001). The unread badge is the attention mechanism; a tab isn't earned yet (revisit with usage data).
+- **Payments / Rates** remain inside obligation detail (NAV-2), not top-level tabs.
+- Adopted from the blueprints as **enrichments, not structure changes**: the "two numbers" comparison hero (official balance vs projected true cost) on loan detail, and cumulative extra-interest on the rate timeline. See `00-audit/00-source-audit.md §7`.
+- New MVP screens implied by the M6 backend track (auth, consent, connect) are specified in `screen-inventory.md` when M6 is specced; they sit **outside** the tab structure (pre-dashboard / modal flows), so the 3-tab shell is unaffected.
+
 ## 4. Screen inventory index
 
-Full specifications with states: `screen-inventory.md`. Count: 26 MVP screen specifications (the three obligation-detail variants share one route per NAV-2; modals included), 3 stretch.
+Full specifications with states: `screen-inventory.md`. Count: 26 MVP screen specifications (the three obligation-detail variants share one route per NAV-2; modals included), 3 stretch. (M6 auth/consent/connect screens add to this when specced.)
