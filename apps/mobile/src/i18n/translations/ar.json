@@ -1,0 +1,17 @@
+{
+  "common": {
+    "toggleLanguage": "English"
+  },
+  "tabs": {
+    "dashboard": "الرئيسية",
+    "simulator": "المحاكي"
+  },
+  "dashboard": {
+    "greeting": "مرحباً، التزاماتي!",
+    "subtitle": "التزاماتك المالية، منظمة."
+  },
+  "simulator": {
+    "title": "محاكي البطاقات",
+    "subtitle": "خطط لاستراتيجية السداد الخاصة بك."
+  }
+}

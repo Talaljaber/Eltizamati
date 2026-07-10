@@ -2,7 +2,7 @@
 
 **Decision basis:** `docs/00-audit/01-critique-and-recommendations.md` (sharp story over broad shell) + the **SRC-3/4 delta-audit** (`00-audit/00-source-audit.md §7`). The MVP proves **one memorable flow end-to-end with defensible math**, staged on a credible multi-obligation dashboard.
 
-**Timeline basis (updated 2026-07-10):** the hackathon runs **~3 weeks**, not a compressed day. This makes it realistic to promote **authentication, Supabase backend activation, consent records, local notifications, the card payoff simulator, duplicate-payment detection, and a real mock-provider connect flow** into MVP — *provided* the money-shot spine (rate-change → residual → scenario) is green by end of week 2 and **the scripted demo stays airplane-mode-safe on local/demo data.** The backend is a real, demonstrable *secondary* capability, never a demo dependency (ADR-0016).
+**Timeline basis (updated 2026-07-10):** the hackathon runs **~3 weeks**, not a compressed day. This makes it realistic to promote **authentication, Supabase backend activation, consent records, local notifications, the card payoff simulator, duplicate-payment detection, and a real mock-provider connect flow** into MVP — _provided_ the money-shot spine (rate-change → residual → scenario) is green by end of week 2 and **the scripted demo stays airplane-mode-safe on local/demo data.** The backend is a real, demonstrable _secondary_ capability, never a demo dependency (ADR-0016).
 
 ## 1. The one-line MVP
 
@@ -10,67 +10,67 @@
 
 ## 2. Scope table
 
-| Capability | MVP | Stretch (S) | P1 (post-hackathon) | Later |
-|---|---|---|---|---|
-| App shell: i18n AR/EN, RTL, design system, 3-tab nav | ✅ | | | |
-| Onboarding + disclaimer acknowledgment + demo/manual choice | ✅ | | | |
-| Demo seed data (3 obligations, incl. seeded rate change) | ✅ | | | |
-| Unified dashboard (totals, next payment, status, cards, changes) | ✅ | | | |
-| Conventional variable-rate loan detail (full) | ✅ | | | |
-| Rate history timeline + log rate change | ✅ | | | |
-| Amortization + variable-rate projection + residual-balance detection | ✅ | | | |
-| Calculation explanation view (inputs, provenance, formula version, assumptions) | ✅ | | | |
-| Loan scenario planner (extra monthly / one-time) | ✅ | | | |
-| Payment history + log payment | ✅ | | | |
-| Murabaha detail (read-only, contract-correct terms, progress) | ✅ | | | |
-| Credit-card detail (display + utilization) | ✅ | | | |
-| Insights center (rules of FR-INS-001) | ✅ | | | |
-| Contextual education (tap-a-term) + Learn tab + bank-questions checklist | ✅ | | | |
-| Settings: language, erase data, reset demo, acknowledgments | ✅ | | | |
-| Data-source status screen (honest mock labeling) | ✅ | | | |
-| **Card payoff simulator** (`cardPayoff.v1`) | ✅ | | | |
-| **Duplicate payment detection** | ✅ | | | |
-| **Local payment-due notifications** (OS-scheduled, content-minimized) | ✅ | | | |
-| **User-defined gap/threshold insight + reminder-day setting** (from SRC-4) | ✅ | | | |
-| **Email authentication (Supabase): sign-up/in, email verify, password reset, session mgmt** | ✅ | | | |
-| **Versioned consent records (ToS, Privacy, disclaimer, per-provider) — server-backed** | ✅ | | | |
-| **Biometric app-lock (local)** | ✅ | | | |
-| **Supabase deploy: cloud persistence, RLS-from-first-migration, account deletion + audit** | ✅ | | | |
-| **Consent-gated connect flow against a LABELED MOCK CRIF/Open-Banking provider** | ✅ | | | |
-| **"Two numbers" comparison hero on loan detail** (official balance vs projected true cost) | ✅ | | | |
-| JSON export | | ✅ | | |
-| Saved scenarios | | ✅ | | |
-| Phone OTP as a second auth factor | | | ✅ | |
-| Ijara + Diminishing Musharakah read-only types | | | ✅ | |
-| Generic read-only facility type | | | ✅ | |
-| CRIF / Open Banking **real/sandbox** provider (mock ships in MVP) | | | ✅ (if access) | |
-| Push notifications (FCM/APNs, server-triggered) | | | | ✅ |
-| Household sharing, white-label, coaches | | | | ✅ |
-| OCR import, payment initiation, LLM advice | | | | ❌ never as scoped (see not-build) |
+| Capability                                                                                  | MVP | Stretch (S) | P1 (post-hackathon) | Later                              |
+| ------------------------------------------------------------------------------------------- | --- | ----------- | ------------------- | ---------------------------------- |
+| App shell: i18n AR/EN, RTL, design system, 3-tab nav                                        | ✅  |             |                     |                                    |
+| Onboarding + disclaimer acknowledgment + demo/manual choice                                 | ✅  |             |                     |                                    |
+| Demo seed data (3 obligations, incl. seeded rate change)                                    | ✅  |             |                     |                                    |
+| Unified dashboard (totals, next payment, status, cards, changes)                            | ✅  |             |                     |                                    |
+| Conventional variable-rate loan detail (full)                                               | ✅  |             |                     |                                    |
+| Rate history timeline + log rate change                                                     | ✅  |             |                     |                                    |
+| Amortization + variable-rate projection + residual-balance detection                        | ✅  |             |                     |                                    |
+| Calculation explanation view (inputs, provenance, formula version, assumptions)             | ✅  |             |                     |                                    |
+| Loan scenario planner (extra monthly / one-time)                                            | ✅  |             |                     |                                    |
+| Payment history + log payment                                                               | ✅  |             |                     |                                    |
+| Murabaha detail (read-only, contract-correct terms, progress)                               | ✅  |             |                     |                                    |
+| Credit-card detail (display + utilization)                                                  | ✅  |             |                     |                                    |
+| Insights center (rules of FR-INS-001)                                                       | ✅  |             |                     |                                    |
+| Contextual education (tap-a-term) + Learn tab + bank-questions checklist                    | ✅  |             |                     |                                    |
+| Settings: language, erase data, reset demo, acknowledgments                                 | ✅  |             |                     |                                    |
+| Data-source status screen (honest mock labeling)                                            | ✅  |             |                     |                                    |
+| **Card payoff simulator** (`cardPayoff.v1`)                                                 | ✅  |             |                     |                                    |
+| **Duplicate payment detection**                                                             | ✅  |             |                     |                                    |
+| **Local payment-due notifications** (OS-scheduled, content-minimized)                       | ✅  |             |                     |                                    |
+| **User-defined gap/threshold insight + reminder-day setting** (from SRC-4)                  | ✅  |             |                     |                                    |
+| **Email authentication (Supabase): sign-up/in, email verify, password reset, session mgmt** | ✅  |             |                     |                                    |
+| **Versioned consent records (ToS, Privacy, disclaimer, per-provider) — server-backed**      | ✅  |             |                     |                                    |
+| **Biometric app-lock (local)**                                                              | ✅  |             |                     |                                    |
+| **Supabase deploy: cloud persistence, RLS-from-first-migration, account deletion + audit**  | ✅  |             |                     |                                    |
+| **Consent-gated connect flow against a LABELED MOCK CRIF/Open-Banking provider**            | ✅  |             |                     |                                    |
+| **"Two numbers" comparison hero on loan detail** (official balance vs projected true cost)  | ✅  |             |                     |                                    |
+| JSON export                                                                                 |     | ✅          |                     |                                    |
+| Saved scenarios                                                                             |     | ✅          |                     |                                    |
+| Phone OTP as a second auth factor                                                           |     |             | ✅                  |                                    |
+| Ijara + Diminishing Musharakah read-only types                                              |     |             | ✅                  |                                    |
+| Generic read-only facility type                                                             |     |             | ✅                  |                                    |
+| CRIF / Open Banking **real/sandbox** provider (mock ships in MVP)                           |     |             | ✅ (if access)      |                                    |
+| Push notifications (FCM/APNs, server-triggered)                                             |     |             |                     | ✅                                 |
+| Household sharing, white-label, coaches                                                     |     |             |                     | ✅                                 |
+| OCR import, payment initiation, LLM advice                                                  |     |             |                     | ❌ never as scoped (see not-build) |
 
 ## 3. Explicit not-build list (with reasons)
 
-| Item | Reason |
-|------|--------|
-| Real/implied CRIF or Open Banking integration (a *labeled mock* connect flow ships; real access stays P1) | No confirmed access (RES-002); non-negotiable honesty rule |
-| Auth on the **scripted demo path** (auth ships and is demonstrable, but the stage flow runs demo mode) | DEC-001 (amended by ADR-0016); keeps the demo airplane-mode-safe |
-| Push notification infra (FCM/APNs) — local scheduled notifications *do* ship | Needs device tokens + server triggers; local reminders deliver the MVP value |
-| Phone OTP | SMS provider + cost; email verification covers MVP identity (P1) |
-| Remote education CMS | Static versioned content suffices; repo PRs are the CMS |
-| Product analytics platform | Privacy-first posture; Sentry only; event taxonomy documented for later |
-| Feature-flag service | Typed local config module; one developer |
-| OCR statement import | Privacy surface + effort ≫ demo value |
-| Islamic early-settlement simulation | Ibra' is institution-discretionary (GAP-07); honest = don't simulate |
-| Multi-currency runtime | JOD-only; schema keeps `currency` code for later |
-| "Smart tips" (any AI-generated advice) | Regulatory/trust risk; DEC-004 |
+| Item                                                                                                      | Reason                                                                       |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Real/implied CRIF or Open Banking integration (a _labeled mock_ connect flow ships; real access stays P1) | No confirmed access (RES-002); non-negotiable honesty rule                   |
+| Auth on the **scripted demo path** (auth ships and is demonstrable, but the stage flow runs demo mode)    | DEC-001 (amended by ADR-0016); keeps the demo airplane-mode-safe             |
+| Push notification infra (FCM/APNs) — local scheduled notifications _do_ ship                              | Needs device tokens + server triggers; local reminders deliver the MVP value |
+| Phone OTP                                                                                                 | SMS provider + cost; email verification covers MVP identity (P1)             |
+| Remote education CMS                                                                                      | Static versioned content suffices; repo PRs are the CMS                      |
+| Product analytics platform                                                                                | Privacy-first posture; Sentry only; event taxonomy documented for later      |
+| Feature-flag service                                                                                      | Typed local config module; one developer                                     |
+| OCR statement import                                                                                      | Privacy surface + effort ≫ demo value                                        |
+| Islamic early-settlement simulation                                                                       | Ibra' is institution-discretionary (GAP-07); honest = don't simulate         |
+| Multi-currency runtime                                                                                    | JOD-only; schema keeps `currency` code for later                             |
+| "Smart tips" (any AI-generated advice)                                                                    | Regulatory/trust risk; DEC-004                                               |
 
 ## 4. Demo data set (canonical; implemented in `packages/demo-data`)
 
-| # | Obligation | Why it's in the demo |
-|---|-----------|----------------------|
-| 1 | **Personal loan, Bank of Amman (fictional)** — 20,000 JOD original, variable rate 7.5%→9.25% (repriced 14 months in, installment unchanged), 84-month term, 30 months elapsed | The star: triggers residual-balance insight; scenario planner target |
-| 2 | **Murabaha auto financing, Safa Islamic Bank (fictional)** — 15,000 JOD cost + 3,600 JOD profit, fixed total 18,600 JOD, 60 months, 22 paid | Proves contract-aware Islamic handling with safe math |
-| 3 | **Credit card, same Bank of Amman** — 4,000 JOD limit, 2,350 JOD balance (59% utilization), min payment 3%, purchase APR 24% | Breadth + utilization insight; simulator target if stretch lands |
+| #   | Obligation                                                                                                                                                                    | Why it's in the demo                                                 |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 1   | **Personal loan, Bank of Amman (fictional)** — 20,000 JOD original, variable rate 7.5%→9.25% (repriced 14 months in, installment unchanged), 84-month term, 30 months elapsed | The star: triggers residual-balance insight; scenario planner target |
+| 2   | **Murabaha auto financing, Safa Islamic Bank (fictional)** — 15,000 JOD cost + 3,600 JOD profit, fixed total 18,600 JOD, 60 months, 22 paid                                   | Proves contract-aware Islamic handling with safe math                |
+| 3   | **Credit card, same Bank of Amman** — 4,000 JOD limit, 2,350 JOD balance (59% utilization), min payment 3%, purchase APR 24%                                                  | Breadth + utilization insight; simulator target if stretch lands     |
 
 Institutions are fictional-but-plausible; demo banner states "Demonstration data — not real accounts." All seeded values chosen so the finance teammates can hand-verify every derived figure (see `calculation-test-vectors.md` — seed #1 IS test vector family TV-30x).
 

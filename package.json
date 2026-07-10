@@ -1,0 +1,35 @@
+{
+  "name": "eltizamati",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Eltizamati — unified financial obligations tracker. Jordan-first, MENA-ready.",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@10.17.0",
+  "scripts": {
+    "dev": "pnpm --filter @eltizamati/mobile expo start",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --build",
+    "depcruise": "depcruise --config .dependency-cruiser.cjs apps packages",
+    "test": "pnpm run test:packages && pnpm run test:app",
+    "test:packages": "pnpm --filter @eltizamati/domain test && pnpm --filter @eltizamati/finance-engine test && pnpm --filter @eltizamati/demo-data test",
+    "test:app": "pnpm --filter @eltizamati/mobile jest",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run depcruise && pnpm run test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/node": "^20.17.0",
+    "dependency-cruiser": "^16.10.3",
+    "eslint": "^9.21.0",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^17.7.0",
+    "prettier": "^3.5.3",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.25.0"
+  }
+}

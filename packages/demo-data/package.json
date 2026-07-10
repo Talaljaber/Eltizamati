@@ -1,0 +1,23 @@
+{
+  "name": "@eltizamati/demo-data",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Demo seed factory + fixture builders for tests. Versioned, date-anchored, pure TypeScript.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@eltizamati/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "vitest": "^3.2.4"
+  }
+}

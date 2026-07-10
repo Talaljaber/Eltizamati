@@ -2,7 +2,7 @@
 
 **One clear, understandable view of all your financial obligations — what you owe, what changed, what it costs, and what your choices do about it.**
 
-Jordan-first, MENA-ready mobile app for tracking and *understanding* loans, Islamic financing, and credit cards: rate changes, financing cost, repayment progress, residual-balance ("balloon") risk, and honest what-if scenarios. Built for the Rally Fintech Hackathon; architected to keep living after it.
+Jordan-first, MENA-ready mobile app for tracking and _understanding_ loans, Islamic financing, and credit cards: rate changes, financing cost, repayment progress, residual-balance ("balloon") risk, and honest what-if scenarios. Built for the Rally Fintech Hackathon; architected to keep living after it.
 
 > Eltizamati is not a bank, credit bureau, or financial adviser. It explains and estimates — clearly labeling every figure as official, user-entered, or estimated — and never claims to modify contracts or guarantee outcomes.
 
@@ -15,16 +15,16 @@ The repository currently contains the full documentation and decision system tha
 
 ## Quick links
 
-| I want to… | Go to |
-|------------|-------|
-| Understand the whole documentation set | [`docs/INDEX.md`](docs/INDEX.md) |
-| See what was audited/challenged in the original materials | [`docs/00-audit/`](docs/00-audit/00-source-audit.md) |
-| Know exactly what the hackathon MVP is | [`docs/01-requirements/mvp-scope.md`](docs/01-requirements/mvp-scope.md) |
-| Understand the architecture & stack | [`docs/04-architecture/system-architecture.md`](docs/04-architecture/system-architecture.md) + [ADRs](docs/09-decisions/adr-template.md) |
-| Check the financial math rules | [`docs/03-domain/financial-calculation-spec.md`](docs/03-domain/financial-calculation-spec.md) |
-| Start implementing (agents) | [`AI_AGENT_RULES.md`](AI_AGENT_RULES.md) → [`docs/08-delivery/first-slice-prompt.md`](docs/08-delivery/first-slice-prompt.md) |
-| Approve pending product decisions | [`docs/08-delivery/decision-memo.md`](docs/08-delivery/decision-memo.md) |
-| Validate calculations (finance teammates) | [`docs/03-domain/calculation-test-vectors.md`](docs/03-domain/calculation-test-vectors.md) |
+| I want to…                                                | Go to                                                                                                                                    |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Understand the whole documentation set                    | [`docs/INDEX.md`](docs/INDEX.md)                                                                                                         |
+| See what was audited/challenged in the original materials | [`docs/00-audit/`](docs/00-audit/00-source-audit.md)                                                                                     |
+| Know exactly what the hackathon MVP is                    | [`docs/01-requirements/mvp-scope.md`](docs/01-requirements/mvp-scope.md)                                                                 |
+| Understand the architecture & stack                       | [`docs/04-architecture/system-architecture.md`](docs/04-architecture/system-architecture.md) + [ADRs](docs/09-decisions/adr-template.md) |
+| Check the financial math rules                            | [`docs/03-domain/financial-calculation-spec.md`](docs/03-domain/financial-calculation-spec.md)                                           |
+| Start implementing (agents)                               | [`AI_AGENT_RULES.md`](AI_AGENT_RULES.md) → [`docs/08-delivery/first-slice-prompt.md`](docs/08-delivery/first-slice-prompt.md)            |
+| Approve pending product decisions                         | [`docs/08-delivery/decision-memo.md`](docs/08-delivery/decision-memo.md)                                                                 |
+| Validate calculations (finance teammates)                 | [`docs/03-domain/calculation-test-vectors.md`](docs/03-domain/calculation-test-vectors.md)                                               |
 
 ## Stack (decided — rationale in `docs/09-decisions/`)
 

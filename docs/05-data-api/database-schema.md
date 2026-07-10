@@ -147,18 +147,19 @@ P1-only: `users` (Supabase auth.users + profile), `data_connections`, `sync_runs
 
 ## 2. Type & constraint rules
 
-| Concern | SQLite (MVP) | Postgres (P1) |
-|---------|--------------|----------------|
-| Money | `TEXT` carrying canonical decimal string (Drizzle custom type ↔ `Money`) — SQLite REAL is a float, never used | `NUMERIC(14,3)` |
-| Rates | `TEXT` decimal string | `NUMERIC(9,6)` |
-| Dates (civil) | `TEXT` ISO `YYYY-MM-DD` | `DATE` |
-| Timestamps | `TEXT` ISO | `TIMESTAMPTZ` |
-| Enums | `TEXT` + zod check at boundary + CHECK constraint | Postgres enums |
-| Provenance | JSON column per sourced field group. **Field-level `_prov` columns** exist for every `Sourced<T>` field in the domain model (see ERD above: `outstanding_balance_prov`, murabaha `*_prov`, card `*_prov`). Record-level `provenance_json` on `obligations` covers non-sourced metadata fields. Drizzle custom type `sourcedText(col)` emits the paired `col` + `col_prov` columns. | same, JSONB |
+| Concern       | SQLite (MVP)                                                                                                                                                                                                                                                                                                                                                                       | Postgres (P1)   |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Money         | `TEXT` carrying canonical decimal string (Drizzle custom type ↔ `Money`) — SQLite REAL is a float, never used                                                                                                                                                                                                                                                                      | `NUMERIC(14,3)` |
+| Rates         | `TEXT` decimal string                                                                                                                                                                                                                                                                                                                                                              | `NUMERIC(9,6)`  |
+| Dates (civil) | `TEXT` ISO `YYYY-MM-DD`                                                                                                                                                                                                                                                                                                                                                            | `DATE`          |
+| Timestamps    | `TEXT` ISO                                                                                                                                                                                                                                                                                                                                                                         | `TIMESTAMPTZ`   |
+| Enums         | `TEXT` + zod check at boundary + CHECK constraint                                                                                                                                                                                                                                                                                                                                  | Postgres enums  |
+| Provenance    | JSON column per sourced field group. **Field-level `_prov` columns** exist for every `Sourced<T>` field in the domain model (see ERD above: `outstanding_balance_prov`, murabaha `*_prov`, card `*_prov`). Record-level `provenance_json` on `obligations` covers non-sourced metadata fields. Drizzle custom type `sourcedText(col)` emits the paired `col` + `col_prov` columns. | same, JSONB     |
 
 Constraints (both): `rate_periods` unique `(obligation_id, effective_from)` where not superseded; `rate_periods`, `payments`, `calculation_runs`, `insights` index on `user_id` (for RLS performance); `payments` index `(obligation_id, paid_on)`; CHECK amount > 0; murabaha CHECK `total_sale_price = asset_cost + disclosed_profit` (tolerance handled at app layer, DB stores exact entered values — violation surfaces as data error per BR-OBL-003); `calculation_runs` index `(obligation_id, formula_id, created_at desc)`; `insights` unique `(rule_id, obligation_id, trigger_hash)` (FR-INS-004).
 
 ## 3. Migrations
+
 - Local: Drizzle migrations, forward-only, committed; tested against seeded previous version (NFR-REL-002). Migration files are generated (drizzle-kit) then reviewed — no hand-edited generated files (controlled codegen rule).
 - P1 Supabase: SQL migrations in `supabase/migrations/`, **RLS enabled in the same migration that creates each table** (NFR-SEC-002); policy pattern: `user_id = auth.uid()` on every user-data table; deny-by-default; service-role only in Edge Functions.
 
@@ -179,4 +180,5 @@ create policy <table>_owner on <table>
 Every user-data table: same pattern + pgTAP tests asserting cross-user access fails (NFR-SEC-002). The pgTAP suite creates two test users, inserts rows for user A, and asserts that user B's session returns zero rows from every table above.
 
 ## 5. Local erasure (FR-SET-003)
+
 `DELETE` all rows in one transaction + MMKV clear + return to onboarding; verified by a test that counts all tables = 0. P1 adds server-side erasure workflow + audit event (FR-AUTH-003).

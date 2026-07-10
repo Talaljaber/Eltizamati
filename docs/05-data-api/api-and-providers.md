@@ -4,16 +4,16 @@
 
 ## 1. Application service contracts (MVP; stable across P1)
 
-| Service | Operations (Result<T, AppError>) |
-|---------|----------------------------------|
-| `ObligationService` | `list()`, `get(id)`, `create(CreateObligationCmd)` (type-discriminated per kind), `update(id, patch)`, `archive(id)`, `delete(id)` |
-| `PaymentService` | `listFor(obligationId)`, `log(LogPaymentCmd)` (validations US-005), duplicate check (S) |
-| `RateService` | `historyFor(obligationId)`, `logChange(LogRateChangeCmd)` (BR-OBL-002 validation) |
+| Service              | Operations (Result<T, AppError>)                                                                                                               |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ObligationService`  | `list()`, `get(id)`, `create(CreateObligationCmd)` (type-discriminated per kind), `update(id, patch)`, `archive(id)`, `delete(id)`             |
+| `PaymentService`     | `listFor(obligationId)`, `log(LogPaymentCmd)` (validations US-005), duplicate check (S)                                                        |
+| `RateService`        | `historyFor(obligationId)`, `logChange(LogRateChangeCmd)` (BR-OBL-002 validation)                                                              |
 | `CalculationService` | `projectionFor(obligationId, asOf)`, `scenario(obligationId, ScenarioCmd)`, `explain(runId)`, `aggregates(asOf)` — persists runs (FR-CALC-005) |
-| `InsightService` | `list()`, `markRead(id)`, internal `evaluateRules(events)` |
-| `ImportService` | `runProvider(providerId)` (pipeline in provider-abstraction.md §3) |
-| `ConsentService` | `acknowledge(docType, version)`, `status()` |
-| `MaintenanceService` | `eraseAll()`, `resetDemo()`, `exportJson()` (S) |
+| `InsightService`     | `list()`, `markRead(id)`, internal `evaluateRules(events)`                                                                                     |
+| `ImportService`      | `runProvider(providerId)` (pipeline in provider-abstraction.md §3)                                                                             |
+| `ConsentService`     | `acknowledge(docType, version)`, `status()`                                                                                                    |
+| `MaintenanceService` | `eraseAll()`, `resetDemo()`, `exportJson()` (S)                                                                                                |
 
 Commands/queries are zod-validated DTOs in each feature's `api/` module; services are the only writers; every mutation emits domain events (domain-model.md §6).
 
@@ -32,5 +32,6 @@ Commands/queries are zod-validated DTOs in each feature's `api/` module; service
 Mapping tables (provider code → domain kind) are data, reviewed by finance teammates, not inline switch statements.
 
 ## 4. Contract tests
+
 - Every provider implementation passes the same contract test suite (fixtures → expected domain entities + provenance) — mock and real must be substitutable (§35.6).
 - Edge Function DTOs round-trip the shared zod schemas in CI (P1).

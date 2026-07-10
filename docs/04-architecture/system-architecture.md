@@ -53,6 +53,7 @@ flowchart TD
 ```
 
 **Rules (lint-enforced via dependency-cruiser):**
+
 1. `UI → Application → Domain`; `Infrastructure → Domain`. Nothing imports upward. Domain packages import nothing from the app.
 2. UI never touches repositories, SQLite, providers, or the engine directly — only query/mutation hooks and application services (anti-patterns: API/DB access from UI, business logic in widgets).
 3. Raw persistence rows and provider payloads are mapped to domain types at the infrastructure boundary (mappers live beside repositories) — DB records never reach components (anti-pattern guard).
@@ -86,13 +87,13 @@ One-way, predictable: **UI event → mutation → service → (repo, engine) →
 
 ## 4. State management (ADR-0004)
 
-| State kind | Owner | Examples |
-|------------|-------|----------|
-| Persistent domain data | SQLite via repositories, exposed as TanStack Query caches | obligations, payments, rates, runs, insights |
-| Derived financial values | Never "state" — computed by engine via services, persisted as runs | projections, residuals |
-| Session/UI state | Zustand (small, few stores) | active locale, demo banner dismissal-in-session, form drafts |
-| Preferences | MMKV via typed `preferences` module | locale, onboarding done, consent ack pointers |
-| Navigation state | Expo Router | stacks/tabs |
+| State kind               | Owner                                                              | Examples                                                     |
+| ------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------ |
+| Persistent domain data   | SQLite via repositories, exposed as TanStack Query caches          | obligations, payments, rates, runs, insights                 |
+| Derived financial values | Never "state" — computed by engine via services, persisted as runs | projections, residuals                                       |
+| Session/UI state         | Zustand (small, few stores)                                        | active locale, demo banner dismissal-in-session, form drafts |
+| Preferences              | MMKV via typed `preferences` module                                | locale, onboarding done, consent ack pointers                |
+| Navigation state         | Expo Router                                                        | stacks/tabs                                                  |
 
 Rules: no global god-store (anti-pattern); a Zustand store per concern with typed selectors; TanStack Query keys centralized in `features/*/api/keys.ts` (no ad-hoc string keys).
 
@@ -155,4 +156,5 @@ eltizamati/
 - i18n keys: `feature.screen.element` + `glossary.<term-id>` + terminology namespaces (content rules §1).
 
 ## 9. Mobile lifecycle concerns (details in `mobile-primer-for-web-devs.md`)
+
 State restoration (process death), background execution limits, safe areas, keyboard handling, app-switcher privacy (P1: blur sensitive screens), permissions timing (notifications, S) — each mapped to concrete practices in the primer so web assumptions don't leak into implementation.

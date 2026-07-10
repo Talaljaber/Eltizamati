@@ -35,15 +35,15 @@ flowchart TD
 
 ## 2. Navigation rules
 
-| Rule | Detail |
-|------|--------|
-| NAV-1 | Tabs preserve their own stacks (standard mobile expectation; differs from web SPA history — see mobile primer §Navigation). |
-| NAV-2 | Obligation detail is one route with type-driven layout (`/obligation/[id]`), not three routes — the subtype union decides the rendered sections (ADR-0008). |
-| NAV-3 | `SCR-EXPLAIN` is a reusable modal/sheet parameterized by a calculation-run id — every derived figure everywhere opens the same component (PRIN-2). |
-| NAV-4 | The scenario planner is *always entered with an obligation in context* — no global picker (DEC-002). |
+| Rule  | Detail                                                                                                                                                                                                                             |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NAV-1 | Tabs preserve their own stacks (standard mobile expectation; differs from web SPA history — see mobile primer §Navigation).                                                                                                        |
+| NAV-2 | Obligation detail is one route with type-driven layout (`/obligation/[id]`), not three routes — the subtype union decides the rendered sections (ADR-0008).                                                                        |
+| NAV-3 | `SCR-EXPLAIN` is a reusable modal/sheet parameterized by a calculation-run id — every derived figure everywhere opens the same component (PRIN-2).                                                                                 |
+| NAV-4 | The scenario planner is _always entered with an obligation in context_ — no global picker (DEC-002).                                                                                                                               |
 | NAV-5 | Deep links (`eltizamati://obligation/{id}`, `.../insights`) validate the route allow-list and re-resolve entities by id (NFR-SEC-005). Insights use deep links internally today so future push notifications reuse them unchanged. |
-| NAV-6 | Android back button: predictable stack pop; from tab roots, back exits (Android convention) — never traps the user. |
-| NAV-7 | In RTL, stack "push" animates from the left; tab order mirrors (framework-provided; verify per screen in RTL pass). |
+| NAV-6 | Android back button: predictable stack pop; from tab roots, back exits (Android convention) — never traps the user.                                                                                                                |
+| NAV-7 | In RTL, stack "push" animates from the left; tab order mirrors (framework-provided; verify per screen in RTL pass).                                                                                                                |
 
 ## 3. Why 3 tabs (decision record summary)
 
@@ -55,6 +55,7 @@ flowchart TD
 ## 3a. SRC-3 / SRC-4 delta note (2026-07-10)
 
 The supplied architecture doc (SRC-3) proposes **6 tabs** (Home, Obligations, Payments, Plan, Learn, Notifications); the UI blueprint (SRC-4, "Wadeh") proposes **4** (Home, Pay, Rates, Plan). They disagree with each other. **DEC-002's 3 tabs are retained** — §3's reasoning already covers Payments and Plan as contextual, and the same "one dominant purpose per screen" test applies. Specifically:
+
 - **Notifications** stays a header icon + full-screen center (SCR-INS-CENTER), not a tab — even though local notifications now ship in MVP (FR-NTF-001). The unread badge is the attention mechanism; a tab isn't earned yet (revisit with usage data).
 - **Payments / Rates** remain inside obligation detail (NAV-2), not top-level tabs.
 - Adopted from the blueprints as **enrichments, not structure changes**: the "two numbers" comparison hero (official balance vs projected true cost) on loan detail, and cumulative extra-interest on the rate timeline. See `00-audit/00-source-audit.md §7`.

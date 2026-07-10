@@ -1,22 +1,22 @@
 # ADR-0016 — Activate the Backend & Identity in the Build (Three-Week Timeline)
 
-- **Status:** Accepted · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Low (all of it was already designed for P1; this ADR changes *timing and demo posture*, not architecture)
-- **Amends:** the MVP-timing clauses of ADR-0002 (backend deferred), ADR-0012 (auth demo-mode), ADR-0013 (local-only MVP). Those ADRs' architecture is unchanged; only *when* the P1 surface is built moves earlier.
+- **Status:** Accepted · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Low (all of it was already designed for P1; this ADR changes _timing and demo posture_, not architecture)
+- **Amends:** the MVP-timing clauses of ADR-0002 (backend deferred), ADR-0012 (auth demo-mode), ADR-0013 (local-only MVP). Those ADRs' architecture is unchanged; only _when_ the P1 surface is built moves earlier.
 - **Supersedes:** nothing structurally. Does **not** touch ADR-0001/0007/0008/0009/0010/0014 (framework, engine isolation, subtypes, provider abstraction, i18n/RTL, error taxonomy) — all confirmed intact by the SRC-3/4 delta-audit (`00-audit/00-source-audit.md §7.3`).
 
 ## Context & forces
 
 Two facts changed after the original KB was written:
 
-1. **The hackathon runs ~3 weeks, not a compressed day.** The original demo-mode-only / backend-deferred decisions (ADR-0002/0012/0013) were correct *for a short timeline* where auth+network were the top demo risk and bought no story value. Three weeks changes the trade: the P1 backend/auth/consent design already exists in the repo (docs/05 schema + `/supabase` migrations lockstepped with Drizzle, docs/06 controls, FR-AUTH-*), so activating it is **deployment + wiring, not design.**
-2. **SRC-3 (architecture PDF) centers exactly this surface** — Splash→Auth→Consent→Retrieve→Unified Profile→Classify→Dashboard, with CRIF/Open Banking as primary and explicit per-provider consent. The delta-audit classifies auth and consent as *promote to MVP* and CRIF/OB as *keep mock*.
+1. **The hackathon runs ~3 weeks, not a compressed day.** The original demo-mode-only / backend-deferred decisions (ADR-0002/0012/0013) were correct _for a short timeline_ where auth+network were the top demo risk and bought no story value. Three weeks changes the trade: the P1 backend/auth/consent design already exists in the repo (docs/05 schema + `/supabase` migrations lockstepped with Drizzle, docs/06 controls, FR-AUTH-*), so activating it is **deployment + wiring, not design.**
+2. **SRC-3 (architecture PDF) centers exactly this surface** — Splash→Auth→Consent→Retrieve→Unified Profile→Classify→Dashboard, with CRIF/Open Banking as primary and explicit per-provider consent. The delta-audit classifies auth and consent as _promote to MVP_ and CRIF/OB as _keep mock_.
 
 The unchanged constraint that governs the decision: **the demo must stay reliable.** The original reliability win (airplane-mode demo, "does the phone turn on") must not be sacrificed to add depth.
 
 ## Decision
 
 1. **Build the P1 backend surface during the three-week window (milestone M6), off the critical demo path:**
-   - Supabase project deployed; `/supabase` migrations applied; **RLS policies from the first migration** with pgTAP tests (satisfies §35.8 / CON-08 *in running code*, not just in design).
+   - Supabase project deployed; `/supabase` migrations applied; **RLS policies from the first migration** with pgTAP tests (satisfies §35.8 / CON-08 _in running code_, not just in design).
    - Email auth: sign-up, email verification, sign-in, session management, sign-out, password reset (FR-AUTH-001). SecureStore tokens. Biometric app-lock (FR-AUTH-004).
    - Versioned, timestamped consent records — server-backed when signed in, local in demo mode (FR-AUTH-002); per-provider consent gates the connect flow (FR-AUTH-005).
    - Account deletion with server-side erasure + audit event (FR-AUTH-003).
@@ -33,7 +33,7 @@ The unchanged constraint that governs the decision: **the demo must stay reliabl
 
 ## Consequences
 
-- **Positive:** SRC-3's headline flow becomes real (against a mock); §35.8 server-side authorization moves from designed to enforced (RLS + pgTAP); the codebase judges read is demonstrably production-shaped, not just production-*planned*; the post-hackathon P1 shrinks to "replace mock with real providers behind the unchanged contract."
+- **Positive:** SRC-3's headline flow becomes real (against a mock); §35.8 server-side authorization moves from designed to enforced (RLS + pgTAP); the codebase judges read is demonstrably production-shaped, not just production-_planned_; the post-hackathon P1 shrinks to "replace mock with real providers behind the unchanged contract."
 - **Cost/risk:** M6 is the first real network/auth surface in the project — the highest new-integration risk after the engine. It is fenced: independent week-3 track, depends only on M5's repository/schema surface, first thing cut if time is short.
 - **Discipline carried over:** any schema change still updates both Drizzle and `/supabase` in the same PR (ADR-0002 consequence, review-checklist item). No MVP feature may assume single-device-forever beyond the repository seam (ADR-0013 consequence) — now actively exercised by the cloud path.
 - **Roadmap shift:** P1 moves from "backend/auth/consent" (now in MVP) to "real providers + phone OTP + multi-device sync-queue" (`hackathon-plan.md §5`).

@@ -1,0 +1,17 @@
+{
+  "common": {
+    "toggleLanguage": "عربي"
+  },
+  "tabs": {
+    "dashboard": "Dashboard",
+    "simulator": "Simulator"
+  },
+  "dashboard": {
+    "greeting": "Hello, Eltizamati!",
+    "subtitle": "Your financial obligations, organized."
+  },
+  "simulator": {
+    "title": "Card Simulator",
+    "subtitle": "Plan your payoff strategy."
+  }
+}

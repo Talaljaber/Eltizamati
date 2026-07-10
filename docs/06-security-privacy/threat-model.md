@@ -3,35 +3,38 @@
 **Method:** STRIDE-informed, pragmatic for a solo-dev fintech prototype maturing to production. Scope column: MVP (local-only build) vs P1 (Supabase + providers). Controls are concrete and each has a verification hook (docs/06/security-controls.md holds the full control list).
 
 ## Assets
+
 A1 obligation/payment financial data · A2 auth tokens & sessions (P1) · A3 consent records · A4 provider credentials (P1, server-side only) · A5 calculation integrity (results users act on) · A6 the app's trust reputation.
 
 ## Threats & mitigations
 
-| ID | Threat (SRC-1 §27 coverage) | Scope | Risk | Mitigations | Verification |
-|----|------------------------------|-------|------|-------------|--------------|
-| T-01 | Device theft/loss exposes local financial data | MVP | M | OS FS encryption baseline; no data on lock screen; P1: biometric app-lock (FR-AUTH-004); SQLCipher upgrade path (ADR-0006) documents residual risk honestly | Manual device check; ADR review |
-| T-02 | Sensitive data in logs/crash reports | MVP | H | NFR-SEC-004: scrubbed Sentry, no-PII log policy, error safe-metadata whitelist | Log-policy unit tests; Sentry config in review checklist |
-| T-03 | Account takeover (credential stuffing, weak reset) | P1 | H | Supabase auth rate limits, email verification, reset flows; re-auth for sensitive ops (export/delete); session revocation | Auth integration tests |
-| T-04 | Token theft from device storage | P1 | H | Tokens only in SecureStore (NFR-SEC-003); short-lived JWT + refresh rotation | Lint rule + storage audit |
-| T-05 | Broken object-level authorization (user A reads B's loans) | P1 | H | RLS on every table from first migration, deny-by-default; no service-role in client | pgTAP cross-user tests (NFR-SEC-002) |
-| T-06 | Provider secrets extracted from app bundle | P1 | H | Structural: secrets exist only in Edge Functions; client holds anon key only | gitleaks; bundle inspection checklist |
-| T-07 | Malicious/malformed provider payloads (injection, oversized, type confusion) | P1 | M | zod boundary validation (NFR-SEC-008), size limits, no dynamic eval, parameterized SQL only (Drizzle/PostgREST) | Contract tests with hostile fixtures |
-| T-08 | Insecure deep links (spoofed navigation, parameter injection) | MVP | M | Route allow-list, id re-resolution, no auth-bypassing params (NFR-SEC-005) | Route-guard tests |
-| T-09 | Notification content leaks finances on lock screen | S/P1 | M | Content minimization (NFR-PRIV-005) | Manual check |
-| T-10 | Consent bypass (feature reads data without consent scope) | P1 | M | Consent checked server-side in Edge Functions before provider fetch; consent version gates | Consent-gate tests |
-| T-11 | Replay of mutation requests | P1 | L | Idempotency keys; TLS everywhere (platform default, cleartext blocked NFR-SEC-006) | API tests |
-| T-12 | Calculation tampering / silent formula drift (integrity of A5) | MVP | M | Formula versioning + vectors + determinism (INV-5); CI blocks vector changes without review; runs persisted with input hash | CI gates; vector review rule |
-| T-13 | Debug builds with prod data / demo bypasses shipped | P1 | M | Environment separation (EAS profiles), release-build config diff check (NFR-SEC-006) | CI check |
-| T-14 | Supply-chain: malicious/compromised npm dependency | MVP | M | Lockfile, pnpm audit + Dependabot, dependency-addition rule (AI_AGENT_RULES #12), minimal dep policy | CI |
-| T-15 | Screenshot/app-switcher exposure of balances | P1 | L | App-switcher blur on sensitive screens (expo-screen-capture / native flag); MVP: accepted risk (demo data) | Manual |
-| T-16 | Excessive analytics = privacy liability | MVP | L | No product analytics in MVP; event taxonomy with minimization rules before any adoption (NFR-PRIV-004) | Event-schema review |
-| T-17 | Unauthorized export / erasure failures | P1 | M | Re-auth for export/delete; erasure verified by absence tests (NFR-PRIV-003); audit events | Erasure test |
-| T-18 | AI agent introduces security regression (secret commit, RLS bypass, logging PII) | MVP | H | AI_AGENT_RULES #9/10; gitleaks in CI; review checklist security section; RLS tests as regression net | CI + human review |
+| ID   | Threat (SRC-1 §27 coverage)                                                      | Scope | Risk | Mitigations                                                                                                                                                 | Verification                                             |
+| ---- | -------------------------------------------------------------------------------- | ----- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| T-01 | Device theft/loss exposes local financial data                                   | MVP   | M    | OS FS encryption baseline; no data on lock screen; P1: biometric app-lock (FR-AUTH-004); SQLCipher upgrade path (ADR-0006) documents residual risk honestly | Manual device check; ADR review                          |
+| T-02 | Sensitive data in logs/crash reports                                             | MVP   | H    | NFR-SEC-004: scrubbed Sentry, no-PII log policy, error safe-metadata whitelist                                                                              | Log-policy unit tests; Sentry config in review checklist |
+| T-03 | Account takeover (credential stuffing, weak reset)                               | P1    | H    | Supabase auth rate limits, email verification, reset flows; re-auth for sensitive ops (export/delete); session revocation                                   | Auth integration tests                                   |
+| T-04 | Token theft from device storage                                                  | P1    | H    | Tokens only in SecureStore (NFR-SEC-003); short-lived JWT + refresh rotation                                                                                | Lint rule + storage audit                                |
+| T-05 | Broken object-level authorization (user A reads B's loans)                       | P1    | H    | RLS on every table from first migration, deny-by-default; no service-role in client                                                                         | pgTAP cross-user tests (NFR-SEC-002)                     |
+| T-06 | Provider secrets extracted from app bundle                                       | P1    | H    | Structural: secrets exist only in Edge Functions; client holds anon key only                                                                                | gitleaks; bundle inspection checklist                    |
+| T-07 | Malicious/malformed provider payloads (injection, oversized, type confusion)     | P1    | M    | zod boundary validation (NFR-SEC-008), size limits, no dynamic eval, parameterized SQL only (Drizzle/PostgREST)                                             | Contract tests with hostile fixtures                     |
+| T-08 | Insecure deep links (spoofed navigation, parameter injection)                    | MVP   | M    | Route allow-list, id re-resolution, no auth-bypassing params (NFR-SEC-005)                                                                                  | Route-guard tests                                        |
+| T-09 | Notification content leaks finances on lock screen                               | S/P1  | M    | Content minimization (NFR-PRIV-005)                                                                                                                         | Manual check                                             |
+| T-10 | Consent bypass (feature reads data without consent scope)                        | P1    | M    | Consent checked server-side in Edge Functions before provider fetch; consent version gates                                                                  | Consent-gate tests                                       |
+| T-11 | Replay of mutation requests                                                      | P1    | L    | Idempotency keys; TLS everywhere (platform default, cleartext blocked NFR-SEC-006)                                                                          | API tests                                                |
+| T-12 | Calculation tampering / silent formula drift (integrity of A5)                   | MVP   | M    | Formula versioning + vectors + determinism (INV-5); CI blocks vector changes without review; runs persisted with input hash                                 | CI gates; vector review rule                             |
+| T-13 | Debug builds with prod data / demo bypasses shipped                              | P1    | M    | Environment separation (EAS profiles), release-build config diff check (NFR-SEC-006)                                                                        | CI check                                                 |
+| T-14 | Supply-chain: malicious/compromised npm dependency                               | MVP   | M    | Lockfile, pnpm audit + Dependabot, dependency-addition rule (AI_AGENT_RULES #12), minimal dep policy                                                        | CI                                                       |
+| T-15 | Screenshot/app-switcher exposure of balances                                     | P1    | L    | App-switcher blur on sensitive screens (expo-screen-capture / native flag); MVP: accepted risk (demo data)                                                  | Manual                                                   |
+| T-16 | Excessive analytics = privacy liability                                          | MVP   | L    | No product analytics in MVP; event taxonomy with minimization rules before any adoption (NFR-PRIV-004)                                                      | Event-schema review                                      |
+| T-17 | Unauthorized export / erasure failures                                           | P1    | M    | Re-auth for export/delete; erasure verified by absence tests (NFR-PRIV-003); audit events                                                                   | Erasure test                                             |
+| T-18 | AI agent introduces security regression (secret commit, RLS bypass, logging PII) | MVP   | H    | AI_AGENT_RULES #9/10; gitleaks in CI; review checklist security section; RLS tests as regression net                                                        | CI + human review                                        |
 
 ## Accepted risks (explicit, revisit at P1 gate)
+
 - AR-1: MVP local DB not app-layer encrypted beyond OS FS encryption (T-01) — demo data only in hackathon; upgrade path costed in ADR-0006.
 - AR-2: No app-lock in MVP — same rationale.
 - AR-3: No certificate pinning planned even at P1 (Supabase managed TLS; pinning's operational risk > benefit at this scale) — revisit if threat profile changes.
 
 ## Out of scope (documented so nobody pretends otherwise)
+
 Rooted-device resistance, anti-tampering/obfuscation beyond store defaults, server-side HSM custody (no money movement exists), formal pen-test (post-funding item).
