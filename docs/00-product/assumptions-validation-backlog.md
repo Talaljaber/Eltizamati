@@ -1,0 +1,42 @@
+# Assumptions Registry & Validation Backlog
+
+**Rule:** anything the product or engine relies on that is not verified fact lives here with an ID. Code and docs cite these IDs. When an assumption is validated or falsified, update its status here — do not delete rows.
+
+**Status values:** `OPEN` (unvalidated), `VALIDATED`, `FALSIFIED` (with follow-up action), `ACCEPTED-FOR-PROTOTYPE` (consciously unverified for hackathon; must revalidate before production).
+
+## Assumptions (ASM)
+
+| ID | Assumption | Depends on it | Status | Validation route |
+|----|-----------|----------------|--------|------------------|
+| ASM-001 | Multi-obligation borrowers in Jordan lack and want a unified view | Whole product premise | OPEN | RES-007 interviews |
+| ASM-002 | Variable-rate repricing with unchanged installment producing residual balances is a real, present pattern in Jordanian retail lending | Headline demo story, balloon engine priority | OPEN | Finance teammates via bank contacts / real statements (RES-006) |
+| ASM-003 | CRIF Jordan and future Open Banking APIs expose (approximately) the fields listed in SRC-1 §9.1–9.2 | Provider contract shapes | ACCEPTED-FOR-PROTOTYPE | RES-002 sandbox docs when available |
+| ASM-004 | Users can and will manually enter obligation data accurately enough for useful calculation | Manual-entry provider value | OPEN | Hallway test with real statement (RES-006) |
+| ASM-005 | 3-decimal JOD display is expected for official figures; rounded display acceptable for estimates | Formatting rules BR-CALC-014 | ACCEPTED-FOR-PROTOTYPE | User feedback post-demo |
+| ASM-006 | Hackathon judges reward engineering quality and honesty about mocks | Effort allocation | OPEN | RES-001 rubric |
+| ASM-007 | Device floor Android 8.0+ / iOS 15.5+ (current Expo SDK defaults) is acceptable for target users | Build config | ACCEPTED-FOR-PROTOTYPE | Market device stats if productionizing |
+| ASM-008 | Monthly payment frequency, payment-in-arrears, and nominal-annual-rate/12 periodic compounding are acceptable *generic* modeling conventions when contract specifics are unknown | Every estimate the engine produces | ACCEPTED-FOR-PROTOTYPE (all outputs labeled estimates) | RES-004 comparison against ≥2 real bank schedules |
+| ASM-009 | HALF_UP rounding at 3 dp for payment amounts approximates local bank behavior | Engine rounding policy | ACCEPTED-FOR-PROTOTYPE | RES-004 |
+| ASM-010 | Murabaha contracts in Jordan fix the total sale price at contract signing, making progress display safe without institution-specific conventions | Islamic MVP scope | OPEN (high confidence) | Finance teammate confirmation (RES-008) |
+| ASM-011 | Credit-card interest approximated as `balance × APR/12` monthly is directionally honest for payoff simulation when labeled an estimate (real issuers use daily accrual on average daily balance) | Card simulator (stretch) | ACCEPTED-FOR-PROTOTYPE | RES-004 card statement comparison |
+| ASM-012 | Jordan PDPL (Law 24/2023) allows this product category with consent-based processing; no license needed for non-advisory information display | Legal viability | OPEN | RES-003 legal review |
+| ASM-013 | The demo can run fully offline on one Android device (no venue-network dependency) | Demo reliability plan | VALIDATED by architecture choice (local-first MVP) | — |
+
+## Research / validation tasks (RES)
+
+| ID | Task | Owner (suggested) | Blocking? | Due |
+|----|------|-------------------|-----------|-----|
+| RES-001 | Obtain Rally Hackathon judging criteria, submission format, demo constraints | Talal | Sizes MVP polish vs. breadth | Before feature freeze |
+| RES-002 | Confirm availability/scope of CRIF sandbox and any Open Banking sandbox (JoPACC/CBJ ecosystem) — in writing | Business teammate | Only for stretch integration | Hackathon week |
+| RES-003 | Legal read on PDPL consent requirements + disclaimer wording (Arabic + English) | Business teammate + counsel if available | Production only | Post-hackathon |
+| RES-004 | Obtain ≥2 real amortization schedules (1 conventional variable-rate, 1 card statement) and compare engine outputs; record deltas | Finance teammates | Blocks removing "unvalidated" caveat from engine | Post-MVP, pre-production |
+| RES-005 | Brand identity: name lockup (incl. Arabic wordmark التزاماتي), palette, typography | Design teammate | Non-blocking (neutral tokens ship) | Demo polish window |
+| RES-006 | Collect 2–3 anonymized statements (conventional, Murabaha, card) to validate manual-entry fields | Finance teammates | Improves ASM-004 | Hackathon prep |
+| RES-007 | 3–5 PER-1 interviews | Product teammate | Validates ASM-001/002 resonance | Hackathon prep |
+| RES-008 | 2 PER-3 (Islamic banking customer) interviews + Murabaha terminology check | Product teammate | Validates ASM-010, terminology map | Hackathon prep |
+| RES-009 | Native-speaker review of all Arabic UI copy and glossary | Product teammate | Blocks demo in Arabic | Before demo rehearsal |
+| RES-010 | Verify Rally rules on pre-written code/docs (is this KB permissible as pre-work?) | Talal | Could constrain repo usage | ASAP |
+
+## Prototype-permitted assumptions (Phase-6 gate)
+
+For the hackathon build specifically, the following are consciously accepted without validation: ASM-003, ASM-005, ASM-007, ASM-008, ASM-009, ASM-011. Each is (a) labeled in-product as estimate/convention where user-visible, and (b) carried as a `LIMITATION` note in the calculation explanation screen. **None of these may survive unvalidated into a production release** — see readiness scorecard.
