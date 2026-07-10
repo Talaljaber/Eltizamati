@@ -1,6 +1,7 @@
 # Calculation Test Vectors
 
-**Format & process:** vectors are JSON files in `packages/finance-engine/vectors/`, loaded by the test suite. Each vector: `id, formulaId, version, description, inputs, expected, tolerance, source ('analytical' | 'finance-team' | 'bank-schedule'), reviewedBy`.
+**Format & process:** vectors are JSON files in `packages/finance-engine/vectors/`, loaded by the test suite. Each vector: `id, formulaId, version, description, inputs, asOf, expected, tolerance, source ('analytical' | 'finance-team' | 'bank-schedule'), reviewedBy`.
+**`asOf` field (required):** all vectors carry an explicit `asOf: LocalDate` so the engine never reads the system clock and tests are reproducible on any date. For TV-30x (demo-seed vectors), `asOf` equals the fixed `demoDate` constant declared in `packages/demo-data/src/constants.ts` — finance teammates **must use this same date** in their spreadsheets. Changing `demoDate` is a breaking change requiring a vector version bump and new teammate sign-off.
 **Integrity rule:** the engine must never be the source of its own expected values. Expected values come from (a) closed-form analytical results, or (b) independent spreadsheet computation by finance teammates, or (c) real bank schedules (RES-004). Vectors marked `PENDING-FINANCE` below ship as structure with expectations to be filled by teammates before the engine's caveat can be softened.
 
 ## Family TV-1xx — `amortization.v1` analytical anchors (source: analytical)
@@ -26,6 +27,7 @@
 ## Family TV-3xx — Demo seed loan (⭐ the numbers judges will see; source: finance-team)
 
 Seed: P=20,000 JOD, 84 months, start 2024-01-15, r=7.5% (months 1–14) → 9.25% (effective month 15), installment unchanged, 30 months elapsed at demo date, all installments paid on time.
+**`asOf` for this family: `packages/demo-data/src/constants.ts → DEMO_DATE`** (a fixed `LocalDate` constant, currently `2026-07-10`). Finance teammates use this exact date in their spreadsheets. Tests call `buildDemoSeed({ demoDate: DEMO_DATE })` before running the engine. Changing `DEMO_DATE` requires re-signing all TV-30x expected values.
 
 | ID | Assertion |
 |----|-----------|

@@ -63,7 +63,7 @@ All screens: RTL-mirrored, a11y per NFR-A11Y-*, one primary CTA.
 - Traces: FR-OBL-004, US-007, BR-CALC-020.
 
 ### SCR-OBL-DETAIL-CARD
-- **Purpose:** card position at a glance. **Primary:** "Payoff simulator" (stretch) else "Log payment".
+- **Purpose:** card position at a glance. **Primary action:** "Payoff simulator" → SCR-SIM-CARD, else "Log payment".
 - Sections: balance vs limit (utilization ring + text equivalent), available credit, statement block (statement balance, min payment + TERM-015 caveat inline, due date), rates & fees (unknowns explicit), payments.
 - Traces: FR-OBL-005, US-008.
 
@@ -115,6 +115,13 @@ All screens: RTL-mirrored, a11y per NFR-A11Y-*, one primary CTA.
 ### SCR-INS-CENTER — Insights center
 - Purpose: review everything the app noticed. Content: grouped by day; severity icon+text (never color alone); "why did I get this?" line; read state; deep links. States: E "all calm" state (positive, meaningful — PRIN-4). Traces: FR-INS-001…004, US-012.
 
+### SCR-SIM-CARD — Card payoff simulator ⭐ (MVP, milestone M7)
+- **Purpose:** show total cost of a card balance under minimum-only vs. a fixed or custom payment amount. **Primary action:** "Calculate".
+- Content: inputs (payment strategy picker: minimum / fixed amount / custom; APR pre-filled from card record with edit option) · result: months to payoff, total finance charges, total paid, savings vs minimum-only · side-by-side comparison table · **"payment doesn't cover monthly charges" warning state** when input payment ≤ first-period finance charge (`neverPaysOff` result from `cardPayoff.v1`).
+- States: pre-calculation (inputs only) · result · neverPaysOff warning · missing APR/balance → refusal banner with "add data" CTA.
+- Assumption note rendered: monthly vs daily accrual caveat (ASM-011 text; see financial-calculation-spec.md §4.6).
+- Traces: FR-SIM-004, US-013, `cardPayoff.v1`, TV-6xx.
+
 ### SCR-SET — Settings
 - Language, appearance of legal acknowledgments (versions/dates — FR-SET-002), data sources → SCR-DATA-STATUS, reset demo (demo mode), erase all data (double confirm — US-011), about/version, export (stretch).
 
@@ -125,7 +132,6 @@ All screens: RTL-mirrored, a11y per NFR-A11Y-*, one primary CTA.
 ### SCR-LEARN-TOPIC — education topic page: definition-first, JOD example, related terms, contract-specific caveats; content version footer (FR-EDU-004).
 
 ## Stretch screens
-- **SCR-SIM-CARD** — card payoff simulator (US-013; includes "payment doesn't cover charges" warning state).
 - **SCR-EXPORT** — export summary (US-015).
 - **SCR-SCEN-SAVED** — saved scenarios list (FR-SIM-005).
 
@@ -138,6 +144,7 @@ All screens: RTL-mirrored, a11y per NFR-A11Y-*, one primary CTA.
 | SCR-OBL-DETAIL-* | ✅ | — | ✅ | ✅ | ✅ (unknown fields, refused calc) |
 | SCR-RATE-IMPACT | ✅ | — | ✅ | — | ✅ (confidence banner) |
 | SCR-SIM-LOAN | — | ✅ (pre-calc) | ✅ | — | ✅ (LOW-confidence banner) |
+| SCR-SIM-CARD | — | ✅ (pre-calc) | ✅ (refusal / neverPaysOff) | — | ✅ (missing APR/balance) |
 | SCR-INS-CENTER | ✅ | ✅ | — | — | — |
 | SCR-DATA-STATUS | ✅ | — | — | ✅ | — |
 | Forms (ADD/PAY/RATE) | — | — | ✅ (validation) | — | — |
