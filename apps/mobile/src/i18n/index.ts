@@ -1,25 +1,48 @@
 /* eslint-disable no-console */
-import i18n from 'i18next'
+import i18n, { LanguageDetectorAsyncModule } from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import { I18nManager } from 'react-native'
 import * as Updates from 'expo-updates'
 import { getLocales } from 'expo-localization'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import en from './translations/en.json'
 import ar from './translations/ar.json'
 
-// Fallback to English if device locale is not available
-const deviceLanguage = getLocales()[0]?.languageCode ?? 'en'
-const initialLang = ['en', 'ar'].includes(deviceLanguage) ? deviceLanguage : 'en'
+const LANGUAGE_KEY = '@Eltizamati:language'
+
+const languageDetector: LanguageDetectorAsyncModule = {
+  type: 'languageDetector',
+  async: true,
+  detect: (callback) => {
+    AsyncStorage.getItem(LANGUAGE_KEY)
+      .then((saved) => {
+        if (saved && ['en', 'ar'].includes(saved)) {
+          callback(saved)
+        } else {
+          const deviceLanguage = getLocales()[0]?.languageCode ?? 'en'
+          callback(['en', 'ar'].includes(deviceLanguage) ? deviceLanguage : 'en')
+        }
+      })
+      .catch(() => {
+        callback('en')
+      })
+  },
+  init: () => {},
+  cacheUserLanguage: (lng) => {
+    AsyncStorage.setItem(LANGUAGE_KEY, lng).catch(console.error)
+  },
+}
 
 i18n
+  .use(languageDetector)
   .use(initReactI18next)
   .init({
+    compatibilityJSON: 'v3',
     resources: {
       en: { translation: en },
       ar: { translation: ar },
     },
-    lng: initialLang,
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false, // React already safeguards from XSS

@@ -1,5 +1,6 @@
-import { Tabs } from 'expo-router'
+import { Tabs, Link } from 'expo-router'
 import { useTranslation } from 'react-i18next'
+import { Pressable, Text } from 'react-native'
 
 export default function TabLayout() {
   const { t } = useTranslation()
@@ -10,6 +11,13 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t('tabs.home'),
+          headerRight: () => (
+            <Link href="/settings/" asChild>
+              <Pressable accessibilityRole="button" accessibilityLabel={t('navigation.settings')} style={{ marginRight: 16 }}>
+                <Text style={{ fontSize: 24 }}>⚙️</Text>
+              </Pressable>
+            </Link>
+          ),
         }}
       />
       <Tabs.Screen
