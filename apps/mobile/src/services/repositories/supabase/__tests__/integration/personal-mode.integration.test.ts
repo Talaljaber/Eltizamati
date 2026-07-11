@@ -1,0 +1,311 @@
+/**
+ * Real integration suite against a live local Supabase stack — the
+ * "temporary dev-only harness ... labeled as such" the Phase 4 Exit Demo
+ * explicitly permits in place of polished auth screens. Requires
+ * `pnpm run supabase:start` (Docker) first; run via `pnpm run test:integration`.
+ * Never part of `pnpm test`/`pnpm check` — see jest.config.js.
+ *
+ * Exercises PHASE-04 exit criteria 1/2/3/5 for real: sign-up (local dev has
+ * `enable_confirmations = false`, so "verify" is auto-satisfied) → sign-in →
+ * write every repository → read back → cross-user isolation via the actual
+ * client (not SQL) → sign-out → sign-in → session-restored read.
+ */
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import {
+  brandId,
+  isOk,
+  isErr,
+  userEntered,
+  Money,
+  Rate,
+  type UserProfile,
+  type Obligation,
+  type Payment,
+  type RatePeriod,
+  type Insight,
+  type ConsentRecord,
+  type CalculationRun,
+} from '@eltizamati/domain'
+import type { Database } from '../../../../../core/supabase/database.types'
+import { SupabaseUserProfileRepository } from '../../user-profile-repository'
+import { SupabaseObligationRepository } from '../../obligation-repository'
+import { SupabasePaymentRepository } from '../../payment-repository'
+import { SupabaseRatePeriodRepository } from '../../rate-period-repository'
+import { SupabaseInsightRepository } from '../../insight-repository'
+import { SupabaseConsentRepository } from '../../consent-repository'
+import { SupabaseCalculationRunRepository } from '../../calculation-run-repository'
+
+// Supabase's well-known fixed local-dev anon key (supabase/config.toml default) —
+// not a secret, identical for every `supabase start` on this machine.
+const LOCAL_URL = 'http://127.0.0.1:54321'
+const LOCAL_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+
+/** Node has no SecureStore — an in-memory map is sufficient for this test's session persistence. */
+function makeInMemoryStorage(): {
+  getItem: (key: string) => Promise<string | null>
+  setItem: (key: string, value: string) => Promise<void>
+  removeItem: (key: string) => Promise<void>
+} {
+  const store = new Map<string, string>()
+  return {
+    getItem: (key) => Promise.resolve(store.get(key) ?? null),
+    setItem: (key, value) => {
+      store.set(key, value)
+      return Promise.resolve()
+    },
+    removeItem: (key) => {
+      store.delete(key)
+      return Promise.resolve()
+    },
+  }
+}
+
+function makeTestClient(): SupabaseClient<Database> {
+  return createClient<Database>(LOCAL_URL, LOCAL_ANON_KEY, {
+    auth: { storage: makeInMemoryStorage(), autoRefreshToken: false, persistSession: true },
+  })
+}
+
+interface SyntheticUser {
+  readonly userId: string
+  readonly email: string
+  readonly password: string
+}
+
+async function signUpSyntheticUser(
+  client: SupabaseClient<Database>,
+  tag: string,
+): Promise<SyntheticUser> {
+  const email = `phase4-${tag}-${Date.now()}-${Math.random().toString(36).slice(2)}@eltizamati.test`
+  const password = 'correct-horse-battery-staple'
+  const { data, error } = await client.auth.signUp({ email, password })
+  // Test-setup fail-fast, not application error handling — ADR-0014's
+  // AppError taxonomy governs app code paths, not beforeAll() plumbing.
+  // eslint-disable-next-line no-restricted-syntax
+  if (error !== null) throw new Error(`signUp failed for ${tag}: ${error.message}`)
+  if (data.session === null) {
+    // eslint-disable-next-line no-restricted-syntax
+    throw new Error(
+      `signUp for ${tag} did not return a session — is enable_confirmations left on in supabase/config.toml?`,
+    )
+  }
+  return { userId: data.session.user.id, email, password }
+}
+
+describe('Phase 4 personal-mode integration (live local Supabase)', () => {
+  let clientA: SupabaseClient<Database>
+  let clientB: SupabaseClient<Database>
+  let userA: SyntheticUser
+  let userB: SyntheticUser
+  let obligationId: string
+
+  beforeAll(async () => {
+    clientA = makeTestClient()
+    clientB = makeTestClient()
+    userA = await signUpSyntheticUser(clientA, 'user-a')
+    userB = await signUpSyntheticUser(clientB, 'user-b')
+  }, 30_000)
+
+  afterAll(async () => {
+    // Best-effort cleanup: obligation delete cascades to every child table
+    // (loan_details/rate_periods/payments/calculation_runs/insights) per
+    // Phase 3's ON DELETE CASCADE. Re-sign-in first since a later test
+    // deliberately signs user A out.
+    await clientA.auth.signInWithPassword({ email: userA.email, password: userA.password })
+    if (obligationId !== undefined) {
+      await clientA.from('obligations').delete().eq('id', obligationId)
+    }
+    await clientA.from('consent_records').delete().eq('user_id', userA.userId)
+    await clientA.from('profiles').delete().eq('user_id', userA.userId)
+  }, 15_000)
+
+  it('user A completes sign-up -> write -> read across every repository (exit criteria 1, 2, 5)', async () => {
+    const now = new Date().toISOString()
+    const userId = brandId<'user'>(userA.userId)
+
+    // ── UserProfile ──
+    const profileRepo = new SupabaseUserProfileRepository(clientA)
+    const profile: UserProfile = {
+      userId,
+      locale: 'en',
+      dataMode: 'personal',
+      createdAt: now,
+      updatedAt: now,
+    }
+    expect(isOk(await profileRepo.save(profile))).toBe(true)
+    const readProfile = await profileRepo.get(userId)
+    expect(isOk(readProfile)).toBe(true)
+    if (isOk(readProfile)) expect(readProfile.value.locale).toBe('en')
+
+    // ── Consent (exit criterion 5) ──
+    const consentRepo = new SupabaseConsentRepository(clientA)
+    const consent: ConsentRecord = {
+      id: brandId<'consentRecord'>(crypto.randomUUID()),
+      userId,
+      docType: 'privacy-policy',
+      version: 'v1',
+      locale: 'en',
+      acknowledgedAt: now,
+    }
+    expect(isOk(await consentRepo.acknowledge(consent))).toBe(true)
+    const consentStatus = await consentRepo.status(userId)
+    expect(isOk(consentStatus)).toBe(true)
+    if (isOk(consentStatus)) {
+      expect(
+        consentStatus.value.some((c) => c.docType === 'privacy-policy' && c.version === 'v1'),
+      ).toBe(true)
+    }
+
+    // ── Obligation (conventionalLoan) + RatePeriod ──
+    const obligationRepo = new SupabaseObligationRepository(clientA)
+    const ratePeriodRepo = new SupabaseRatePeriodRepository(clientA)
+    const oblId = brandId<'obligation'>(crypto.randomUUID())
+    obligationId = oblId
+
+    const obligation: Obligation = {
+      id: oblId,
+      userId,
+      kind: 'conventionalLoan',
+      nickname: 'Integration Test Loan',
+      institution: { name: 'Test Bank' },
+      currency: 'JOD',
+      openedDate: '2024-01-15' as Obligation['openedDate'],
+      provenance: userEntered(undefined, now).provenance,
+      createdAt: now,
+      updatedAt: now,
+      loanDetails: {
+        originalPrincipal: userEntered(Money.of('20000', 'JOD'), now),
+        installment: userEntered(Money.of('307', 'JOD'), now),
+        rateType: 'fixed',
+        ratePeriods: [],
+        termMonths: userEntered(84, now),
+        startDate: '2024-01-15' as Obligation['openedDate'],
+        maturityDate: '2031-01-15' as Obligation['openedDate'],
+        paymentFrequency: 'monthly',
+      },
+    }
+    expect(isOk(await obligationRepo.save(obligation))).toBe(true)
+
+    const period: RatePeriod = {
+      id: brandId<'ratePeriod'>(crypto.randomUUID()),
+      obligationId: oblId,
+      annualRate: Rate.fromPercent('7.5'),
+      effectiveFrom: '2024-01-15' as RatePeriod['effectiveFrom'],
+      provenance: userEntered(undefined, now).provenance,
+      createdAt: now,
+    }
+    expect(isOk(await ratePeriodRepo.append(period))).toBe(true)
+
+    const readObligation = await obligationRepo.get(oblId)
+    expect(isOk(readObligation)).toBe(true)
+    if (isOk(readObligation) && readObligation.value.kind === 'conventionalLoan') {
+      expect(readObligation.value.loanDetails.originalPrincipal.value.toStorageString()).toBe(
+        '20000',
+      )
+      expect(readObligation.value.nickname).toBe('Integration Test Loan')
+    }
+
+    const history = await ratePeriodRepo.historyFor(oblId)
+    expect(isOk(history)).toBe(true)
+    if (isOk(history)) expect(history.value).toHaveLength(1)
+
+    // ── Payment ──
+    const paymentRepo = new SupabasePaymentRepository(clientA)
+    const payment: Payment = {
+      id: brandId<'payment'>(crypto.randomUUID()),
+      obligationId: oblId,
+      userId,
+      date: '2024-02-15' as Payment['date'],
+      amount: Money.of('307', 'JOD'),
+      provenance: userEntered(undefined, now).provenance,
+      createdAt: now,
+    }
+    expect(isOk(await paymentRepo.log(payment))).toBe(true)
+    const payments = await paymentRepo.listFor(oblId)
+    expect(isOk(payments)).toBe(true)
+    if (isOk(payments)) expect(payments.value).toHaveLength(1)
+
+    // ── CalculationRun ──
+    const runRepo = new SupabaseCalculationRunRepository(clientA)
+    const run: CalculationRun = {
+      id: brandId<'calculationRun'>(crypto.randomUUID()),
+      userId,
+      obligationId: oblId,
+      formulaId: 'amortization.v1',
+      formulaVersion: 1,
+      asOf: '2026-07-01' as CalculationRun['asOf'],
+      inputsSnapshot: { principal: '20000' },
+      inputsHash: 'test-hash',
+      outcome: { kind: 'result', confidence: 'high', resultSnapshot: { residual: '19693' } },
+      assumptions: [],
+      calculatedAt: now,
+    }
+    expect(isOk(await runRepo.persist(run))).toBe(true)
+    const latestRun = await runRepo.latestFor(oblId, 'amortization.v1')
+    expect(isOk(latestRun)).toBe(true)
+    if (isOk(latestRun)) expect(latestRun.value?.id).toBe(run.id)
+
+    // ── Insight ──
+    const insightRepo = new SupabaseInsightRepository(clientA)
+    const insight: Insight = {
+      id: brandId<'insight'>(crypto.randomUUID()),
+      userId,
+      ruleId: 'integration.test.rule',
+      obligationId: oblId,
+      severity: 'info',
+      titleKey: 'insight.title',
+      bodyKey: 'insight.body',
+      triggerHash: 'trigger-1',
+      createdAt: now,
+    }
+    expect(isOk(await insightRepo.raise(insight))).toBe(true)
+    const insights = await insightRepo.list(userId)
+    expect(isOk(insights)).toBe(true)
+    if (isOk(insights)) expect(insights.value.some((i) => i.id === insight.id)).toBe(true)
+  }, 30_000)
+
+  it('cross-user isolation holds through the client, not just SQL (exit criterion 3)', async () => {
+    const obligationRepoB = new SupabaseObligationRepository(clientB)
+    const insightRepoB = new SupabaseInsightRepository(clientB)
+    const consentRepoB = new SupabaseConsentRepository(clientB)
+
+    const crossUserGet = await obligationRepoB.get(brandId(obligationId))
+    expect(isErr(crossUserGet)).toBe(true)
+
+    const insightsB = await insightRepoB.list(brandId(userB.userId))
+    expect(isOk(insightsB)).toBe(true)
+    if (isOk(insightsB)) expect(insightsB.value).toHaveLength(0)
+
+    const consentB = await consentRepoB.status(brandId(userB.userId))
+    expect(isOk(consentB)).toBe(true)
+    if (isOk(consentB)) expect(consentB.value).toHaveLength(0)
+  }, 15_000)
+
+  it("sign-out then sign-in restores a session that reads user A's own data (exit criterion 1)", async () => {
+    const obligationRepo = new SupabaseObligationRepository(clientA)
+
+    const { error: signOutError } = await clientA.auth.signOut()
+    expect(signOutError).toBeNull()
+
+    const { data: sessionAfterSignOut } = await clientA.auth.getSession()
+    expect(sessionAfterSignOut.session).toBeNull()
+
+    // Personal mode is honestly unavailable without a session — RLS denies
+    // reads for an anon-role client, matching the "no fake offline/anon
+    // access" requirement (ADR-0017 §4).
+    const resultWhileSignedOut = await obligationRepo.get(brandId(obligationId))
+    expect(isErr(resultWhileSignedOut)).toBe(true)
+
+    const { error: signInError } = await clientA.auth.signInWithPassword({
+      email: userA.email,
+      password: userA.password,
+    })
+    expect(signInError).toBeNull()
+
+    const resultAfterSignIn = await obligationRepo.get(brandId(obligationId))
+    expect(isOk(resultAfterSignIn)).toBe(true)
+    if (isOk(resultAfterSignIn))
+      expect(resultAfterSignIn.value.nickname).toBe('Integration Test Loan')
+  }, 15_000)
+})

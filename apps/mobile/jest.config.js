@@ -1,6 +1,10 @@
 module.exports = {
   preset: 'jest-expo',
   setupFilesAfterEnv: ['<rootDir>/jest-setup.js'],
+  // Integration tests need a live local Supabase stack (`pnpm supabase:start`)
+  // and are run separately via `test:integration` — excluded here so
+  // `pnpm test`/`pnpm check` stay Docker-independent (Phase 4).
+  testPathIgnorePatterns: ['/node_modules/', '\\.integration\\.test\\.ts$'],
   // Transform all packages using non-standard JS (Flow types, JSX, ESM).
   //
   // Windows + pnpm path issue:
