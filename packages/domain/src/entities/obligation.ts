@@ -13,7 +13,10 @@
 
 import type { Id, LocalDate } from '../value-objects/id.js'
 import type { Money, Rate } from '../value-objects/money.js'
-import type { Sourced } from '../value-objects/provenance.js'
+import type { Percentage } from '../value-objects/percentage.js'
+import type { CardFee } from '../value-objects/fee.js'
+import type { Provenance, Sourced } from '../value-objects/provenance.js'
+import type { RatePeriod } from './rate-period.js'
 
 // ─── Obligation kind (the discriminant) ──────────────────────────────────────
 
@@ -25,18 +28,33 @@ export type ObligationKind =
   | 'creditCard'
   | 'genericFacility'
 
+// ─── Institution (structured — PHASE-02 decision, domain-model.md §3.1) ──────
+
+export interface Institution {
+  readonly name: string
+  readonly id?: string
+}
+
 // ─── Shared base ─────────────────────────────────────────────────────────────
 
 export interface ObligationBase {
   readonly id: Id<'obligation'>
-  readonly userId: string // localProfileId in MVP, auth.uid() in P1 (database-schema.md §1)
+  /**
+   * Mode-neutral owner identifier — never `auth.uid()` directly. Demo mode
+   * uses a fixed, non-authenticated sentinel that never reaches Supabase;
+   * personal mode's Supabase repository maps this to/from `auth.uid()` at
+   * the persistence boundary. See PHASE-02-DECISION-LOG.md §4.
+   */
+  readonly userId: Id<'user'>
   readonly kind: ObligationKind
   readonly nickname: string
-  readonly institutionName: string
+  readonly institution: Institution
   readonly currency: string // 'JOD' in MVP
   readonly openedDate: LocalDate
   readonly closedDate?: LocalDate
   readonly notes?: string
+  /** Record-level provenance (data-provenance.md §1) — covers non-sourced metadata fields. */
+  readonly provenance: Provenance
   readonly createdAt: string
   readonly updatedAt: string
 }
@@ -69,6 +87,8 @@ export interface ConventionalLoanDetails {
   readonly outstandingBalance?: Sourced<Money>
   readonly installment: Sourced<Money>
   readonly rateType: RateType
+  /** Append-only rate history (≥1 entry) — BR-OBL-002; validate with `validateRatePeriods`. */
+  readonly ratePeriods: readonly RatePeriod[]
   readonly termMonths: Sourced<number>
   readonly startDate: LocalDate
   readonly maturityDate: LocalDate
@@ -91,7 +111,7 @@ export interface MurabahaDetails {
   readonly assetCost: Sourced<Money>
   readonly disclosedProfit: Sourced<Money>
   readonly installment: Sourced<Money>
-  readonly termMonths: number
+  readonly termMonths: Sourced<number>
   readonly startDate: LocalDate
   /** Display-only — not used in calculations (BR-CALC-020). */
   readonly profitRateDisclosed?: Rate
@@ -104,19 +124,28 @@ export interface MurabahaFinancing extends ObligationBase {
 
 // ─── Credit Card ─────────────────────────────────────────────────────────────
 
-export type MinPaymentRule =
-  { type: 'percentFloor'; percent: number; floorAmount: Money } | { type: 'fixed'; amount: Money }
+/**
+ * 3-variant minimum-payment rule (domain-model.md §3.4). `unknown` is a
+ * distinct, renderable state — it must never be silently coerced to zero
+ * (BR-CALC-016 in spirit; enforced by consumers, not representable otherwise
+ * here since there is no numeric fallback in this variant).
+ */
+export type MinimumPaymentRule =
+  | { readonly type: 'percent'; readonly value: Percentage; readonly floor?: Money }
+  | { readonly type: 'fixed'; readonly value: Money }
+  | { readonly type: 'unknown' }
 
 export interface CardDetails {
   readonly creditLimit: Sourced<Money>
   readonly currentBalance: Sourced<Money>
   readonly statementBalance?: Sourced<Money>
   readonly statementDate?: LocalDate
-  readonly minPaymentRule?: MinPaymentRule
+  readonly minimumPaymentRule?: MinimumPaymentRule
   readonly purchaseApr?: Sourced<Rate>
   readonly cashAdvanceApr?: Sourced<Rate>
   readonly dueDate?: LocalDate
   readonly graceDays?: number
+  readonly fees?: readonly CardFee[]
 }
 
 export interface CreditCard extends ObligationBase {
@@ -132,6 +161,9 @@ export interface GenericFacility extends ObligationBase {
 }
 
 // ─── Ijara / Diminishing Musharakah (P1 full support — FR-OBL-010) ───────────
+// Deliberately minimal — read-only facts only, no schedule/projection modeling
+// until contract-specific specs are validated with the finance team
+// (financial-calculation-spec.md §4.8). Do not over-model these (Known Risks).
 
 export interface IjaraFinancing extends ObligationBase {
   readonly kind: 'ijara'
