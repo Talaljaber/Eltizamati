@@ -16,7 +16,7 @@ export default defineConfig([
       '**/build/**',
       '**/*.generated.*',
       'apps/mobile/src/core/supabase/database.types.ts',
-      'supabase/.temp/**',
+      'supabase/**',
       // drizzle-kit output
       '**/drizzle/**',
       '**/*.d.ts',

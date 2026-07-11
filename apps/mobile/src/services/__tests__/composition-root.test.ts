@@ -3,6 +3,12 @@ import { QueryClient } from '@tanstack/react-query'
 import { createCompositionRoot } from '../composition-root'
 import { getSupabaseClient } from '../../core/supabase/client'
 import { SupabaseAuthService } from '../auth/supabase-auth-service'
+import { SupabaseObligationRepository } from '../repositories/supabase/obligation-repository'
+import { SupabasePaymentRepository } from '../repositories/supabase/payment-repository'
+import { SupabaseRatePeriodRepository } from '../repositories/supabase/rate-period-repository'
+import { SupabaseCalculationRunRepository } from '../repositories/supabase/calculation-run-repository'
+import { SupabaseInsightRepository } from '../repositories/supabase/insight-repository'
+import { SupabaseConsentRepository } from '../repositories/supabase/consent-repository'
 import { SupabaseUserProfileRepository } from '../repositories/supabase/user-profile-repository'
 
 jest.mock('../../core/supabase/client', () => ({
@@ -21,12 +27,12 @@ describe('createCompositionRoot', () => {
     if (isOk(result)) {
       expect(result.value.queryClient).toBeInstanceOf(QueryClient)
       expect(result.value.authService).toBeUndefined()
-      expect(result.value.userProfileRepository).toBeUndefined()
+      expect(result.value.repositories).toBeUndefined()
     }
     expect(getSupabaseClient).not.toHaveBeenCalled()
   })
 
-  it('personal mode constructs authService and userProfileRepository from the Supabase client', () => {
+  it('personal mode constructs authService and every repository from the Supabase client', () => {
     const fakeClient = { mockClient: true } as never
     jest.mocked(getSupabaseClient).mockReturnValue(ok(fakeClient))
 
@@ -35,7 +41,14 @@ describe('createCompositionRoot', () => {
     expect(isOk(result)).toBe(true)
     if (isOk(result)) {
       expect(result.value.authService).toBeInstanceOf(SupabaseAuthService)
-      expect(result.value.userProfileRepository).toBeInstanceOf(SupabaseUserProfileRepository)
+      const repos = result.value.repositories
+      expect(repos?.obligation).toBeInstanceOf(SupabaseObligationRepository)
+      expect(repos?.payment).toBeInstanceOf(SupabasePaymentRepository)
+      expect(repos?.ratePeriod).toBeInstanceOf(SupabaseRatePeriodRepository)
+      expect(repos?.calculationRun).toBeInstanceOf(SupabaseCalculationRunRepository)
+      expect(repos?.insight).toBeInstanceOf(SupabaseInsightRepository)
+      expect(repos?.consent).toBeInstanceOf(SupabaseConsentRepository)
+      expect(repos?.userProfile).toBeInstanceOf(SupabaseUserProfileRepository)
     }
   })
 

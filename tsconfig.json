@@ -24,5 +24,5 @@
     { "path": "./packages/finance-engine" },
     { "path": "./packages/demo-data" }
   ],
-  "exclude": ["node_modules", "apps"]
+  "exclude": ["node_modules", "apps", "supabase"]
 }

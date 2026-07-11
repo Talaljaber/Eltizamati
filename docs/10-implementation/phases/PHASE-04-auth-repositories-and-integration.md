@@ -40,7 +40,7 @@ ADR-0017 (mode behavior, offline contract) · ADR-0004 (TanStack Query + Zustand
 
 - **Application services/state:** composition root; query/mutation hooks foundation; AppError mapping.
 - **Data/backend:** repositories + mappers; deletion workflow (client + any required SQL function/Edge Function).
-- **Mobile UI:** three auth screens + onboarding account step + settings account section (sign-out, delete account) — all states, EN+AR.
+- **Mobile UI:** three auth screens + onboarding account step — all states, EN+AR. The settings _account section_ (sign-out, delete account button) moves to Phase 8 — see "Moved to Phase 8" below.
 - **Security:** SecureStore session storage; dependency-cruiser rule: only infrastructure imports supabase-js; no tokens in logs.
 - **Testing:** see below.
 - **Documentation:** system-architecture composition-root section confirmed real; STATUS.md; completion report.
@@ -98,6 +98,12 @@ Reviewer watches: create account → consent → add a row (via a temporary dev-
 - Highest-integration-risk phase (first network/auth surface). Contained by Phase 3's verified foundation and by demo mode's independence.
 - Email verification in local dev needs the Supabase local inbox (mailpit) — document the workflow.
 - Session/SecureStore adapter choices vary by Supabase SDK version — record the exact supported pattern used.
+
+## Moved to Phase 8
+
+**Settings _account section_ UI** (sign-out button, delete-account button/confirmation, in the SCR-SET screen) — moved to Phase 8, which already claims it: `PHASE-08-remaining-mvp-flows.md` line 24 lists "account section (Phase-4 hooks)" as part of its own SCR-SET completion criterion. Safe to postpone because it is a thin UI wrapper over Phase-4-owned primitives, not new auth/security surface: the auth session (`SupabaseAuthService`), the account-deletion Edge Function, and the query/mutation hook pattern it will call are all implemented and tested in Phase 4. Phase 8 is adding a button; Phase 4 is what makes that button correct and safe.
+
+This does **not** move the SCR-AUTH-SIGNIN / SCR-AUTH-SIGNUP / SCR-AUTH-RESET screens or the onboarding account-step wiring (In Scope #2) — those remain Phase 4's own scope and are not built as of this closure pass (see STATUS.md).
 
 ## Cuttable Work
 

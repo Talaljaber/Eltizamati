@@ -1,21 +1,127 @@
 {
   "common": {
     "toggleLanguage": "English",
-    "loading": "جارٍ التحميل…"
+    "loading": "جارٍ التحميل…",
+    "back": "رجوع",
+    "continue": "متابعة",
+    "skip": "تخطي",
+    "done": "تم",
+    "errorTitle": "حدث خطأ ما",
+    "retry": "حاول مجدداً"
   },
   "tabs": {
     "home": "الرئيسية",
     "obligations": "الالتزامات",
     "learn": "تعلّم"
   },
+  "navigation": {
+    "settings": "الإعدادات",
+    "notFound": "غير موجود"
+  },
   "home": {
     "greeting": "مرحباً، التزاماتي!",
-    "subtitle": "التزاماتك المالية، منظمة."
+    "subtitle": "التزاماتك المالية، منظمة.",
+    "demoWelcome": "استكشف لوحة التحكم التجريبية",
+    "demoSubtitle": "جميع الأرقام بيانات توضيحية. ليست حساباً حقيقياً.",
+    "totalLabel": "إجمالي الالتزامات الشهرية",
+    "totalPending": "الحساب قيد الانتظار",
+    "nextPaymentLabel": "الدفعة التالية",
+    "insightsTitle": "تنبيهات",
+    "noInsights": "لا توجد تنبيهات جديدة",
+    "viewAll": "عرض الكل"
   },
   "obligations": {
     "title": "الالتزامات",
     "emptyTitle": "لا توجد التزامات بعد",
-    "emptySubtitle": "الالتزامات التي تضيفها ستظهر هنا."
+    "emptySubtitle": "الالتزامات التي تضيفها ستظهر هنا.",
+    "filterAll": "الكل",
+    "filterLoan": "القروض",
+    "filterCard": "البطاقات",
+    "filterIslamic": "التمويل الإسلامي",
+    "loadingTitle": "جارٍ تحميل الالتزامات…",
+    "errorTitle": "تعذّر تحميل الالتزامات",
+    "obligationCount": "{{count}} التزام",
+    "obligationCount_plural": "{{count}} التزامات"
+  },
+  "obligationDetail": {
+    "title": "تفاصيل الالتزام",
+    "institution": "الجهة",
+    "opened": "تاريخ الفتح",
+    "currency": "العملة",
+    "kind": "النوع",
+    "status": "الحالة",
+    "provenance": "مصدر البيانات",
+    "loanSection": "تفاصيل القرض",
+    "originalPrincipal": "المبلغ الأصلي",
+    "installment": "القسط",
+    "term": "المدة",
+    "termMonths": "{{months}} شهر",
+    "rateType": "نوع الفائدة",
+    "rateTypeVariable": "متغير",
+    "rateTypeFixed": "ثابت",
+    "startDate": "تاريخ البدء",
+    "maturityDate": "تاريخ الاستحقاق",
+    "murabahaSection": "تفاصيل المرابحة",
+    "assetCost": "تكلفة الأصل",
+    "disclosedProfit": "الربح المُفصَح عنه",
+    "totalSalePrice": "إجمالي سعر البيع",
+    "cardSection": "تفاصيل البطاقة",
+    "creditLimit": "حد الائتمان",
+    "currentBalance": "الرصيد الحالي",
+    "utilization": "نسبة الاستخدام",
+    "minimumPayment": "الحد الأدنى للدفع",
+    "dueDate": "تاريخ الاستحقاق",
+    "ratePeriodCount": "{{count}} فترة فائدة",
+    "ratePeriodCount_plural": "{{count}} فترات فائدة",
+    "noRatePeriods": "لا توجد فترات فائدة مسجّلة",
+    "phaseNote": "سيتوفر عرض الحساب التفصيلي في تحديث قادم."
+  },
+  "onboarding": {
+    "languageTitle": "اختر لغتك",
+    "languageSubtitle": "يمكنك تغيير ذلك لاحقاً من الإعدادات.",
+    "english": "English",
+    "arabic": "العربية",
+    "introTitle": "اعرف كل التزام",
+    "introBody": "تتبّع القروض والتمويل الإسلامي وبطاقات الائتمان في مكان واحد صادق. كل رقم مُصنَّف حسب مصدره ومستوى دقته.",
+    "consentTitle": "الوضع التجريبي",
+    "consentBody": "يستخدم هذا التطبيق بيانات خيالية لأغراض توضيحية فقط. جميع الأرقام مخترعة — لا تمثّل حسابات حقيقية أو أرصدة فعلية أو نصائح مالية.",
+    "consentAcknowledge": "أفهم أن هذه بيانات توضيحية",
+    "modeTitle": "كيف تريد البدء؟",
+    "modeDemo": "استكشف ببيانات تجريبية",
+    "modeDemoSubtitle": "لا يلزم حساب. تحميل مسبق ببيانات خيالية واقعية.",
+    "modeManual": "أدخل بياناتي الخاصة",
+    "modeManualSubtitle": "أدخل التزاماتك يدوياً. متاح بعد الإطلاق.",
+    "modeManualBadge": "قريباً",
+    "modeAccount": "تسجيل الدخول / إنشاء حساب",
+    "modeAccountSubtitle": "تخزين آمن على السحابة مع ضوابط خصوصية كاملة. متاح بعد الإطلاق.",
+    "modeAccountBadge": "قريباً",
+    "startDemo": "ابدأ الاستكشاف"
+  },
+  "demo": {
+    "banner": {
+      "message": "بيانات توضيحية — ليست حسابات حقيقية."
+    },
+    "badge": "تجريبي"
+  },
+  "status": {
+    "onTrack": "على المسار",
+    "dueSoon": "يستحق قريباً",
+    "overdue": "متأخر",
+    "delinquent": "متعثر",
+    "attentionRequired": "يحتاج انتباهاً",
+    "dataStale": "البيانات قديمة",
+    "calculationIncomplete": "الحساب معلّق",
+    "notStarted": "لم يبدأ",
+    "completed": "مكتمل",
+    "unknown": "غير محدد"
+  },
+  "obligationKind": {
+    "conventionalLoan": "قرض تقليدي",
+    "murabaha": "مرابحة",
+    "creditCard": "بطاقة ائتمان",
+    "ijara": "إجارة",
+    "diminishingMusharakah": "مشاركة متناقصة",
+    "genericFacility": "تسهيل عام"
   },
   "learn": {
     "title": "تعلّم",
@@ -38,5 +144,19 @@
     "userEntered": "أدخله المستخدم",
     "estimate": "تقدير",
     "demo": "بيانات تجريبية"
+  },
+  "insights": {
+    "rateIncreased": {
+      "title": "ارتفعت الفائدة",
+      "body": "ارتفعت فائدتك من {{fromRate}}٪ إلى {{toRate}}٪."
+    },
+    "installmentUnchanged": {
+      "title": "القسط لم يتغير رغم ارتفاع الفائدة",
+      "body": "قسطك لا يزال {{installment}} دينار رغم ارتفاع الفائدة. قد يكون رصيدك المتبقي أعلى مما تتوقع."
+    },
+    "residualRisk": {
+      "title": "خطر الرصيد المتبقي",
+      "body": "بناءً على سجل دفعاتك والتغيير في الفائدة، قد يتجاوز توقع رصيدك الجدول الأصلي. الحساب قيد الانتظار."
+    }
   }
 }
