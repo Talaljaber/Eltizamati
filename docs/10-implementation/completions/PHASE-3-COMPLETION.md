@@ -1,0 +1,95 @@
+# Phase 3 Completion Report
+
+**Phase:** Phase 3 (Supabase Schema and Security Foundation)
+**Status:** Implementation complete; **verification partially blocked by this session's environment (no Docker)** — see §6. Not yet marked "Complete" in STATUS.md per this phase's own exit criteria.
+**Date:** 2026-07-12
+
+## 1. Overview
+
+Phase 3 implements `docs/05-data-api/database-schema.md` — frozen in Phase 2, extended in the Phase 3 readiness pass with §1.11's composite ownership foreign keys — as real Supabase migrations, RLS policies, and pgTAP tests. `supabase init` was run locally; `supabase/migrations/` contains 11 forward-only SQL files (one shared setup + one per table); `supabase/tests/database/` contains 3 pgTAP suites (68 assertions total); `.github/workflows/ci.yml` gained a `supabase` job that runs the full local stack (start → migrate → pgTAP → type-drift check) on GitHub-hosted runners, which have Docker preinstalled.
+
+**What could not be verified in this session:** this sandboxed environment has no Docker daemon (confirmed: `docker`/`docker ps` not found; only `wsl.exe` present, no Docker Desktop installed) and no local Postgres. The Supabase CLI itself works (fetched via `npx supabase`, v2.109.1), so `supabase init` succeeded, but every command that needs a running database (`supabase start`, `db reset`, `test db`, `gen types --local`) fails with a connection error in this session. This is recorded honestly below, not silently worked around — per this phase's own instruction: "Do not mark Phase 3 complete unless: fresh supabase db reset passes; pgTAP passes; generated types are diff-clean..."
+
+## 2. Migrations (`supabase/migrations/`)
+
+| File                                        | Table(s)           | Notes                                                                                                       |
+| ------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `20260712000000_extensions_and_helpers.sql` | —                  | `pgtap` extension; shared `set_updated_at()` trigger function                                               |
+| `20260712000001_profiles.sql`               | `profiles`         | PK = `user_id` (= `auth.uid()`)                                                                             |
+| `20260712000002_obligations.sql`            | `obligations`      | Base table; `UNIQUE (id, user_id)` — the composite-FK target for every child table                          |
+| `20260712000003_loan_details.sql`           | `loan_details`     | Composite FK only (no redundant single-column FK)                                                           |
+| `20260712000004_murabaha_details.sql`       | `murabaha_details` | BR-OBL-003 CHECK: `abs(asset_cost + disclosed_profit - total_sale_price) <= 0.005`                          |
+| `20260712000005_card_details.sql`           | `card_details`     | `minimum_payment_rule_json`/`fees_json` CHECK on the rule-type discriminant                                 |
+| `20260712000006_rate_periods.sql`           | `rate_periods`     | Partial unique index on `(obligation_id, effective_from) where superseded_by is null`                       |
+| `20260712000007_payments.sql`               | `payments`         | INV-2 CHECK + all-or-nothing allocation CHECK                                                               |
+| `20260712000008_calculation_runs.sql`       | `calculation_runs` | `outcome_kind` result/refused shape CHECK; composite FK + direct `auth.users` FK (nullable `obligation_id`) |
+| `20260712000009_insights.sql`               | `insights`         | FR-INS-004 dedup unique index; composite FK + direct `auth.users` FK                                        |
+| `20260712000010_consent_records.sql`        | `consent_records`  | No `obligation_id` — direct `auth.users` FK only                                                            |
+
+Every money/rate column is `NUMERIC(14,3)`/`NUMERIC(9,6)` — no floating-point column exists anywhere in the schema. Every user-owned table has non-null `user_id`. RLS is enabled and every policy created in the same migration that creates its table (no separate "add RLS later" migration). Composite ownership foreign keys (§1.11 of the schema doc) are declared inline in each child table's `create table` statement, not bolted on afterward.
+
+## 3. RLS policies
+
+Every table's SELECT/INSERT/UPDATE/DELETE policies match `database-schema.md` §4 exactly: simple `user_id = auth.uid()` ownership checks, no joins, no subqueries. Tables without an UPDATE or DELETE policy (`rate_periods` — append-only; `consent_records`/`profiles` — no client deletion; `calculation_runs`/`consent_records` — no client update) deny that operation to every role, including the owner, matching the frozen design's stated intent (append-only history, immutable calculation runs, service-role-only account deletion).
+
+## 4. Composite ownership foreign keys (§1.11)
+
+`obligations` carries `UNIQUE (id, user_id)`. Every child table with a required `obligation_id` (`loan_details`, `murabaha_details`, `card_details`, `rate_periods`, `payments`) declares **only** a composite FK `(obligation_id, user_id) → obligations (id, user_id)` — no redundant single-column FK, since the composite target already implies `obligation_id` must reference a real `obligations.id`. Tables with a **nullable** `obligation_id` (`calculation_runs`, `insights`) declare both the composite FK (checked only when `obligation_id` is set — Postgres `MATCH SIMPLE` skips it otherwise) and a direct `user_id → auth.users(id)` FK (always checked, covering the aggregate/obligation-agnostic case). This is exactly the design frozen in the readiness pass, implemented verbatim.
+
+## 5. pgTAP tests (`supabase/tests/database/`)
+
+| File                               | Assertions | Covers                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `10_rls_cross_user.sql`            | 43         | SELECT/INSERT/UPDATE/DELETE cross-user denial for every table with a two-user fixture; explicit checks that tables with no update/delete policy deny even the owner; a sanity check that the owner _can_ see/act on their own rows                                                                                                    |
+| `20_ownership_and_constraints.sql` | 14         | Composite-FK ownership-mismatch rejection (including the nullable-`obligation_id` case), BR-OBL-003 (Murabaha price consistency + CONV-5 tolerance), INV-2 (payment allocation sum + all-or-nothing), BR-OBL-002 (rate-period active-date uniqueness), FR-INS-004 (insight dedup), BR-CALC-016 (card rule-type CHECK)                 |
+| `30_account_deletion.sql`          | 11         | Full deletion-order cascade per §6 (delete `obligations` → children cascade via the composite FK's `ON DELETE CASCADE`; `consent_records`/`profiles` deleted explicitly), the exact §6 verification method (re-query every table for the deleted `user_id`, assert zero rows), and that a second user's rows are completely untouched |
+
+Total: 68 pgTAP assertions. Each file is self-contained (own `auth.users`/fixture rows, `begin`/`rollback`) so files can run in any order without interference.
+
+**Not executed in this session** (§6): these files were written and manually reviewed (parenthesis-balance-checked, cross-referenced against every migration's actual column list) but never run against a live Postgres, because none is available in this sandbox.
+
+## 6. What could not be verified locally, and why
+
+| Gate (from this phase's exit criteria)                         | Status                                                                                                    | Reason                                                                                                                                                                                                                                                                          |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase init`                                                | ✅ Done                                                                                                   | No Docker required                                                                                                                                                                                                                                                              |
+| Migrations written matching `database-schema.md`               | ✅ Done                                                                                                   | Static SQL authorship + manual review                                                                                                                                                                                                                                           |
+| `NUMERIC`, never floating-point                                | ✅ Done (verified by reading every column type)                                                           |                                                                                                                                                                                                                                                                                 |
+| Non-null `user_id` on every user-owned table                   | ✅ Done                                                                                                   |                                                                                                                                                                                                                                                                                 |
+| RLS + policies in the same migration as each table             | ✅ Done                                                                                                   |                                                                                                                                                                                                                                                                                 |
+| Composite ownership constraints for child tables               | ✅ Done                                                                                                   |                                                                                                                                                                                                                                                                                 |
+| pgTAP test files written, 2-user, every table, every operation | ✅ Done                                                                                                   |                                                                                                                                                                                                                                                                                 |
+| **Fresh `supabase db reset` passes**                           | ❌ **Not verified**                                                                                       | `supabase start` fails: no Docker daemon in this environment (`docker`/`docker ps`: command not found; only `wsl.exe` present, Docker Desktop not installed)                                                                                                                    |
+| **`supabase test db` (pgTAP) passes**                          | ❌ **Not verified**                                                                                       | Same — needs the running local stack                                                                                                                                                                                                                                            |
+| **Generated types diff-clean**                                 | ❌ **Not generated at all**                                                                               | `supabase gen types --local` needs the running stack; `--linked`/`--project-id` need a cloud project (not created — no cloud project link without explicit user approval, per this phase's instructions). `apps/mobile/src/core/supabase/database.types.ts` does not exist yet. |
+| `pnpm check` passes                                            | ✅ Verified — still green with `supabase/` present (depcruise only cruises `apps`/`packages`, unaffected) |                                                                                                                                                                                                                                                                                 |
+| **CI is green (live run)**                                     | ❌ **Not confirmed**                                                                                      | Requires a push; not performed without explicit approval (see §7)                                                                                                                                                                                                               |
+| Completion report + STATUS.md updated                          | ✅ This report; STATUS.md updated in the same change                                                      |                                                                                                                                                                                                                                                                                 |
+
+**Why this isn't a fabricated pass:** every unchecked box above requires either a Docker daemon (absent) or a push (not yet approved). Claiming green here would be exactly the kind of false verification this project's own culture (`AI_AGENT_RULES.md`, `DEFINITION_OF_DONE.md`) exists to prevent. The CI workflow's new `supabase` job is written to perform every one of these checks for real, because GitHub-hosted `ubuntu-latest` runners ship Docker preinstalled — once pushed, this job is the actual verification, not a local substitute for it.
+
+## 7. Outstanding steps before Phase 3 can be marked "Complete"
+
+1. **Push these commits** (this readiness-pass + Phase 3 commit set) to `origin/main` — requires explicit user approval, not performed automatically.
+2. **Observe the `supabase` CI job pass** on that push — this is where `db reset`, `test db`, and the type-drift check actually run against a real (CI-provisioned) Postgres.
+3. **Establish the `database.types.ts` baseline.** The type-drift check will fail on the very first run because no file is committed yet — this is intentional (it fails loudly rather than silently skipping the check). Whoever has Docker locally (or via a follow-up session with Docker access) should run `pnpm run supabase:gen-types` and commit the result once; every subsequent change is then a real drift check.
+4. Once 1–3 land, update `STATUS.md`'s Phase 3 status to "Complete" and re-run this report's §6 table with real (not "not verified") results.
+
+## 8. Out-of-scope items confirmed untouched
+
+Supabase mobile client, authentication, SecureStore, repositories/row-mappers, TanStack Query, UI, demo seed builders, finance formulas, SQLite — none of these were touched. `packages/demo-data` has zero references anywhere in `supabase/`; no `seed.sql` exists; bundled demo data is never inserted into Supabase, per ADR-0017 and `database-schema.md` §7.
+
+## 9. Commits
+
+- `dca2d83` — `fix: repair repo-wide pnpm check and CI ci:check script`
+- `7a3a1ac` — `fix(domain): upgrade inputsHash to real SHA-256; design composite ownership FKs`
+- `5240be5` — `docs: record Phase 3 readiness-pass evidence and correct pushed state`
+- `c5a9296` — `feat(supabase): Phase 3 schema, RLS, and pgTAP foundation`
+
+All four commits are local to the readiness-pass worktree branch, on top of the already-pushed `fdf25a0`. **Not yet pushed** — pending explicit user approval.
+
+## Honest completion assessment
+
+- **Is Phase 3's code complete?** Yes — every migration, RLS policy, composite-ownership constraint, and pgTAP test file specified in this phase's scope exists, matches `database-schema.md` column-for-column, and has been manually reviewed for correctness.
+- **Is Phase 3 verified?** Partially. `pnpm check` is genuinely green. The Supabase-specific gates (`db reset`, pgTAP execution, generated-types diff) could not be run in this sandboxed session (no Docker) and are not claimed as passing — they are the explicit next step, expected to run for real in CI once pushed.
+- **Should Phase 3 be marked "Complete" in STATUS.md?** No, not yet — per this phase's own instruction, it stays "In Progress" (implementation done, verification pending Docker/CI) until §7's steps 1–3 land.
