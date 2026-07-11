@@ -1,5 +1,12 @@
 # MVP Scope — Hackathon Build
 
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):**
+> **Personal mode** (real user data) requires an authenticated Supabase account; **Supabase Postgres is the only persistent source of truth for personal data in the MVP** — there is **no SQLite** financial database (postponed post-MVP: [FUTURE_LOCAL_FIRST_ROADMAP](../08-delivery/FUTURE_LOCAL_FIRST_ROADMAP.md)).
+> **Demo mode** works without authentication or network, from bundled deterministic in-memory seed data — the scripted demo remains airplane-mode-safe (§5a unchanged).
+> **Full offline personal mode is not MVP:** personal mode shows honest offline/error/retry states when Supabase is unreachable; no offline editing or sync is promised.
+> Account erasure = server-side deletion of all user rows + audit event (FR-AUTH-003); consent records for signed-in users are server-backed under RLS. Mock providers stay visibly labeled (C-07).
+> References below to "local-first", "SQLite as system of record", or auth/backend as cuttable week-3 work are superseded. The current execution plan is [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
+
 **Decision basis:** `docs/00-audit/01-critique-and-recommendations.md` (sharp story over broad shell) + the **SRC-3/4 delta-audit** (`00-audit/00-source-audit.md §7`). The MVP proves **one memorable flow end-to-end with defensible math**, staged on a credible multi-obligation dashboard.
 
 **Timeline basis (updated 2026-07-10):** the hackathon runs **~3 weeks**, not a compressed day. This makes it realistic to promote **authentication, Supabase backend activation, consent records, local notifications, the card payoff simulator, duplicate-payment detection, and a real mock-provider connect flow** into MVP — _provided_ the money-shot spine (rate-change → residual → scenario) is green by end of week 2 and **the scripted demo stays airplane-mode-safe on local/demo data.** The backend is a real, demonstrable _secondary_ capability, never a demo dependency (ADR-0016).
@@ -28,7 +35,7 @@
 | Contextual education (tap-a-term) + Learn tab + bank-questions checklist                    | ✅  |             |                     |                                    |
 | Settings: language, erase data, reset demo, acknowledgments                                 | ✅  |             |                     |                                    |
 | Data-source status screen (honest mock labeling)                                            | ✅  |             |                     |                                    |
-| **Card payoff simulator** (`cardPayoff.v1`)                                                 | ✅  |             |                     |                                    |
+| **Card payoff simulator** (`cardPayoff.v1`) — **canonical classification: MVP-conditional; first item on the cut order** (see IMPLEMENTATION_PLAN cut order) | ✅  |             |                     |                                    |
 | **Duplicate payment detection**                                                             | ✅  |             |                     |                                    |
 | **Local payment-due notifications** (OS-scheduled, content-minimized)                       | ✅  |             |                     |                                    |
 | **User-defined gap/threshold insight + reminder-day setting** (from SRC-4)                  | ✅  |             |                     |                                    |
@@ -93,4 +100,5 @@ Scope moves between columns only by explicit decision recorded in this file's hi
 
 ### Change history
 
+- **2026-07-11 — Supabase-first persistence (ADR-0017).** Personal mode now requires Supabase auth and persists exclusively to Supabase (RLS from first migration); SQLite removed from MVP scope entirely (postponed to the post-MVP local-first roadmap); demo mode moves from SQLite-seeded to bundled in-memory seed data (still airplane-mode-safe). Backend/auth move from cuttable week-3 M6 work to foundational Phases 3–4. **What it displaces:** the entire local Drizzle/SQLite schema, dual-migration lockstep, and local↔cloud repository swap — net scope reduction. Card payoff simulator's conflicting classifications reconciled to **MVP-conditional, first cut**. Canonical `DEMO_DATE` fixed at `2026-07-01`.
 - **2026-07-10 — SRC-3/4 delta-audit + three-week timeline correction (ADR-0016).** Promoted to MVP: email auth, versioned consent records, biometric lock, Supabase deploy + RLS + account deletion, labeled-mock connect flow, local payment-due notifications, user-defined threshold insight + reminder-day setting, card payoff simulator, duplicate-payment detection, "two numbers" loan-detail hero. **What it displaces:** nothing on the demo spine — all promotions are additive week-3 work off the critical path; if week-3 time is short, they are cut back toward the original local-first MVP (which remains fully demo-ready on its own). Rejected: "Explore Financing Options" (DEC-005). Unchanged: real CRIF/OB access, phone OTP, push/FCM, Islamic early-settlement simulation stay out of MVP.

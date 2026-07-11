@@ -1,17 +1,42 @@
 {
   "common": {
-    "toggleLanguage": "English"
+    "toggleLanguage": "English",
+    "loading": "جارٍ التحميل…"
   },
   "tabs": {
-    "dashboard": "الرئيسية",
-    "simulator": "المحاكي"
+    "home": "الرئيسية",
+    "obligations": "الالتزامات",
+    "learn": "تعلّم"
   },
-  "dashboard": {
+  "home": {
     "greeting": "مرحباً، التزاماتي!",
     "subtitle": "التزاماتك المالية، منظمة."
   },
-  "simulator": {
-    "title": "محاكي البطاقات",
-    "subtitle": "خطط لاستراتيجية السداد الخاصة بك."
+  "obligations": {
+    "title": "الالتزامات",
+    "emptyTitle": "لا توجد التزامات بعد",
+    "emptySubtitle": "الالتزامات التي تضيفها ستظهر هنا."
+  },
+  "learn": {
+    "title": "تعلّم",
+    "subtitle": "افهم القروض والتمويل والائتمان — بلغة واضحة."
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "languageLabel": "اللغة"
+  },
+  "notFound": {
+    "title": "هذه الشاشة غير موجودة.",
+    "goHome": "الذهاب إلى الشاشة الرئيسية"
+  },
+  "currency": {
+    "jod": "د.أ"
+  },
+  "provenance": {
+    "official": "رسمي",
+    "bureau": "من مكتب الائتمان",
+    "userEntered": "أدخله المستخدم",
+    "estimate": "تقدير",
+    "demo": "بيانات تجريبية"
   }
 }

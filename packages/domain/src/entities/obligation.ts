@@ -42,33 +42,40 @@ export interface ObligationBase {
 }
 
 // ─── Obligation Status (derived — BR-STAT-001) ────────────────────────────────
+// Values and precedence order are normative — domain-model.md §4. Deriving or
+// inventing a status value anywhere but `deriveObligationStatus` is forbidden.
 
 export type ObligationStatus =
   | 'onTrack'
-  | 'attentionNeeded'
-  | 'urgent'
-  | 'residualRisk'
+  | 'dueSoon'
   | 'overdue'
-  | 'completed'
-  | 'dataIncomplete'
+  | 'delinquent'
+  | 'attentionRequired'
   | 'dataStale'
+  | 'calculationIncomplete'
+  | 'notStarted'
+  | 'completed'
+  | 'unknown'
 
 // ─── Conventional Loan ────────────────────────────────────────────────────────
 
 export type RateType = 'fixed' | 'variable' | 'mixed' | 'unknown'
 
+/** personal/auto/housing are purposes of a conventional loan, never separate obligation kinds (ADR-0008). */
+export type LoanPurpose = 'personal' | 'auto' | 'housing' | 'other'
+
 export interface ConventionalLoanDetails {
-  readonly originalPrincipal: Money
-  readonly outstandingBalance: Sourced<Money>
-  readonly installment: Money
+  readonly originalPrincipal: Sourced<Money>
+  readonly outstandingBalance?: Sourced<Money>
+  readonly installment: Sourced<Money>
   readonly rateType: RateType
-  readonly termMonths: number
+  readonly termMonths: Sourced<number>
   readonly startDate: LocalDate
   readonly maturityDate: LocalDate
   readonly firstPaymentDate?: LocalDate
   readonly paymentFrequency: 'monthly'
-  readonly purpose?: string
-  readonly contractualBalloon?: Money
+  readonly purpose?: LoanPurpose
+  readonly contractualBalloon?: Sourced<Money>
 }
 
 export interface ConventionalLoan extends ObligationBase {

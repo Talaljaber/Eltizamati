@@ -1,5 +1,7 @@
 # Decision Memo — Items Requiring Human Approval
 
+> **⚠ Update 2026-07-11:** a new approved architecture decision ([ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)) makes **Supabase the primary MVP persistence** (personal mode requires an account; SQLite postponed post-MVP; demo mode = bundled in-memory seed, still offline). This amends **DEC-001** further: auth is no longer a cuttable secondary track — it is foundational for personal mode — while the guardrail survives intact: **the scripted demo still runs in demo mode with no auth/network dependency, and fake login remains rejected.** DEC-002/003/004/005 are unaffected.
+
 **Policy applied (SRC-2):** engineering-resolvable trade-offs were decided and recorded as ADRs. Only decisions that materially change the product promise, carry regulatory weight, or are genuinely preference-balanced are escalated. **Defaults apply if no response before implementation start** — silence is not a blocker.
 
 ---

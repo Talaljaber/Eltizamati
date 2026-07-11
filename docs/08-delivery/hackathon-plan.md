@@ -1,5 +1,7 @@
 # Hackathon Delivery Plan
 
+> **⚠ SUPERSEDED as the execution plan (2026-07-11).** The M0–M8 milestone plan below is replaced by the phase-based execution system in **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** (9 phases, Supabase-first per [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md); the M→Phase mapping is in that document). This file is retained for: the demo script (§4, still canonical), the traceability matrix (§3, migrated into the new plan), and historical context. **Do not implement from the milestone descriptions below** — M0's SQLite exit condition and M6's late-backend sequencing are superseded. ID fixes applied 2026-07-11: the §3 matrix rows formerly citing `US-014*`/`US-015*` for auth/mock-connect now map to **US-016/US-017** (defined in `user-stories.md`), and `SCR-AUTH-*`/`SCR-CONSENT`/`SCR-CONNECT` are now specced as **SCR-AUTH-SIGNIN/SIGNUP/RESET, SCR-CONSENT-PROVIDER, SCR-CONNECT-MOCK** in `screen-inventory.md`.
+
 **Timeline (updated 2026-07-10):** the hackathon runs **~3 weeks** solo + AI (corrects the earlier unknown-duration assumption; GAP-02 partially closed, exact judging rules still RES-001). Below is a **week-mapped** plan. The governing rule is unchanged: **compress by cutting from the bottom (week-3 depth), never by cutting engine tests or the demo spine.**
 
 **The one hard sequencing rule:** the money-shot spine — dashboard → rate change → residual → explanation → scenario — must be **green and airplane-mode-safe by the end of week 2** (through M4). Everything in week 3 (backend, auth, notifications, card simulator, hardening) is **additive and cuttable**; none of it may become a demo dependency (mvp-scope §5a).
@@ -100,15 +102,15 @@ M3 (engine) can start against `packages/domain` as soon as M1's domain core exis
 | Education            | FR-EDU-001..004             | —          | SCR-LEARN*              | content format                                       | key-coverage              | M2/M6     |
 | Settings/erase       | FR-SET-001..003/005         | US-010/011 | SCR-SET                 | —                                                    | absence test              | M5        |
 | Data status          | FR-DATA-003                 | —          | SCR-DATA-STATUS         | provider registry                                    | RNTL                      | M5        |
-| Auth & session       | FR-AUTH-001/006             | US-014*    | SCR-AUTH-*              | RLS policies                                         | RNTL + pgTAP              | M6        |
-| Consent records      | FR-AUTH-002/005             | —          | SCR-CONSENT             | consent versioning                                   | unit + RNTL               | M6        |
+| Auth & session       | FR-AUTH-001/006             | US-016     | SCR-AUTH-SIGNIN/SIGNUP/RESET | RLS policies                                    | RNTL + pgTAP              | M6        |
+| Consent records      | FR-AUTH-002/005             | US-016     | SCR-CONSENT-PROVIDER    | consent versioning                                   | unit + RNTL               | M6        |
 | Account deletion     | FR-AUTH-003                 | —          | SCR-SET                 | erasure + audit                                      | integration               | M6        |
-| Mock connect flow    | FR-ONB-004, FR-AUTH-005     | US-015*    | SCR-CONNECT             | provider contract (mock)                             | RNTL + Maestro            | M6        |
+| Mock connect flow    | FR-ONB-004, FR-AUTH-005     | US-017     | SCR-CONNECT-MOCK        | provider contract (mock)                             | RNTL + Maestro            | M6        |
 | Card payoff sim      | FR-SIM-004                  | US-013     | SCR-SIM-CARD            | cardPayoff.v1, INV-*                                 | TV-6xx + Maestro          | M7        |
 | Local notifications  | FR-NTF-001, FR-SET-006      | —          | SCR-SET                 | scheduling + quiet hours                             | integration               | M7        |
 | Duplicate detection  | FR-PAY-004                  | US-005     | SCR-PAY-ADD             | dedup rule                                           | unit + RNTL               | M7        |
 
-(*US-014/015 to be added to `user-stories.md` when M6 UI is specced; the FRs and screens are the binding contract meanwhile.)
+(US-016/US-017 defined in `user-stories.md` 2026-07-11 — the earlier `US-014*/US-015*` placeholders collided with the existing reminder/export stories and are retired.)
 (Every MVP FR now appears; only FR-SET-004/FR-SIM-005/FR-AUTH-007/FR-NTF-002 remain out of MVP by design.)
 
 ## 4. Demo script (5 minutes) & fallbacks

@@ -1,5 +1,7 @@
 # Security & Privacy Controls
 
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** controls marked "(P1)" for auth/RLS/consent/erasure are now **MVP**: RLS deny-by-default + pgTAP cross-user tests, Supabase session tokens in SecureStore, server-backed consent records, server-side account deletion + audit. Storage rule updated: tokens→SecureStore; prefs→key-value (MMKV/AsyncStorage); **personal financial data→Supabase only (no local financial DB in MVP)**; demo data→bundled in-memory seed. C3 handling reads "RLS-guarded (MVP)" for personal mode; demo mode holds no real financial data. Supabase env vars: anon key only, via typed `core/config`; service-role keys exist only in Supabase/Edge Function environments, never in the client or repo. **Offline personal-data limitation is an accepted, stated MVP posture** (honest error states, no offline editing). Demo mode is isolated: never authenticated, never writes to Supabase, always banner-labeled.
+
 Companion to `threat-model.md`. Owner for every control: Talal (solo dev) — the "ownership" column therefore states the _enforcement mechanism_, which matters more here than a name.
 
 ## 1. Data classification

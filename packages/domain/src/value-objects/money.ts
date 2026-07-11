@@ -10,7 +10,7 @@
  * @module packages/domain/src/value-objects/money
  */
 import Decimal from 'decimal.js'
-import { AppError } from '../errors/app-error'
+import { DomainInvariantError } from '../errors/app-error.js'
 
 // ─── Currency configuration ─────────────────────────────────────────────────
 
@@ -40,8 +40,19 @@ export class Money {
     this.currency = currency
   }
 
-  /** Primary constructor — from a Decimal string or number (use string to avoid float imprecision). */
+  /**
+   * Primary constructor — from a canonical decimal string, or a safe-integer number
+   * (e.g. `0` for a zero amount). Non-integer `number` input is rejected: JS floats
+   * already lose precision before they reach this constructor (NFR-MNT-003) — always
+   * pass a decimal string for fractional amounts.
+   */
   static of(value: string | number, currency = 'JOD'): Money {
+    if (typeof value === 'number' && !Number.isSafeInteger(value)) {
+      throw new DomainInvariantError(
+        'validation',
+        `Money.of: unsafe floating-point number ${String(value)} — use a decimal string`,
+      )
+    }
     return new Money(new Decimal(String(value)), currency)
   }
 
@@ -72,7 +83,7 @@ export class Money {
   /** Divide by a scalar. @throws on division by zero. */
   divideBy(scalar: string | number): Money {
     const s = new Decimal(String(scalar))
-    if (s.isZero()) throw AppError.validation('Money.divideBy: division by zero')
+    if (s.isZero()) throw new DomainInvariantError('validation', 'Money.divideBy: division by zero')
     return new Money(this.#value.dividedBy(s), this.currency)
   }
 
@@ -163,7 +174,10 @@ export class Money {
 
   #assertSameCurrency(other: Money): void {
     if (this.currency !== other.currency) {
-      throw AppError.validation(`Money: currency mismatch — ${this.currency} vs ${other.currency}`)
+      throw new DomainInvariantError(
+        'validation',
+        `Money: currency mismatch — ${this.currency} vs ${other.currency}`,
+      )
     }
   }
 }
@@ -189,7 +203,10 @@ export class Rate {
   static fromPercent(percent: string | number): Rate {
     const d = new Decimal(String(percent))
     if (d.isNegative() || d.greaterThan(100)) {
-      throw AppError.validation(`Rate.fromPercent: out of range [0, 100]: ${String(percent)}`)
+      throw new DomainInvariantError(
+        'validation',
+        `Rate.fromPercent: out of range [0, 100]: ${String(percent)}`,
+      )
     }
     return new Rate(d.dividedBy(100))
   }
@@ -198,7 +215,10 @@ export class Rate {
   static fromDecimal(value: string | number): Rate {
     const d = new Decimal(String(value))
     if (d.isNegative() || d.greaterThan(1)) {
-      throw AppError.validation(`Rate.fromDecimal: out of range [0, 1]: ${String(value)}`)
+      throw new DomainInvariantError(
+        'validation',
+        `Rate.fromDecimal: out of range [0, 1]: ${String(value)}`,
+      )
     }
     return new Rate(d)
   }

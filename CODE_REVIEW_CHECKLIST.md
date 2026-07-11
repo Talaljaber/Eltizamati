@@ -29,7 +29,7 @@ Apply to every PR (human- or AI-authored). Skip sections that genuinely don't ap
 ## Security & privacy
 
 - [ ] No secrets/keys; no PII or financial values in logs/errors/analytics; safe-metadata only
-- [ ] Storage tier correct (SecureStore/MMKV/SQLite per ADR-0006)
+- [ ] Storage tier correct (tokens→SecureStore; prefs→MMKV/AsyncStorage; personal financial data→Supabase only; demo data→in-memory seed — ADR-0017 + ADR-0006 surviving clauses; **no local financial DB in MVP**)
 - [ ] Deep links via allow-list; params re-resolved, not trusted
 - [ ] No demo/debug bypass reachable in preview/production builds
 

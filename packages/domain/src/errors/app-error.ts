@@ -89,6 +89,22 @@ const ERROR_CATALOGUE: Record<
   sync: { severity: 'warning', retryable: true, userMessageKey: 'error.sync' },
 }
 
+// ─── Invariant violations (value-object construction/arithmetic misuse) ──────
+
+/**
+ * Thrown by value objects (Money, Rate, Id, LocalDate) on invariant violations —
+ * these are programmer errors caught at construction time, not Result-worthy
+ * business failures, so they throw rather than return `Err` (ADR-0014).
+ */
+export class DomainInvariantError extends Error {
+  readonly code: AppErrorCode
+  constructor(code: AppErrorCode, message: string) {
+    super(message)
+    this.name = 'DomainInvariantError'
+    this.code = code
+  }
+}
+
 // ─── Factory ─────────────────────────────────────────────────────────────────
 
 export function makeError(

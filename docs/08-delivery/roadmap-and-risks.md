@@ -1,10 +1,12 @@
 # Post-Hackathon Roadmap & Risk Register
 
+> **⚠ Updated 2026-07-11 ([ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** Supabase deployment, email auth, server-backed consent, account deletion, and biometric lock **moved into the MVP** (Phases 3–4 of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)) — struck from P1 below. P1's headline item is now the **local-first/offline enhancement** (durable local cache, offline reads, queued writes, SQLite): see [FUTURE_LOCAL_FIRST_ROADMAP.md](FUTURE_LOCAL_FIRST_ROADMAP.md).
+
 ## 1. Roadmap (phases gate on validations, not dates)
 
-### P1 — Real accounts (gate: hackathon done + RES-003 legal read + decision to continue)
+### P1 — Local-first enhancement + real-data readiness (gate: hackathon done + RES-003 legal read + decision to continue)
 
-Supabase deployment (schema+RLS already designed: docs/05) · email auth + sessions (FR-AUTH-001) · server-side consent records + re-consent (FR-AUTH-002) · cloud persistence with read-cache + mutation queue (offline-sync.md P1 design) · account deletion workflow + audit events (FR-AUTH-003) · biometric app-lock (FR-AUTH-004) · SQLCipher decision (ADR-0006 revisit) · Ijara + Diminishing Musharakah read-only types + generic facility (FR-OBL-009/010) · RES-004 engine validation against real schedules (removes "unvalidated" caveats).
+**Local-first/offline work (was MVP scope pre-ADR-0017, now the flagship P1 item):** durable local cache (SQLite per ADR-0006's analysis), offline personal-data reads, small outbound mutation queue, provenance-priority conflict handling — full design preserved in [FUTURE_LOCAL_FIRST_ROADMAP.md](FUTURE_LOCAL_FIRST_ROADMAP.md) and `offline-sync.md`'s future section · SQLCipher decision (ADR-0006 revisit) · Ijara + Diminishing Musharakah read-only types + generic facility (FR-OBL-009/010) · RES-004 engine validation against real schedules (removes "unvalidated" caveats). ~~Supabase deployment / email auth / consent / account deletion / biometric lock~~ — now MVP (ADR-0017).
 
 ### P2 — Real data (gate: RES-002 sandbox access in writing)
 

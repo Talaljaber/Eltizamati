@@ -1,5 +1,7 @@
 # Seed & Demo Data Architecture
 
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** demo data is served by a **pure in-memory demo repository** built from these builders — it is **never inserted into Supabase** and never touches a database. Reset-demo = re-run the builders. **Canonical `DEMO_DATE` = `2026-07-01`** (`packages/demo-data/src/constants.ts` — the code value; the `2026-07-10` figure previously in `calculation-test-vectors.md` was an error, corrected 2026-07-11). Changing `DEMO_DATE` later invalidates every date-dependent vector (TV-30x) and requires finance re-sign-off. Builders use the canonical domain models from `packages/domain` (same types personal mode persists to Supabase), so seed drift breaks compilation loudly — rule unchanged.
+
 **Home:** `packages/demo-data` — a versioned, pure-TS factory (no JSON blobs scattered in the app). The canonical demo _content_ is defined in `docs/01-requirements/mvp-scope.md §4`; this file defines the mechanics.
 
 ## 1. Design rules

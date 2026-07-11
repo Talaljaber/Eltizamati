@@ -27,6 +27,7 @@ export type {
   ObligationBase,
   ObligationStatus,
   RateType,
+  LoanPurpose,
   ConventionalLoanDetails,
   ConventionalLoan,
   MurabahaDetails,
@@ -46,5 +47,13 @@ export { deriveObligationStatus } from './services/derive-obligation-status.js'
 export type { StatusDerivationInputs } from './services/derive-obligation-status.js'
 
 // ─── Errors & Result ─────────────────────────────────────────────────────────
-export { makeError, ok, err, isOk, isErr, mapResult } from './errors/app-error.js'
+export {
+  makeError,
+  ok,
+  err,
+  isOk,
+  isErr,
+  mapResult,
+  DomainInvariantError,
+} from './errors/app-error.js'
 export type { AppErrorCode, AppError, ErrorSeverity, Result, Ok, Err } from './errors/app-error.js'

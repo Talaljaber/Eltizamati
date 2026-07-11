@@ -1,6 +1,7 @@
 # ADR-0016 — Activate the Backend & Identity in the Build (Three-Week Timeline)
 
-- **Status:** Accepted · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Low (all of it was already designed for P1; this ADR changes _timing and demo posture_, not architecture)
+- **Status:** **Superseded in sequencing by [ADR-0017](ADR-0017-supabase-first-mvp-persistence.md) (2026-07-11)** · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Low (all of it was already designed for P1; this ADR changes _timing and demo posture_, not architecture)
+- **⚠ Superseded in sequencing by ADR-0017 (2026-07-11):** backend/auth are no longer a cuttable week-3 secondary track (M6) — Supabase is the **primary MVP persistence**, built as foundational Phases 3–4 of [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md), and the repository swap / dual-migration lockstep with SQLite is gone (no SQLite in MVP). **Still binding from this ADR:** the demo-safety invariant (scripted demo airplane-mode-safe on demo data), the labeled-mock CRIF/OB rule, RLS-with-pgTAP before any multi-user path is demoed, and the RES-003 (PDPL) gate on real personal data.
 - **Amends:** the MVP-timing clauses of ADR-0002 (backend deferred), ADR-0012 (auth demo-mode), ADR-0013 (local-only MVP). Those ADRs' architecture is unchanged; only _when_ the P1 surface is built moves earlier.
 - **Supersedes:** nothing structurally. Does **not** touch ADR-0001/0007/0008/0009/0010/0014 (framework, engine isolation, subtypes, provider abstraction, i18n/RTL, error taxonomy) — all confirmed intact by the SRC-3/4 delta-audit (`00-audit/00-source-audit.md §7.3`).
 

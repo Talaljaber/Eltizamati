@@ -1,3 +1,5 @@
+import { DomainInvariantError } from '../errors/app-error.js'
+
 /**
  * Branded ID type — prevents mixing obligation ids with payment ids etc.
  * IDs are UUID v7 strings (sortable, generated at creation per ADR-0013).
@@ -13,7 +15,7 @@ export type Id<T extends string> = string & { readonly _brand: T }
  */
 export function brandId<T extends string>(raw: string): Id<T> {
   if (!raw || typeof raw !== 'string') {
-    throw AppError.validation('Id must be a non-empty string')
+    throw new DomainInvariantError('validation', 'Id must be a non-empty string')
   }
   return raw as Id<T>
 }
@@ -29,7 +31,7 @@ export type LocalDate = string & { readonly _brand: 'LocalDate' }
 
 export function toLocalDate(iso: string): LocalDate {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    throw AppError.validation(`Invalid LocalDate: "${iso}" — expected YYYY-MM-DD`)
+    throw new DomainInvariantError('validation', `Invalid LocalDate: "${iso}" — expected YYYY-MM-DD`)
   }
   return iso as LocalDate
 }

@@ -16,11 +16,19 @@ describe('Money', () => {
       expect(Money.zero().isZero()).toBe(true)
     })
 
-    it('refuses construction from float literals by design — always use strings', () => {
-      // 0.1 + 0.2 in floats = 0.30000000000000004
-      // Money.of(0.1).add(Money.of(0.2)) must equal 0.3 exactly
+    it('adds decimal strings without float imprecision (0.1 + 0.2 = 0.3 exactly)', () => {
       const result = Money.of('0.1').add(Money.of('0.2'))
       expect(result.toStorageString()).toBe('0.3')
+    })
+
+    it('NFR-MNT-003: rejects unsafe floating-point number input', () => {
+      expect(() => Money.of(0.1)).toThrow('unsafe floating-point number')
+      expect(() => Money.of(19.99)).toThrow('unsafe floating-point number')
+    })
+
+    it('NFR-MNT-003: accepts safe-integer number input (e.g. zero)', () => {
+      expect(Money.of(0).isZero()).toBe(true)
+      expect(Money.of(100).toStorageString()).toBe('100')
     })
   })
 

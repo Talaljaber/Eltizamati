@@ -1,5 +1,7 @@
 # CI/CD, Environments, Release & Observability
 
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** environments now include Supabase in MVP — `development` uses local `supabase start` (or a dev cloud project), `preview`/`production` use dedicated Supabase projects; typed env validation (`core/config`) covers `SUPABASE_URL`/anon key (fail fast at boot). CI additions once Phases 3–4 land: apply migrations to an ephemeral/local Supabase and run pgTAP + repository integration tests. The `development` row's "local SQLite" is superseded — no SQLite in MVP.
+
 ## 1. CI (GitHub Actions — `/.github/workflows/ci.yml`)
 
 Pipeline on every PR + main push (target < 8 min):

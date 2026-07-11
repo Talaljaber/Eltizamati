@@ -33,8 +33,7 @@ export interface StatusDerivationInputs {
  * @see docs/03-domain/domain-model.md §4 for the full derivation logic
  */
 export function deriveObligationStatus(_inputs: StatusDerivationInputs): ObligationStatus {
-  // M0: stub — will implement full BR-STAT-001 derivation in M1
-  // DOC-ISSUE: full derivation algorithm not yet fully specified in domain-model.md §4;
-  //            this is intentionally a placeholder for M0.
-  return 'dataIncomplete'
+  // M0: stub — will implement the full BR-STAT-001 precedence chain in M1 once
+  // rate history and payment records exist to derive from.
+  return 'unknown'
 }

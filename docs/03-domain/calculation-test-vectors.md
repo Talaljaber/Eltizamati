@@ -27,7 +27,7 @@
 ## Family TV-3xx — Demo seed loan (⭐ the numbers judges will see; source: finance-team)
 
 Seed: P=20,000 JOD, 84 months, start 2024-01-15, r=7.5% (months 1–14) → 9.25% (effective month 15), installment unchanged, 30 months elapsed at demo date, all installments paid on time.
-**`asOf` for this family: `packages/demo-data/src/constants.ts → DEMO_DATE`** (a fixed `LocalDate` constant, currently `2026-07-10`). Finance teammates use this exact date in their spreadsheets. Tests call `buildDemoSeed({ demoDate: DEMO_DATE })` before running the engine. Changing `DEMO_DATE` requires re-signing all TV-30x expected values.
+**`asOf` for this family: `packages/demo-data/src/constants.ts → DEMO_DATE`** (a fixed `LocalDate` constant — **canonical value `2026-07-01`**; an earlier revision of this document said `2026-07-10`, which never matched the code and was corrected 2026-07-11 during the ADR-0017 reconciliation — no vector had been signed against either date, so nothing needs re-validation *yet*). Finance teammates use this exact date in their spreadsheets. Tests call `buildDemoSeed({ demoDate: DEMO_DATE })` before running the engine. **Changing `DEMO_DATE` later requires re-signing all TV-30x expected values** — no vector may be signed against an ambiguous date.
 
 | ID     | Assertion                                                                                                                                   |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |

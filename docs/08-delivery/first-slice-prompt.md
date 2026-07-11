@@ -1,5 +1,7 @@
 # First Coding-Agent Prompt (M0 — Foundation)
 
+> **⚠ SUPERSEDED (2026-07-11).** Do not use this prompt. M0 was partially executed (see [CURRENT_STATE.md](../10-implementation/CURRENT_STATE.md)); the SQLite/Drizzle items in step 2 are **removed from MVP scope** by [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md). The current entry point for any implementation agent is **[docs/10-implementation/STATUS.md](../10-implementation/STATUS.md)** → the active phase file under `docs/10-implementation/phases/`. Retained for historical reference only.
+
 Copy-paste this to the first implementation agent, from the repo root, after reading it yourself once.
 
 ---

@@ -1,6 +1,8 @@
 # Threat Model
 
-**Method:** STRIDE-informed, pragmatic for a solo-dev fintech prototype maturing to production. Scope column: MVP (local-only build) vs P1 (Supabase + providers). Controls are concrete and each has a verification hook (docs/06/security-controls.md holds the full control list).
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** the MVP now includes Supabase auth + cloud persistence for personal mode, so the scope column shifts: **T-03 (account takeover), T-04 (token theft), T-05 (RLS/BOLA), T-10 (consent bypass), T-13 (env separation) are MVP threats**, mitigations and verifications unchanged. **T-01 (device loss) shrinks in MVP** — no local financial database exists; on-device exposure is limited to key-value preferences, SecureStore session material, and transient query cache. T-06/T-07 (provider secrets/payloads) become MVP-relevant only for the labeled-mock connect flow; real provider surfaces stay P1. New accepted, stated risk: **personal mode is unavailable offline** (availability, not confidentiality — mitigated by honest error states and the offline demo mode).
+
+**Method:** STRIDE-informed, pragmatic for a solo-dev fintech prototype maturing to production. Scope column: MVP (local-only build) vs P1 (Supabase + providers) — **read per the banner above** (auth/RLS threats now MVP). Controls are concrete and each has a verification hook (docs/06/security-controls.md holds the full control list).
 
 ## Assets
 

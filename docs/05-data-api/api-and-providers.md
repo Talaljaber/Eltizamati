@@ -1,6 +1,8 @@
 # API & Provider Contracts
 
-**MVP:** there is no network API — the "API" is the application-service layer's typed contracts (below), which is exactly what becomes the client of the P1 HTTP surface. **P1:** Supabase (PostgREST for CRUD under RLS + Edge Functions for provider proxying and privileged operations).
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** the Supabase surface described in §2 as "P1 design freeze, not built" is now **built in the MVP** (Phases 3–4): PostgREST CRUD under RLS via supabase-js behind the repository interfaces, Supabase JWT auth with SecureStore tokens, generated database types. The application-service contracts in §1 are unchanged and are implemented against **two repository families**: in-memory demo repositories (demo mode) and Supabase repositories (personal mode). `MaintenanceService.eraseAll()` = account deletion + server-side erasure in personal mode, reset-demo in demo mode. Edge Functions remain scoped to privileged operations (account deletion workflow, future provider proxying).
+
+**MVP:** the "API" clients see is the application-service layer's typed contracts (below); personal mode is backed by **Supabase (PostgREST CRUD under RLS + Edge Functions for privileged operations)**; demo mode is backed by bundled in-memory repositories.
 
 ## 1. Application service contracts (MVP; stable across P1)
 
@@ -19,7 +21,7 @@ Commands/queries are zod-validated DTOs in each feature's `api/` module; service
 
 ## 2. P1 HTTP surface (design freeze, not built)
 
-- **CRUD:** Supabase PostgREST on the schema (RLS-guarded); client uses supabase-js through the same repository interfaces (repos swap SQLite→remote+cache; services unchanged — that's the migration seam).
+- **CRUD:** Supabase PostgREST on the schema (RLS-guarded); client uses supabase-js through the same repository interfaces (demo in-memory ↔ Supabase repos swap at the composition root; services unchanged — that's the seam; a future local read-cache slots in the same way per ADR-0017 §5).
 - **Edge Functions (TypeScript/Deno):** `POST /providers/crif/sync` (consent-checked, secrets server-side, returns normalized import records) · `POST /account/delete` (erasure workflow + audit) · `POST /export` (server-side export) — all with `Idempotency-Key` header support and rate limiting (Supabase built-ins + per-user counters).
 - **Versioning:** Edge Function routes under `/v1/`; breaking changes → `/v2/` + deprecation window. DTO schemas shared via `packages/domain` zod (client and functions import the same schemas — the monorepo payoff).
 - **Idempotency:** client-generated uuid v7 entity ids; upsert semantics on sync; `Idempotency-Key` for non-entity commands.

@@ -28,8 +28,8 @@ Node LTS + pnpm via corepack; Android device/emulator; see `docs/04-architecture
 ## Language & schema rules (the two most common mistakes)
 
 - Every user-visible string lands in **both** `en` and `ar` files in the same PR.
-- Every schema change updates **both** the Drizzle (local) migration and the `/supabase` (P1) migration in the same PR (ADR-0002).
+- Every schema change updates the `/supabase` migration **with RLS + pgTAP tests and regenerated types in the same PR** (ADR-0017 — there is no local Drizzle schema in the MVP; the dual-migration rule returns with the post-MVP local-first work).
 
-## Milestone gates
+## Phase gates
 
-Each milestone (M0–M6) ends with its exit demo (`docs/08-delivery/hackathon-plan.md`) plus: AR walkthrough of new screens on device, states check (loading/empty/error), and a risk-register re-score.
+Each phase (see `docs/08-delivery/IMPLEMENTATION_PLAN.md` and `docs/10-implementation/phases/`) ends with its exit criteria + exit demo, a completion report in `docs/10-implementation/completions/`, AR walkthrough of new screens, states check (loading/empty/error), and a risk-register re-score. The live position is `docs/10-implementation/STATUS.md`.

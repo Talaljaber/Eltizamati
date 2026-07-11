@@ -1,5 +1,7 @@
 # Implementation Readiness Review (Phase 6)
 
+> **⚠ Superseded as the current readiness statement (2026-07-11).** This review predates [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md) (Supabase-first, no SQLite in MVP) and the M0→phase restructuring. The live position is **[docs/10-implementation/STATUS.md](../10-implementation/STATUS.md)**; the execution plan is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Retained for its scorecard/blocker history. Note RES-003 (PDPL) now gates **Phase 4** (first real personal data), earlier than this review assumed.
+
 **Date:** 2026-07-10 · **Verdict: READY to begin M0**, with the blockers/dependencies below tracked (none block M0–M2).
 
 **Amendment 2026-07-10 (SRC-3/4 delta-audit + three-week timeline):** SRC-3/4 supplied and audited (`00-audit/00-source-audit.md §7`); source completeness upgraded 🟡→🟢 (deck still pending). Scope expanded for a three-week build (auth, Supabase backend, consent records, local notifications, card simulator, duplicate detection, mock-connect flow — ADR-0016), all as **week-3 work off the critical demo path**. The M0 first slice and the demo-spine sequencing are **unchanged**. New guardrail: the scripted demo stays airplane-mode-safe (mvp-scope §5a).

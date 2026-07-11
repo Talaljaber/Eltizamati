@@ -1,17 +1,42 @@
 {
   "common": {
-    "toggleLanguage": "عربي"
+    "toggleLanguage": "عربي",
+    "loading": "Loading…"
   },
   "tabs": {
-    "dashboard": "Dashboard",
-    "simulator": "Simulator"
+    "home": "Home",
+    "obligations": "Obligations",
+    "learn": "Learn"
   },
-  "dashboard": {
+  "home": {
     "greeting": "Hello, Eltizamati!",
     "subtitle": "Your financial obligations, organized."
   },
-  "simulator": {
-    "title": "Card Simulator",
-    "subtitle": "Plan your payoff strategy."
+  "obligations": {
+    "title": "Obligations",
+    "emptyTitle": "No obligations yet",
+    "emptySubtitle": "Obligations you add will appear here."
+  },
+  "learn": {
+    "title": "Learn",
+    "subtitle": "Understand loans, financing, and credit — in plain language."
+  },
+  "settings": {
+    "title": "Settings",
+    "languageLabel": "Language"
+  },
+  "notFound": {
+    "title": "This screen doesn't exist.",
+    "goHome": "Go to home screen"
+  },
+  "currency": {
+    "jod": "JOD"
+  },
+  "provenance": {
+    "official": "Official",
+    "bureau": "Bureau",
+    "userEntered": "User-entered",
+    "estimate": "Estimate",
+    "demo": "Demo data"
   }
 }

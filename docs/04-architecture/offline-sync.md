@@ -1,14 +1,17 @@
-# Offline, Caching & Synchronization
+# Offline Behavior (MVP) & Future Local-First Synchronization
 
-**MVP stance (ADR-0013):** the app is **local-first because it is local-only** — SQLite is the system of record; there is nothing to sync and no offline "mode" (offline _is_ the mode). This deletes the entire hardest problem class (bidirectional sync, conflicts, queues) from the hackathon while the design below keeps the P1 path honest.
+> **⚠ Rewritten 2026-07-11 per [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md).** The previous "local-first because local-only" stance (ADR-0013) is superseded. This document now states the MVP offline contract; the sync design below it is **future scope**, preserved for the post-MVP local-first phase.
 
-## MVP facts
+## MVP offline contract (ADR-0017)
 
-- All reads/writes hit SQLite transactionally; process death loses nothing (US edge matrix).
-- "Freshness" still rendered (provenance `observedAt`) — the UI habit that matters later.
-- Airplane-mode demo is a rehearsal-checklist item (NFR-REL-001).
+- **Demo mode is fully offline by construction:** bundled deterministic seed data (`packages/demo-data`, anchored to `DEMO_DATE = 2026-07-01`) served by an in-memory repository. The scripted demo runs in airplane mode — rehearsal-checklist item (NFR-REL-001). No database involved.
+- **Personal mode requires network** for authoritative reads/writes against Supabase. When Supabase is unreachable the UI must show **explicit offline/error/retry states** (TanStack Query error surfaces mapped through the AppError taxonomy — `connectivity` code family). TanStack Query's in-memory cache may display previously-fetched data **clearly marked stale** via provenance freshness; it is not a durable store.
+- **Not promised in MVP:** offline personal-data editing, durable offline reads, queued/deferred financial mutations, any synchronization. Financial mutations either reach Supabase or fail visibly — never silently queued.
+- "Freshness" is still rendered everywhere (provenance `observedAt`) — the UI habit that matters later.
 
-## P1 design (when Supabase ships) — decided now, built later
+## Future local-first design (post-MVP — preserved, not scheduled)
+
+> Everything below is **future scope** (see [FUTURE_LOCAL_FIRST_ROADMAP](../08-delivery/FUTURE_LOCAL_FIRST_ROADMAP.md)). Do not implement any of it in the MVP phases.
 
 | Concern             | Decision                                                                                                                                                                                 |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

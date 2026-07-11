@@ -7,15 +7,21 @@ export default function TabLayout() {
   return (
     <Tabs screenOptions={{ headerShown: true }}>
       <Tabs.Screen
-        name="dashboard"
+        name="index"
         options={{
-          title: t('tabs.dashboard'),
+          title: t('tabs.home'),
         }}
       />
       <Tabs.Screen
-        name="simulator"
+        name="obligations"
         options={{
-          title: t('tabs.simulator'),
+          title: t('tabs.obligations'),
+        }}
+      />
+      <Tabs.Screen
+        name="learn"
+        options={{
+          title: t('tabs.learn'),
         }}
       />
     </Tabs>

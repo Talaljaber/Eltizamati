@@ -1,6 +1,7 @@
 # ADR-0006 — Local Persistence: expo-sqlite + Drizzle ORM; SecureStore; MMKV
 
-- **Status:** Accepted · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Medium (repository seam contains it)
+- **Status:** **Partially superseded by [ADR-0017](ADR-0017-supabase-first-mvp-persistence.md) (2026-07-11)** · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Medium (repository seam contains it)
+- **⚠ Partially superseded by ADR-0017 (2026-07-11):** the expo-sqlite + Drizzle local financial database is **postponed to the post-MVP local-first phase** ([FUTURE_LOCAL_FIRST_ROADMAP](../08-delivery/FUTURE_LOCAL_FIRST_ROADMAP.md)) — do not build it in the MVP. Personal-mode data persists in Supabase only; demo mode uses bundled in-memory seed data. **Still in force from this ADR:** MMKV (or AsyncStorage) for lightweight preferences, SecureStore for tokens/session material, and the KV-is-not-a-financial-database rule. The SQLite technology analysis below remains the reference for the future local-first work.
 
 ## Context & forces
 

@@ -1,6 +1,14 @@
 # Testing Strategy
 
-**Stack (ADR-0011):** Vitest + fast-check for pure packages (`domain`, `finance-engine`, `demo-data`) · Jest (jest-expo) + React Native Testing Library for the app · Maestro for E2E on Android · pgTAP for RLS (P1).
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** test-layer changes for the Supabase-first MVP:
+> - **pgTAP RLS cross-user tests are MVP** (every user-data table, from migration 0001) — no longer "P1".
+> - **Supabase repository integration tests** (row↔domain round-trips against local `supabase start` or a dedicated test project) and **migration tests** replace the SQLite in-memory round-trip layer, which is removed from MVP.
+> - **Auth flow integration tests** (sign-up/verify/sign-in/reset/session/deletion) are MVP.
+> - **Demo repository contract tests**: demo (in-memory) and Supabase repositories pass the same repository-interface contract suite (§35.6 substitutability).
+> - **Offline/error-state component tests**: personal-mode screens must render offline/error/retry states (connectivity AppError family); demo mode must be verified working with network disabled.
+> - Unchanged: engine ≥95% coverage gate, vectors, property tests, RNTL component layer, Maestro demo-spine E2E, fixtures-from-builders rule.
+
+**Stack (ADR-0011, amended by ADR-0017):** Vitest + fast-check for pure packages (`domain`, `finance-engine`, `demo-data`) · Jest (jest-expo) + React Native Testing Library for the app · Maestro for E2E on Android · pgTAP for RLS (**MVP**).
 **Philosophy:** the test pyramid is weighted where the product's risk lives — the finance engine and domain rules get the depth; UI gets targeted behavior tests; E2E covers the demo spine only.
 
 ## 1. Pyramid & budgets

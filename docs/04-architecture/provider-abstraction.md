@@ -1,5 +1,7 @@
 # Provider Abstraction & Demo-to-Real Transition
 
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** the provider contract below is unchanged, but the **persistence target** changes: in demo mode, `DemoSeedProvider`/`ImportService` populate the **in-memory demo repository** (never Supabase — bundled demo data is not inserted into the cloud); in personal mode, repositories are **Supabase-backed** and manual-entry writes go through application services → Supabase repositories with `userEntered` provenance. References to "local repos"/SQLite below read accordingly. Both repository families implement the same interfaces, chosen at the composition root by `dataMode`.
+
 **Non-negotiables served:** replaceable providers (§35.6), honest mock labeling (C-07), no client secrets (§35.7).
 
 ## 1. Contract (in `packages/domain/src/providers/`)

@@ -1,6 +1,8 @@
 # System Architecture
 
-**Stack summary (decisions in ADRs):** Expo (React Native) + TypeScript (ADR-0001) · pnpm monorepo (ADR-0003) · local-first MVP with SQLite via Drizzle (ADR-0006, ADR-0013) · Supabase as designed-and-deferred production backend (ADR-0002) · TanStack Query + Zustand (ADR-0004) · Expo Router (ADR-0005) · pure-TS finance engine (ADR-0007).
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** the MVP is now **Supabase-first**. Personal-mode data persists only in Supabase Postgres (Auth + RLS + generated types); demo mode runs from **bundled in-memory seed data** (no database, no network, no auth). **There is no SQLite in the MVP** — diagrams/sections below showing "SQLite (Drizzle)" should be read as: *demo mode → in-memory `Demo*Repository` over `packages/demo-data`; personal mode → `Supabase*Repository` over supabase-js*. Both implement the **same repository interfaces**, selected once at the composition root (`apps/mobile/src/services/composition-root.ts`) by the active `dataMode` — no code may branch on mode for business logic (ADR-0009 unchanged). Layering/dependency rules in §2 are unchanged and remain lint-enforced. Personal mode requires network for authoritative reads/writes (honest offline/error/retry states — no sync engine, no silently queued financial mutations). Source-of-truth rule: **Supabase for personal mode; seed builders for demo mode; the finance engine derives, never stores.** SQLite returns post-MVP: [FUTURE_LOCAL_FIRST_ROADMAP](../08-delivery/FUTURE_LOCAL_FIRST_ROADMAP.md).
+
+**Stack summary (decisions in ADRs):** Expo (React Native) + TypeScript (ADR-0001) · pnpm monorepo (ADR-0003) · **Supabase-first MVP persistence (ADR-0017; supersedes ADR-0006/0013 for MVP)** · TanStack Query + Zustand (ADR-0004) · Expo Router (ADR-0005) · pure-TS finance engine (ADR-0007).
 
 ## 1. System context
 

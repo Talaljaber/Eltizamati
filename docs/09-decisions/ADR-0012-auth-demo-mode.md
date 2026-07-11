@@ -1,7 +1,8 @@
 # ADR-0012 — Authentication: Local Demo Mode for Hackathon; Supabase Auth at P1
 
-- **Status:** Accepted, **amended by ADR-0016** · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Low (auth design pre-specified)
+- **Status:** Accepted, **amended by ADR-0016, partially superseded by [ADR-0017](ADR-0017-supabase-first-mvp-persistence.md)** · **Date:** 2026-07-10 · **Confidence:** High · **Reversal cost:** Low (auth design pre-specified)
 - **⚠ Amended by ADR-0016 (2026-07-10):** with the confirmed three-week timeline, Supabase email auth + consent + biometric lock are **now built in MVP (M6)** rather than deferred to P1. The core of this ADR still holds: **demo mode remains the on-stage scripted path** (airplane-mode-safe); auth is a real _secondary_ capability, not a demo dependency. "Auth in P1" below now reads "auth in M6, week 3."
+- **⚠ Partially superseded by ADR-0017 (2026-07-11):** "MVP: no accounts" no longer holds — **personal mode now requires an authenticated Supabase account** (auth is foundational, built in Phases 3–4 of [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md), not a cuttable week-3 track). **Still binding:** demo mode requires no account and no network, remains the on-stage scripted path, and fake-login theater stays rejected (C-07).
 
 ## Context & forces
 

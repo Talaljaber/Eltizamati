@@ -1,5 +1,7 @@
 # Eltizamati Engineering Knowledge Base — Index
 
+> **⚠ Implementation agents start here instead:** (1) [`10-implementation/STATUS.md`](10-implementation/STATUS.md) — live status + active phase, (2) the active phase file under [`10-implementation/phases/`](10-implementation/phases/), (3) [`08-delivery/IMPLEMENTATION_PLAN.md`](08-delivery/IMPLEMENTATION_PLAN.md) — the 9-phase master plan. **Architecture baseline: [ADR-0017](09-decisions/ADR-0017-supabase-first-mvp-persistence.md) (2026-07-11, Supabase-first MVP; SQLite postponed — [future roadmap](08-delivery/FUTURE_LOCAL_FIRST_ROADMAP.md)); it supersedes ADR-0013 and parts of 0002/0006/0012/0016 — banners in the affected documents mark superseded passages.**
+
 **How to use:** every document is self-contained but cross-referenced by stable ids. Start with the README; agents start here + `AI_AGENT_RULES.md`.
 **ID registry (where each id family is defined):** ASM/RES → `00-product/assumptions-validation-backlog.md` · DEC → `08-delivery/decision-memo.md` · CON/GAP → `00-audit/00-source-audit.md` · FR → `01-requirements/functional-requirements.md` · NFR → `01-requirements/non-functional-requirements.md` · US → `01-requirements/user-stories.md` · SCR/NAV → `02-ux/` · TERM → `00-product/glossary.md` · BR/INV/CONV → `03-domain/` · TV → `03-domain/calculation-test-vectors.md` · ADR → `09-decisions/` · RISK → `08-delivery/roadmap-and-risks.md` · PRIN/PER/JTBD → `00-product/`.
 
@@ -61,15 +63,25 @@
 
 ## 08-delivery
 
-- [Hackathon plan: milestones, traceability, demo script](08-delivery/hackathon-plan.md)
+- **[IMPLEMENTATION PLAN — the active 9-phase execution system](08-delivery/IMPLEMENTATION_PLAN.md)** ⭐
+- [Future local-first (SQLite) roadmap — post-MVP](08-delivery/FUTURE_LOCAL_FIRST_ROADMAP.md)
+- [Hackathon plan: milestones, traceability, demo script](08-delivery/hackathon-plan.md) *(superseded as execution plan; demo script still canonical)*
 - [Roadmap & risk register (RISK)](08-delivery/roadmap-and-risks.md)
 - [Decision memo — needs humans (DEC)](08-delivery/decision-memo.md)
-- [Readiness review & first slice](08-delivery/readiness-review.md)
-- [First coding-agent prompt (M0)](08-delivery/first-slice-prompt.md)
+- [Readiness review & first slice](08-delivery/readiness-review.md) *(historical)*
+- [First coding-agent prompt (M0)](08-delivery/first-slice-prompt.md) *(superseded — use STATUS.md + active phase file)*
+
+## 10-implementation
+
+- **[STATUS.md — live implementation status (read first)](10-implementation/STATUS.md)** ⭐
+- [Phase files PHASE-01…PHASE-09](10-implementation/phases/)
+- [Completion reports](10-implementation/completions/) *(one required per phase)*
+- [Current-state audit (2026-07-11)](10-implementation/CURRENT_STATE.md)
+- [M0 session log (historical)](10-implementation/status-m0-session-log.md)
 
 ## 09-decisions (ADRs)
 
-[Template](09-decisions/adr-template.md) · [0001 Framework: Expo+TS](09-decisions/ADR-0001-cross-platform-framework.md) · [0002 Backend: Supabase deferred](09-decisions/ADR-0002-backend-supabase-deferred.md) · [0003 Monorepo](09-decisions/ADR-0003-monorepo-structure.md) · [0004 State mgmt](09-decisions/ADR-0004-state-management.md) · [0005 Expo Router](09-decisions/ADR-0005-navigation-expo-router.md) · [0006 Persistence](09-decisions/ADR-0006-local-persistence.md) · [0007 Finance engine](09-decisions/ADR-0007-finance-engine-isolation.md) · [0008 Obligation subtypes](09-decisions/ADR-0008-obligation-subtype-modeling.md) · [0009 Providers](09-decisions/ADR-0009-provider-abstraction.md) · [0010 i18n/RTL](09-decisions/ADR-0010-i18n-rtl.md) · [0011 Testing](09-decisions/ADR-0011-testing-stack.md) · [0012 Auth/demo mode](09-decisions/ADR-0012-auth-demo-mode.md) · [0013 Local-first MVP](09-decisions/ADR-0013-local-first-mvp.md) · [0014 Errors](09-decisions/ADR-0014-error-taxonomy.md) · [0015 Observability](09-decisions/ADR-0015-observability.md) · [0016 Backend/auth activation — 3-week build; amends 0002/0012/0013](09-decisions/ADR-0016-backend-auth-activation.md)
+[Template](09-decisions/adr-template.md) · [0001 Framework: Expo+TS](09-decisions/ADR-0001-cross-platform-framework.md) · [0002 Backend: Supabase deferred](09-decisions/ADR-0002-backend-supabase-deferred.md) *(superseded in timing by 0017)* · [0003 Monorepo](09-decisions/ADR-0003-monorepo-structure.md) · [0004 State mgmt](09-decisions/ADR-0004-state-management.md) · [0005 Expo Router](09-decisions/ADR-0005-navigation-expo-router.md) · [0006 Persistence](09-decisions/ADR-0006-local-persistence.md) *(partially superseded by 0017)* · [0007 Finance engine](09-decisions/ADR-0007-finance-engine-isolation.md) · [0008 Obligation subtypes](09-decisions/ADR-0008-obligation-subtype-modeling.md) · [0009 Providers](09-decisions/ADR-0009-provider-abstraction.md) · [0010 i18n/RTL](09-decisions/ADR-0010-i18n-rtl.md) · [0011 Testing](09-decisions/ADR-0011-testing-stack.md) · [0012 Auth/demo mode](09-decisions/ADR-0012-auth-demo-mode.md) *(partially superseded by 0017)* · [0013 Local-first MVP](09-decisions/ADR-0013-local-first-mvp.md) *(superseded by 0017)* · [0014 Errors](09-decisions/ADR-0014-error-taxonomy.md) · [0015 Observability](09-decisions/ADR-0015-observability.md) · [0016 Backend/auth activation](09-decisions/ADR-0016-backend-auth-activation.md) *(superseded in sequencing by 0017)* · **[0017 Supabase-first MVP persistence — supersedes 0013, amends 0002/0006/0012/0016](09-decisions/ADR-0017-supabase-first-mvp-persistence.md)** ⭐
 
 ## 99-sources (verbatim originals)
 

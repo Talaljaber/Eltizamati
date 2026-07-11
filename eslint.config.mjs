@@ -32,7 +32,9 @@ export default defineConfig([
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parserOptions: {
-        project: './tsconfig.json',
+        // Auto-discovers the nearest tsconfig per file across the monorepo
+        // (root tsconfig for packages/*, apps/mobile/tsconfig.json for the app).
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },

@@ -6,17 +6,21 @@ Jordan-first, MENA-ready mobile app for tracking and _understanding_ loans, Isla
 
 > Eltizamati is not a bank, credit bureau, or financial adviser. It explains and estimates — clearly labeling every figure as official, user-entered, or estimated — and never claims to modify contracts or guarantee outcomes.
 
-## Current status (2026-07-10)
+## Current status (2026-07-11)
 
-**Phase: engineering knowledge base complete — implementation not yet started.**
-The repository currently contains the full documentation and decision system that any engineer or AI agent needs to build the product without additional context. First implementation milestone: **M0** (see below).
+**Phase: implementation in progress — Phase 1 (Stabilize the foundation) of a 9-phase plan.**
+Live status: **[docs/10-implementation/STATUS.md](docs/10-implementation/STATUS.md)** · Execution plan: **[docs/08-delivery/IMPLEMENTATION_PLAN.md](docs/08-delivery/IMPLEMENTATION_PLAN.md)** · Current-state audit: [docs/10-implementation/CURRENT_STATE.md](docs/10-implementation/CURRENT_STATE.md).
 
-**Update (2026-07-10):** the supporting architecture doc (SRC-3) and UI blueprint (SRC-4) were supplied and [delta-audited](docs/00-audit/00-source-audit.md). With the hackathon confirmed at **~3 weeks**, scope expanded to include **email auth, Supabase backend + RLS, versioned consent, local notifications, the card payoff simulator, and a labeled-mock connect flow** — all as week-3 work **off the critical demo path** (the scripted demo stays airplane-mode-safe). See [ADR-0016](docs/09-decisions/ADR-0016-backend-auth-activation.md), the [3-week plan](docs/08-delivery/hackathon-plan.md), and [MVP scope](docs/01-requirements/mvp-scope.md). No load-bearing architectural decision changed.
+**Architecture update (2026-07-11, [ADR-0017](docs/09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** the MVP is **Supabase-first** — personal mode requires a Supabase account and persists exclusively to Supabase (Postgres + Auth + RLS); **SQLite is postponed post-MVP** ([roadmap](docs/08-delivery/FUTURE_LOCAL_FIRST_ROADMAP.md)); demo mode runs from bundled deterministic in-memory seed data and stays fully offline (the scripted demo remains airplane-mode-safe). Supersedes the local-first MVP framing of ADR-0006/0013 and the timing of ADR-0002/0012/0016.
+
+**Update (2026-07-10):** the supporting architecture doc (SRC-3) and UI blueprint (SRC-4) were supplied and [delta-audited](docs/00-audit/00-source-audit.md). With the hackathon confirmed at **~3 weeks**, scope expanded to include **email auth, Supabase backend + RLS, versioned consent, local notifications, the card payoff simulator, and a labeled-mock connect flow**. See [ADR-0016](docs/09-decisions/ADR-0016-backend-auth-activation.md) (now superseded in sequencing by ADR-0017) and [MVP scope](docs/01-requirements/mvp-scope.md).
 
 ## Quick links
 
 | I want to…                                                | Go to                                                                                                                                    |
 | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **See where implementation stands right now**             | [`docs/10-implementation/STATUS.md`](docs/10-implementation/STATUS.md)                                                                   |
+| **Read the phase-based implementation plan**              | [`docs/08-delivery/IMPLEMENTATION_PLAN.md`](docs/08-delivery/IMPLEMENTATION_PLAN.md) → [phase files](docs/10-implementation/phases/)      |
 | Understand the whole documentation set                    | [`docs/INDEX.md`](docs/INDEX.md)                                                                                                         |
 | See what was audited/challenged in the original materials | [`docs/00-audit/`](docs/00-audit/00-source-audit.md)                                                                                     |
 | Know exactly what the hackathon MVP is                    | [`docs/01-requirements/mvp-scope.md`](docs/01-requirements/mvp-scope.md)                                                                 |
@@ -28,7 +32,7 @@ The repository currently contains the full documentation and decision system tha
 
 ## Stack (decided — rationale in `docs/09-decisions/`)
 
-Expo (React Native) + TypeScript strict · pnpm monorepo (`apps/mobile` + `packages/{domain, finance-engine, demo-data}`) · Expo Router · TanStack Query + Zustand · expo-sqlite + Drizzle (system of record for the offline demo) · i18next (Arabic/English, RTL from day one) · decimal.js-backed `Money`/`Rate` value objects · Vitest + fast-check / Jest + RNTL / Maestro · GitHub Actions + EAS Build · Sentry. **Supabase (Postgres + RLS + Auth + Edge Functions) is activated during the three-week build (M6, ADR-0016)** as a real secondary capability — email auth, versioned consent, cloud persistence with RLS-from-first-migration — while the scripted demo runs local-first in airplane mode. CRIF/Open Banking ship as a **labeled mock** (real access is post-hackathon).
+Expo (React Native) + TypeScript strict · pnpm monorepo (`apps/mobile` + `packages/{domain, finance-engine, demo-data}`) · Expo Router · TanStack Query + Zustand · **Supabase (Postgres + RLS + Auth) as the MVP persistence for personal-mode data (ADR-0017)** · bundled in-memory deterministic seed data for the offline demo mode · i18next (Arabic/English, RTL from day one) · decimal.js-backed `Money`/`Rate` value objects · Vitest + fast-check / Jest + RNTL / Maestro / pgTAP · GitHub Actions + EAS Build · Sentry. SQLite/local-first is **post-MVP** ([roadmap](docs/08-delivery/FUTURE_LOCAL_FIRST_ROADMAP.md)). CRIF/Open Banking ship as a **labeled mock** (real access is post-hackathon). The scripted demo runs in demo mode, in airplane mode, always.
 
 ## Local setup
 

@@ -1,5 +1,7 @@
 # Non-Functional Requirements
 
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** Supabase is the MVP persistence for personal-mode data — NFR-SEC-002 (RLS from first migration) and NFR-SEC-003 (SecureStore tokens) are now **MVP-blocking**, not P1. Reliability NFRs that assumed total offline capability apply to **demo mode** (bundled in-memory seed — fully offline); **personal mode requires network for authoritative reads/writes** and must surface honest offline/error/retry states instead of promising offline editing. No SQLite in MVP.
+
 **ID scheme:** `NFR-<CAT>-###`. Categories: SEC security, PRIV privacy, L10N localization, A11Y accessibility, PERF performance, REL reliability, MNT maintainability, TEST testability, OPS operations.
 Verification column states how compliance is checked. SRC-1 §35's twenty non-negotiables are all represented here (mapping noted).
 

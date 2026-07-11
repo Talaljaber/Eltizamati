@@ -1,10 +1,11 @@
 # ADR-0002 — Backend: Supabase, Designed Now, Deployed Post-Hackathon
 
-- **Status:** Accepted
+- **Status:** **Superseded in timing by [ADR-0017](ADR-0017-supabase-first-mvp-persistence.md) (2026-07-11); platform choice confirmed**
 - **Date:** 2026-07-10
 - **Confidence:** High for "no backend in MVP"; Medium-High for Supabase as the P1 platform (revalidate at P1 start against then-current options)
 - **Reversal cost:** MVP part — none (nothing deployed). P1 platform — Medium (schema is plain Postgres; auth/RLS/Edge Functions are the Supabase-specific surfaces; repositories isolate supabase-js).
 - **⚠ Amended by ADR-0016 (2026-07-10):** the three-week timeline moved the backend from "deployed post-hackathon" to **deployed during the build (M6) as a secondary track**. The Supabase _platform choice below is unchanged_; only the timing of activation moves earlier. The demo still runs with no backend on its critical path.
+- **⚠ Superseded by ADR-0017 (2026-07-11):** Supabase is now the **primary MVP persistence for personal-mode data**, built as a foundational early phase — no longer deferred, secondary, or paired with a SQLite system of record (SQLite is postponed post-MVP). The Supabase platform analysis below stands; the "MVP ships with no backend / SQLite is the system of record" decision no longer does. Demo mode still runs offline via bundled in-memory seed data.
 
 ## Context & forces
 

@@ -1,5 +1,7 @@
 # Functional Requirements
 
+> **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** personal mode requires Supabase authentication and persists exclusively to Supabase (no SQLite in MVP); demo mode requires no auth/network (bundled in-memory seed). Read any FR below that assumes "local data" for personal mode as: **demo mode = bundled seed; personal mode = Supabase under RLS**. FR-SET-003 (erase) means reset-demo in demo mode and server-side account/data erasure + audit in personal mode. FR-AUTH-* are foundational (Phases 3–4), not late-milestone work. Execution plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
+
 **ID scheme:** `FR-<AREA>-###`. Areas: ONB onboarding, OBL obligations, PAY payments, RATE rates, CALC calculation, SIM simulation, INS insights, EDU education, SET settings, DATA data sources/providers, AUTH auth, NTF notifications.
 **Scope update 2026-07-10 (ADR-0016 / SRC-3 delta-audit):** the three-week timeline promoted auth, consent, biometric lock, local notifications, the card payoff simulator, and duplicate detection into **MVP**. AUTH/NTF are no longer "post-MVP" as an area. The **scripted demo still runs in demo mode** (auth is a real secondary capability — mvp-scope §5a).
 **Scope column:** `MVP` (hackathon build), `S` (hackathon stretch), `P1` (first post-hackathon phase), `LATER`.

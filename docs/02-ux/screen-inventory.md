@@ -157,6 +157,38 @@ All screens: RTL-mirrored, a11y per NFR-A11Y-*, one primary CTA.
 
 ### SCR-LEARN-TOPIC — education topic page: definition-first, JOD example, related terms, contract-specific caveats; content version footer (FR-EDU-004).
 
+## Auth & connect (added 2026-07-11 — resolves the previously-undefined SCR-AUTH-*/SCR-CONSENT/SCR-CONNECT references; per [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md) personal mode requires an account)
+
+### SCR-AUTH-SIGNIN — Sign in
+
+- **Purpose:** authenticate an existing personal-mode user (Supabase email auth). **Primary:** Sign in; secondary: "Continue in demo mode" (always available — demo never requires auth), links to sign-up and reset.
+- States: L (submitting) · ER (invalid credentials, unverified email, network failure with retry) · OF (offline notice — personal mode needs a connection).
+- Traces: FR-ONB-006, FR-AUTH-001, US-016, NFR-SEC-003.
+
+### SCR-AUTH-SIGNUP — Create account
+
+- **Purpose:** email sign-up with verification. **Primary:** Create account → verification-pending state with resend.
+- States: L · ER (email in use, weak password, network) · verification-pending.
+- Traces: FR-AUTH-001, US-016.
+
+### SCR-AUTH-RESET — Password reset
+
+- **Purpose:** request + complete password reset. States: L · ER · sent-confirmation.
+- Traces: FR-AUTH-001, US-016.
+
+### SCR-CONSENT-PROVIDER — Per-provider consent
+
+- **Purpose:** informed, versioned, per-provider consent before any connect/retrieve (distinct from SCR-ONB-CONSENT's app-level disclaimer). **Primary:** "I consent" (recorded server-side with version + timestamp for signed-in users).
+- States: ER (record failure — consent must persist before proceeding) · declined (respectful block of the connect flow only).
+- Traces: FR-AUTH-002/005, NFR-PRIV-002, US-016/US-017.
+
+### SCR-CONNECT-MOCK — Connect a data source (labeled mock)
+
+- **Purpose:** consent-gated connect→retrieve→classify flow against the **visibly-labeled mock** CRIF/Open-Banking provider — never implies live access. **Primary:** Connect (gated on SCR-CONSENT-PROVIDER).
+- Content: provider cards each carrying a permanent "Mock / demonstration" badge; retrieval progress; imported-records summary with mock provenance badges.
+- States: L (retrieving) · ER (with retry) · consent-missing (redirect to consent).
+- Traces: FR-ONB-004, FR-AUTH-005, US-017, C-07.
+
 ## Stretch screens
 
 - **SCR-EXPORT** — export summary (US-015).
