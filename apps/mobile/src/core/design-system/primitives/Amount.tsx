@@ -36,7 +36,9 @@ export function Amount({
   testID,
 }: AmountProps) {
   const { t } = useTranslation()
-  const currencyLabel = t(`currency.${money.currency.toLowerCase()}`, { defaultValue: money.currency })
+  const currencyLabel = t(`currency.${money.currency.toLowerCase()}`, {
+    defaultValue: money.currency,
+  })
   const formatted =
     precision === 'estimate'
       ? formatMoneyEstimate(money, currencyLabel)
@@ -53,7 +55,10 @@ export function Amount({
     >
       {formatted}
       {precision === 'estimate' ? (
-        <Text variant="caption" color="secondary"> {provenanceLabel}</Text>
+        <Text variant="caption" color="secondary">
+          {' '}
+          {provenanceLabel}
+        </Text>
       ) : null}
     </Text>
   )

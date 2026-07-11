@@ -91,7 +91,7 @@ Reviewer runs `supabase start && supabase db reset && supabase test db` and watc
 
 ## Cuttable Work
 
-None — every table here is load-bearing for MVP personal mode. (If time pressure hits, the *phase order* already protects the demo: Phases 5–7 don't need this.)
+None — every table here is load-bearing for MVP personal mode. (If time pressure hits, the _phase order_ already protects the demo: Phases 5–7 don't need this.)
 
 ## Handoff to Next Phase
 

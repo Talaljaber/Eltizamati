@@ -42,7 +42,7 @@ Server-authoritative + durable local read cache + small outbound mutation queue 
 
 ## Data migration considerations
 
-- No user-data migration is needed to *adopt* the cache (server stays the source of truth; the cache hydrates from it).
+- No user-data migration is needed to _adopt_ the cache (server stays the source of truth; the cache hydrates from it).
 - Encryption stance must be re-decided at adoption time (ADR-0006's honest MVP stance — OS filesystem encryption, SQLCipher upgrade path — was written for this moment).
 - Erasure semantics extend: account deletion must also verifiably wipe the local cache + queue (absence tests).
 

@@ -14,7 +14,7 @@ The engine is the product's defensibility ("every number can defend itself") and
 
 ## Preconditions
 
-Phase 2 complete (final domain types incl. `CalculationRun`, `Percentage`, `Confidence`). For the persistence-integration slice: Phase 4 or 5 repositories available. Finance teammates engaged for vector sign-off (TV families currently `PENDING-FINANCE` block *exit*, not start).
+Phase 2 complete (final domain types incl. `CalculationRun`, `Percentage`, `Confidence`). For the persistence-integration slice: Phase 4 or 5 repositories available. Finance teammates engaged for vector sign-off (TV families currently `PENDING-FINANCE` block _exit_, not start).
 
 ## In Scope
 
@@ -33,7 +33,7 @@ Phase 2 complete (final domain types incl. `CalculationRun`, `Percentage`, `Conf
 5. **Property tests (fast-check):** INV-1..7 with fixed CI seeds + documented unfixed-seed mode; minimized counterexamples become permanent vectors.
 6. **Coverage gate:** ≥95% lines enforced in CI as a real gate over real formula code.
 7. **CalculationRun persistence integration:** application-service slice invoking the engine and persisting runs (FR-CALC-005) through the Phase-4/5 repositories; consistency-check notice (BR-CALC-017).
-8. **Insight rule primitives** (pure rule evaluation for RATE_INCREASED / INSTALLMENT_UNCHANGED_AFTER_INCREASE / RESIDUAL_RISK with dedup keys) — the *rules*; their center UI is Phase 7.
+8. **Insight rule primitives** (pure rule evaluation for RATE_INCREASED / INSTALLMENT_UNCHANGED_AFTER_INCREASE / RESIDUAL_RISK with dedup keys) — the _rules_; their center UI is Phase 7.
 
 ## Out of Scope
 

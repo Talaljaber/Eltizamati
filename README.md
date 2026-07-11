@@ -20,7 +20,7 @@ Live status: **[docs/10-implementation/STATUS.md](docs/10-implementation/STATUS.
 | I want to…                                                | Go to                                                                                                                                    |
 | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **See where implementation stands right now**             | [`docs/10-implementation/STATUS.md`](docs/10-implementation/STATUS.md)                                                                   |
-| **Read the phase-based implementation plan**              | [`docs/08-delivery/IMPLEMENTATION_PLAN.md`](docs/08-delivery/IMPLEMENTATION_PLAN.md) → [phase files](docs/10-implementation/phases/)      |
+| **Read the phase-based implementation plan**              | [`docs/08-delivery/IMPLEMENTATION_PLAN.md`](docs/08-delivery/IMPLEMENTATION_PLAN.md) → [phase files](docs/10-implementation/phases/)     |
 | Understand the whole documentation set                    | [`docs/INDEX.md`](docs/INDEX.md)                                                                                                         |
 | See what was audited/challenged in the original materials | [`docs/00-audit/`](docs/00-audit/00-source-audit.md)                                                                                     |
 | Know exactly what the hackathon MVP is                    | [`docs/01-requirements/mvp-scope.md`](docs/01-requirements/mvp-scope.md)                                                                 |

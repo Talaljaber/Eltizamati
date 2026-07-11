@@ -17,43 +17,43 @@
 
 ## 2. Scope table
 
-| Capability                                                                                  | MVP | Stretch (S) | P1 (post-hackathon) | Later                              |
-| ------------------------------------------------------------------------------------------- | --- | ----------- | ------------------- | ---------------------------------- |
-| App shell: i18n AR/EN, RTL, design system, 3-tab nav                                        | ✅  |             |                     |                                    |
-| Onboarding + disclaimer acknowledgment + demo/manual choice                                 | ✅  |             |                     |                                    |
-| Demo seed data (3 obligations, incl. seeded rate change)                                    | ✅  |             |                     |                                    |
-| Unified dashboard (totals, next payment, status, cards, changes)                            | ✅  |             |                     |                                    |
-| Conventional variable-rate loan detail (full)                                               | ✅  |             |                     |                                    |
-| Rate history timeline + log rate change                                                     | ✅  |             |                     |                                    |
-| Amortization + variable-rate projection + residual-balance detection                        | ✅  |             |                     |                                    |
-| Calculation explanation view (inputs, provenance, formula version, assumptions)             | ✅  |             |                     |                                    |
-| Loan scenario planner (extra monthly / one-time)                                            | ✅  |             |                     |                                    |
-| Payment history + log payment                                                               | ✅  |             |                     |                                    |
-| Murabaha detail (read-only, contract-correct terms, progress)                               | ✅  |             |                     |                                    |
-| Credit-card detail (display + utilization)                                                  | ✅  |             |                     |                                    |
-| Insights center (rules of FR-INS-001)                                                       | ✅  |             |                     |                                    |
-| Contextual education (tap-a-term) + Learn tab + bank-questions checklist                    | ✅  |             |                     |                                    |
-| Settings: language, erase data, reset demo, acknowledgments                                 | ✅  |             |                     |                                    |
-| Data-source status screen (honest mock labeling)                                            | ✅  |             |                     |                                    |
+| Capability                                                                                                                                                   | MVP | Stretch (S) | P1 (post-hackathon) | Later                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | ----------- | ------------------- | ---------------------------------- |
+| App shell: i18n AR/EN, RTL, design system, 3-tab nav                                                                                                         | ✅  |             |                     |                                    |
+| Onboarding + disclaimer acknowledgment + demo/manual choice                                                                                                  | ✅  |             |                     |                                    |
+| Demo seed data (3 obligations, incl. seeded rate change)                                                                                                     | ✅  |             |                     |                                    |
+| Unified dashboard (totals, next payment, status, cards, changes)                                                                                             | ✅  |             |                     |                                    |
+| Conventional variable-rate loan detail (full)                                                                                                                | ✅  |             |                     |                                    |
+| Rate history timeline + log rate change                                                                                                                      | ✅  |             |                     |                                    |
+| Amortization + variable-rate projection + residual-balance detection                                                                                         | ✅  |             |                     |                                    |
+| Calculation explanation view (inputs, provenance, formula version, assumptions)                                                                              | ✅  |             |                     |                                    |
+| Loan scenario planner (extra monthly / one-time)                                                                                                             | ✅  |             |                     |                                    |
+| Payment history + log payment                                                                                                                                | ✅  |             |                     |                                    |
+| Murabaha detail (read-only, contract-correct terms, progress)                                                                                                | ✅  |             |                     |                                    |
+| Credit-card detail (display + utilization)                                                                                                                   | ✅  |             |                     |                                    |
+| Insights center (rules of FR-INS-001)                                                                                                                        | ✅  |             |                     |                                    |
+| Contextual education (tap-a-term) + Learn tab + bank-questions checklist                                                                                     | ✅  |             |                     |                                    |
+| Settings: language, erase data, reset demo, acknowledgments                                                                                                  | ✅  |             |                     |                                    |
+| Data-source status screen (honest mock labeling)                                                                                                             | ✅  |             |                     |                                    |
 | **Card payoff simulator** (`cardPayoff.v1`) — **canonical classification: MVP-conditional; first item on the cut order** (see IMPLEMENTATION_PLAN cut order) | ✅  |             |                     |                                    |
-| **Duplicate payment detection**                                                             | ✅  |             |                     |                                    |
-| **Local payment-due notifications** (OS-scheduled, content-minimized)                       | ✅  |             |                     |                                    |
-| **User-defined gap/threshold insight + reminder-day setting** (from SRC-4)                  | ✅  |             |                     |                                    |
-| **Email authentication (Supabase): sign-up/in, email verify, password reset, session mgmt** | ✅  |             |                     |                                    |
-| **Versioned consent records (ToS, Privacy, disclaimer, per-provider) — server-backed**      | ✅  |             |                     |                                    |
-| **Biometric app-lock (local)**                                                              | ✅  |             |                     |                                    |
-| **Supabase deploy: cloud persistence, RLS-from-first-migration, account deletion + audit**  | ✅  |             |                     |                                    |
-| **Consent-gated connect flow against a LABELED MOCK CRIF/Open-Banking provider**            | ✅  |             |                     |                                    |
-| **"Two numbers" comparison hero on loan detail** (official balance vs projected true cost)  | ✅  |             |                     |                                    |
-| JSON export                                                                                 |     | ✅          |                     |                                    |
-| Saved scenarios                                                                             |     | ✅          |                     |                                    |
-| Phone OTP as a second auth factor                                                           |     |             | ✅                  |                                    |
-| Ijara + Diminishing Musharakah read-only types                                              |     |             | ✅                  |                                    |
-| Generic read-only facility type                                                             |     |             | ✅                  |                                    |
-| CRIF / Open Banking **real/sandbox** provider (mock ships in MVP)                           |     |             | ✅ (if access)      |                                    |
-| Push notifications (FCM/APNs, server-triggered)                                             |     |             |                     | ✅                                 |
-| Household sharing, white-label, coaches                                                     |     |             |                     | ✅                                 |
-| OCR import, payment initiation, LLM advice                                                  |     |             |                     | ❌ never as scoped (see not-build) |
+| **Duplicate payment detection**                                                                                                                              | ✅  |             |                     |                                    |
+| **Local payment-due notifications** (OS-scheduled, content-minimized)                                                                                        | ✅  |             |                     |                                    |
+| **User-defined gap/threshold insight + reminder-day setting** (from SRC-4)                                                                                   | ✅  |             |                     |                                    |
+| **Email authentication (Supabase): sign-up/in, email verify, password reset, session mgmt**                                                                  | ✅  |             |                     |                                    |
+| **Versioned consent records (ToS, Privacy, disclaimer, per-provider) — server-backed**                                                                       | ✅  |             |                     |                                    |
+| **Biometric app-lock (local)**                                                                                                                               | ✅  |             |                     |                                    |
+| **Supabase deploy: cloud persistence, RLS-from-first-migration, account deletion + audit**                                                                   | ✅  |             |                     |                                    |
+| **Consent-gated connect flow against a LABELED MOCK CRIF/Open-Banking provider**                                                                             | ✅  |             |                     |                                    |
+| **"Two numbers" comparison hero on loan detail** (official balance vs projected true cost)                                                                   | ✅  |             |                     |                                    |
+| JSON export                                                                                                                                                  |     | ✅          |                     |                                    |
+| Saved scenarios                                                                                                                                              |     | ✅          |                     |                                    |
+| Phone OTP as a second auth factor                                                                                                                            |     |             | ✅                  |                                    |
+| Ijara + Diminishing Musharakah read-only types                                                                                                               |     |             | ✅                  |                                    |
+| Generic read-only facility type                                                                                                                              |     |             | ✅                  |                                    |
+| CRIF / Open Banking **real/sandbox** provider (mock ships in MVP)                                                                                            |     |             | ✅ (if access)      |                                    |
+| Push notifications (FCM/APNs, server-triggered)                                                                                                              |     |             |                     | ✅                                 |
+| Household sharing, white-label, coaches                                                                                                                      |     |             |                     | ✅                                 |
+| OCR import, payment initiation, LLM advice                                                                                                                   |     |             |                     | ❌ never as scoped (see not-build) |
 
 ## 3. Explicit not-build list (with reasons)
 

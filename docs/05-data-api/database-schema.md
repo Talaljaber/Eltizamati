@@ -1,6 +1,7 @@
 # Database Schema — Supabase Postgres (MVP)
 
 > **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** this schema is now implemented **once, in Supabase Postgres, as the MVP persistent schema.** There is **no local SQLite schema in the MVP** — the SQLite column of the type-mapping table below is retained only as future-scope reference (see "Future local-first enhancement" at the end of this file). Key deltas from the text below:
+>
 > - **`user_id` is NON-NULL on every user-owned table from the first migration** (obligations, rate_periods, payments, calculation_runs, insights, consent_records). The "nullable MVP, non-null P1" annotations in the ERD are superseded — no nullable-ownership shortcuts.
 > - **RLS is enabled in the same migration that creates each table** (§4 pattern) with pgTAP cross-user tests — this is MVP-blocking, not P1.
 > - The **localProfileId → auth.uid() remapping strategy (§ below the ERD) is superseded**: personal mode requires sign-in before any personal data is written, so rows are created with `auth.uid()` from the start. No MMKV profile-id backfill exists.

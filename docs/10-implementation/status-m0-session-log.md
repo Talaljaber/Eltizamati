@@ -45,6 +45,7 @@ The previous shell had two tabs, "Dashboard" and "Simulator" — neither matches
 - Updated `en.json`/`ar.json` with new keys: `tabs.{home,obligations,learn}`, `home.*`, `obligations.*`, `learn.*`, `settings.*`, `notFound.*`, `currency.jod`, `provenance.*`, `common.loading`. Removed the obsolete `tabs.dashboard`/`tabs.simulator`/`dashboard.*`/`simulator.*` keys. EN and AR were edited together in every case.
 
 **Not yet done (interrupted mid-task):**
+
 - `app/+not-found.tsx` still has its original hardcoded English strings ("Oops!", "This screen doesn't exist.") and does not yet use the design-system primitives or the `notFound.*` i18n keys that were already added to the locale files. **This is a real gap against the "no hardcoded user-visible strings" rule.**
 - `app/_layout.tsx` has not been updated to register the new `settings` route in the root `Stack` (it currently only knows about `(tabs)` and `+not-found`); navigating to `/settings` is unverified.
 
@@ -66,17 +67,17 @@ No component library was added; everything is built on bare `react-native` + the
 
 ## 2. Verification actually run this session (with real output)
 
-| Command | Result |
-|---|---|
-| `pnpm run typecheck` (root: `tsc --build` for packages + `tsc --noEmit` in `apps/mobile`) | **Pass**, clean, after all fixes in §1b/§1a |
-| `pnpm run lint` (`eslint . --max-warnings=0`) | **Pass**, clean, after the `projectService` fix |
-| `pnpm run test:packages` (vitest: domain, finance-engine, demo-data) | **Pass** — 25 + 4 + 2 = 31 tests green |
-| `pnpm run test:app` (mobile Jest/RNTL) | **Not verified.** The script was broken (`jest` vs `test`) and was fixed, but the corrected command was not re-run before the session was interrupted. There are also no test files for the new design-system primitives yet, so even a clean run would not mean the primitives are tested. |
-| `pnpm run format:check` | **Not run this session.** |
-| `pnpm run depcruise` | **Not run this session.** |
-| `pnpm run check` (the full combined gate) | **Not run this session** — do not report this as green anywhere until it has actually been executed end-to-end. |
-| `npx expo-doctor` | **Not run.** |
-| Metro bundling (`expo start` + direct HTTP request for the Android bundle) | **Pass** (`200`) after the `@babel/runtime` + asset fixes; confirmed via `curl`, not via an actual emulator/device render. |
+| Command                                                                                   | Result                                                                                                                                                                                                                                                                                      |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run typecheck` (root: `tsc --build` for packages + `tsc --noEmit` in `apps/mobile`) | **Pass**, clean, after all fixes in §1b/§1a                                                                                                                                                                                                                                                 |
+| `pnpm run lint` (`eslint . --max-warnings=0`)                                             | **Pass**, clean, after the `projectService` fix                                                                                                                                                                                                                                             |
+| `pnpm run test:packages` (vitest: domain, finance-engine, demo-data)                      | **Pass** — 25 + 4 + 2 = 31 tests green                                                                                                                                                                                                                                                      |
+| `pnpm run test:app` (mobile Jest/RNTL)                                                    | **Not verified.** The script was broken (`jest` vs `test`) and was fixed, but the corrected command was not re-run before the session was interrupted. There are also no test files for the new design-system primitives yet, so even a clean run would not mean the primitives are tested. |
+| `pnpm run format:check`                                                                   | **Not run this session.**                                                                                                                                                                                                                                                                   |
+| `pnpm run depcruise`                                                                      | **Not run this session.**                                                                                                                                                                                                                                                                   |
+| `pnpm run check` (the full combined gate)                                                 | **Not run this session** — do not report this as green anywhere until it has actually been executed end-to-end.                                                                                                                                                                             |
+| `npx expo-doctor`                                                                         | **Not run.**                                                                                                                                                                                                                                                                                |
+| Metro bundling (`expo start` + direct HTTP request for the Android bundle)                | **Pass** (`200`) after the `@babel/runtime` + asset fixes; confirmed via `curl`, not via an actual emulator/device render.                                                                                                                                                                  |
 
 ## 3. Not started (still open from the M0 scope)
 

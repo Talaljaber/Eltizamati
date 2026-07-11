@@ -85,30 +85,30 @@ M3 (engine) can start against `packages/domain` as soon as M1's domain core exis
 
 ## 3. Traceability matrix (Phase-5 consistency check — MVP features)
 
-| Feature              | FR                          | US         | SCR                     | BR/Formula                                           | Test                      | Milestone |
-| -------------------- | --------------------------- | ---------- | ----------------------- | ---------------------------------------------------- | ------------------------- | --------- |
-| Onboarding + consent | FR-ONB-001..005             | US-001     | SCR-ONB-*               | —                                                    | RNTL + Maestro            | M1        |
-| Dashboard            | FR-OBL-001/002, FR-CALC-006 | US-002     | SCR-HOME                | aggregates.v1, BR-PROV-004/005, BR-STAT-002          | TV-7xx + RNTL             | M1        |
-| Loan detail          | FR-OBL-003                  | US-003/009 | SCR-OBL-DETAIL-LOAN     | BR-CALC-016                                          | RNTL states               | M2        |
-| Murabaha             | FR-OBL-004                  | US-007     | SCR-OBL-DETAIL-MURABAHA | murabahaProgress.v1, BR-TERM-001, BR-CALC-020, INV-7 | TV-5xx + terminology test | M2        |
-| Card display         | FR-OBL-005                  | US-008     | SCR-OBL-DETAIL-CARD     | —                                                    | RNTL                      | M2        |
-| Rate history/log     | FR-RATE-001/002             | US-003     | SCR-RATE-HIST/ADD       | BR-OBL-002, BR-RATE-001                              | unit + RNTL               | M2/M5     |
-| Rate impact          | FR-RATE-003/004             | US-003     | SCR-RATE-IMPACT         | variableProjection.v1, residualDetection.v1          | TV-2xx/30x                | M3        |
-| Explanation          | FR-CALC-001/005             | US-009     | SCR-EXPLAIN             | run persistence                                      | unit + RNTL               | M3        |
-| Insights             | FR-INS-001..004             | US-012     | SCR-INS-CENTER          | dedup rule                                           | rule unit tests           | M3        |
-| Scenario             | FR-SIM-001..003             | US-004     | SCR-SIM-LOAN            | extraPaymentScenario.v1, INV-3                       | TV-304 + Maestro          | M4        |
-| Payments             | FR-PAY-001..003/005         | US-005     | SCR-PAY-LIST/ADD        | allocationEstimate.v1                                | TV-4xx                    | M2/M5     |
-| Manual entry         | FR-OBL-006/007              | US-006     | SCR-OBL-ADD-*           | BR-CALC-017                                          | RNTL + Maestro            | M5        |
-| Education            | FR-EDU-001..004             | —          | SCR-LEARN*              | content format                                       | key-coverage              | M2/M6     |
-| Settings/erase       | FR-SET-001..003/005         | US-010/011 | SCR-SET                 | —                                                    | absence test              | M5        |
-| Data status          | FR-DATA-003                 | —          | SCR-DATA-STATUS         | provider registry                                    | RNTL                      | M5        |
-| Auth & session       | FR-AUTH-001/006             | US-016     | SCR-AUTH-SIGNIN/SIGNUP/RESET | RLS policies                                    | RNTL + pgTAP              | M6        |
-| Consent records      | FR-AUTH-002/005             | US-016     | SCR-CONSENT-PROVIDER    | consent versioning                                   | unit + RNTL               | M6        |
-| Account deletion     | FR-AUTH-003                 | —          | SCR-SET                 | erasure + audit                                      | integration               | M6        |
-| Mock connect flow    | FR-ONB-004, FR-AUTH-005     | US-017     | SCR-CONNECT-MOCK        | provider contract (mock)                             | RNTL + Maestro            | M6        |
-| Card payoff sim      | FR-SIM-004                  | US-013     | SCR-SIM-CARD            | cardPayoff.v1, INV-*                                 | TV-6xx + Maestro          | M7        |
-| Local notifications  | FR-NTF-001, FR-SET-006      | —          | SCR-SET                 | scheduling + quiet hours                             | integration               | M7        |
-| Duplicate detection  | FR-PAY-004                  | US-005     | SCR-PAY-ADD             | dedup rule                                           | unit + RNTL               | M7        |
+| Feature              | FR                          | US         | SCR                          | BR/Formula                                           | Test                      | Milestone |
+| -------------------- | --------------------------- | ---------- | ---------------------------- | ---------------------------------------------------- | ------------------------- | --------- |
+| Onboarding + consent | FR-ONB-001..005             | US-001     | SCR-ONB-*                    | —                                                    | RNTL + Maestro            | M1        |
+| Dashboard            | FR-OBL-001/002, FR-CALC-006 | US-002     | SCR-HOME                     | aggregates.v1, BR-PROV-004/005, BR-STAT-002          | TV-7xx + RNTL             | M1        |
+| Loan detail          | FR-OBL-003                  | US-003/009 | SCR-OBL-DETAIL-LOAN          | BR-CALC-016                                          | RNTL states               | M2        |
+| Murabaha             | FR-OBL-004                  | US-007     | SCR-OBL-DETAIL-MURABAHA      | murabahaProgress.v1, BR-TERM-001, BR-CALC-020, INV-7 | TV-5xx + terminology test | M2        |
+| Card display         | FR-OBL-005                  | US-008     | SCR-OBL-DETAIL-CARD          | —                                                    | RNTL                      | M2        |
+| Rate history/log     | FR-RATE-001/002             | US-003     | SCR-RATE-HIST/ADD            | BR-OBL-002, BR-RATE-001                              | unit + RNTL               | M2/M5     |
+| Rate impact          | FR-RATE-003/004             | US-003     | SCR-RATE-IMPACT              | variableProjection.v1, residualDetection.v1          | TV-2xx/30x                | M3        |
+| Explanation          | FR-CALC-001/005             | US-009     | SCR-EXPLAIN                  | run persistence                                      | unit + RNTL               | M3        |
+| Insights             | FR-INS-001..004             | US-012     | SCR-INS-CENTER               | dedup rule                                           | rule unit tests           | M3        |
+| Scenario             | FR-SIM-001..003             | US-004     | SCR-SIM-LOAN                 | extraPaymentScenario.v1, INV-3                       | TV-304 + Maestro          | M4        |
+| Payments             | FR-PAY-001..003/005         | US-005     | SCR-PAY-LIST/ADD             | allocationEstimate.v1                                | TV-4xx                    | M2/M5     |
+| Manual entry         | FR-OBL-006/007              | US-006     | SCR-OBL-ADD-*                | BR-CALC-017                                          | RNTL + Maestro            | M5        |
+| Education            | FR-EDU-001..004             | —          | SCR-LEARN*                   | content format                                       | key-coverage              | M2/M6     |
+| Settings/erase       | FR-SET-001..003/005         | US-010/011 | SCR-SET                      | —                                                    | absence test              | M5        |
+| Data status          | FR-DATA-003                 | —          | SCR-DATA-STATUS              | provider registry                                    | RNTL                      | M5        |
+| Auth & session       | FR-AUTH-001/006             | US-016     | SCR-AUTH-SIGNIN/SIGNUP/RESET | RLS policies                                         | RNTL + pgTAP              | M6        |
+| Consent records      | FR-AUTH-002/005             | US-016     | SCR-CONSENT-PROVIDER         | consent versioning                                   | unit + RNTL               | M6        |
+| Account deletion     | FR-AUTH-003                 | —          | SCR-SET                      | erasure + audit                                      | integration               | M6        |
+| Mock connect flow    | FR-ONB-004, FR-AUTH-005     | US-017     | SCR-CONNECT-MOCK             | provider contract (mock)                             | RNTL + Maestro            | M6        |
+| Card payoff sim      | FR-SIM-004                  | US-013     | SCR-SIM-CARD                 | cardPayoff.v1, INV-*                                 | TV-6xx + Maestro          | M7        |
+| Local notifications  | FR-NTF-001, FR-SET-006      | —          | SCR-SET                      | scheduling + quiet hours                             | integration               | M7        |
+| Duplicate detection  | FR-PAY-004                  | US-005     | SCR-PAY-ADD                  | dedup rule                                           | unit + RNTL               | M7        |
 
 (US-016/US-017 defined in `user-stories.md` 2026-07-11 — the earlier `US-014*/US-015*` placeholders collided with the existing reminder/export stories and are retired.)
 (Every MVP FR now appears; only FR-SET-004/FR-SIM-005/FR-AUTH-007/FR-NTF-002 remain out of MVP by design.)

@@ -10,7 +10,7 @@ The MVP surface is complete around the demo spine: Murabaha and card details, ma
 
 ## Why This Phase Exists
 
-Breadth and honesty surfaces (contract-correct Islamic handling, honest provider status, education) plus the judge-interaction flows ("enter my own loan live") — everything the demo *stages on* but the spine doesn't strictly need. Gathered into one phase with explicit internal cut lines so time pressure trims depth, never the spine.
+Breadth and honesty surfaces (contract-correct Islamic handling, honest provider status, education) plus the judge-interaction flows ("enter my own loan live") — everything the demo _stages on_ but the spine doesn't strictly need. Gathered into one phase with explicit internal cut lines so time pressure trims depth, never the spine.
 
 ## Preconditions
 
@@ -24,7 +24,7 @@ Phase 7 complete. For personal-mode write flows: Phase 4 complete. Cut decisions
 4. **SCR-SET complete:** language, acknowledgments view (FR-SET-002), reset demo, erase (mode-appropriate per ADR-0017), account section (Phase-4 hooks), about/version.
 5. **SCR-DATA-STATUS:** provider list with honest labels ("CRIF — not connected, planned"), record counts, last-updated (ManualEntryProvider read adapter per provider-abstraction §3a).
 6. **SCR-LEGAL-DOC**, **SCR-LEARN + SCR-LEARN-TOPIC:** first 10 education entries, tap-a-term glossary integration (FR-EDU-001..004), bilingual.
-7. **User-defined threshold insight + reminder-day setting** (FR-INS-001 user rule, FR-SET-006) — *setting + insight only; notification delivery is cut #3 item below.*
+7. **User-defined threshold insight + reminder-day setting** (FR-INS-001 user rule, FR-SET-006) — _setting + insight only; notification delivery is cut #3 item below._
 8. Remaining state-matrix coverage for all the above; form-field design-system family just-in-time.
 
 ## In Scope (cuttable, in cut order — record any cut in STATUS.md + completion report)
@@ -74,7 +74,7 @@ pnpm run test:app
 
 ## Manual Validation
 
-"Judge's loan in <2 minutes" run-through (manual add live) · Arabic pass over all new screens · if mock-connect ships: verify the Mock badge is present at every step with networking on *and* off (flow must degrade honestly).
+"Judge's loan in <2 minutes" run-through (manual add live) · Arabic pass over all new screens · if mock-connect ships: verify the Mock badge is present at every step with networking on _and_ off (flow must degrade honestly).
 
 ## Exit Criteria
 

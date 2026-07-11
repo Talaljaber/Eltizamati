@@ -1,6 +1,6 @@
 # Eltizamati Current Implementation State
 
-> **Note (added 2026-07-11, same day, after the documentation reorganization):** this audit is a frozen snapshot taken *before* the phase-plan reorganization. References to `docs/10-implementation/status.md` now resolve to **[status-m0-session-log.md](status-m0-session-log.md)** (renamed; content preserved). The live status is **[STATUS.md](STATUS.md)**; the execution plan is [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md); §9–§11's recommendations have been incorporated into that plan. The SQLite recommendations in §9/§11 are superseded by [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md) (Supabase-first; no SQLite in MVP).
+> **Note (added 2026-07-11, same day, after the documentation reorganization):** this audit is a frozen snapshot taken _before_ the phase-plan reorganization. References to `docs/10-implementation/status.md` now resolve to **[status-m0-session-log.md](status-m0-session-log.md)** (renamed; content preserved). The live status is **[STATUS.md](STATUS.md)**; the execution plan is [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md); §9–§11's recommendations have been incorporated into that plan. The SQLite recommendations in §9/§11 are superseded by [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md) (Supabase-first; no SQLite in MVP).
 
 **Audit date:** 2026-07-11
 **Auditor:** Claude (factual current-state audit, no implementation performed)
@@ -15,6 +15,7 @@ The repository is in **early M0 (Foundation)**, interrupted mid-session, with th
 On top of that commit, the working tree contains a large, coherent, but still uncommitted cleanup pass: the navigation shell was rewritten to match the approved Home/Obligations/Learn IA, the domain model's `ObligationStatus` enum was corrected to match the spec, several real pre-existing build/lint/typecheck bugs were fixed, and a small but well-built design-system primitive set was added. **None of this is committed or pushed** — `git status` shows staged deletions, unstaged modifications, and untracked new files, all on top of a HEAD that is identical to `origin/main`.
 
 Verified this session:
+
 - `pnpm run typecheck` — **passes** (packages + mobile app).
 - `pnpm run lint` — **passes** clean, 0 warnings.
 - `pnpm run depcruise` — **passes**, 0 boundary violations (88 modules, 131 dependencies).
@@ -56,6 +57,7 @@ There is no local persistence layer, no Supabase artifact, no CI workflow, and n
 ### Staged changes
 
 `git diff --cached --stat` — 36 files, 1,882 deletions, 0 insertions. **All of it is deletion of previously-committed generated/build artifacts** being untracked via `git rm --cached` (files still exist on disk, per `docs/10-implementation/status.md`'s own account of this cleanup):
+
 - `apps/mobile/app/**/*.d.ts(.map)` (route type-declaration files)
 - `apps/mobile/src/i18n/index.d.ts(.map)`
 - `packages/{demo-data,domain,finance-engine}/vitest.config.d.ts(.map)`
@@ -67,6 +69,7 @@ This matches an updated `.gitignore` (see below) that now excludes these pattern
 ### Unstaged changes
 
 `git diff --stat` — 21 files, 443 insertions, 492 deletions:
+
 - `.gitignore` — rewritten; status.md reports the previous version was corrupted (null-byte-separated last line) and silently ignored nothing. New patterns added: `*.tsbuildinfo`, `*.d.ts.map`, `apps/mobile/app/**/*.d.ts`, `apps/mobile/src/**/*.d.ts`, `packages/*/vitest.config.d.ts`, `coverage/`.
 - `apps/mobile/app.json` — asset paths, plugin registration (`expo-sqlite` config plugin auto-added), `typedRoutes` disabled.
 - `apps/mobile/app/(tabs)/_layout.tsx` — tabs re-registered to `index`/`obligations`/`learn`.
@@ -87,6 +90,7 @@ This matches an updated `.gitignore` (see below) that now excludes these pattern
 ### Untracked files
 
 `git ls-files --others --exclude-standard` — 6 new paths (some directories with multiple files):
+
 - `apps/mobile/app/(tabs)/index.tsx` — new Home tab route
 - `apps/mobile/app/(tabs)/learn/index.tsx` — new Learn tab route
 - `apps/mobile/app/(tabs)/obligations/index.tsx` — new Obligations tab route
@@ -104,20 +108,20 @@ This matches an updated `.gitignore` (see below) that now excludes these pattern
 
 All commands run from the repo root (`c:\Users\hp\.m2\Eltizamati`) against the current, unmodified working tree. No formatting, installs beyond a frozen-lockfile verification, or generation commands were run.
 
-| Command | Result | Notes |
-|---|---|---|
-| `pnpm install --frozen-lockfile` | **Passed** | "Lockfile is up to date, resolution step is skipped." Pruned 45 extraneous packages from `node_modules` to match the lockfile (normal, non-destructive to lockfile/source). |
-| `pnpm run format:check` (`prettier --check .`) | **Failed** | Exit 1. **101 files** flagged, spanning nearly every doc and source file in the repo, including files that were not touched this session. Given `git diff` shows CRLF-conversion warnings on every touched file (`warning: in the working copy of 'X', LF will be replaced by CRLF...`) and `.prettierrc.json` pins `endOfLine: "lf"`, this strongly suggests a **Windows checkout line-ending mismatch** (git `core.autocrlf` converting to CRLF on checkout while Prettier demands LF) rather than 101 individually malformed files. Not independently confirmed by re-running Prettier with a diff, per the "do not run formatting across the repository" constraint on this audit — flagged as the most likely cause, not a certainty. |
-| `pnpm run lint` (`eslint . --max-warnings=0`) | **Passed** | Exit 0, no output beyond the script header — 0 errors, 0 warnings. |
-| `pnpm run typecheck` (`tsc --build` + mobile `tsc --noEmit`) | **Passed** | Exit 0, clean, both the packages composite build and the Expo app's own typecheck. |
-| `pnpm run depcruise` (`.dependency-cruiser.cjs` against `apps`+`packages`) | **Passed** | "no dependency violations found (88 modules, 131 dependencies cruised)." |
-| `pnpm run test:packages` (Vitest: domain, finance-engine, demo-data) | **Passed** | 31/31 tests green (25 domain + 4 finance-engine + 2 demo-data). Finance-engine coverage report shows 100% on the registry metadata file itself, but this is coverage of scaffolding, not of any calculation logic (none exists — see §5, Finance Engine). |
-| `pnpm run test:app` (mobile Jest/RNTL) | **Failed** | Exit 1: `No tests found, exiting with code 1` — 32 files checked, 0 matched `testMatch`. The Jest/`jest-expo`/RNTL harness is correctly configured (`apps/mobile/jest.config.js`, relevant devDependencies present), but **zero test files exist** anywhere under `apps/mobile`. |
-| `pnpm run test` (= `test:packages && test:app`) | **Failed** | Fails at the `test:app` step, as above. |
-| `pnpm run check` (= `format:check && lint && typecheck && depcruise && test`) | **Would fail** | Not re-run standalone since it is a strict chain of the commands above and the first step (`format:check`) already fails — re-running would add no new information. **`pnpm check` is not green.** |
-| `npx expo-doctor` | **Failed to run — no usable diagnostics** | Exits with code 1 with **no stdout/stderr text** on this machine, from both Bash and PowerShell, with and without redirection. Isolated the failure to the underlying `expo config --json --full` call inside `expo-doctor`, which also exits 1 silently. This environment runs **Node v23.8.0**; Expo SDK 52 tooling's supported Node range is 18/20-line LTS, and a silent CLI crash is consistent with an unsupported Node major version. **Not resolved or worked around** (would require changing the Node version, outside this audit's scope) — expo-doctor's findings are simply unavailable this session. |
-| Mobile scripts / safest non-destructive Expo validation | **Not run this session** | The prior session (documented in `status.md`) verified Metro could bundle the Android JS entry point via a direct HTTP request (200 OK) after fixing a missing `@babel/runtime` dependency. This audit did not start Metro or re-verify bundling, to honor "do not leave Metro running" and to avoid any state-changing action beyond the read-only verification matrix requested. **No claim is made here about current bundling status** — treat it as unverified since the last confirmed check. |
-| Android/iOS device or emulator validation | **Not performed, not available** | No Android SDK, no `adb`, no emulator in this environment (confirmed by `status.md` and not contradicted by anything found this session). No physical-device, emulator, RTL-on-device, persistence, or offline validation can be claimed. |
+| Command                                                                       | Result                                    | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm install --frozen-lockfile`                                              | **Passed**                                | "Lockfile is up to date, resolution step is skipped." Pruned 45 extraneous packages from `node_modules` to match the lockfile (normal, non-destructive to lockfile/source).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `pnpm run format:check` (`prettier --check .`)                                | **Failed**                                | Exit 1. **101 files** flagged, spanning nearly every doc and source file in the repo, including files that were not touched this session. Given `git diff` shows CRLF-conversion warnings on every touched file (`warning: in the working copy of 'X', LF will be replaced by CRLF...`) and `.prettierrc.json` pins `endOfLine: "lf"`, this strongly suggests a **Windows checkout line-ending mismatch** (git `core.autocrlf` converting to CRLF on checkout while Prettier demands LF) rather than 101 individually malformed files. Not independently confirmed by re-running Prettier with a diff, per the "do not run formatting across the repository" constraint on this audit — flagged as the most likely cause, not a certainty. |
+| `pnpm run lint` (`eslint . --max-warnings=0`)                                 | **Passed**                                | Exit 0, no output beyond the script header — 0 errors, 0 warnings.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `pnpm run typecheck` (`tsc --build` + mobile `tsc --noEmit`)                  | **Passed**                                | Exit 0, clean, both the packages composite build and the Expo app's own typecheck.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `pnpm run depcruise` (`.dependency-cruiser.cjs` against `apps`+`packages`)    | **Passed**                                | "no dependency violations found (88 modules, 131 dependencies cruised)."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `pnpm run test:packages` (Vitest: domain, finance-engine, demo-data)          | **Passed**                                | 31/31 tests green (25 domain + 4 finance-engine + 2 demo-data). Finance-engine coverage report shows 100% on the registry metadata file itself, but this is coverage of scaffolding, not of any calculation logic (none exists — see §5, Finance Engine).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `pnpm run test:app` (mobile Jest/RNTL)                                        | **Failed**                                | Exit 1: `No tests found, exiting with code 1` — 32 files checked, 0 matched `testMatch`. The Jest/`jest-expo`/RNTL harness is correctly configured (`apps/mobile/jest.config.js`, relevant devDependencies present), but **zero test files exist** anywhere under `apps/mobile`.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `pnpm run test` (= `test:packages && test:app`)                               | **Failed**                                | Fails at the `test:app` step, as above.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `pnpm run check` (= `format:check && lint && typecheck && depcruise && test`) | **Would fail**                            | Not re-run standalone since it is a strict chain of the commands above and the first step (`format:check`) already fails — re-running would add no new information. **`pnpm check` is not green.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `npx expo-doctor`                                                             | **Failed to run — no usable diagnostics** | Exits with code 1 with **no stdout/stderr text** on this machine, from both Bash and PowerShell, with and without redirection. Isolated the failure to the underlying `expo config --json --full` call inside `expo-doctor`, which also exits 1 silently. This environment runs **Node v23.8.0**; Expo SDK 52 tooling's supported Node range is 18/20-line LTS, and a silent CLI crash is consistent with an unsupported Node major version. **Not resolved or worked around** (would require changing the Node version, outside this audit's scope) — expo-doctor's findings are simply unavailable this session.                                                                                                                         |
+| Mobile scripts / safest non-destructive Expo validation                       | **Not run this session**                  | The prior session (documented in `status.md`) verified Metro could bundle the Android JS entry point via a direct HTTP request (200 OK) after fixing a missing `@babel/runtime` dependency. This audit did not start Metro or re-verify bundling, to honor "do not leave Metro running" and to avoid any state-changing action beyond the read-only verification matrix requested. **No claim is made here about current bundling status** — treat it as unverified since the last confirmed check.                                                                                                                                                                                                                                        |
+| Android/iOS device or emulator validation                                     | **Not performed, not available**          | No Android SDK, no `adb`, no emulator in this environment (confirmed by `status.md` and not contradicted by anything found this session). No physical-device, emulator, RTL-on-device, persistence, or offline validation can be claimed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ---
 
@@ -128,6 +132,7 @@ All commands run from the repo root (`c:\Users\hp\.m2\Eltizamati`) against the c
 **Intended outcome** (`docs/08-delivery/hackathon-plan.md`): monorepo scaffolded, Expo app boots, i18n+RTL working, design tokens + `Screen`/`Text`/`Button`/`Card`/`Amount` (placeholder) primitives, SQLite+Drizzle with migration 0001, CI green, Sentry wired, README quickstart verified. Exit bar: a bilingual "hello dashboard" shell.
 
 **Completed work:**
+
 - pnpm monorepo with correct workspace boundaries (`apps/mobile`, `packages/{domain,finance-engine,demo-data}`), enforced by a working `.dependency-cruiser.cjs` (0 violations).
 - TypeScript strict build across all packages + the mobile app typechecks clean.
 - ESLint clean (0 warnings) across the whole repo, including typed linting on `apps/mobile`.
@@ -137,6 +142,7 @@ All commands run from the repo root (`c:\Users\hp\.m2\Eltizamati`) against the c
 - Domain package's `ObligationStatus` enum, `LoanPurpose`, and `Sourced<T>` provenance wrappers corrected to match `domain-model.md`.
 
 **Incomplete work (explicitly still open, not started at all):**
+
 - Local persistence: no `expo-sqlite`/Drizzle schema, no migration files, no migration runner, no repositories, no domain↔row mappers — despite `expo-sqlite`/`drizzle-orm` being installed as dependencies. **0% of this M0 requirement exists.**
 - CI: no `.github/workflows/` directory at all.
 - Sentry: not found anywhere in the repo (no `@sentry/*` dependency, no init code).
@@ -235,18 +241,19 @@ Compared field-by-field against `docs/03-domain/domain-model.md` (full detail in
 - **Formula registry:** `FORMULA_REGISTRY: Record<FormulaId, FormulaMetadata>` populated with all 8 documented formula ids, each carrying `version` (fixed at `1`), `description`, and `assumptions`. **Metadata only — `FormulaMetadata` has no `execute`/`calculate` function field at all.**
 - **Every formula, classified:**
 
-  | Formula | Status |
-  |---|---|
-  | `amortization.v1` | **Scaffold only** — metadata/description only, no implementation |
-  | `variableProjection.v1` | **Scaffold only** |
-  | `residualDetection.v1` | **Scaffold only** |
-  | `allocationEstimate.v1` | **Scaffold only** |
-  | `murabahaProgress.v1` | **Scaffold only** |
-  | `extraPaymentScenario.v1` | **Scaffold only** |
-  | `cardPayoff.v1` | **Scaffold only** |
-  | `aggregates.v1` | **Scaffold only** |
+  | Formula                   | Status                                                           |
+  | ------------------------- | ---------------------------------------------------------------- |
+  | `amortization.v1`         | **Scaffold only** — metadata/description only, no implementation |
+  | `variableProjection.v1`   | **Scaffold only**                                                |
+  | `residualDetection.v1`    | **Scaffold only**                                                |
+  | `allocationEstimate.v1`   | **Scaffold only**                                                |
+  | `murabahaProgress.v1`     | **Scaffold only**                                                |
+  | `extraPaymentScenario.v1` | **Scaffold only**                                                |
+  | `cardPayoff.v1`           | **Scaffold only**                                                |
+  | `aggregates.v1`           | **Scaffold only**                                                |
 
   All 8 are self-documented in code as such: `src/index.ts` states "M0: Registry scaffold only. Formula implementations land in M3." No formula is blocked by finance-team validation yet, because none has been attempted — the `TV-30x`/`TV-104`/`TV-203`/`TV-601` test vectors that finance teammates need to sign off are themselves still marked `PENDING-FINANCE` in the spec document, so even once code is written, M3 cannot honestly close until those vectors are filled.
+
 - **Deterministic input handling, explicit `asOf`, decimal arithmetic, rounding, confidence, refusal behavior:** **none of this can be evaluated** — there is no calculation function signature anywhere in the package yet to carry an `asOf` parameter or exercise rounding/refusal logic. The `CalculationConfidence` type includes a `'REFUSED'` value, signaling intent, but no code can currently refuse anything.
 - **Property tests, calculation vectors:** **not started.** `fast-check` is an installed devDependency but unused; no `vectors/` directory exists under `packages/finance-engine`.
 - **Coverage thresholds / actual passing coverage:** the package's Vitest config runs with `--coverage` and reports **97.5% statements**, but this is coverage of the registry-metadata scaffold only (`formula-registry.ts` is 100% covered because it's pure data) — it is not meaningful coverage of any calculation logic, and the test file's own header comment says as much ("Coverage gate (≥95%) will only apply once formula implementations land"). **Not a real coverage signal yet.**
@@ -286,24 +293,24 @@ Compared field-by-field against `docs/03-domain/domain-model.md` (full detail in
 
 ### Screens and Flows
 
-| Screen/route | Route only | Visible UI | Business logic | Data integration | Persistence | Tests | End-to-end usable |
-|---|---|---|---|---|---|---|---|
-| Language selection | — | Folded into Settings toggle, not a dedicated onboarding screen | No | No | No (no persistence of choice) | No | No |
-| Onboarding (SCR-ONB-*) | Not started | — | — | — | — | — | No |
-| Home (`(tabs)/index.tsx`) | Yes | Static title/subtitle only | No | No | No | No | No |
-| Obligations (`(tabs)/obligations/index.tsx`) | Yes | Static title/subtitle only (doesn't even use its own defined `emptyTitle` i18n key) | No | No | No | No | No |
-| Learn (`(tabs)/learn/index.tsx`) | Yes | Static title/subtitle only | No | No | No | No | No |
-| Settings (`settings/index.tsx`) | Yes | Language-toggle button (only interactive screen) | Minimal (calls `changeLanguage()`) | No | No (preference not persisted) | No | Reachable only by direct URL, not linked from any screen |
-| Demo loading | Not started | — | — | — | — | — | No |
-| Obligation details | Not started | — | — | — | — | — | No |
-| Rate impact | Not started | — | — | — | — | — | No |
-| Loan simulator | Not started | — | — | — | — | — | No |
-| Card simulator | Not started | — | — | — | — | — | No |
-| Add obligation | Not started | — | — | — | — | — | No |
-| Log payment | Not started | — | — | — | — | — | No |
-| Insights | Not started (not even a route/tab, correctly per IA) | — | — | — | — | — | No |
-| Data-source status | Not started | — | — | — | — | — | No |
-| Authentication | Not started | — | — | — | — | — | No |
+| Screen/route                                 | Route only                                           | Visible UI                                                                          | Business logic                     | Data integration | Persistence                   | Tests | End-to-end usable                                        |
+| -------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------- | ---------------- | ----------------------------- | ----- | -------------------------------------------------------- |
+| Language selection                           | —                                                    | Folded into Settings toggle, not a dedicated onboarding screen                      | No                                 | No               | No (no persistence of choice) | No    | No                                                       |
+| Onboarding (SCR-ONB-*)                       | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Home (`(tabs)/index.tsx`)                    | Yes                                                  | Static title/subtitle only                                                          | No                                 | No               | No                            | No    | No                                                       |
+| Obligations (`(tabs)/obligations/index.tsx`) | Yes                                                  | Static title/subtitle only (doesn't even use its own defined `emptyTitle` i18n key) | No                                 | No               | No                            | No    | No                                                       |
+| Learn (`(tabs)/learn/index.tsx`)             | Yes                                                  | Static title/subtitle only                                                          | No                                 | No               | No                            | No    | No                                                       |
+| Settings (`settings/index.tsx`)              | Yes                                                  | Language-toggle button (only interactive screen)                                    | Minimal (calls `changeLanguage()`) | No               | No (preference not persisted) | No    | Reachable only by direct URL, not linked from any screen |
+| Demo loading                                 | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Obligation details                           | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Rate impact                                  | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Loan simulator                               | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Card simulator                               | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Add obligation                               | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Log payment                                  | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Insights                                     | Not started (not even a route/tab, correctly per IA) | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Data-source status                           | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
+| Authentication                               | Not started                                          | —                                                                                   | —                                  | —                | —                             | —     | No                                                       |
 
 Every screen that exists is a route-only placeholder with static UI. Nothing in the app currently reads, writes, or displays real or demo data.
 
@@ -344,7 +351,7 @@ Every screen that exists is a route-only placeholder with static UI. Nothing in 
 10. **Missing entities:** `Payment`, `RatePeriod`, `ScheduleEntry`, `CalculationRun`, `Insight`, `ConsentRecord`, `UserProfile` are all specified in `domain-model.md` and none exist in code yet. (Expected at this stage of M0 per the milestone plan, but worth stating plainly as the largest single gap between doc and code.)
 11. **Persisted language preference:** `first-slice-prompt.md` requires a language screen whose choice is persisted (and RTL flips from that persisted choice on relaunch); the current implementation re-derives locale from the device every cold start with no persistence — an explicit user override does not survive an app restart.
 12. **Domain package internal structure:** doc implies status derivation lives under `packages/domain/src/status/`; code places it under `services/` instead. Cosmetic, not a behavioral mismatch.
-13. **Screen-inventory / hackathon-plan traceability gap** (pre-existing in the docs, not a code issue): `hackathon-plan.md`'s M6 traceability matrix references `SCR-AUTH-*`, `SCR-CONSENT`, `SCR-CONNECT` screen ids that don't exist in `screen-inventory.md`, and separately cites `US-014`/`US-015` for auth/mock-connect work that collides with two *already-defined, unrelated* stretch stories of the same ids in `user-stories.md` (local reminders and export, respectively). Flagged here because a future agent implementing M6 off the traceability matrix alone would hit undefined/conflicting ids.
+13. **Screen-inventory / hackathon-plan traceability gap** (pre-existing in the docs, not a code issue): `hackathon-plan.md`'s M6 traceability matrix references `SCR-AUTH-*`, `SCR-CONSENT`, `SCR-CONNECT` screen ids that don't exist in `screen-inventory.md`, and separately cites `US-014`/`US-015` for auth/mock-connect work that collides with two _already-defined, unrelated_ stretch stories of the same ids in `user-stories.md` (local reminders and export, respectively). Flagged here because a future agent implementing M6 off the traceability matrix alone would hit undefined/conflicting ids.
 
 ---
 
@@ -450,12 +457,14 @@ Every screen that exists is a route-only placeholder with static UI. Nothing in 
 **Objective:** Make `pnpm check` pass end-to-end from a clean shell, without changing any application behavior — pure verification-gate repair, so every subsequent session has a trustworthy green baseline to build on.
 
 **Likely files:**
+
 - `.gitattributes` (new, or fix existing git line-ending handling) — root cause of the `format:check` failure.
 - `apps/mobile/src/core/design-system/__tests__/*.test.tsx` (new — `Screen`, `Text`, `Button`, `Card`, `Amount`, one file each).
 - `apps/mobile/src/core/formatting/__tests__/format-money.test.ts` (new).
 - Possibly `apps/mobile/jest.config.js` if any config adjustment is needed to discover the new tests (should already work — 32 files were already being scanned).
 
 **Acceptance criteria:**
+
 - `pnpm run format:check` exits 0 with no manual per-file edits beyond line-ending normalization (confirm via `git diff --stat` showing no unexpected content changes, only line-ending metadata).
 - `pnpm run test:app` exits 0 with ≥1 passing test per design-system primitive, each including at least one accessibility assertion (e.g., `getByRole`/`accessibilityLabel` check) per `design-system.md` DS-4.
 - `pnpm run check` exits 0 end-to-end from a fresh shell at the repo root.
@@ -463,6 +472,7 @@ Every screen that exists is a route-only placeholder with static UI. Nothing in 
 **Tests:** the new RNTL test files themselves are the deliverable; no other test changes required for this task.
 
 **Commands to run:**
+
 ```
 pnpm run format:check
 pnpm run lint
@@ -558,6 +568,7 @@ The minimum path to a credible hackathon demo, in dependency order: **domain mod
 ## Appendix A — Commands Run
 
 Git/inspection (no working-tree mutation):
+
 ```
 git branch --show-current
 git rev-parse HEAD
@@ -575,6 +586,7 @@ git diff --stat origin/main
 ```
 
 Verification (read-only w.r.t. source; `pnpm install --frozen-lockfile` only touches `node_modules`):
+
 ```
 pnpm --version
 node --version

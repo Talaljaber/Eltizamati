@@ -5,6 +5,7 @@
 > **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** personal mode requires a Supabase account; demo mode requires neither auth nor network. Edge cases below that say "state in SQLite" now read: demo mode = re-seeded deterministic state; personal mode = Supabase (relaunch refetches; offline shows honest error/retry states).
 >
 > **ID reservation (resolves the hackathon-plan collision):** `US-014` (local due-date reminders) and `US-015` (JSON export) keep their meanings **as defined in this file**. The auth and mock-connect stories formerly cited as "US-014*/US-015*" in `hackathon-plan.md §3` are assigned **new ids**:
+>
 > - **US-016 — Real account & cloud persistence [MVP]:** as a returning user, I want to create an account (email sign-up/verify/sign-in/reset) so my obligations persist securely (RLS) across reinstalls. AC: auth flows work; consent recorded server-side; personal data invisible to other users (pgTAP); account deletion erases server data + audit. Screens: SCR-AUTH-SIGNIN / SCR-AUTH-SIGNUP / SCR-AUTH-RESET.
 > - **US-017 — Consent-gated labeled-mock connect [MVP-conditional, cuttable]:** as a user, I want to try connecting a data source so I can see how retrieval will work — against a provider **visibly labeled as a mock**. AC: per-provider consent gate precedes fetch; imported records carry mock provenance; nothing implies live bank access (C-07). Screens: SCR-CONSENT-PROVIDER, SCR-CONNECT-MOCK.
 

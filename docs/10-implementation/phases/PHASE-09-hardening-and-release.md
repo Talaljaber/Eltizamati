@@ -10,7 +10,7 @@ The MVP is demo-ready per mvp-scope §5: E2E-tested, validated on a physical And
 
 ## Why This Phase Exists
 
-Every prior phase validated its own slice on dev tooling; nothing has ever been validated on a physical device, in full Arabic, under real airplane-mode conditions, or as a release-profile build (the project has *never* had device evidence — CURRENT_STATE §7). Release readiness is its own discipline with its own gates.
+Every prior phase validated its own slice on dev tooling; nothing has ever been validated on a physical device, in full Arabic, under real airplane-mode conditions, or as a release-profile build (the project has _never_ had device evidence — CURRENT_STATE §7). Release readiness is its own discipline with its own gates.
 
 ## Preconditions
 
@@ -68,7 +68,7 @@ eas build -p android --profile preview
 
 ## Manual Validation
 
-This phase largely *is* manual validation — every item in In Scope 3–7 and 10 with recorded evidence (video/screenshots/measurements). **No claim without evidence** (global gate 12).
+This phase largely _is_ manual validation — every item in In Scope 3–7 and 10 with recorded evidence (video/screenshots/measurements). **No claim without evidence** (global gate 12).
 
 ## Exit Criteria
 
@@ -90,7 +90,7 @@ README · STATUS.md (final) · roadmap-and-risks re-score · demo runbook · com
 
 ## Known Risks
 
-- Device/tooling availability is a user-environment dependency discovered *late* if not flagged early — STATUS.md should track it from Phase 1 onward.
+- Device/tooling availability is a user-environment dependency discovered _late_ if not flagged early — STATUS.md should track it from Phase 1 onward.
 - First-ever device run may surface layout/perf issues from any phase — budget real fix time; that's why this phase exists.
 
 ## Cuttable Work

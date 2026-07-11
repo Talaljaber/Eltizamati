@@ -30,13 +30,13 @@ None. Phases 2–9: Planned. (Old M0 was never completed; it maps onto Phase 1 m
 
 ## Failing checks (must be green to close Phase 1)
 
-| Check | State | Cause |
-|---|---|---|
-| `pnpm run format:check` | ❌ 101 files | Likely CRLF checkout vs Prettier `endOfLine: lf` — needs `.gitattributes`/line-ending policy |
-| `pnpm run test:app` | ❌ "No tests found" | Zero mobile test files exist (harness configured, `__tests__/` dirs empty) |
-| `pnpm run check` | ❌ | Fails at the first step above |
-| `npx expo-doctor` | ❌ silent exit | Node v23.8.0 on dev machine; Expo SDK 52 expects LTS (18/20) |
-| CI | — absent | `.github/workflows/` does not exist |
+| Check                   | State               | Cause                                                                                        |
+| ----------------------- | ------------------- | -------------------------------------------------------------------------------------------- |
+| `pnpm run format:check` | ❌ 101 files        | Likely CRLF checkout vs Prettier `endOfLine: lf` — needs `.gitattributes`/line-ending policy |
+| `pnpm run test:app`     | ❌ "No tests found" | Zero mobile test files exist (harness configured, `__tests__/` dirs empty)                   |
+| `pnpm run check`        | ❌                  | Fails at the first step above                                                                |
+| `npx expo-doctor`       | ❌ silent exit      | Node v23.8.0 on dev machine; Expo SDK 52 expects LTS (18/20)                                 |
+| CI                      | — absent            | `.github/workflows/` does not exist                                                          |
 
 ## Current task
 

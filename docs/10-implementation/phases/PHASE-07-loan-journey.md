@@ -31,7 +31,7 @@ Phases 5 and 6 complete. TV-30x finance sign-off **in progress** (gates this pha
 
 ## Out of Scope
 
-Murabaha/card rich detail (Phase 8) · manual entry / log payment / log rate UI (Phase 8 — the *engine and services* for them exist; this phase reads seeded history) · card simulator · notifications · mock-connect · export.
+Murabaha/card rich detail (Phase 8) · manual entry / log payment / log rate UI (Phase 8 — the _engine and services_ for them exist; this phase reads seeded history) · card simulator · notifications · mock-connect · export.
 
 ## Architecture Decisions Applied
 
@@ -95,7 +95,7 @@ STATUS.md · calculation-test-vectors.md (signed statuses) · completion report.
 
 ## Cuttable Work
 
-None — this phase *is* the product story. (Two-numbers hero could degrade to a single-figure header under extreme pressure; record if so.)
+None — this phase _is_ the product story. (Two-numbers hero could degrade to a single-figure header under extreme pressure; record if so.)
 
 ## Handoff to Next Phase
 

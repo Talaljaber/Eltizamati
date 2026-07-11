@@ -61,7 +61,9 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' || variant === 'destructive' ? theme.bgElevated : theme.brand}
+          color={
+            variant === 'primary' || variant === 'destructive' ? theme.bgElevated : theme.brand
+          }
           accessibilityLabel={t('common.loading')}
         />
       ) : (

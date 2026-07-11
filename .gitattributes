@@ -1,0 +1,15 @@
+# Force LF line endings for all text files (Prettier endOfLine: lf)
+* text=auto eol=lf
+
+# Explicitly binary — never touch line endings
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2binary
+*.eot binary

@@ -16,17 +16,17 @@
 
 ### Old M0–M8 → new phases (not a rename — SQLite work is deleted, Supabase moves from late to foundational)
 
-| Old milestone | Disposition in new plan |
-|---|---|
-| M0 Foundation | **Phase 1** (minus all SQLite/Drizzle items — removed from MVP per ADR-0017; CI, tests, nav loose ends, i18n persistence in) |
-| M1 Demo data & dashboard | Domain core → **Phase 2**; seed builders, onboarding, Home/Obligations → **Phase 5** |
-| M2 Loan detail & histories | Loan detail/histories → **Phase 7**; Murabaha/card detail + glossary → **Phase 8** |
-| M3 Engine ⭐ | Formulas/vectors/property tests → **Phase 6**; rate-impact/explain/insights UI → **Phase 7** |
-| M4 Scenario planner ⭐ | **Phase 7** |
-| M5 Manual entry & settings | **Phase 8** |
-| M6 Backend & identity | Design → **Phase 2**; schema/RLS/pgTAP → **Phase 3**; auth/repos/integration → **Phase 4**; mock-connect → **Phase 8** (cuttable) |
-| M7 Engagement depth | **Phase 8** (card simulator, notifications, thresholds, duplicate detection — all with cut lines); two-numbers hero → **Phase 7** |
-| M8 Hardening & polish | **Phase 9** |
+| Old milestone              | Disposition in new plan                                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| M0 Foundation              | **Phase 1** (minus all SQLite/Drizzle items — removed from MVP per ADR-0017; CI, tests, nav loose ends, i18n persistence in)      |
+| M1 Demo data & dashboard   | Domain core → **Phase 2**; seed builders, onboarding, Home/Obligations → **Phase 5**                                              |
+| M2 Loan detail & histories | Loan detail/histories → **Phase 7**; Murabaha/card detail + glossary → **Phase 8**                                                |
+| M3 Engine ⭐               | Formulas/vectors/property tests → **Phase 6**; rate-impact/explain/insights UI → **Phase 7**                                      |
+| M4 Scenario planner ⭐     | **Phase 7**                                                                                                                       |
+| M5 Manual entry & settings | **Phase 8**                                                                                                                       |
+| M6 Backend & identity      | Design → **Phase 2**; schema/RLS/pgTAP → **Phase 3**; auth/repos/integration → **Phase 4**; mock-connect → **Phase 8** (cuttable) |
+| M7 Engagement depth        | **Phase 8** (card simulator, notifications, thresholds, duplicate detection — all with cut lines); two-numbers hero → **Phase 7** |
+| M8 Hardening & polish      | **Phase 9**                                                                                                                       |
 
 ## 2. Current project position
 
@@ -42,17 +42,17 @@ Mid–Phase 1. The [current-state audit](../10-implementation/CURRENT_STATE.md) 
 
 ## 4. Phase map
 
-| # | Phase (file) | One-line objective | Status |
-|---|---|---|---|
-| 1 | [PHASE-01-stabilize-foundation](../10-implementation/phases/PHASE-01-stabilize-foundation.md) | Verify, finish, test, and **commit** the existing foundation; green `pnpm check`; CI | **In Progress** |
-| 2 | [PHASE-02-domain-contracts-and-schema-design](../10-implementation/phases/PHASE-02-domain-contracts-and-schema-design.md) | Complete every domain entity/VO/invariant; freeze the Supabase schema + RLS design on paper | Planned |
-| 3 | [PHASE-03-supabase-schema-and-security](../10-implementation/phases/PHASE-03-supabase-schema-and-security.md) | `supabase/` migrations, tables, constraints, RLS-in-creating-migration, pgTAP green, generated types | Planned |
-| 4 | [PHASE-04-auth-repositories-and-integration](../10-implementation/phases/PHASE-04-auth-repositories-and-integration.md) | Email auth end-to-end, Supabase repositories, TanStack Query foundation, composition root, account deletion, offline/error states | Planned |
-| 5 | [PHASE-05-demo-mode-and-first-experience](../10-implementation/phases/PHASE-05-demo-mode-and-first-experience.md) | Seed builders + in-memory demo repos + onboarding/mode-selection + populated Home/Obligations, airplane-mode verified | Planned |
-| 6 | [PHASE-06-finance-engine](../10-implementation/phases/PHASE-06-finance-engine.md) | All MVP formulas implemented, vectors + property tests + real coverage gate, CalculationRun persistence | Planned |
-| 7 | [PHASE-07-loan-journey](../10-implementation/phases/PHASE-07-loan-journey.md) | The complete primary demo story: loan detail → rate history/impact → residual → explanation → scenario | Planned |
-| 8 | [PHASE-08-remaining-mvp-flows](../10-implementation/phases/PHASE-08-remaining-mvp-flows.md) | Murabaha/card detail, manual entry, insights center, Learn, settings/data-status, cuttable depth (card sim, notifications, mock-connect) | Planned |
-| 9 | [PHASE-09-hardening-and-release](../10-implementation/phases/PHASE-09-hardening-and-release.md) | E2E, device/Arabic/a11y/offline validation, security pass, Sentry, EAS preview APK, rehearsals | Planned |
+| #   | Phase (file)                                                                                                              | One-line objective                                                                                                                       | Status          |
+| --- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| 1   | [PHASE-01-stabilize-foundation](../10-implementation/phases/PHASE-01-stabilize-foundation.md)                             | Verify, finish, test, and **commit** the existing foundation; green `pnpm check`; CI                                                     | **In Progress** |
+| 2   | [PHASE-02-domain-contracts-and-schema-design](../10-implementation/phases/PHASE-02-domain-contracts-and-schema-design.md) | Complete every domain entity/VO/invariant; freeze the Supabase schema + RLS design on paper                                              | Planned         |
+| 3   | [PHASE-03-supabase-schema-and-security](../10-implementation/phases/PHASE-03-supabase-schema-and-security.md)             | `supabase/` migrations, tables, constraints, RLS-in-creating-migration, pgTAP green, generated types                                     | Planned         |
+| 4   | [PHASE-04-auth-repositories-and-integration](../10-implementation/phases/PHASE-04-auth-repositories-and-integration.md)   | Email auth end-to-end, Supabase repositories, TanStack Query foundation, composition root, account deletion, offline/error states        | Planned         |
+| 5   | [PHASE-05-demo-mode-and-first-experience](../10-implementation/phases/PHASE-05-demo-mode-and-first-experience.md)         | Seed builders + in-memory demo repos + onboarding/mode-selection + populated Home/Obligations, airplane-mode verified                    | Planned         |
+| 6   | [PHASE-06-finance-engine](../10-implementation/phases/PHASE-06-finance-engine.md)                                         | All MVP formulas implemented, vectors + property tests + real coverage gate, CalculationRun persistence                                  | Planned         |
+| 7   | [PHASE-07-loan-journey](../10-implementation/phases/PHASE-07-loan-journey.md)                                             | The complete primary demo story: loan detail → rate history/impact → residual → explanation → scenario                                   | Planned         |
+| 8   | [PHASE-08-remaining-mvp-flows](../10-implementation/phases/PHASE-08-remaining-mvp-flows.md)                               | Murabaha/card detail, manual entry, insights center, Learn, settings/data-status, cuttable depth (card sim, notifications, mock-connect) | Planned         |
+| 9   | [PHASE-09-hardening-and-release](../10-implementation/phases/PHASE-09-hardening-and-release.md)                           | E2E, device/Arabic/a11y/offline validation, security pass, Sentry, EAS preview APK, rehearsals                                           | Planned         |
 
 ## 5. Hard dependencies
 
@@ -81,11 +81,11 @@ Mid–Phase 1. The [current-state audit](../10-implementation/CURRENT_STATE.md) 
 ## 8. Cut order (first cut first)
 
 1. Mock-connect flow (SCR-CONNECT-MOCK, US-017)
-2. Card payoff simulator (SCR-SIM-CARD, `cardPayoff.v1`, US-013) — *canonical classification: MVP-conditional*
+2. Card payoff simulator (SCR-SIM-CARD, `cardPayoff.v1`, US-013) — _canonical classification: MVP-conditional_
 3. Local notifications + user-defined threshold insight + reminder settings
 4. Duplicate-payment detection
 5. Biometric app-lock
-6. Personal mode as a *demonstrated* beat (auth/backend stay built, drop from the demo script)
+6. Personal mode as a _demonstrated_ beat (auth/backend stay built, drop from the demo script)
 7. **Never cut:** demo spine (Phases 5–7 output), engine vectors/coverage, provenance badges, AR/EN parity, honest labeling.
 
 ## 9. Global validation gates (every phase)
@@ -121,34 +121,34 @@ An implementation agent starting a session must read, in order: (1) `docs/10-imp
 
 Ownership = the phase that implements it. Validation may repeat in Phase 9 without transferring ownership.
 
-| Requirement / artifact | IDs | Owning phase |
-|---|---|---|
-| Repo/tooling/CI foundation, mobile shell, i18n/RTL wiring, base primitives | NFR-MNT-*, NFR-L10N-002, ADR-0001/0003/0005/0010 | 1 |
-| Language persistence + language screen entry | FR-ONB-001, US-001 AC-1 | 1 |
-| Domain entities/VOs/invariants complete | BR-OBL-001..003, BR-RATE-001, BR-STAT-001..003, domain-model.md §2–5 | 2 |
-| Supabase schema + RLS design freeze, repository interfaces, deletion contract | ADR-0008/0017, database-schema.md | 2 |
-| Migrations, tables, constraints, RLS, pgTAP, generated types | NFR-SEC-002, T-05 | 3 |
-| Email auth, sessions, SecureStore | FR-AUTH-001/006, US-016, NFR-SEC-003, T-03/T-04, SCR-AUTH-SIGNIN/SIGNUP/RESET | 4 |
-| Supabase repositories, TanStack Query, composition root, error/offline states | ADR-0004/0014, api-and-providers.md §1 | 4 |
-| Server-backed consent, account deletion + audit | FR-AUTH-002/003, NFR-PRIV-002/003 | 4 |
-| Biometric app-lock | FR-AUTH-004 | 4 (cut #5) |
-| Seed builders, DemoSeedProvider + ImportService, demo repositories, reset | mvp-scope §4, seed-demo-data.md, FR-SET-005, ADR-0009 | 5 |
-| Onboarding, mode selection, demo banner | FR-ONB-001..006, US-001, SCR-ONB-* | 5 |
-| Home dashboard + obligations list (+ `aggregates.v1` consumption) | FR-OBL-001/002, FR-CALC-006, US-002, SCR-HOME, SCR-OBL-LIST | 5 |
-| All 8 formulas, vectors, property tests, coverage gate, refusal/confidence | FR-CALC-001..006, BR-CALC-*, INV-1..7, TV-1xx/2xx/4xx/5xx/6xx/7xx, ADR-0007 | 6 |
-| CalculationRun persistence | FR-CALC-005 | 6 (integration with 4/5 repos) |
-| Loan detail + two-numbers hero | FR-OBL-003, US-003/009, SCR-OBL-DETAIL-LOAN | 7 |
-| Rate history/impact, residual, explanation, schedule, bank questions | FR-RATE-001..004, BR-CALC-012/013, SCR-RATE-HIST/IMPACT, SCR-EXPLAIN, SCR-OBL-SCHEDULE, SCR-BANK-QUESTIONS | 7 |
-| Scenario planner | FR-SIM-001..003, US-004, SCR-SIM-LOAN, TV-304 | 7 |
-| Core insight rules + insights center | FR-INS-001..004, US-012, SCR-INS-CENTER | 7 |
-| TV-30x finance sign-off | calculation-test-vectors.md TV-3xx | gates 7 exit |
-| Murabaha + card detail, terminology | FR-OBL-004/005, US-007/008, BR-TERM-001, SCR-OBL-DETAIL-MURABAHA/CARD | 8 |
-| Manual add/edit/archive, log payment/rate | FR-OBL-006..008, FR-PAY-001..003/005, FR-RATE-002, US-005/006, SCR-OBL-ADD-*, SCR-PAY-*, SCR-RATE-ADD | 8 |
-| Settings, data-status, legal docs, Learn/education | FR-SET-001..003/005, FR-DATA-003, FR-EDU-001..004, US-010/011, SCR-SET, SCR-DATA-STATUS, SCR-LEGAL-DOC, SCR-LEARN* | 8 |
-| Card payoff simulator | FR-SIM-004, US-013, SCR-SIM-CARD, TV-6xx | 8 (cut #2) |
-| Notifications + thresholds + duplicate detection | FR-NTF-001, FR-SET-006, FR-INS-001(user), FR-PAY-004 | 8 (cuts #3/#4) |
-| Mock connect flow | FR-ONB-004(connect), FR-AUTH-005, US-017, SCR-CONSENT-PROVIDER, SCR-CONNECT-MOCK | 8 (cut #1) |
-| E2E, device/AR/a11y/perf/security validation, Sentry, EAS, APK, rehearsal | NFR-PERF-*, NFR-A11Y-*, NFR-REL-001, ADR-0015, mvp-scope §5 | 9 |
+| Requirement / artifact                                                        | IDs                                                                                                                | Owning phase                   |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
+| Repo/tooling/CI foundation, mobile shell, i18n/RTL wiring, base primitives    | NFR-MNT-*, NFR-L10N-002, ADR-0001/0003/0005/0010                                                                   | 1                              |
+| Language persistence + language screen entry                                  | FR-ONB-001, US-001 AC-1                                                                                            | 1                              |
+| Domain entities/VOs/invariants complete                                       | BR-OBL-001..003, BR-RATE-001, BR-STAT-001..003, domain-model.md §2–5                                               | 2                              |
+| Supabase schema + RLS design freeze, repository interfaces, deletion contract | ADR-0008/0017, database-schema.md                                                                                  | 2                              |
+| Migrations, tables, constraints, RLS, pgTAP, generated types                  | NFR-SEC-002, T-05                                                                                                  | 3                              |
+| Email auth, sessions, SecureStore                                             | FR-AUTH-001/006, US-016, NFR-SEC-003, T-03/T-04, SCR-AUTH-SIGNIN/SIGNUP/RESET                                      | 4                              |
+| Supabase repositories, TanStack Query, composition root, error/offline states | ADR-0004/0014, api-and-providers.md §1                                                                             | 4                              |
+| Server-backed consent, account deletion + audit                               | FR-AUTH-002/003, NFR-PRIV-002/003                                                                                  | 4                              |
+| Biometric app-lock                                                            | FR-AUTH-004                                                                                                        | 4 (cut #5)                     |
+| Seed builders, DemoSeedProvider + ImportService, demo repositories, reset     | mvp-scope §4, seed-demo-data.md, FR-SET-005, ADR-0009                                                              | 5                              |
+| Onboarding, mode selection, demo banner                                       | FR-ONB-001..006, US-001, SCR-ONB-*                                                                                 | 5                              |
+| Home dashboard + obligations list (+ `aggregates.v1` consumption)             | FR-OBL-001/002, FR-CALC-006, US-002, SCR-HOME, SCR-OBL-LIST                                                        | 5                              |
+| All 8 formulas, vectors, property tests, coverage gate, refusal/confidence    | FR-CALC-001..006, BR-CALC-*, INV-1..7, TV-1xx/2xx/4xx/5xx/6xx/7xx, ADR-0007                                        | 6                              |
+| CalculationRun persistence                                                    | FR-CALC-005                                                                                                        | 6 (integration with 4/5 repos) |
+| Loan detail + two-numbers hero                                                | FR-OBL-003, US-003/009, SCR-OBL-DETAIL-LOAN                                                                        | 7                              |
+| Rate history/impact, residual, explanation, schedule, bank questions          | FR-RATE-001..004, BR-CALC-012/013, SCR-RATE-HIST/IMPACT, SCR-EXPLAIN, SCR-OBL-SCHEDULE, SCR-BANK-QUESTIONS         | 7                              |
+| Scenario planner                                                              | FR-SIM-001..003, US-004, SCR-SIM-LOAN, TV-304                                                                      | 7                              |
+| Core insight rules + insights center                                          | FR-INS-001..004, US-012, SCR-INS-CENTER                                                                            | 7                              |
+| TV-30x finance sign-off                                                       | calculation-test-vectors.md TV-3xx                                                                                 | gates 7 exit                   |
+| Murabaha + card detail, terminology                                           | FR-OBL-004/005, US-007/008, BR-TERM-001, SCR-OBL-DETAIL-MURABAHA/CARD                                              | 8                              |
+| Manual add/edit/archive, log payment/rate                                     | FR-OBL-006..008, FR-PAY-001..003/005, FR-RATE-002, US-005/006, SCR-OBL-ADD-_, SCR-PAY-_, SCR-RATE-ADD              | 8                              |
+| Settings, data-status, legal docs, Learn/education                            | FR-SET-001..003/005, FR-DATA-003, FR-EDU-001..004, US-010/011, SCR-SET, SCR-DATA-STATUS, SCR-LEGAL-DOC, SCR-LEARN* | 8                              |
+| Card payoff simulator                                                         | FR-SIM-004, US-013, SCR-SIM-CARD, TV-6xx                                                                           | 8 (cut #2)                     |
+| Notifications + thresholds + duplicate detection                              | FR-NTF-001, FR-SET-006, FR-INS-001(user), FR-PAY-004                                                               | 8 (cuts #3/#4)                 |
+| Mock connect flow                                                             | FR-ONB-004(connect), FR-AUTH-005, US-017, SCR-CONSENT-PROVIDER, SCR-CONNECT-MOCK                                   | 8 (cut #1)                     |
+| E2E, device/AR/a11y/perf/security validation, Sentry, EAS, APK, rehearsal     | NFR-PERF-_, NFR-A11Y-_, NFR-REL-001, ADR-0015, mvp-scope §5                                                        | 9                              |
 
 **Flags:** `FR-SET-004`/`FR-SIM-005` (export, saved scenarios) — stretch, unassigned by design · `FR-AUTH-007`, `FR-OBL-009/010`, `FR-NTF-002` — P1, unassigned · TV-30x/TV-104/TV-203/TV-601 — **awaiting finance validation** (`PENDING-FINANCE`) · US-017/mock-connect — **cuttable** · card simulator — **MVP-conditional** (reconciled 2026-07-11; was inconsistently "MVP" vs "stretch target" across docs) · no requirement found assigned to two owning phases.
 

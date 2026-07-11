@@ -1,6 +1,6 @@
 # ADR-0017 — Supabase-First MVP Persistence; SQLite Postponed to Post-MVP
 
-- **Status:** Accepted · **Date:** 2026-07-11 · **Confidence:** High · **Reversal cost:** Medium (repository seam contains it; the postponed SQLite work *is* the reversal path)
+- **Status:** Accepted · **Date:** 2026-07-11 · **Confidence:** High · **Reversal cost:** Medium (repository seam contains it; the postponed SQLite work _is_ the reversal path)
 - **Supersedes / amends:**
   - **ADR-0013 (local-only MVP data topology): superseded.** SQLite is no longer the MVP system of record for anything. Demo mode's offline guarantee is now met by bundled in-memory seed data, not a local database.
   - **ADR-0006 (expo-sqlite + Drizzle local persistence): partially superseded.** The SQLite+Drizzle decision is postponed to the post-MVP local-first phase (see [FUTURE_LOCAL_FIRST_ROADMAP](../08-delivery/FUTURE_LOCAL_FIRST_ROADMAP.md)). The MMKV-for-preferences and SecureStore-for-tokens decisions in ADR-0006 **remain in force**.
@@ -55,31 +55,31 @@ The local-first design (durable local cache, offline reads, queued writes, prove
 
 ## Mode-specific data behavior (summary table)
 
-| Concern | Demo mode | Personal mode |
-|---|---|---|
-| Source of truth | Bundled seed builders (in-memory) | Supabase Postgres |
-| Auth required | No | Yes (Supabase email auth) |
-| Network required | No | Yes for authoritative reads/writes |
-| Repository impl | `Demo*Repository` (in-memory) | `Supabase*Repository` |
-| Consent records | Local acknowledgment (versioned, timestamped, key-value) | Server-backed rows under RLS |
-| Erasure | Reset demo (re-seed) | Account deletion: server-side erasure + audit |
-| Labeling | Persistent demo banner | None |
-| Finance engine | Same pure engine, `asOf = DEMO_DATE` | Same pure engine, explicit `asOf` |
+| Concern          | Demo mode                                                | Personal mode                                 |
+| ---------------- | -------------------------------------------------------- | --------------------------------------------- |
+| Source of truth  | Bundled seed builders (in-memory)                        | Supabase Postgres                             |
+| Auth required    | No                                                       | Yes (Supabase email auth)                     |
+| Network required | No                                                       | Yes for authoritative reads/writes            |
+| Repository impl  | `Demo*Repository` (in-memory)                            | `Supabase*Repository`                         |
+| Consent records  | Local acknowledgment (versioned, timestamped, key-value) | Server-backed rows under RLS                  |
+| Erasure          | Reset demo (re-seed)                                     | Account deletion: server-side erasure + audit |
+| Labeling         | Persistent demo banner                                   | None                                          |
+| Finance engine   | Same pure engine, `asOf = DEMO_DATE`                     | Same pure engine, explicit `asOf`             |
 
 ## Consequences
 
-- **Positive:** one persistence system instead of two; no dual-migration lockstep discipline; RLS and auth are exercised from the first data-bearing feature instead of week 3; the schema is designed once, in Postgres, against a completed domain model; the demo becomes *simpler* (no database to migrate/seed/reset — just builders).
+- **Positive:** one persistence system instead of two; no dual-migration lockstep discipline; RLS and auth are exercised from the first data-bearing feature instead of week 3; the schema is designed once, in Postgres, against a completed domain model; the demo becomes _simpler_ (no database to migrate/seed/reset — just builders).
 - **Costs / accepted risks:**
   - Personal mode has no offline capability in MVP (stated honestly in-product via offline/error states; recorded in threat model and NFRs).
   - The project takes a network/auth dependency earlier — the highest-risk integration moves from week 3 to the foundation. Mitigation: it is now foundational rather than rushed, with its own phases (3–4) and exit gates.
   - Supabase project availability/config becomes a development dependency for personal-mode features (local `supabase start` for development; typed env validation fails fast).
-  - Demo-mode state does not survive process death (in-memory) — acceptable: reset-demo is one tap and the demo script starts from reset anyway. If rehearsals show this matters, persisting the *demo flag* (not the data) in key-value storage is permitted.
+  - Demo-mode state does not survive process death (in-memory) — acceptable: reset-demo is one tap and the demo script starts from reset anyway. If rehearsals show this matters, persisting the _demo flag_ (not the data) in key-value storage is permitted.
 
 ## Security implications
 
 - RLS from first migration + pgTAP cross-user tests are now MVP-blocking, not P1 (threat T-05 moves to MVP scope).
 - Auth token handling (SecureStore), session refresh, account takeover mitigations (T-03/T-04) move to MVP scope.
-- Local device-loss exposure (T-01) *shrinks*: no local financial database exists in MVP; only key-value preferences and transient cache.
+- Local device-loss exposure (T-01) _shrinks_: no local financial database exists in MVP; only key-value preferences and transient cache.
 - Real personal data storage remains gated on RES-003 (PDPL review) — until cleared, personal mode is exercised with synthetic/test accounts only (carried from ADR-0016).
 - Secrets: unchanged — anon key only in client via typed env config; service-role only server-side; gitleaks in CI.
 

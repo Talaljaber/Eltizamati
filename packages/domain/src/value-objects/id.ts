@@ -31,7 +31,10 @@ export type LocalDate = string & { readonly _brand: 'LocalDate' }
 
 export function toLocalDate(iso: string): LocalDate {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    throw new DomainInvariantError('validation', `Invalid LocalDate: "${iso}" — expected YYYY-MM-DD`)
+    throw new DomainInvariantError(
+      'validation',
+      `Invalid LocalDate: "${iso}" — expected YYYY-MM-DD`,
+    )
   }
   return iso as LocalDate
 }

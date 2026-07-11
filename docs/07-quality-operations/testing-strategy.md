@@ -1,6 +1,7 @@
 # Testing Strategy
 
 > **⚠ Architecture update (2026-07-11, [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md)):** test-layer changes for the Supabase-first MVP:
+>
 > - **pgTAP RLS cross-user tests are MVP** (every user-data table, from migration 0001) — no longer "P1".
 > - **Supabase repository integration tests** (row↔domain round-trips against local `supabase start` or a dedicated test project) and **migration tests** replace the SQLite in-memory round-trip layer, which is removed from MVP.
 > - **Auth flow integration tests** (sign-up/verify/sign-in/reset/session/deletion) are MVP.

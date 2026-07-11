@@ -18,17 +18,20 @@ export interface ScreenProps {
  * Screen primitive — safe area + gutter + scroll behavior + skeleton slot.
  * Every route renders its content inside exactly one `Screen` (DS-3).
  */
-export function Screen({ children, scroll = true, loading = false, skeleton, testID }: ScreenProps) {
+export function Screen({
+  children,
+  scroll = true,
+  loading = false,
+  skeleton,
+  testID,
+}: ScreenProps) {
   const theme = useTheme()
   const content = loading ? (skeleton ?? children) : children
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]} testID={testID}>
       {scroll ? (
-        <ScrollView
-          contentContainerStyle={styles.gutter}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={styles.gutter} showsVerticalScrollIndicator={false}>
           {content}
         </ScrollView>
       ) : (
