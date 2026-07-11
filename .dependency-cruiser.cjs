@@ -72,6 +72,19 @@ module.exports = {
         path: 'node_modules/@supabase',
       },
     },
+    {
+      name: 'no-supabase-outside-infrastructure',
+      comment:
+        'supabase-js is confined to core/supabase and services/repositories/supabase (Phase 4, NFR-SEC-003, PHASE-04 exit criterion 7).',
+      severity: 'error',
+      from: {
+        path: '^apps/mobile/',
+        pathNot: '^apps/mobile/src/(core/supabase|services/auth|services/repositories/supabase)/',
+      },
+      to: {
+        path: 'node_modules/@supabase',
+      },
+    },
     // ─── MONEY / FORMATTING RULES ────────────────────────────────────────────
     {
       name: 'no-raw-console-in-features',
