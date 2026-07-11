@@ -120,24 +120,39 @@ select throws_ok(
 
 -- ─── UPDATE denial: filtered to zero rows by USING, not an exception ───────────────────────
 
-select is((with u as (update public.profiles set locale = 'ar' where user_id = 'a0000000-0000-0000-0000-00000000000a' returning 1) select count(*)::int from u), 0, 'profiles: user B updates zero of user A''s rows');
-select is((with u as (update public.obligations set nickname = 'hijacked' where id = '10000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from u), 0, 'obligations: user B updates zero of user A''s rows');
-select is((with u as (update public.loan_details set installment = 999 where obligation_id = '10000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from u), 0, 'loan_details: user B updates zero of user A''s rows');
-select is((with u as (update public.murabaha_details set installment = 999 where obligation_id = '10000000-0000-0000-0000-000000000002' returning 1) select count(*)::int from u), 0, 'murabaha_details: user B updates zero of user A''s rows');
-select is((with u as (update public.card_details set current_balance = 0 where obligation_id = '10000000-0000-0000-0000-000000000003' returning 1) select count(*)::int from u), 0, 'card_details: user B updates zero of user A''s rows');
-select is((with u as (update public.rate_periods set annual_rate = 0.99 where id = '20000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from u), 0, 'rate_periods: user B updates zero of user A''s rows');
-select is((with u as (update public.payments set amount = 1 where id = '30000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from u), 0, 'payments: user B updates zero of user A''s rows');
-select is((with u as (update public.insights set read_at = now() where id = '50000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from u), 0, 'insights: user B updates zero of user A''s rows');
+with u as (update public.profiles set locale = 'ar' where user_id = 'a0000000-0000-0000-0000-00000000000a' returning 1)
+select is((select count(*)::int from u), 0, 'profiles: user B updates zero of user A''s rows');
+with u as (update public.obligations set nickname = 'hijacked' where id = '10000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from u), 0, 'obligations: user B updates zero of user A''s rows');
+with u as (update public.loan_details set installment = 999 where obligation_id = '10000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from u), 0, 'loan_details: user B updates zero of user A''s rows');
+with u as (update public.murabaha_details set installment = 999 where obligation_id = '10000000-0000-0000-0000-000000000002' returning 1)
+select is((select count(*)::int from u), 0, 'murabaha_details: user B updates zero of user A''s rows');
+with u as (update public.card_details set current_balance = 0 where obligation_id = '10000000-0000-0000-0000-000000000003' returning 1)
+select is((select count(*)::int from u), 0, 'card_details: user B updates zero of user A''s rows');
+with u as (update public.rate_periods set annual_rate = 0.99 where id = '20000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from u), 0, 'rate_periods: user B updates zero of user A''s rows');
+with u as (update public.payments set amount = 1 where id = '30000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from u), 0, 'payments: user B updates zero of user A''s rows');
+with u as (update public.insights set read_at = now() where id = '50000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from u), 0, 'insights: user B updates zero of user A''s rows');
 
 -- ─── DELETE denial: tables with a delete policy — filtered to zero rows for the wrong user ──
 
-select is((with d as (delete from public.insights where id = '50000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from d), 0, 'insights: user B deletes zero of user A''s rows');
-select is((with d as (delete from public.calculation_runs where id = '40000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from d), 0, 'calculation_runs: user B deletes zero of user A''s rows');
-select is((with d as (delete from public.payments where id = '30000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from d), 0, 'payments: user B deletes zero of user A''s rows');
-select is((with d as (delete from public.card_details where obligation_id = '10000000-0000-0000-0000-000000000003' returning 1) select count(*)::int from d), 0, 'card_details: user B deletes zero of user A''s rows');
-select is((with d as (delete from public.murabaha_details where obligation_id = '10000000-0000-0000-0000-000000000002' returning 1) select count(*)::int from d), 0, 'murabaha_details: user B deletes zero of user A''s rows');
-select is((with d as (delete from public.loan_details where obligation_id = '10000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from d), 0, 'loan_details: user B deletes zero of user A''s rows');
-select is((with d as (delete from public.obligations where id = '10000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from d), 0, 'obligations: user B deletes zero of user A''s rows');
+with d as (delete from public.insights where id = '50000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from d), 0, 'insights: user B deletes zero of user A''s rows');
+with d as (delete from public.calculation_runs where id = '40000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from d), 0, 'calculation_runs: user B deletes zero of user A''s rows');
+with d as (delete from public.payments where id = '30000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from d), 0, 'payments: user B deletes zero of user A''s rows');
+with d as (delete from public.card_details where obligation_id = '10000000-0000-0000-0000-000000000003' returning 1)
+select is((select count(*)::int from d), 0, 'card_details: user B deletes zero of user A''s rows');
+with d as (delete from public.murabaha_details where obligation_id = '10000000-0000-0000-0000-000000000002' returning 1)
+select is((select count(*)::int from d), 0, 'murabaha_details: user B deletes zero of user A''s rows');
+with d as (delete from public.loan_details where obligation_id = '10000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from d), 0, 'loan_details: user B deletes zero of user A''s rows');
+with d as (delete from public.obligations where id = '10000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from d), 0, 'obligations: user B deletes zero of user A''s rows');
 
 -- ─── Tables with NO delete policy at all: denied even to the owner ─────────────────────────
 -- Switch back to user A to prove this isn't just cross-user filtering — nobody can delete.
@@ -146,14 +161,19 @@ reset role;
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"a0000000-0000-0000-0000-00000000000a","role":"authenticated"}';
 
-select is((with d as (delete from public.rate_periods where id = '20000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from d), 0, 'rate_periods: even the owner cannot delete (no delete policy exists — append-only)');
-select is((with d as (delete from public.consent_records where id = '60000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from d), 0, 'consent_records: even the owner cannot delete (no delete policy exists — history is permanent)');
-select is((with d as (delete from public.profiles where user_id = 'a0000000-0000-0000-0000-00000000000a' returning 1) select count(*)::int from d), 0, 'profiles: even the owner cannot delete (deletion is a service-role account-deletion workflow only)');
+with d as (delete from public.rate_periods where id = '20000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from d), 0, 'rate_periods: even the owner cannot delete (no delete policy exists — append-only)');
+with d as (delete from public.consent_records where id = '60000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from d), 0, 'consent_records: even the owner cannot delete (no delete policy exists — history is permanent)');
+with d as (delete from public.profiles where user_id = 'a0000000-0000-0000-0000-00000000000a' returning 1)
+select is((select count(*)::int from d), 0, 'profiles: even the owner cannot delete (deletion is a service-role account-deletion workflow only)');
 
 -- ─── Tables with NO update policy at all: denied even to the owner ─────────────────────────
 
-select is((with u as (update public.calculation_runs set formula_version = 99 where id = '40000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from u), 0, 'calculation_runs: even the owner cannot update (no update policy exists — immutable once written)');
-select is((with u as (update public.consent_records set version = 'v99' where id = '60000000-0000-0000-0000-000000000001' returning 1) select count(*)::int from u), 0, 'consent_records: even the owner cannot update (no update policy exists — append new row instead)');
+with u as (update public.calculation_runs set formula_version = 99 where id = '40000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from u), 0, 'calculation_runs: even the owner cannot update (no update policy exists — immutable once written)');
+with u as (update public.consent_records set version = 'v99' where id = '60000000-0000-0000-0000-000000000001' returning 1)
+select is((select count(*)::int from u), 0, 'consent_records: even the owner cannot update (no update policy exists — append new row instead)');
 
 -- ─── Sanity: user A CAN see/update their own rows (the matrix isn''t just "always deny") ────
 

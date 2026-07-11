@@ -1,9 +1,11 @@
 node_modules
 .expo
+.claude
 dist
 build
 .turbo
 coverage
 *.generated.*
+apps/mobile/src/core/supabase/database.types.ts
 supabase/.temp
 pnpm-lock.yaml

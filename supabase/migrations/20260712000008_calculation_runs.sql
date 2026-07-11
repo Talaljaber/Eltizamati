@@ -59,7 +59,7 @@ comment on table public.calculation_runs is
   'Mirrors domain CalculationRun. Immutable once written — a re-run inserts a new row.';
 
 create index calculation_runs_obligation_formula_created_idx
-  on public.calculation_runs (obligation_id, formula_id, created_at desc);
+  on public.calculation_runs (obligation_id, formula_id, calculated_at desc);
 create index calculation_runs_user_id_idx on public.calculation_runs (user_id);
 
 alter table public.calculation_runs enable row level security;
