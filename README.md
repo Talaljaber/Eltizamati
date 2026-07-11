@@ -36,7 +36,19 @@ Expo (React Native) + TypeScript strict · pnpm monorepo (`apps/mobile` + `packa
 
 ## Local setup
 
-Implementation starts at M0; once it lands this section will contain the verified commands (target: `pnpm install && pnpm check && pnpm dev` — see [`CONTRIBUTING.md`](CONTRIBUTING.md)).
+```bash
+# 1. Install dependencies
+pnpm install
+
+# 2. Run quality checks (types, format, lint, tests)
+pnpm run ci:check
+
+# 3. Start the mobile app
+cd apps/mobile
+pnpm start
+```
+
+For detailed contribution guidelines, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Documentation map
 
