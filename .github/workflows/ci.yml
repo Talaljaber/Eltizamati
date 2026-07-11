@@ -42,3 +42,49 @@ jobs:
 
       - name: Run CI checks
         run: pnpm run ci:check
+
+  supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # ubuntu-latest GitHub-hosted runners ship Docker preinstalled — `supabase start` needs
+      # it to run local Postgres/Auth/etc. (docs/05-data-api/database-schema.md §3, §8).
+      - name: Start local Supabase stack
+        run: supabase start
+
+      # Applies every migration in supabase/migrations/ to a fresh database, in order —
+      # the same command a developer runs locally before `supabase test db`.
+      - name: Apply migrations (fresh db reset)
+        run: supabase db reset
+
+      # pgTAP cross-user RLS matrix, composite-ownership-FK, business-rule constraint, and
+      # account-deletion cascade tests (supabase/tests/database/*.sql).
+      - name: Run pgTAP tests
+        run: supabase test db
+
+      # Generated-types drift check (docs/05-data-api/database-schema.md §8): regenerate
+      # against the migrations just applied and fail if the committed file disagrees — the
+      # committed file is the typed boundary Supabase repositories consume; it must never be
+      # hand-edited or silently stale (AI_AGENT_RULES §16).
+      - name: Check generated Supabase types are diff-clean
+        run: |
+          mkdir -p apps/mobile/src/core/supabase
+          supabase gen types typescript --local --schema public > /tmp/database.types.ts
+          if [ ! -f apps/mobile/src/core/supabase/database.types.ts ]; then
+            echo "::error::apps/mobile/src/core/supabase/database.types.ts is not committed yet." \
+                 "Run 'supabase start && supabase gen types typescript --local --schema public > apps/mobile/src/core/supabase/database.types.ts' locally (requires Docker) and commit the result."
+            diff /tmp/database.types.ts /dev/null || true
+            exit 1
+          fi
+          diff apps/mobile/src/core/supabase/database.types.ts /tmp/database.types.ts
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: supabase stop
