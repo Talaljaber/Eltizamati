@@ -5,6 +5,8 @@ build/
 dist/
 *.lock
 .env*
+!.env.example
+!apps/mobile/.env.example
 *.keystore
 *.p8
 *.p12
