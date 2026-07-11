@@ -13,7 +13,11 @@ export default function TabLayout() {
           title: t('tabs.home'),
           headerRight: () => (
             <Link href="/settings/" asChild>
-              <Pressable accessibilityRole="button" accessibilityLabel={t('navigation.settings')} style={{ marginRight: 16 }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('navigation.settings')}
+                style={{ marginRight: 16 }}
+              >
                 <Text style={{ fontSize: 24 }}>⚙️</Text>
               </Pressable>
             </Link>

@@ -102,9 +102,7 @@ describe('Amount', () => {
 
   it('accessibilityLabel includes demo provenance key', () => {
     const money = Money.of('100', 'JOD')
-    const { getByLabelText } = render(
-      <Amount money={money} provenance={demoProvenance} />,
-    )
+    const { getByLabelText } = render(<Amount money={money} provenance={demoProvenance} />)
     expect(getByLabelText(/provenance\.demo/)).toBeTruthy()
   })
 
@@ -133,7 +131,7 @@ describe('Amount', () => {
   it('has accessibilityRole="button" when onPress is provided', () => {
     const money = Money.of('750', 'JOD')
     const { getByRole } = render(
-      <Amount money={money} provenance={officialProvenance} onPress={() => {}} />,
+      <Amount money={money} provenance={officialProvenance} onPress={() => undefined} />,
     )
     // a11y: announced as interactive when SCR-EXPLAIN link is wired
     expect(getByRole('button')).toBeTruthy()
@@ -141,9 +139,7 @@ describe('Amount', () => {
 
   it('does NOT have button role when onPress is absent', () => {
     const money = Money.of('750', 'JOD')
-    const { queryByRole } = render(
-      <Amount money={money} provenance={officialProvenance} />,
-    )
+    const { queryByRole } = render(<Amount money={money} provenance={officialProvenance} />)
     expect(queryByRole('button')).toBeNull()
   })
 })

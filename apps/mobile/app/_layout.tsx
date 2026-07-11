@@ -9,7 +9,10 @@ export default function RootLayout() {
     <>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="settings/index" options={{ title: t('navigation.settings'), presentation: 'modal' }} />
+        <Stack.Screen
+          name="settings/index"
+          options={{ title: t('navigation.settings'), presentation: 'modal' }}
+        />
         <Stack.Screen name="+not-found" options={{ title: t('navigation.notFound') }} />
       </Stack>
       <StatusBar style="auto" />

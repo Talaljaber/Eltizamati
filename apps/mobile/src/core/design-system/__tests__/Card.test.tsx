@@ -36,7 +36,7 @@ describe('Card', () => {
 
   it('has accessibilityRole="button" when onPress is provided — a11y required', () => {
     const { getByRole } = render(
-      <Card onPress={() => {}} accessibilityLabel="Open details">
+      <Card onPress={() => undefined} accessibilityLabel="Open details">
         <RNText>Pressable card</RNText>
       </Card>,
     )
@@ -46,7 +46,7 @@ describe('Card', () => {
 
   it('has accessibilityLabel when onPress is provided', () => {
     const { getByLabelText } = render(
-      <Card onPress={() => {}} accessibilityLabel="View obligation details">
+      <Card onPress={() => undefined} accessibilityLabel="View obligation details">
         <RNText>Loan card</RNText>
       </Card>,
     )
@@ -67,7 +67,7 @@ describe('Card', () => {
 
   it('renders testID on pressable card', () => {
     const { getByTestId } = render(
-      <Card onPress={() => {}} accessibilityLabel="Card" testID="card-pressable">
+      <Card onPress={() => undefined} accessibilityLabel="Card" testID="card-pressable">
         <RNText>Content</RNText>
       </Card>,
     )

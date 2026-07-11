@@ -14,46 +14,40 @@ import { Button } from '../primitives/Button'
 
 describe('Button', () => {
   it('renders label text', () => {
-    const { getByText } = render(<Button label="Submit" onPress={() => {}} />)
+    const { getByText } = render(<Button label="Submit" onPress={() => undefined} />)
     expect(getByText('Submit')).toBeTruthy()
   })
 
   // ── Accessibility (DS-4 requirement) ──────────────────────────────────────
 
   it('has accessibilityRole="button" — required for screen readers', () => {
-    const { getByRole } = render(<Button label="Click me" onPress={() => {}} />)
+    const { getByRole } = render(<Button label="Click me" onPress={() => undefined} />)
     // a11y: button role is announced by screen readers
     expect(getByRole('button')).toBeTruthy()
   })
 
   it('has accessibilityLabel matching the label prop', () => {
-    const { getByLabelText } = render(<Button label="Confirm" onPress={() => {}} />)
+    const { getByLabelText } = render(<Button label="Confirm" onPress={() => undefined} />)
     // a11y: screen reader reads the label
     expect(getByLabelText('Confirm')).toBeTruthy()
   })
 
   it('sets accessibilityState.busy when loading=true', () => {
-    const { getByRole } = render(
-      <Button label="Loading…" onPress={() => {}} loading />,
-    )
+    const { getByRole } = render(<Button label="Loading…" onPress={() => undefined} loading />)
     // a11y: screen reader announces "busy" state during loading
     const btn = getByRole('button')
     expect(btn.props.accessibilityState).toMatchObject({ busy: true })
   })
 
   it('sets accessibilityState.disabled when disabled=true', () => {
-    const { getByRole } = render(
-      <Button label="Disabled" onPress={() => {}} disabled />,
-    )
+    const { getByRole } = render(<Button label="Disabled" onPress={() => undefined} disabled />)
     // a11y: screen reader announces disabled state
     const btn = getByRole('button')
     expect(btn.props.accessibilityState).toMatchObject({ disabled: true })
   })
 
   it('sets accessibilityState.disabled when loading=true (loading implies disabled)', () => {
-    const { getByRole } = render(
-      <Button label="Loading" onPress={() => {}} loading />,
-    )
+    const { getByRole } = render(<Button label="Loading" onPress={() => undefined} loading />)
     const btn = getByRole('button')
     expect(btn.props.accessibilityState).toMatchObject({ disabled: true, busy: true })
   })
@@ -69,18 +63,14 @@ describe('Button', () => {
 
   it('does NOT call onPress when disabled', () => {
     const onPress = jest.fn()
-    const { getByRole } = render(
-      <Button label="Disabled" onPress={onPress} disabled />,
-    )
+    const { getByRole } = render(<Button label="Disabled" onPress={onPress} disabled />)
     fireEvent.press(getByRole('button'))
     expect(onPress).not.toHaveBeenCalled()
   })
 
   it('does NOT call onPress when loading', () => {
     const onPress = jest.fn()
-    const { getByRole } = render(
-      <Button label="Loading" onPress={onPress} loading />,
-    )
+    const { getByRole } = render(<Button label="Loading" onPress={onPress} loading />)
     fireEvent.press(getByRole('button'))
     expect(onPress).not.toHaveBeenCalled()
   })
@@ -89,28 +79,26 @@ describe('Button', () => {
 
   it('renders secondary variant without error', () => {
     const { getByRole } = render(
-      <Button label="Secondary" onPress={() => {}} variant="secondary" />,
+      <Button label="Secondary" onPress={() => undefined} variant="secondary" />,
     )
     expect(getByRole('button')).toBeTruthy()
   })
 
   it('renders ghost variant without error', () => {
-    const { getByRole } = render(
-      <Button label="Ghost" onPress={() => {}} variant="ghost" />,
-    )
+    const { getByRole } = render(<Button label="Ghost" onPress={() => undefined} variant="ghost" />)
     expect(getByRole('button')).toBeTruthy()
   })
 
   it('renders destructive variant without error', () => {
     const { getByRole } = render(
-      <Button label="Delete" onPress={() => {}} variant="destructive" />,
+      <Button label="Delete" onPress={() => undefined} variant="destructive" />,
     )
     expect(getByRole('button')).toBeTruthy()
   })
 
   it('renders testID when provided', () => {
     const { getByTestId } = render(
-      <Button label="Labelled" onPress={() => {}} testID="btn-submit" />,
+      <Button label="Labelled" onPress={() => undefined} testID="btn-submit" />,
     )
     expect(getByTestId('btn-submit')).toBeTruthy()
   })

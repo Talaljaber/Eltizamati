@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
-import i18n, { LanguageDetectorAsyncModule } from 'i18next'
+import i18n from 'i18next'
+import type { LanguageDetectorAsyncModule } from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import { I18nManager } from 'react-native'
 import * as Updates from 'expo-updates'
@@ -17,7 +18,7 @@ const languageDetector: LanguageDetectorAsyncModule = {
   detect: (callback) => {
     AsyncStorage.getItem(LANGUAGE_KEY)
       .then((saved) => {
-        if (saved && ['en', 'ar'].includes(saved)) {
+        if (saved !== null && ['en', 'ar'].includes(saved)) {
           callback(saved)
         } else {
           const deviceLanguage = getLocales()[0]?.languageCode ?? 'en'
@@ -28,7 +29,7 @@ const languageDetector: LanguageDetectorAsyncModule = {
         callback('en')
       })
   },
-  init: () => {},
+  init: () => undefined,
   cacheUserLanguage: (lng) => {
     AsyncStorage.setItem(LANGUAGE_KEY, lng).catch(console.error)
   },
@@ -38,7 +39,6 @@ i18n
   .use(languageDetector)
   .use(initReactI18next)
   .init({
-    compatibilityJSON: 'v3',
     resources: {
       en: { translation: en },
       ar: { translation: ar },
