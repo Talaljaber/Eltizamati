@@ -88,7 +88,7 @@ export { validateMurabahaFinancing } from './services/validate-murabaha.js'
 export { validatePaymentAllocation } from './services/validate-payment-allocation.js'
 export { resolveMinimumPaymentDue } from './services/resolve-minimum-payment.js'
 export type { MinimumPaymentResolution } from './services/resolve-minimum-payment.js'
-export { canonicalStringify, hashCanonicalJson } from './services/canonical-json.js'
+export { canonicalStringify, hashCanonicalJson, sha256Hex } from './services/canonical-json.js'
 export type { CanonicalJsonValue } from './services/canonical-json.js'
 
 // ─── Contracts (repository ports) ────────────────────────────────────────────

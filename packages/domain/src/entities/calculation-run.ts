@@ -42,7 +42,7 @@ export interface CalculationRun {
   readonly formulaVersion: number
   readonly asOf: LocalDate
   readonly inputsSnapshot: CanonicalJsonValue
-  /** `hashCanonicalJson(inputsSnapshot)` — reproducibility check (INV-5). */
+  /** `hashCanonicalJson(inputsSnapshot)` — SHA-256, reproducibility check (INV-5). */
   readonly inputsHash: string
   readonly outcome: CalculationOutcome
   readonly assumptions: readonly string[]

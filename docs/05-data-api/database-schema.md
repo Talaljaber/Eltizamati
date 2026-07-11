@@ -11,6 +11,8 @@
 > - **Bundled demo data is never inserted into Supabase** — demo mode is in-memory (ADR-0017 §2, restated in §7 below).
 > - Generated types (`supabase gen types typescript`) are committed and are the typed boundary for repositories (§8).
 > - `rate_periods`, `payments`, `calculation_runs`, `insights` gain the exact JSON shapes and constraints implied by the Phase 2 domain entities (append-only rate history, `CalculationOutcome`'s result/refused split, etc.) — see §1–2 below.
+>
+> **⚠ Phase 3 readiness-pass addendum (2026-07-12):** the denormalized `user_id` columns on every child table were, until this pass, only ever guaranteed consistent with their parent `obligations.user_id` by RLS policies and careful application code — nothing stopped a buggy or compromised write path from inserting a child row whose `user_id` didn't match its own parent obligation's owner (RLS would still block a _different_ user from reading it, but a same-session bug could silently mismatch ownership within one account, or a service-role operation bypassing RLS entirely could do so undetected). §1.11 below adds a database-enforced composite foreign key (`(obligation_id, user_id) → obligations(id, user_id)`) to every child table so Postgres itself rejects a parent/child ownership mismatch — this does not replace RLS (RLS still gates cross-user access), it closes the separate same-account-integrity gap RLS was never designed to cover. `CalculationRun.inputsHash`/`inputs_hash` was also reassessed in this pass: the original implementation was a non-cryptographic FNV-1a checksum (ambiguous next to an "audit-looking" column name); it is now genuine SHA-256, computed by a portable pure-JS implementation in `packages/domain/src/services/canonical-json.ts` (no Node `crypto`, no Web Crypto — both are unreliable/unavailable across the React Native + Edge Functions targets), verified against NIST test vectors and Node's own `crypto.createHash('sha256')`.
 
 **One schema, one shape:** the Postgres/Supabase schema is the MVP system of record for personal-mode data. Subtype modeling per ADR-0008: common `obligations` table + per-family detail tables (no giant nullable table — SRC-1 §21.1).
 
@@ -52,32 +54,32 @@ Mirrors `ObligationBase` (domain: `entities/obligation.ts`).
 | `created_at`       | `timestamptz`                | not null     | default `now()`                                                                                                |
 | `updated_at`       | `timestamptz`                | not null     | maintained on update                                                                                           |
 
-Index: `(user_id)`; `(user_id, kind)` for list-by-kind queries.
+Index: `(user_id)`; `(user_id, kind)` for list-by-kind queries. **Constraint (new in the Phase 3 readiness pass, §1.11):** `UNIQUE (id, user_id)` — a composite unique key, in addition to the `id` primary key, that every child table's composite foreign key references so a child row's `user_id` is provably the same as its parent obligation's owner.
 
 ### 1.3 `loan_details` (kind = `conventionalLoan`)
 
 Mirrors `ConventionalLoanDetails`. 1:1 with `obligations`. **Rate history is not stored here** — see `rate_periods` (§1.6); `loan_details` carries no rate column at all (BR-OBL-002 lives entirely in the append-only table).
 
-| Column                     | Type                             | Null         | Notes                                                                 |
-| -------------------------- | -------------------------------- | ------------ | --------------------------------------------------------------------- |
-| `obligation_id`            | `uuid` PK FK → `obligations(id)` | not null     | `ON DELETE CASCADE`                                                   |
-| `user_id`                  | `uuid` FK → `auth.users(id)`     | **not null** | denormalized (RLS)                                                    |
-| `original_principal`       | `numeric(14,3)`                  | not null     |                                                                       |
-| `original_principal_prov`  | `jsonb`                          | not null     |                                                                       |
-| `outstanding_balance`      | `numeric(14,3)`                  | nullable     |                                                                       |
-| `outstanding_balance_prov` | `jsonb`                          | nullable     |                                                                       |
-| `installment`              | `numeric(14,3)`                  | not null     |                                                                       |
-| `installment_prov`         | `jsonb`                          | not null     |                                                                       |
-| `rate_type`                | `text`                           | not null     | CHECK `rate_type in ('fixed','variable','mixed','unknown')`           |
-| `term_months`              | `integer`                        | not null     |                                                                       |
-| `term_months_prov`         | `jsonb`                          | not null     |                                                                       |
-| `start_date`               | `date`                           | not null     |                                                                       |
-| `maturity_date`            | `date`                           | not null     |                                                                       |
-| `first_payment_date`       | `date`                           | nullable     |                                                                       |
-| `payment_frequency`        | `text`                           | not null     | CHECK `payment_frequency = 'monthly'` (MVP)                           |
-| `purpose`                  | `text`                           | nullable     | CHECK `purpose in ('personal','auto','housing','other')` when present |
-| `contractual_balloon`      | `numeric(14,3)`                  | nullable     |                                                                       |
-| `contractual_balloon_prov` | `jsonb`                          | nullable     |                                                                       |
+| Column                     | Type                             | Null         | Notes                                                                                                           |
+| -------------------------- | -------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------- |
+| `obligation_id`            | `uuid` PK FK → `obligations(id)` | not null     | `ON DELETE CASCADE`; see §1.11 — `(obligation_id, user_id)` is also a composite FK → `obligations(id, user_id)` |
+| `user_id`                  | `uuid` FK → `auth.users(id)`     | **not null** | denormalized (RLS); ownership-matched to the parent via the §1.11 composite FK, not RLS/app code alone          |
+| `original_principal`       | `numeric(14,3)`                  | not null     |                                                                                                                 |
+| `original_principal_prov`  | `jsonb`                          | not null     |                                                                                                                 |
+| `outstanding_balance`      | `numeric(14,3)`                  | nullable     |                                                                                                                 |
+| `outstanding_balance_prov` | `jsonb`                          | nullable     |                                                                                                                 |
+| `installment`              | `numeric(14,3)`                  | not null     |                                                                                                                 |
+| `installment_prov`         | `jsonb`                          | not null     |                                                                                                                 |
+| `rate_type`                | `text`                           | not null     | CHECK `rate_type in ('fixed','variable','mixed','unknown')`                                                     |
+| `term_months`              | `integer`                        | not null     |                                                                                                                 |
+| `term_months_prov`         | `jsonb`                          | not null     |                                                                                                                 |
+| `start_date`               | `date`                           | not null     |                                                                                                                 |
+| `maturity_date`            | `date`                           | not null     |                                                                                                                 |
+| `first_payment_date`       | `date`                           | nullable     |                                                                                                                 |
+| `payment_frequency`        | `text`                           | not null     | CHECK `payment_frequency = 'monthly'` (MVP)                                                                     |
+| `purpose`                  | `text`                           | nullable     | CHECK `purpose in ('personal','auto','housing','other')` when present                                           |
+| `contractual_balloon`      | `numeric(14,3)`                  | nullable     |                                                                                                                 |
+| `contractual_balloon_prov` | `jsonb`                          | nullable     |                                                                                                                 |
 
 CHECK: `term_months > 0`.
 
@@ -87,8 +89,8 @@ Mirrors `MurabahaDetails`.
 
 | Column                  | Type                             | Null         | Notes                                                                                 |
 | ----------------------- | -------------------------------- | ------------ | ------------------------------------------------------------------------------------- |
-| `obligation_id`         | `uuid` PK FK → `obligations(id)` | not null     | `ON DELETE CASCADE`                                                                   |
-| `user_id`               | `uuid` FK → `auth.users(id)`     | **not null** | denormalized (RLS)                                                                    |
+| `obligation_id`         | `uuid` PK FK → `obligations(id)` | not null     | `ON DELETE CASCADE`; composite FK → `obligations(id, user_id)`, §1.11                 |
+| `user_id`               | `uuid` FK → `auth.users(id)`     | **not null** | denormalized (RLS); ownership-matched via the §1.11 composite FK                      |
 | `asset_cost`            | `numeric(14,3)`                  | not null     |                                                                                       |
 | `asset_cost_prov`       | `jsonb`                          | not null     |                                                                                       |
 | `disclosed_profit`      | `numeric(14,3)`                  | not null     |                                                                                       |
@@ -110,8 +112,8 @@ Mirrors `CardDetails`. `minimum_payment_rule_json` and `fees_json` hold the two 
 
 | Column                      | Type                             | Null         | Notes                                                                                                                                                                                                                               |
 | --------------------------- | -------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `obligation_id`             | `uuid` PK FK → `obligations(id)` | not null     | `ON DELETE CASCADE`                                                                                                                                                                                                                 |
-| `user_id`                   | `uuid` FK → `auth.users(id)`     | **not null** | denormalized (RLS)                                                                                                                                                                                                                  |
+| `obligation_id`             | `uuid` PK FK → `obligations(id)` | not null     | `ON DELETE CASCADE`; composite FK → `obligations(id, user_id)`, §1.11                                                                                                                                                               |
+| `user_id`                   | `uuid` FK → `auth.users(id)`     | **not null** | denormalized (RLS); ownership-matched via the §1.11 composite FK                                                                                                                                                                    |
 | `credit_limit`              | `numeric(14,3)`                  | not null     |                                                                                                                                                                                                                                     |
 | `credit_limit_prov`         | `jsonb`                          | not null     |                                                                                                                                                                                                                                     |
 | `current_balance`           | `numeric(14,3)`                  | not null     |                                                                                                                                                                                                                                     |
@@ -134,16 +136,16 @@ CHECK: `minimum_payment_rule_json is null or minimum_payment_rule_json->>'type' 
 
 Mirrors `RatePeriod` (domain: `entities/rate-period.ts`). Append-only (BR-RATE-001) — application code must never `UPDATE` an existing row's `annual_rate`/`effective_from`; corrections `INSERT` a new row and `UPDATE` only the superseded row's `superseded_by` column.
 
-| Column            | Type                           | Null     | Notes                          |
-| ----------------- | ------------------------------ | -------- | ------------------------------ |
-| `id`              | `uuid` PK                      | not null |                                |
-| `obligation_id`   | `uuid` FK → `obligations(id)`  | not null | `ON DELETE CASCADE`            |
-| `user_id`         | `uuid` FK → `auth.users(id)`   | not null | denormalized (RLS)             |
-| `annual_rate`     | `numeric(9,6)`                 | not null |                                |
-| `effective_from`  | `date`                         | not null |                                |
-| `superseded_by`   | `uuid` FK → `rate_periods(id)` | nullable | append-only correction pointer |
-| `provenance_json` | `jsonb`                        | not null |                                |
-| `created_at`      | `timestamptz`                  | not null | default `now()`                |
+| Column            | Type                           | Null     | Notes                                                                 |
+| ----------------- | ------------------------------ | -------- | --------------------------------------------------------------------- |
+| `id`              | `uuid` PK                      | not null |                                                                       |
+| `obligation_id`   | `uuid` FK → `obligations(id)`  | not null | `ON DELETE CASCADE`; composite FK → `obligations(id, user_id)`, §1.11 |
+| `user_id`         | `uuid` FK → `auth.users(id)`   | not null | denormalized (RLS); ownership-matched via the §1.11 composite FK      |
+| `annual_rate`     | `numeric(9,6)`                 | not null |                                                                       |
+| `effective_from`  | `date`                         | not null |                                                                       |
+| `superseded_by`   | `uuid` FK → `rate_periods(id)` | nullable | append-only correction pointer                                        |
+| `provenance_json` | `jsonb`                        | not null |                                                                       |
+| `created_at`      | `timestamptz`                  | not null | default `now()`                                                       |
 
 Constraints: unique `(obligation_id, effective_from)` where `superseded_by is null` (BR-OBL-002 non-overlap, enforced at the active-period layer — full ordering/gap validation is `validateRatePeriods` at the application layer, since Postgres CHECK constraints cannot express "no overlap across rows" without a trigger, and this schema deliberately keeps the invariant enforcement in one place, the domain service, rather than duplicating it in a trigger — no data path may bypass `validateRatePeriods`, so app-layer enforcement is sufficient here). Index: `(obligation_id, effective_from)`; `(user_id)`.
 
@@ -151,19 +153,19 @@ Constraints: unique `(obligation_id, effective_from)` where `superseded_by is nu
 
 Mirrors `Payment` (domain: `entities/payment.ts`).
 
-| Column            | Type                           | Null     | Notes                                                         |
-| ----------------- | ------------------------------ | -------- | ------------------------------------------------------------- |
-| `id`              | `uuid` PK                      | not null |                                                               |
-| `obligation_id`   | `uuid` FK → `obligations(id)`  | not null | `ON DELETE CASCADE`                                           |
-| `user_id`         | `uuid` FK → `auth.users(id)`   | not null | denormalized (RLS)                                            |
-| `paid_on`         | `date`                         | not null |                                                               |
-| `amount`          | `numeric(14,3)`                | not null | CHECK `amount > 0`                                            |
-| `alloc_principal` | `numeric(14,3)`                | nullable | present iff `alloc_cost`/`alloc_source` present               |
-| `alloc_cost`      | `numeric(14,3)`                | nullable |                                                               |
-| `alloc_source`    | `text`                         | nullable | CHECK `alloc_source in ('official','estimated')` when present |
-| `period_ref`      | `uuid` FK → `rate_periods(id)` | nullable |                                                               |
-| `provenance_json` | `jsonb`                        | not null |                                                               |
-| `created_at`      | `timestamptz`                  | not null | default `now()`                                               |
+| Column            | Type                           | Null     | Notes                                                                 |
+| ----------------- | ------------------------------ | -------- | --------------------------------------------------------------------- |
+| `id`              | `uuid` PK                      | not null |                                                                       |
+| `obligation_id`   | `uuid` FK → `obligations(id)`  | not null | `ON DELETE CASCADE`; composite FK → `obligations(id, user_id)`, §1.11 |
+| `user_id`         | `uuid` FK → `auth.users(id)`   | not null | denormalized (RLS); ownership-matched via the §1.11 composite FK      |
+| `paid_on`         | `date`                         | not null |                                                                       |
+| `amount`          | `numeric(14,3)`                | not null | CHECK `amount > 0`                                                    |
+| `alloc_principal` | `numeric(14,3)`                | nullable | present iff `alloc_cost`/`alloc_source` present                       |
+| `alloc_cost`      | `numeric(14,3)`                | nullable |                                                                       |
+| `alloc_source`    | `text`                         | nullable | CHECK `alloc_source in ('official','estimated')` when present         |
+| `period_ref`      | `uuid` FK → `rate_periods(id)` | nullable |                                                                       |
+| `provenance_json` | `jsonb`                        | not null |                                                                       |
+| `created_at`      | `timestamptz`                  | not null | default `now()`                                                       |
 
 CHECK (INV-2, app-layer mirrors `validatePaymentAllocation`): when `alloc_principal`/`alloc_cost` are present, `abs(alloc_principal + alloc_cost - amount) <= 0.005`. Index: `(obligation_id, paid_on)`; `(user_id)`.
 
@@ -171,23 +173,23 @@ CHECK (INV-2, app-layer mirrors `validatePaymentAllocation`): when `alloc_princi
 
 Mirrors `CalculationRun` (domain: `entities/calculation-run.ts`). `outcome_kind` implements the `CalculationOutcome` result/refused split (PHASE-02-DECISION-LOG.md §7) — confidence is only ever populated for `'result'`, never for `'refused'`.
 
-| Column                | Type                          | Null     | Notes                                                                                                                                                                                   |
-| --------------------- | ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                  | `uuid` PK                     | not null |                                                                                                                                                                                         |
-| `user_id`             | `uuid` FK → `auth.users(id)`  | not null | denormalized (RLS)                                                                                                                                                                      |
-| `obligation_id`       | `uuid` FK → `obligations(id)` | nullable | nullable for aggregate (`aggregates.v1`) runs                                                                                                                                           |
-| `formula_id`          | `text`                        | not null | opaque reference to the finance-engine registry — this table never imports the engine's `FormulaId` type                                                                                |
-| `formula_version`     | `integer`                     | not null |                                                                                                                                                                                         |
-| `as_of`               | `date`                        | not null | explicit, never derived from a clock (BR-CALC-001)                                                                                                                                      |
-| `inputs_json`         | `jsonb`                       | not null | canonical JSON snapshot (`canonicalStringify` output, parsed)                                                                                                                           |
-| `inputs_hash`         | `text`                        | not null | `hashCanonicalJson(inputs_json)` — reproducibility check (INV-5)                                                                                                                        |
-| `outcome_kind`        | `text`                        | not null | CHECK `outcome_kind in ('result','refused')`                                                                                                                                            |
-| `confidence`          | `text`                        | nullable | CHECK `confidence in ('official','high','medium','low')`; **not null iff `outcome_kind = 'result'`**                                                                                    |
-| `result_json`         | `jsonb`                       | nullable | canonical result snapshot; **not null iff `outcome_kind = 'result'`** — per-formula shape (e.g. `ScheduleEntry[]`) is defined in `packages/finance-engine`, Phase 6, and is opaque here |
-| `missing_fields_json` | `jsonb`                       | nullable | array of field refs; **not null iff `outcome_kind = 'refused'`** (BR-CALC-016)                                                                                                          |
-| `partial_json`        | `jsonb`                       | nullable | optional limited view; only when `outcome_kind = 'refused'`                                                                                                                             |
-| `assumptions_json`    | `jsonb`                       | not null | array of assumption-note strings                                                                                                                                                        |
-| `calculated_at`       | `timestamptz`                 | not null |                                                                                                                                                                                         |
+| Column                | Type                          | Null     | Notes                                                                                                                                                                                                                                          |
+| --------------------- | ----------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                  | `uuid` PK                     | not null |                                                                                                                                                                                                                                                |
+| `user_id`             | `uuid` FK → `auth.users(id)`  | not null | denormalized (RLS); ownership-matched via the §1.11 composite FK when `obligation_id` is set                                                                                                                                                   |
+| `obligation_id`       | `uuid` FK → `obligations(id)` | nullable | nullable for aggregate (`aggregates.v1`) runs; when set, `(obligation_id, user_id)` is also a composite FK → `obligations(id, user_id)`, §1.11 (Postgres skips a composite FK check when any column is NULL, so aggregate runs are unaffected) |
+| `formula_id`          | `text`                        | not null | opaque reference to the finance-engine registry — this table never imports the engine's `FormulaId` type                                                                                                                                       |
+| `formula_version`     | `integer`                     | not null |                                                                                                                                                                                                                                                |
+| `as_of`               | `date`                        | not null | explicit, never derived from a clock (BR-CALC-001)                                                                                                                                                                                             |
+| `inputs_json`         | `jsonb`                       | not null | canonical JSON snapshot (`canonicalStringify` output, parsed)                                                                                                                                                                                  |
+| `inputs_hash`         | `text`                        | not null | `hashCanonicalJson(inputs_json)` — SHA-256 hex digest, reproducibility check (INV-5); a genuine cryptographic hash (reassessed in the Phase 3 readiness pass), used here only for change-detection, not as an audit/integrity signature        |
+| `outcome_kind`        | `text`                        | not null | CHECK `outcome_kind in ('result','refused')`                                                                                                                                                                                                   |
+| `confidence`          | `text`                        | nullable | CHECK `confidence in ('official','high','medium','low')`; **not null iff `outcome_kind = 'result'`**                                                                                                                                           |
+| `result_json`         | `jsonb`                       | nullable | canonical result snapshot; **not null iff `outcome_kind = 'result'`** — per-formula shape (e.g. `ScheduleEntry[]`) is defined in `packages/finance-engine`, Phase 6, and is opaque here                                                        |
+| `missing_fields_json` | `jsonb`                       | nullable | array of field refs; **not null iff `outcome_kind = 'refused'`** (BR-CALC-016)                                                                                                                                                                 |
+| `partial_json`        | `jsonb`                       | nullable | optional limited view; only when `outcome_kind = 'refused'`                                                                                                                                                                                    |
+| `assumptions_json`    | `jsonb`                       | not null | array of assumption-note strings                                                                                                                                                                                                               |
+| `calculated_at`       | `timestamptz`                 | not null |                                                                                                                                                                                                                                                |
 
 CHECK: `(outcome_kind = 'result' and confidence is not null and result_json is not null and missing_fields_json is null) or (outcome_kind = 'refused' and confidence is null and result_json is null and missing_fields_json is not null)`. Index: `(obligation_id, formula_id, created_at desc)`; `(user_id)`.
 
@@ -195,20 +197,20 @@ CHECK: `(outcome_kind = 'result' and confidence is not null and result_json is n
 
 Mirrors `Insight` (domain: `entities/insight.ts`).
 
-| Column          | Type                          | Null     | Notes                                                                               |
-| --------------- | ----------------------------- | -------- | ----------------------------------------------------------------------------------- |
-| `id`            | `uuid` PK                     | not null |                                                                                     |
-| `user_id`       | `uuid` FK → `auth.users(id)`  | not null | denormalized (RLS)                                                                  |
-| `obligation_id` | `uuid` FK → `obligations(id)` | nullable |                                                                                     |
-| `rule_id`       | `text`                        | not null | includes the reserved `system.calculationRefused` id (PHASE-02-DECISION-LOG.md §13) |
-| `severity`      | `text`                        | not null | CHECK `severity in ('info','attention','urgent','positive')`                        |
-| `title_key`     | `text`                        | not null | i18n key, never inlined copy                                                        |
-| `body_key`      | `text`                        | not null | i18n key                                                                            |
-| `params_json`   | `jsonb`                       | nullable | i18n interpolation params                                                           |
-| `trigger_hash`  | `text`                        | not null | dedup component                                                                     |
-| `deep_link`     | `text`                        | nullable | validated against the route allow-list at read time, not stored validated           |
-| `read_at`       | `timestamptz`                 | nullable |                                                                                     |
-| `created_at`    | `timestamptz`                 | not null |                                                                                     |
+| Column          | Type                          | Null     | Notes                                                                                           |
+| --------------- | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `id`            | `uuid` PK                     | not null |                                                                                                 |
+| `user_id`       | `uuid` FK → `auth.users(id)`  | not null | denormalized (RLS); ownership-matched via the §1.11 composite FK when `obligation_id` is set    |
+| `obligation_id` | `uuid` FK → `obligations(id)` | nullable | when set, `(obligation_id, user_id)` is also a composite FK → `obligations(id, user_id)`, §1.11 |
+| `rule_id`       | `text`                        | not null | includes the reserved `system.calculationRefused` id (PHASE-02-DECISION-LOG.md §13)             |
+| `severity`      | `text`                        | not null | CHECK `severity in ('info','attention','urgent','positive')`                                    |
+| `title_key`     | `text`                        | not null | i18n key, never inlined copy                                                                    |
+| `body_key`      | `text`                        | not null | i18n key                                                                                        |
+| `params_json`   | `jsonb`                       | nullable | i18n interpolation params                                                                       |
+| `trigger_hash`  | `text`                        | not null | dedup component                                                                                 |
+| `deep_link`     | `text`                        | nullable | validated against the route allow-list at read time, not stored validated                       |
+| `read_at`       | `timestamptz`                 | nullable |                                                                                                 |
+| `created_at`    | `timestamptz`                 | not null |                                                                                                 |
 
 Constraint: unique `(rule_id, obligation_id, trigger_hash)` (FR-INS-004 dedup key). Index: `(user_id)`.
 
@@ -227,6 +229,31 @@ Mirrors `ConsentRecord` (domain: `entities/consent-record.ts`). Server-backed in
 
 Index: `(user_id, doc_type)`.
 
+### 1.11 Composite ownership enforcement (parent/child `user_id` consistency)
+
+**Added in the Phase 3 readiness pass (2026-07-12) — before any migration was written**, so Phase 3 implements this from `supabase/migrations/0001` onward rather than retrofitting it.
+
+**Problem:** every child table (`loan_details`, `murabaha_details`, `card_details`, `rate_periods`, `payments`, `calculation_runs`, `insights`) denormalizes `user_id` from its parent `obligations` row so RLS can use the same simple no-join policy everywhere (§4). But a plain `obligation_id` foreign key to `obligations(id)` says nothing about whether the child's own `user_id` column actually matches that parent's `user_id` — nothing in the schema itself prevented a child row from carrying a different (or NULL-defeating-a-check) `user_id` than its parent obligation. RLS still correctly blocks a _different authenticated user_ from reading or writing another user's rows, but RLS does not protect against **same-account** or **service-role** write paths inserting an internally inconsistent row (an application bug that computes the wrong `user_id` for a child row, or a privileged Edge Function operation that bypasses RLS entirely) — that class of bug would only surface later, if at all, as a confusing data-integrity issue.
+
+**Design:** `obligations` gains a composite unique constraint `UNIQUE (id, user_id)` (in addition to the existing `id` primary key — Postgres allows a foreign key to reference any unique constraint, not only the primary key). Every child table's foreign key to `obligations` becomes a **composite foreign key**:
+
+```sql
+-- On obligations:
+alter table obligations add constraint obligations_id_user_id_key unique (id, user_id);
+
+-- On every child table (example: payments):
+alter table payments
+  add constraint payments_obligation_owner_fkey
+  foreign key (obligation_id, user_id) references obligations (id, user_id)
+  on delete cascade;
+```
+
+**Effect:** Postgres itself now rejects any `INSERT`/`UPDATE` on a child table where `(obligation_id, user_id)` doesn't exactly match an existing `(id, user_id)` row in `obligations` — a parent/child ownership mismatch is a foreign-key violation, not a silent data bug or an RLS-only guarantee. This is strictly additive to RLS, not a replacement: RLS (§4) still gates _which rows a given session can see or touch at all_; the composite FK guarantees that _whatever rows exist_ are internally ownership-consistent, including rows written by service-role code that RLS does not constrain.
+
+**Nullable `obligation_id` tables** (`calculation_runs`, `insights`, for aggregate/account-level rows): Postgres foreign keys use `MATCH SIMPLE` by default, meaning the constraint is automatically satisfied (not checked) whenever _any_ column in the composite is `NULL` — so an aggregate `calculation_runs` row with `obligation_id = NULL` is unaffected by this constraint regardless of its `user_id` value, exactly matching the existing "nullable for aggregates" design.
+
+**Verified by:** a pgTAP test in Phase 3 (§ below) that attempts to insert a child row with a `user_id` different from its parent obligation's owner and asserts the insert fails with a foreign-key violation — this is a new, explicit test class beyond the existing cross-user RLS matrix.
+
 ## 2. Type & constraint rules
 
 | Concern       | SQLite (future local-first — reference only)                                                              | Postgres (MVP)                                                                                                                                                                                                                        |
@@ -240,7 +267,7 @@ Index: `(user_id, doc_type)`.
 | Provenance    | JSON column per sourced field group                                                                       | same, `JSONB` — one `<col>_prov` column per `Sourced<T>` domain field (paired with its value column), plus record-level `provenance_json` on `obligations`                                                                            |
 | Confidence    | n/a                                                                                                       | `TEXT` + `CHECK` (`calculation_runs.confidence`) — domain `Confidence` values only (`'official'\|'high'\|'medium'\|'low'`); engine's `REFUSED` maps to `outcome_kind = 'refused'`, never to this column (PHASE-02-DECISION-LOG.md §2) |
 
-Global constraints: `rate_periods` unique `(obligation_id, effective_from)` where not superseded; `rate_periods`/`payments`/`calculation_runs`/`insights`/`loan_details`/`murabaha_details`/`card_details` all index `user_id` (RLS performance); `payments` index `(obligation_id, paid_on)`; `payments` CHECK `amount > 0`; `murabaha_details` CHECK `total_sale_price = asset_cost + disclosed_profit` within the CONV-5 tolerance; `calculation_runs` index `(obligation_id, formula_id, created_at desc)`; `insights` unique `(rule_id, obligation_id, trigger_hash)`.
+Global constraints: `obligations` unique `(id, user_id)` (§1.11 — the composite-FK target); every child table's `(obligation_id, user_id)` is a composite foreign key → `obligations(id, user_id)` (§1.11 — database-enforced parent/child ownership consistency, not RLS/app-code-only); `rate_periods` unique `(obligation_id, effective_from)` where not superseded; `rate_periods`/`payments`/`calculation_runs`/`insights`/`loan_details`/`murabaha_details`/`card_details` all index `user_id` (RLS performance); `payments` index `(obligation_id, paid_on)`; `payments` CHECK `amount > 0`; `murabaha_details` CHECK `total_sale_price = asset_cost + disclosed_profit` within the CONV-5 tolerance; `calculation_runs` index `(obligation_id, formula_id, created_at desc)`; `insights` unique `(rule_id, obligation_id, trigger_hash)`.
 
 ## 3. Migrations (MVP — Supabase only)
 
