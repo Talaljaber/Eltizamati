@@ -1,21 +1,127 @@
 {
   "common": {
     "toggleLanguage": "عربي",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "back": "Back",
+    "continue": "Continue",
+    "skip": "Skip",
+    "done": "Done",
+    "errorTitle": "Something went wrong",
+    "retry": "Try again"
   },
   "tabs": {
     "home": "Home",
     "obligations": "Obligations",
     "learn": "Learn"
   },
+  "navigation": {
+    "settings": "Settings",
+    "notFound": "Not Found"
+  },
   "home": {
     "greeting": "Hello, Eltizamati!",
-    "subtitle": "Your financial obligations, organized."
+    "subtitle": "Your financial obligations, organized.",
+    "demoWelcome": "Explore your demo dashboard",
+    "demoSubtitle": "All figures are demonstration data. Not a real account.",
+    "totalLabel": "Total Monthly Commitments",
+    "totalPending": "Engine pending",
+    "nextPaymentLabel": "Next due payment",
+    "insightsTitle": "Insights",
+    "noInsights": "No new insights",
+    "viewAll": "View all"
   },
   "obligations": {
     "title": "Obligations",
     "emptyTitle": "No obligations yet",
-    "emptySubtitle": "Obligations you add will appear here."
+    "emptySubtitle": "Obligations you add will appear here.",
+    "filterAll": "All",
+    "filterLoan": "Loans",
+    "filterCard": "Cards",
+    "filterIslamic": "Islamic",
+    "loadingTitle": "Loading obligations…",
+    "errorTitle": "Could not load obligations",
+    "obligationCount": "{{count}} obligation",
+    "obligationCount_plural": "{{count}} obligations"
+  },
+  "obligationDetail": {
+    "title": "Obligation Detail",
+    "institution": "Institution",
+    "opened": "Opened",
+    "currency": "Currency",
+    "kind": "Type",
+    "status": "Status",
+    "provenance": "Data Source",
+    "loanSection": "Loan Details",
+    "originalPrincipal": "Original Principal",
+    "installment": "Installment",
+    "term": "Term",
+    "termMonths": "{{months}} months",
+    "rateType": "Rate Type",
+    "rateTypeVariable": "Variable",
+    "rateTypeFixed": "Fixed",
+    "startDate": "Start Date",
+    "maturityDate": "Maturity Date",
+    "murabahaSection": "Murabaha Details",
+    "assetCost": "Asset Cost",
+    "disclosedProfit": "Disclosed Profit",
+    "totalSalePrice": "Total Sale Price",
+    "cardSection": "Card Details",
+    "creditLimit": "Credit Limit",
+    "currentBalance": "Current Balance",
+    "utilization": "Utilization",
+    "minimumPayment": "Minimum Payment",
+    "dueDate": "Due Date",
+    "ratePeriodCount": "{{count}} rate period",
+    "ratePeriodCount_plural": "{{count}} rate periods",
+    "noRatePeriods": "No rate periods on file",
+    "phaseNote": "Detailed calculation view coming in a future update."
+  },
+  "onboarding": {
+    "languageTitle": "Choose your language",
+    "languageSubtitle": "You can change this later in Settings.",
+    "english": "English",
+    "arabic": "العربية",
+    "introTitle": "Know every obligation",
+    "introBody": "Track loans, Islamic financing, and credit cards in one honest place. Every number is labeled by source and confidence.",
+    "consentTitle": "Demonstration mode",
+    "consentBody": "This demo uses fictional data for illustrative purposes only. All figures are invented — they do not represent real accounts, real balances, or real financial advice.",
+    "consentAcknowledge": "I understand this is demonstration data",
+    "modeTitle": "How do you want to start?",
+    "modeDemo": "Explore with demo data",
+    "modeDemoSubtitle": "No account needed. Pre-loaded with realistic fictional obligations.",
+    "modeManual": "Enter my own data",
+    "modeManualSubtitle": "Type in your obligations manually. Available after launch.",
+    "modeManualBadge": "Coming soon",
+    "modeAccount": "Sign in / Create account",
+    "modeAccountSubtitle": "Secure cloud storage with full privacy controls. Available after launch.",
+    "modeAccountBadge": "Coming soon",
+    "startDemo": "Start exploring"
+  },
+  "demo": {
+    "banner": {
+      "message": "Demonstration data — not real accounts."
+    },
+    "badge": "Demo"
+  },
+  "status": {
+    "onTrack": "On Track",
+    "dueSoon": "Due Soon",
+    "overdue": "Overdue",
+    "delinquent": "Delinquent",
+    "attentionRequired": "Attention Required",
+    "dataStale": "Data Stale",
+    "calculationIncomplete": "Pending Calculation",
+    "notStarted": "Not Started",
+    "completed": "Completed",
+    "unknown": "Unknown"
+  },
+  "obligationKind": {
+    "conventionalLoan": "Conventional Loan",
+    "murabaha": "Murabaha",
+    "creditCard": "Credit Card",
+    "ijara": "Ijara",
+    "diminishingMusharakah": "Diminishing Musharakah",
+    "genericFacility": "Generic Facility"
   },
   "learn": {
     "title": "Learn",
@@ -38,5 +144,19 @@
     "userEntered": "User-entered",
     "estimate": "Estimate",
     "demo": "Demo data"
+  },
+  "insights": {
+    "rateIncreased": {
+      "title": "Rate increased",
+      "body": "Your interest rate increased from {{fromRate}}% to {{toRate}}%."
+    },
+    "installmentUnchanged": {
+      "title": "Installment unchanged after rate increase",
+      "body": "Your installment remains {{installment}} JOD despite the rate increase. Your remaining balance may be higher than expected."
+    },
+    "residualRisk": {
+      "title": "Residual balance risk",
+      "body": "Based on your payment history and the rate change, your balance projection may exceed the original schedule. A calculation is pending."
+    }
   }
 }
