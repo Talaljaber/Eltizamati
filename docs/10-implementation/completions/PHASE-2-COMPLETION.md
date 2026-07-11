@@ -91,14 +91,16 @@ Meets the phase's "~90% target." The handful of 0%-covered files (`entities/rate
 
 ## 9. Commits created
 
-1. `docs: correct active Phase 2 tracking` — STATUS.md / PHASE-1-COMPLETION.md fix (already committed at the start of this session, commit `7745848`)
-2. `feat(domain): add percentage, confidence, fee, and date-math value objects` (pending)
-3. `feat(domain): complete obligation, rate-period, payment, and supporting entities` (pending)
-4. `feat(domain): implement status derivation and invariants` (pending)
-5. `feat(contracts): define repository ports` (pending)
-6. `docs(data): freeze Supabase schema and RLS design` (pending)
-7. `test(domain): complete Phase 2 rule coverage` (pending)
-8. `docs: complete Phase 2 handoff` (pending — this report + STATUS.md update)
+1. `7745848` — `docs: correct active Phase 2 tracking`
+2. `9ad5de3` — `feat(domain): add percentage, confidence, fee, and date-math value objects`
+3. `3b0bb7e` — `feat(domain): complete obligation and supporting entities`
+4. `234b89f` — `feat(domain): implement status derivation and invariants`
+5. `764044e` — `feat(contracts): define repository ports`
+6. `15e3bff` — `test(domain): add public API barrel smoke test`
+7. `f491b67` — `docs(data): freeze Supabase schema and RLS design`
+8. `a6e2657` — `docs: complete Phase 2 handoff`
+
+All commits are local to `main`; **no push or merge has been performed** without explicit user approval, per this repo's operating rules.
 
 (Exact commit hashes for 2–8 are filled in by the commit step immediately following this report — see the session's final message for the actual list. No push or merge performed without explicit user approval.)
 
