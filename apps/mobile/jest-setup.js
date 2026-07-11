@@ -1,4 +1,4 @@
-import '@testing-library/react-native/extend-expect'
+// @testing-library/react-native v13+: extend-expect is automatic, no import needed
 
 // Mock Expo Router
 jest.mock('expo-router', () => ({
