@@ -8,13 +8,14 @@ import fc from 'fast-check'
 import { toLocalDate } from '@eltizamati/domain'
 import { computeMurabahaProgress } from '../formulas/murabaha-progress.js'
 import { arbitraryPrincipal } from '../test-support/arbitraries.js'
+import { assertPropertyChunked } from '../test-support/assert-property-chunked.js'
 
 const FIXED_SEED = 424242
 const asOf = toLocalDate('2026-07-01')
 
 describe('INV-7 — outstanding + paid = totalSalePrice exactly', () => {
-  it('holds for any payments total between 0 and totalSalePrice', () => {
-    fc.assert(
+  it('holds for any payments total between 0 and totalSalePrice', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         fc.integer({ min: 0, max: 1_000_000 }), // milli-fraction of totalSalePrice paid
@@ -28,7 +29,7 @@ describe('INV-7 — outstanding + paid = totalSalePrice exactly', () => {
           expect(result.outstanding.isNegative()).toBe(false)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 })

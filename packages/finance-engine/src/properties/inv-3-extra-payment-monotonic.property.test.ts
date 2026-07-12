@@ -14,6 +14,7 @@ import {
   arbitraryStartDate,
   arbitraryTermMonths,
 } from '../test-support/arbitraries.js'
+import { assertPropertyChunked } from '../test-support/assert-property-chunked.js'
 
 const FIXED_SEED = 424242
 
@@ -26,8 +27,8 @@ function arbitraryExtraMonthly() {
 }
 
 describe('INV-3 — more payment never worsens payoff', () => {
-  it('holds across the generator space for both installment policies', () => {
-    fc.assert(
+  it('holds across the generator space for both installment policies', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         arbitraryRate(),
@@ -75,7 +76,7 @@ describe('INV-3 — more payment never worsens payoff', () => {
           expect(result.costSaved.isNegative()).toBe(false)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 })
