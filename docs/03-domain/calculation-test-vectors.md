@@ -61,4 +61,4 @@ Generators: principal 100–1,000,000 JOD (3dp), rate 0–30%, term 1–480, up 
 
 ## Phase 6 Integration Status
 
-All test vectors (TV-1xx through TV-7xx) pass locally within the \inance-engine\ test suite and the orchestrating \CalculationService\ in \pps/mobile\ (17 test files, 108 tests passing total across apps/mobile). Line coverage is 98.54%.
+All test vectors (TV-1xx through TV-7xx) pass locally within the `finance-engine` test suite and the orchestrating `CalculationService` in `apps/mobile` (18 test files, 119 tests passing total across finance-engine). Line coverage is 100%.
