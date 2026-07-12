@@ -32,7 +32,7 @@ export function runCalculationRunContractTests(
         asOf: toLocalDate('2026-07-01'),
         inputsSnapshot: { test: true },
         inputsHash: hashCanonicalJson({ test: true }),
-        outcome: { kind: 'result', confidence: 'HIGH', resultSnapshot: {} } as const,
+        outcome: { kind: 'result', confidence: 'high', resultSnapshot: {} } as const,
         assumptions: [],
         calculatedAt: '2026-07-01T12:00:00.000Z',
       }
@@ -65,7 +65,7 @@ export function runCalculationRunContractTests(
 
       // 1. An obligation-A run is returned for obligation A.
       const resA = await repo.latestFor(obligationA, formulaId)
-      expect(resA.ok).toBe(true)
+      if (!resA.ok) throw new Error('expected ok')
       expect(resA.value?.id).toBe('run-a')
 
       // 2. An obligation-B run is not returned for obligation A.
@@ -73,7 +73,7 @@ export function runCalculationRunContractTests(
 
       // 3. An aggregate run is returned for undefined scope.
       const resUnscoped = await repo.latestFor(undefined, formulaId)
-      expect(resUnscoped.ok).toBe(true)
+      if (!resUnscoped.ok) throw new Error('expected ok')
       expect(resUnscoped.value?.id).toBe('run-unscoped')
 
       // 4. An obligation-scoped run is never returned for undefined scope.
@@ -96,7 +96,7 @@ export function runCalculationRunContractTests(
         asOf: toLocalDate('2026-07-01'),
         inputsSnapshot: {},
         inputsHash: hashCanonicalJson({}),
-        outcome: { kind: 'result', confidence: 'HIGH', resultSnapshot: {} },
+        outcome: { kind: 'result', confidence: 'high', resultSnapshot: {} },
         assumptions: [],
         calculatedAt: '2026-07-01T10:00:00.000Z',
       }
@@ -105,7 +105,7 @@ export function runCalculationRunContractTests(
 
       // 5. latestFor(undefined) returns undefined when only scoped runs exist
       const res = await repo.latestFor(undefined, 'amortization')
-      expect(res.ok).toBe(true)
+      if (!res.ok) throw new Error('expected ok')
       expect(res.value).toBeUndefined()
 
       await cleanup()
@@ -125,7 +125,7 @@ export function runCalculationRunContractTests(
         asOf: toLocalDate('2026-07-01'),
         inputsSnapshot: {},
         inputsHash: hashCanonicalJson({}),
-        outcome: { kind: 'result', confidence: 'HIGH', resultSnapshot: {} },
+        outcome: { kind: 'result', confidence: 'high', resultSnapshot: {} },
         assumptions: [],
         calculatedAt: '2026-07-01T10:00:00.000Z',
       }
@@ -141,7 +141,7 @@ export function runCalculationRunContractTests(
       await repo.persist(runNew)
 
       const res = await repo.latestFor(obligationId, 'amortization')
-      expect(res.ok).toBe(true)
+      if (!res.ok) throw new Error('expected ok')
       expect(res.value?.id).toBe('new')
 
       await cleanup()

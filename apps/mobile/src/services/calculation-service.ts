@@ -8,8 +8,13 @@ import type {
   Result,
   AppError,
 } from '@eltizamati/domain'
-import { hashCanonicalJson, brandId, err, makeError } from '@eltizamati/domain'
-import { resolveFormula, type FormulaId, type FormulaVersion } from '@eltizamati/finance-engine'
+import { hashCanonicalJson, toCanonicalJsonValue, brandId, err, makeError } from '@eltizamati/domain'
+import {
+  resolveFormula,
+  type FormulaId,
+  type FormulaInput,
+  type FormulaVersion,
+} from '@eltizamati/finance-engine'
 
 function generateId(): string {
   return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
@@ -29,12 +34,12 @@ export class CalculationService {
   /**
    * Executes a finance-engine formula and persists the result.
    */
-  async runCalculation<TInputs>(
+  async runCalculation<K extends FormulaId>(
     userId: Id<'user'>,
     obligationId: Id<'obligation'> | undefined,
-    formulaId: FormulaId,
+    formulaId: K,
     formulaVersion: FormulaVersion,
-    inputs: TInputs,
+    inputs: FormulaInput<K>,
     asOf: LocalDate,
     calculatedAt: string = new Date().toISOString(),
   ): Promise<Result<CalculationRun, AppError>> {
@@ -45,21 +50,42 @@ export class CalculationService {
     const formulaMeta = registryResult.value
     const outcome = formulaMeta.execute(inputs)
 
-    const inputsSnapshot = inputs as unknown as CanonicalJsonValue
+    // Money/Rate/Percentage carry their value in JS `#` private fields, which
+    // JSON.stringify/Object.keys cannot see — a raw type-assertion cast here
+    // would silently persist `{"currency":"JOD"}` (or `{}`) in place of the
+    // actual amount, and every distinct input would hash identically.
+    // toCanonicalJsonValue is the only path that turns these into real JSON.
+    const inputsSnapshotResult = toCanonicalJsonValue(inputs)
+    if (!inputsSnapshotResult.ok) {
+      return err(inputsSnapshotResult.error)
+    }
+    const inputsSnapshot = inputsSnapshotResult.value
     const inputsHash = hashCanonicalJson(inputsSnapshot)
 
     let calculationOutcome: CalculationOutcome
     if (outcome.kind === 'ok') {
+      const resultSnapshotResult = toCanonicalJsonValue(outcome.value)
+      if (!resultSnapshotResult.ok) {
+        return err(resultSnapshotResult.error)
+      }
       calculationOutcome = {
         kind: 'result',
         confidence: outcome.confidence,
-        resultSnapshot: outcome.value as unknown as CanonicalJsonValue,
+        resultSnapshot: resultSnapshotResult.value,
       }
     } else if (outcome.kind === 'refused') {
+      let partialSnapshot: CanonicalJsonValue | undefined
+      if (outcome.partial !== undefined) {
+        const partialResult = toCanonicalJsonValue(outcome.partial)
+        if (!partialResult.ok) {
+          return err(partialResult.error)
+        }
+        partialSnapshot = partialResult.value
+      }
       calculationOutcome = {
         kind: 'refused',
         missingFields: outcome.missing.map((m) => m.field),
-        partialSnapshot: outcome.partial as unknown as CanonicalJsonValue,
+        ...(partialSnapshot !== undefined ? { partialSnapshot } : {}),
       }
     } else {
       return err(
