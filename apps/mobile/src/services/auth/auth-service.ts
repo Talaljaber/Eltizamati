@@ -20,6 +20,8 @@ export interface AuthService {
   signUp(email: string, password: string): Promise<Result<AppAuthSession | undefined, AppError>>
   signIn(email: string, password: string): Promise<Result<AppAuthSession, AppError>>
   signOut(): Promise<Result<void, AppError>>
+  /** SCR-AUTH-RESET: sends a reset-password email; no session yet returned. */
+  resetPassword(email: string): Promise<Result<void, AppError>>
   currentSession(): Promise<Result<AppAuthSession | undefined, AppError>>
   /** Returns an unsubscribe function. */
   onAuthStateChange(callback: (session: AppAuthSession | undefined) => void): () => void

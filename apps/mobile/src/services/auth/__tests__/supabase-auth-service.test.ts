@@ -58,11 +58,11 @@ describe('SupabaseAuthService', () => {
     }
   })
 
-  it('signIn maps an auth error to an AppError with code "auth"', async () => {
+  it('signIn maps a server-rejected error (has a status) to AppError code "auth"', async () => {
     const client = makeFakeClient({
       signInWithPassword: jest.fn().mockResolvedValue({
         data: { session: null },
-        error: { code: 'invalid_credentials', message: 'Invalid login credentials' },
+        error: { code: 'invalid_credentials', status: 400, message: 'Invalid login credentials' },
       }),
     })
     const service = new SupabaseAuthService(client)
@@ -73,6 +73,55 @@ describe('SupabaseAuthService', () => {
     if (isErr(result)) {
       expect(result.error.code).toBe('auth')
       expect(result.error.safeMetadata).toEqual({ authErrorCode: 'invalid_credentials' })
+    }
+  })
+
+  it('signIn maps a pre-response failure (no status) to AppError code "connectivity"', async () => {
+    // supabase-js leaves `status` undefined when the request never reached
+    // the server (offline, DNS failure, timeout) — this must surface as
+    // "offline", not an incorrect "check your credentials" message.
+    const client = makeFakeClient({
+      signInWithPassword: jest.fn().mockResolvedValue({
+        data: { session: null },
+        error: { code: undefined, message: 'Network request failed' },
+      }),
+    })
+    const service = new SupabaseAuthService(client)
+
+    const result = await service.signIn('user@example.com', 'password123')
+
+    expect(isErr(result)).toBe(true)
+    if (isErr(result)) {
+      expect(result.error.code).toBe('connectivity')
+    }
+  })
+
+  it('resetPassword returns ok(undefined) on success', async () => {
+    const client = makeFakeClient({
+      resetPasswordForEmail: jest.fn().mockResolvedValue({ data: {}, error: null }),
+    })
+    const service = new SupabaseAuthService(client)
+
+    const result = await service.resetPassword('user@example.com')
+
+    expect(isOk(result)).toBe(true)
+    expect(client.auth.resetPasswordForEmail).toHaveBeenCalledWith('user@example.com')
+  })
+
+  it('resetPassword maps a server-rejected error to AppError code "auth"', async () => {
+    const client = makeFakeClient({
+      resetPasswordForEmail: jest.fn().mockResolvedValue({
+        data: null,
+        error: { code: 'user_not_found', status: 404, message: 'User not found' },
+      }),
+    })
+    const service = new SupabaseAuthService(client)
+
+    const result = await service.resetPassword('nobody@example.com')
+
+    expect(isErr(result)).toBe(true)
+    if (isErr(result)) {
+      expect(result.error.code).toBe('auth')
     }
   })
 
