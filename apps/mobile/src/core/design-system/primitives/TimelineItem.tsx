@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   },
   iconColumn: {
     alignItems: 'center',
-    marginRight: space[3],
+    marginEnd: space[3],
   },
   iconContainer: {
     width: 24,

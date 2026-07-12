@@ -8,11 +8,11 @@ import {
   type Confidence,
 } from '@eltizamati/domain'
 import type { ResidualCause } from '@eltizamati/finance-engine'
-import { DEMO_DATE } from '@eltizamati/demo-data'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotMoneyAmount, snapshotArray } from '@/services/calculation-snapshot'
+import { calculationAsOf } from '@/services/calculation-as-of'
 
 export interface RateImpactViewModel {
   status: 'loading' | 'error' | 'unsupported' | 'refused' | 'success'
@@ -68,6 +68,7 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
           'projection query ran while enabled gate was false',
         )
       }
+      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,
@@ -80,9 +81,9 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
           startDate: obligation.loanDetails.startDate,
           installment: obligation.loanDetails.installment.value,
           installmentPolicy: { kind: 'unchanged' }, // MVP assumption
-          asOf: DEMO_DATE,
+          asOf,
         },
-        DEMO_DATE,
+        asOf,
       )
 
       if (!result.ok) throw result.error
@@ -134,6 +135,7 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
           'residualDetection query ran while enabled gate was false',
         )
       }
+      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,
@@ -144,9 +146,9 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
           originalPrincipal: obligation.loanDetails.originalPrincipal.value,
           currentInstallment: obligation.loanDetails.installment.value,
           evidence: { rateIncreasedWithUnchangedInstallment },
-          asOf: DEMO_DATE,
+          asOf,
         },
-        DEMO_DATE,
+        asOf,
       )
 
       if (!result.ok) throw result.error

@@ -111,6 +111,7 @@
     "allocationUnknown": "التقسيم غير متاح"
   },
   "loanDetail": {
+    "currentBalance": "الرصيد الحالي",
     "heroTitle": "نظرة عامة على القرض",
     "officialBalance": "الرصيد الرسمي",
     "projectedResidual": "الرصيد المتبقي المقدّر عند الاستحقاق",
@@ -125,6 +126,7 @@
     "navBankQuestions": "أسئلة للبنك"
   },
   "rateHistory": {
+    "annualRate": "{{rate}} سنوياً",
     "title": "سجل الفائدة",
     "effectiveFrom": "ساري من",
     "error": "تعذّر تحميل سجل الفائدة.",
@@ -161,6 +163,7 @@
     "empty": "لا توجد فترات سداد متاحة."
   },
   "scenario": {
+    "oneTimeLabel": "دفعة إضافية لمرة واحدة (دينار)",
     "title": "محاكي السيناريوهات",
     "whatIf": "ماذا لو دفعت {{amount}}+ دينار إضافية؟",
     "monthsSaved": "الأشهر الموفّرة",

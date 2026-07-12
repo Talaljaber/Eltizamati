@@ -35,7 +35,11 @@ export default function RateHistoryScreen() {
                 isLast={idx === viewModel.periods.length - 1}
               >
                 <View style={styles.periodContent}>
-                  <Text variant="heading">{period.annualRate.toStorageString()} / yr</Text>
+                  <Text variant="heading">
+                    {t('rateHistory.annualRate', {
+                      rate: period.annualRate.toStorageString(),
+                    })}
+                  </Text>
                   <Text variant="bodySmall" color="secondary">
                     {t('rateHistory.effectiveFrom')}: {period.effectiveFrom}
                   </Text>
@@ -54,7 +58,7 @@ const styles = StyleSheet.create({
     padding: space[4],
   },
   periodContent: {
-    paddingLeft: space[3],
+    paddingStart: space[3],
     paddingBottom: space[2],
   },
 })

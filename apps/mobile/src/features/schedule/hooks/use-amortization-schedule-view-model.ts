@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { DomainInvariantError, type Id, type CalculationRun } from '@eltizamati/domain'
-import { DEMO_DATE } from '@eltizamati/demo-data'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotArray, snapshotMoneyAmount } from '@/services/calculation-snapshot'
+import { calculationAsOf } from '@/services/calculation-as-of'
 
 /**
  * Display row for one amortization period. `CalculationRun.resultSnapshot` is
@@ -69,6 +69,7 @@ export function useAmortizationScheduleViewModel(
           'projection query ran while enabled gate was false',
         )
       }
+      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,
@@ -81,9 +82,9 @@ export function useAmortizationScheduleViewModel(
           startDate: obligation.loanDetails.startDate,
           installment: obligation.loanDetails.installment.value,
           installmentPolicy: { kind: 'unchanged' }, // MVP assumption
-          asOf: DEMO_DATE,
+          asOf,
         },
-        DEMO_DATE,
+        asOf,
       )
 
       if (!result.ok) throw result.error

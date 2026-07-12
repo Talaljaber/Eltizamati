@@ -111,6 +111,7 @@
     "allocationUnknown": "Split not available"
   },
   "loanDetail": {
+    "currentBalance": "Current balance",
     "heroTitle": "Loan Overview",
     "officialBalance": "Official Balance",
     "projectedResidual": "Estimated Residual at Maturity",
@@ -125,6 +126,7 @@
     "navBankQuestions": "Bank Questions"
   },
   "rateHistory": {
+    "annualRate": "{{rate}} per year",
     "title": "Rate History",
     "effectiveFrom": "Effective from",
     "error": "Error loading rate history.",
@@ -161,6 +163,7 @@
     "empty": "No schedule entries available."
   },
   "scenario": {
+    "oneTimeLabel": "One-time extra payment (JOD)",
     "title": "Scenario Simulator",
     "whatIf": "What if you pay +{{amount}} JOD?",
     "monthsSaved": "Months Saved",

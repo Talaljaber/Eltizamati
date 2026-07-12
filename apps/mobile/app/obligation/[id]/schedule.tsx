@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, Card, FieldRow } from '@/core/design-system'
+import { Text, space, Card, FieldRow, Amount } from '@/core/design-system'
 import { useAmortizationScheduleViewModel } from '@/features/schedule/hooks/use-amortization-schedule-view-model'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
-import type { Id } from '@eltizamati/domain'
+import { Money, engineEstimate, type Id } from '@eltizamati/domain'
 
 const PROJECTION_FORMULA_ID = 'variableProjection'
 
@@ -14,6 +14,20 @@ export default function AmortizationScheduleScreen() {
   const { t } = useTranslation()
   const viewModel = useAmortizationScheduleViewModel(id as Id<'obligation'>)
   const [explainVisible, setExplainVisible] = useState(false)
+
+  function renderEstimatedAmount(amount: string) {
+    const run = viewModel.run
+    if (amount === '?' || run === undefined) return t('common.unknown')
+    const money = Money.of(amount, 'JOD')
+    return (
+      <Amount
+        money={money}
+        provenance={engineEstimate(money, run.id, run.calculatedAt).provenance}
+        precision="estimate"
+        onPress={() => setExplainVisible(true)}
+      />
+    )
+  }
 
   return (
     <>
@@ -63,10 +77,17 @@ export default function AmortizationScheduleScreen() {
                     {t('schedule.period')} {entry.period}
                   </Text>
                 </View>
-                <FieldRow label={t('schedule.installment')} value={entry.payment} />
-                <FieldRow label={t('schedule.principalPortion')} value={entry.principal} />
-                <FieldRow label={t('schedule.interestPortion')} value={entry.cost} />
-                <FieldRow label={t('schedule.endingBalance')} value={entry.closingBalance} />
+                {viewModel.run &&
+                  (
+                    [
+                      [t('schedule.installment'), entry.payment],
+                      [t('schedule.principalPortion'), entry.principal],
+                      [t('schedule.interestPortion'), entry.cost],
+                      [t('schedule.endingBalance'), entry.closingBalance],
+                    ] as const
+                  ).map(([label, amount]) => (
+                    <FieldRow key={label} label={label} value={renderEstimatedAmount(amount)} />
+                  ))}
               </View>
             ))}
           </Card>
