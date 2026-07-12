@@ -13,7 +13,7 @@ jest.mock('@/features/demo/stores/demo-mode-store', () => ({
 }))
 
 jest.mock('@/features/auth/hooks/use-auth-service', () => ({
-  useAuthService: jest.fn(() => ({
+  useAuthServiceLazy: jest.fn(() => () => ({
     ok: true,
     value: {
       currentSession: jest.fn().mockResolvedValue({ ok: true, value: { user: { id: 'user-1' } } }),
@@ -48,9 +48,12 @@ describe('useHomeAggregates', () => {
 
     const { result } = renderHook(() => useHomeAggregates(obligations), { wrapper })
 
-    await waitFor(() => {
-      expect(result.current.status).not.toBe('loading')
-    }, { timeout: 3000 })
+    await waitFor(
+      () => {
+        expect(result.current.status).not.toBe('loading')
+      },
+      { timeout: 3000 },
+    )
 
     expect(result.current.status).toBe('success')
     if (result.current.status !== 'success') return

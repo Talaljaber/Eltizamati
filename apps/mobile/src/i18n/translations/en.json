@@ -11,7 +11,8 @@
     "explain": "Explain",
     "yes": "Yes",
     "no": "No",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "cancel": "Cancel"
   },
   "error": {
     "offlineTitle": "You're offline",
@@ -131,7 +132,17 @@
     "addedCost": "Added Total Cost",
     "addedCostPending": "Pending finance validation",
     "error": "Error loading rate impact.",
-    "unsupported": "Rate impact isn't available for this obligation type yet."
+    "unsupported": "Rate impact isn't available for this obligation type yet.",
+    "residualAmount": "Estimated residual amount",
+    "confidenceDeterministic": "Deterministic",
+    "confidenceEstimated": "Estimated",
+    "causeTitle": "Why this residual exists",
+    "causes": {
+      "rateIncreaseWithUnchangedInstallment": "Your rate increased while your installment stayed the same, so more of each payment covers cost instead of principal.",
+      "paymentShortfall": "Recent payments have been below the amount needed to fully amortize the loan.",
+      "contractualBalloon": "This loan's contract includes a scheduled balloon payment at maturity.",
+      "unknown": "A residual balance is projected, but the specific cause could not be determined from available data."
+    }
   },
   "schedule": {
     "title": "Schedule",
@@ -150,7 +161,13 @@
     "monthsSaved": "Months Saved",
     "costSaved": "Cost Saved",
     "error": "Error loading scenario.",
-    "unsupported": "The simulator isn't available for this obligation type yet."
+    "unsupported": "The simulator isn't available for this obligation type yet.",
+    "extraMonthlyLabel": "Extra monthly payment (JOD)",
+    "currentLabel": "Current",
+    "scenarioLabel": "With extra payment",
+    "payoffPeriod": "Payoff (months)",
+    "residualAtMaturity": "Estimated residual at maturity",
+    "perfLabel": "Calculated in {{ms}} ms"
   },
   "bankQuestions": {
     "title": "Bank Questions",
@@ -254,7 +271,12 @@
   },
   "settings": {
     "title": "Settings",
-    "languageLabel": "Language"
+    "languageLabel": "Language",
+    "resetDemoLabel": "Demo data",
+    "resetDemoButton": "Reset demo data",
+    "resetDemoConfirmTitle": "Reset demo data?",
+    "resetDemoConfirmBody": "This clears everything you have done in demo mode and restores the original seeded loan, Murabaha, and card. This cannot be undone.",
+    "resetDemoConfirmAction": "Reset"
   },
   "notFound": {
     "title": "This screen doesn't exist.",

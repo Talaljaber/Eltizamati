@@ -22,12 +22,13 @@ import {
   arbitraryTermMonths,
 } from '../test-support/arbitraries.js'
 import { canonicalJsonStringOf } from '../test-support/canonicalize-result.js'
+import { assertPropertyChunked } from '../test-support/assert-property-chunked.js'
 
 const FIXED_SEED = 424242
 
 describe('INV-5 — determinism (amortization.v1)', () => {
-  it('identical inputs produce byte-identical, hash-identical results across repeated runs', () => {
-    fc.assert(
+  it('identical inputs produce byte-identical, hash-identical results across repeated runs', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         arbitraryRate(),
@@ -46,14 +47,14 @@ describe('INV-5 — determinism (amortization.v1)', () => {
           expect(hashA).toBe(hashB)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 })
 
 describe('INV-5 — determinism (variableProjection.v1)', () => {
-  it('identical inputs produce byte-identical, hash-identical results across repeated runs', () => {
-    fc.assert(
+  it('identical inputs produce byte-identical, hash-identical results across repeated runs', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         arbitraryRate(),
@@ -104,14 +105,14 @@ describe('INV-5 — determinism (variableProjection.v1)', () => {
           expect(canonicalJsonStringOf(runA)).toBe(canonicalJsonStringOf(runB))
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 })
 
 describe('INV-5 — determinism (murabahaProgress.v1)', () => {
-  it('identical inputs produce byte-identical results', () => {
-    fc.assert(
+  it('identical inputs produce byte-identical results', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         fc.integer({ min: 0, max: 1_000_000 }), // milli-fraction of totalSalePrice paid — never exceeds it
@@ -124,7 +125,7 @@ describe('INV-5 — determinism (murabahaProgress.v1)', () => {
           expect(canonicalJsonStringOf(runA)).toBe(canonicalJsonStringOf(runB))
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 })

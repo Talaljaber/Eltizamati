@@ -105,7 +105,11 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
   // the screen can render their basic fields instead of spinning forever;
   // their rich detail is Phase 8.
   let hero: LoanDetailHeroModel | undefined
-  if (obligation.kind === 'conventionalLoan' && projectionRun && projectionRun.outcome.kind === 'result') {
+  if (
+    obligation.kind === 'conventionalLoan' &&
+    projectionRun &&
+    projectionRun.outcome.kind === 'result'
+  ) {
     const snapshot = snapshotRecord(projectionRun.outcome.resultSnapshot)
     hero = {
       officialBalance: obligation.loanDetails.originalPrincipal.value.toStorageString(), // Assuming original for now, MVP uses whatever official is available

@@ -13,7 +13,12 @@ export function TimelineItem({ icon, isLast = false, children }: TimelineItemPro
   return (
     <View style={styles.container}>
       <View style={styles.iconColumn}>
-        <View style={[styles.iconContainer, { backgroundColor: theme.bgElevated, borderColor: theme.border }]}>
+        <View
+          style={[
+            styles.iconContainer,
+            { backgroundColor: theme.bgElevated, borderColor: theme.border },
+          ]}
+        >
           {icon ?? <View style={[styles.dot, { backgroundColor: theme.brand }]} />}
         </View>
         {!isLast && <View style={[styles.line, { backgroundColor: theme.border }]} />}

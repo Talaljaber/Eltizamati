@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
 import { DEMO_IDS } from '@eltizamati/demo-data'
 import { getDataMode } from '@/features/demo/stores/demo-mode-store'
-import { useAuthService } from './use-auth-service'
+import { useAuthServiceLazy } from './use-auth-service'
 import type { Id } from '@eltizamati/domain'
 
 export function useActiveUser(): Id<'user'> | null {
-  const authServiceResult = useAuthService()
-  const authService = authServiceResult.ok ? authServiceResult.value : null
+  // Lazy on purpose: this hook is called by every core screen, demo mode
+  // included. `useAuthServiceLazy()` itself never constructs the real
+  // Supabase client — only calling the returned getter does, so the
+  // `mode === 'personal'` branch below is what actually gates that
+  // construction (and the network-touching GoTrueClient init it implies).
+  const getAuthService = useAuthServiceLazy()
   const [activeUser, setActiveUser] = useState<Id<'user'> | null>(null)
 
   useEffect(() => {
@@ -17,8 +21,9 @@ export function useActiveUser(): Id<'user'> | null {
       if (mode === 'demo') {
         setActiveUser(DEMO_IDS.userId)
       } else if (mode === 'personal') {
-        if (!authService) return
-        const service = authService
+        const authServiceResult = getAuthService()
+        if (!authServiceResult.ok) return
+        const service = authServiceResult.value
 
         // Initial fetch
         const sessionResult = await service.currentSession()
@@ -42,7 +47,7 @@ export function useActiveUser(): Id<'user'> | null {
     return () => {
       if (unsubscribe) unsubscribe()
     }
-  }, [authService])
+  }, [getAuthService])
 
   return activeUser
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Money, DomainInvariantError, type Id, type CalculationRun } from '@eltizamati/domain'
 import { DEMO_DATE } from '@eltizamati/demo-data'
@@ -6,17 +6,33 @@ import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 
+/** NFR-PERF-002 — debounce the recalculation trigger, not every keystroke. */
+const SCENARIO_INPUT_DEBOUNCE_MS = 300
+
 export interface ScenarioSimulatorViewModel {
   status: 'loading' | 'error' | 'unsupported' | 'refused' | 'success'
   run?: CalculationRun
+  /** Debounced value actually driving the calculation (query key + engine input). */
   extraMonthly: number
-  setExtraMonthly: (val: number) => void
+  /** Immediate value bound to the input field, for responsive typing. */
+  draftExtraMonthly: number
+  setDraftExtraMonthly: (val: number) => void
+  /** Wall-clock duration of the last engine call, ms (NFR-PERF-002: measure and record, target <300ms). */
+  perfMs?: number
 }
 
 export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSimulatorViewModel {
   const repos = useRepositories()
   const activeUser = useActiveUser()
-  const [extraMonthly, setExtraMonthly] = useState<number>(50) // Default to +50 JOD for TV-304 structural test
+  // Default to +50 JOD (TV-304 structural anchor) until the user edits it.
+  const [draftExtraMonthly, setDraftExtraMonthly] = useState<number>(50)
+  const [extraMonthly, setExtraMonthly] = useState<number>(50)
+  const [perfMs, setPerfMs] = useState<number | undefined>(undefined)
+
+  useEffect(() => {
+    const handle = setTimeout(() => setExtraMonthly(draftExtraMonthly), SCENARIO_INPUT_DEBOUNCE_MS)
+    return () => clearTimeout(handle)
+  }, [draftExtraMonthly])
 
   const calcService = useMemo(
     () => new CalculationService(repos.calculationRunRepository),
@@ -54,6 +70,7 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
           'scenario query ran while enabled gate was false',
         )
       }
+      const startedAt = performance.now()
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,
@@ -74,6 +91,7 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
         },
         DEMO_DATE,
       )
+      setPerfMs(performance.now() - startedAt)
 
       if (!result.ok) throw result.error
       return result.value
@@ -81,25 +99,27 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
     enabled: canRunScenario,
   })
 
+  const base = { extraMonthly, draftExtraMonthly, setDraftExtraMonthly, perfMs }
+
   if (isOblError || isRunError) {
-    return { status: 'error', extraMonthly, setExtraMonthly }
+    return { status: 'error', ...base }
   }
 
   if (!obligation) {
-    return { status: 'loading', extraMonthly, setExtraMonthly }
+    return { status: 'loading', ...base }
   }
 
   if (obligation.kind !== 'conventionalLoan') {
-    return { status: 'unsupported', extraMonthly, setExtraMonthly }
+    return { status: 'unsupported', ...base }
   }
 
   if (!run) {
-    return { status: 'loading', extraMonthly, setExtraMonthly }
+    return { status: 'loading', ...base }
   }
 
   if (run.outcome.kind === 'refused') {
-    return { status: 'refused', run, extraMonthly, setExtraMonthly }
+    return { status: 'refused', run, ...base }
   }
 
-  return { status: 'success', run, extraMonthly, setExtraMonthly }
+  return { status: 'success', run, ...base }
 }

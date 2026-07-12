@@ -99,8 +99,14 @@ function SummaryCard({
   const totalText =
     aggregates.status === 'success' && aggregates.totalMonthlyCommitment
       ? aggregates.includesEstimates === true
-        ? formatMoneyEstimate(aggregates.totalMonthlyCommitment, aggregates.totalMonthlyCommitment.currency)
-        : formatMoneyOfficial(aggregates.totalMonthlyCommitment, aggregates.totalMonthlyCommitment.currency)
+        ? formatMoneyEstimate(
+            aggregates.totalMonthlyCommitment,
+            aggregates.totalMonthlyCommitment.currency,
+          )
+        : formatMoneyOfficial(
+            aggregates.totalMonthlyCommitment,
+            aggregates.totalMonthlyCommitment.currency,
+          )
       : t('home.totalPending')
 
   const nextPaymentText =

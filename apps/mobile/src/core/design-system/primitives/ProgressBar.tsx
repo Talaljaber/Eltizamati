@@ -14,12 +14,7 @@ export function ProgressBar({ progress, color, trackColor }: ProgressBarProps) {
   const fillWidth: DimensionValue = `${clampedProgress * 100}%`
 
   return (
-    <View
-      style={[
-        styles.track,
-        { backgroundColor: trackColor ?? theme.border },
-      ]}
-    >
+    <View style={[styles.track, { backgroundColor: trackColor ?? theme.border }]}>
       <View
         style={[
           styles.fill,

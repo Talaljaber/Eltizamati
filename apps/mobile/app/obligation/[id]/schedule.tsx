@@ -15,12 +15,26 @@ export default function AmortizationScheduleScreen() {
       <Stack.Screen options={{ title: t('schedule.title', 'Schedule') }} />
       <ScrollView contentContainerStyle={styles.scroll}>
         {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
-        {viewModel.status === 'error' && <Text variant="body" color="critical">{t('schedule.error')}</Text>}
-        {viewModel.status === 'unsupported' && <Text variant="body" color="secondary">{t('schedule.unsupported')}</Text>}
-        {viewModel.status === 'refused' && <Text variant="body" color="critical">{t('error.calculationRefused')}</Text>}
+        {viewModel.status === 'error' && (
+          <Text variant="body" color="critical">
+            {t('schedule.error')}
+          </Text>
+        )}
+        {viewModel.status === 'unsupported' && (
+          <Text variant="body" color="secondary">
+            {t('schedule.unsupported')}
+          </Text>
+        )}
+        {viewModel.status === 'refused' && (
+          <Text variant="body" color="critical">
+            {t('error.calculationRefused')}
+          </Text>
+        )}
 
         {viewModel.status === 'success' && viewModel.schedule.length === 0 && (
-          <Text variant="body" color="secondary">{t('schedule.empty')}</Text>
+          <Text variant="body" color="secondary">
+            {t('schedule.empty')}
+          </Text>
         )}
 
         {viewModel.status === 'success' && viewModel.schedule.length > 0 && (

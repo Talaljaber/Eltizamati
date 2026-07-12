@@ -11,12 +11,13 @@ import {
   arbitraryStartDate,
   arbitraryTermMonths,
 } from '../test-support/arbitraries.js'
+import { assertPropertyChunked } from '../test-support/assert-property-chunked.js'
 
 const FIXED_SEED = 424242
 
 describe('INV-4 — zero rate ⇒ zero cost; total paid = principal exactly', () => {
-  it('holds for amortization.v1 across arbitrary principal/term at rate = 0', () => {
-    fc.assert(
+  it('holds for amortization.v1 across arbitrary principal/term at rate = 0', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         arbitraryTermMonths(),
@@ -36,7 +37,7 @@ describe('INV-4 — zero rate ⇒ zero cost; total paid = principal exactly', ()
           }
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 })

@@ -22,7 +22,9 @@ export function snapshotRecord(value: CanonicalJsonValue | undefined): JsonRecor
 }
 
 /** Reads a snapshot's top-level value as an array (empty array if the shape doesn't match). */
-export function snapshotArray(value: CanonicalJsonValue | undefined): readonly CanonicalJsonValue[] {
+export function snapshotArray(
+  value: CanonicalJsonValue | undefined,
+): readonly CanonicalJsonValue[] {
   return Array.isArray(value) ? value : []
 }
 

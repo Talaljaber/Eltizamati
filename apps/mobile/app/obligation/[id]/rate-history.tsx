@@ -15,16 +15,25 @@ export default function RateHistoryScreen() {
       <Stack.Screen options={{ title: t('rateHistory.title') }} />
       <ScrollView contentContainerStyle={styles.scroll}>
         {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
-        {viewModel.status === 'error' && <Text variant="body" color="critical">{t('rateHistory.error')}</Text>}
+        {viewModel.status === 'error' && (
+          <Text variant="body" color="critical">
+            {t('rateHistory.error')}
+          </Text>
+        )}
 
         {viewModel.status === 'success' && viewModel.periods.length === 0 && (
-          <Text variant="body" color="secondary">{t('rateHistory.empty')}</Text>
+          <Text variant="body" color="secondary">
+            {t('rateHistory.empty')}
+          </Text>
         )}
 
         {viewModel.status === 'success' && viewModel.periods.length > 0 && (
           <Card>
             {viewModel.periods.map((period, idx) => (
-              <TimelineItem key={period.effectiveFrom} isLast={idx === viewModel.periods.length - 1}>
+              <TimelineItem
+                key={period.effectiveFrom}
+                isLast={idx === viewModel.periods.length - 1}
+              >
                 <View style={styles.periodContent}>
                   <Text variant="heading">{period.annualRate.toStorageString()} / yr</Text>
                   <Text variant="bodySmall" color="secondary">

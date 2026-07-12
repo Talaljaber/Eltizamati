@@ -17,12 +17,13 @@ import {
   arbitraryStartDate,
   arbitraryTermMonths,
 } from '../test-support/arbitraries.js'
+import { assertPropertyChunked } from '../test-support/assert-property-chunked.js'
 
 const FIXED_SEED = 424242 // documented CI seed — do not change without recording why
 
 describe('INV-1 — balances never negative; schedules never contain negative payments', () => {
-  it('holds for amortization.v1 across the generator space', () => {
-    fc.assert(
+  it('holds for amortization.v1 across the generator space', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         arbitraryRate(),
@@ -36,12 +37,12 @@ describe('INV-1 — balances never negative; schedules never contain negative pa
           }
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 
-  it('holds for variableProjection.v1 (unchanged policy — where negative amortization can grow balance, but never below zero)', () => {
-    fc.assert(
+  it('holds for variableProjection.v1 (unchanged policy — where negative amortization can grow balance, but never below zero)', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         arbitraryRate(),
@@ -87,14 +88,14 @@ describe('INV-1 — balances never negative; schedules never contain negative pa
           }
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 })
 
 describe('INV-2 — per period: principal + cost = payment within CONV-5 tolerance', () => {
-  it('holds for amortization.v1', () => {
-    fc.assert(
+  it('holds for amortization.v1', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         arbitraryRate(),
@@ -109,14 +110,14 @@ describe('INV-2 — per period: principal + cost = payment within CONV-5 toleran
           }
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 })
 
 describe('INV-6 — sum of schedule principal = original principal (± CONV-5 schedule tolerance) for closing schedules', () => {
-  it('holds for amortization.v1 (always closes by construction — BR-CALC-008)', () => {
-    fc.assert(
+  it('holds for amortization.v1 (always closes by construction — BR-CALC-008)', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         arbitraryRate(),
@@ -132,12 +133,12 @@ describe('INV-6 — sum of schedule principal = original principal (± CONV-5 sc
           expect(finalEntry?.closingBalance.isZero()).toBe(true)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 
-  it('holds for variableProjection.v1 under `recalculated` (guaranteed to close)', () => {
-    fc.assert(
+  it('holds for variableProjection.v1 under `recalculated` (guaranteed to close)', async () => {
+    await assertPropertyChunked(
       fc.property(
         arbitraryPrincipal(),
         arbitraryRate(),
@@ -181,7 +182,7 @@ describe('INV-6 — sum of schedule principal = original principal (± CONV-5 sc
           expect(diff.isGreaterThan(tolerance)).toBe(false)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
+      { seed: FIXED_SEED, numRuns: 1000 },
     )
   })
 })

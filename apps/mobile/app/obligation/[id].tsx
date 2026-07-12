@@ -19,6 +19,7 @@ import type { Id, ObligationKind } from '@eltizamati/domain'
 import { DEMO_DATE } from '@eltizamati/demo-data'
 import { useLoanDetailViewModel } from '@/features/loan-detail/hooks/use-loan-detail-view-model'
 import { LoanDetailHero } from '@/features/loan-detail/components/LoanDetailHero'
+import { useInsightsViewModel } from '@/features/insights/hooks/use-insights-view-model'
 
 export default function ObligationDetailScreen() {
   return (
@@ -35,6 +36,7 @@ function ObligationDetailInner() {
   const { id } = useLocalSearchParams<{ id: string }>()
 
   const viewModel = useLoanDetailViewModel(id as Id<'obligation'>)
+  const insightsViewModel = useInsightsViewModel(id as Id<'obligation'>)
 
   if (viewModel.status === 'error') {
     return (
@@ -70,7 +72,7 @@ function ObligationDetailInner() {
   const status = deriveObligationStatus({
     obligation,
     payments: viewModel.payments ?? [],
-    insights: [], // TODO: integrate real insights
+    insights: insightsViewModel.status === 'success' ? insightsViewModel.insights : [],
     today: DEMO_DATE,
   })
 
@@ -108,9 +110,7 @@ function ObligationDetailInner() {
           </View>
         </View>
 
-        {viewModel.hero && (
-          <LoanDetailHero obligationId={obligation.id} hero={viewModel.hero} />
-        )}
+        {viewModel.hero && <LoanDetailHero obligationId={obligation.id} hero={viewModel.hero} />}
 
         {obligation.kind === 'conventionalLoan' ? (
           <View style={styles.navigationGrid}>
