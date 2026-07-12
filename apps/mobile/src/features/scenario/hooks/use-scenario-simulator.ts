@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Money, DomainInvariantError, type Id, type CalculationRun } from '@eltizamati/domain'
-import { DEMO_DATE } from '@eltizamati/demo-data'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
+import { calculationAsOf } from '@/services/calculation-as-of'
 
 /** NFR-PERF-002 — debounce the recalculation trigger, not every keystroke. */
 const SCENARIO_INPUT_DEBOUNCE_MS = 300
@@ -17,6 +17,8 @@ export interface ScenarioSimulatorViewModel {
   /** Immediate value bound to the input field, for responsive typing. */
   draftExtraMonthly: number
   setDraftExtraMonthly: (val: number) => void
+  oneTimeAmount: number
+  setOneTimeAmount: (val: number) => void
   /** Wall-clock duration of the last engine call, ms (NFR-PERF-002: measure and record, target <300ms). */
   perfMs?: number
 }
@@ -28,6 +30,7 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
   const [draftExtraMonthly, setDraftExtraMonthly] = useState<number>(50)
   const [extraMonthly, setExtraMonthly] = useState<number>(50)
   const [perfMs, setPerfMs] = useState<number | undefined>(undefined)
+  const [oneTimeAmount, setOneTimeAmount] = useState(0)
 
   useEffect(() => {
     const handle = setTimeout(() => setExtraMonthly(draftExtraMonthly), SCENARIO_INPUT_DEBOUNCE_MS)
@@ -59,10 +62,13 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
   })
 
   const canRunScenario =
-    !!activeUser && obligation?.kind === 'conventionalLoan' && !!ratePeriods && extraMonthly > 0
+    !!activeUser &&
+    obligation?.kind === 'conventionalLoan' &&
+    !!ratePeriods &&
+    (extraMonthly > 0 || oneTimeAmount > 0)
 
   const { data: run, isError: isRunError } = useQuery({
-    queryKey: ['scenario', obligationId, activeUser, extraMonthly],
+    queryKey: ['scenario', obligationId, activeUser, extraMonthly, oneTimeAmount],
     queryFn: async (): Promise<CalculationRun> => {
       if (!activeUser || obligation?.kind !== 'conventionalLoan' || !ratePeriods) {
         throw new DomainInvariantError(
@@ -71,6 +77,7 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
         )
       }
       const startedAt = performance.now()
+      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,
@@ -87,9 +94,12 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
             extraMonthly,
             obligation.loanDetails.originalPrincipal.value.currency,
           ),
-          asOf: DEMO_DATE,
+          ...(oneTimeAmount > 0
+            ? { oneTime: { amount: Money.of(oneTimeAmount, obligation.currency), period: 1 } }
+            : {}),
+          asOf,
         },
-        DEMO_DATE,
+        asOf,
       )
       setPerfMs(performance.now() - startedAt)
 
@@ -99,7 +109,14 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
     enabled: canRunScenario,
   })
 
-  const base = { extraMonthly, draftExtraMonthly, setDraftExtraMonthly, perfMs }
+  const base = {
+    extraMonthly,
+    draftExtraMonthly,
+    setDraftExtraMonthly,
+    oneTimeAmount,
+    setOneTimeAmount,
+    perfMs,
+  }
 
   if (isOblError || isRunError) {
     return { status: 'error', ...base }
