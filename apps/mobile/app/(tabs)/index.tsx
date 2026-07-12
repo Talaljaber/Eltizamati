@@ -13,30 +13,33 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text, space, useTheme, radius, DemoBanner, SkeletonCard } from '@/core/design-system'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { useInsights } from '@/features/home/api/use-insights'
+import { useHomeAggregates } from '@/features/home/hooks/use-home-aggregates'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
-import type { Insight, Obligation, Id } from '@eltizamati/domain'
+import { useActiveUser } from '@/features/auth/hooks/use-active-user'
+import { formatMoneyOfficial, formatMoneyEstimate } from '@/core/formatting/format-money'
+import type { Insight, Id } from '@eltizamati/domain'
 
 export default function HomeTab() {
   const { t } = useTranslation()
   const theme = useTheme()
   const repos = useRepositories()
-
-  // Phase 5 demo seed always uses 'user-1'
-  const userId = 'user-1' as Id<'user'>
+  const activeUser = useActiveUser()
 
   const {
     data: obligations,
     isLoading: isObligationsLoading,
     refetch: refetchObligations,
-  } = useObligations(repos.obligationRepository, userId)
+  } = useObligations(repos.obligationRepository, activeUser ?? ('' as Id<'user'>))
 
   const {
     data: insights,
     isLoading: isInsightsLoading,
     refetch: refetchInsights,
-  } = useInsights(repos.insightRepository, userId)
+  } = useInsights(repos.insightRepository, activeUser ?? ('' as Id<'user'>))
 
-  const isLoading = isObligationsLoading || isInsightsLoading
+  const aggregates = useHomeAggregates(obligations ?? [])
+
+  const isLoading = isObligationsLoading || isInsightsLoading || !activeUser
 
   const handleRefresh = async () => {
     await Promise.all([refetchObligations(), refetchInsights()])
@@ -75,7 +78,7 @@ export default function HomeTab() {
           </View>
         ) : (
           <View style={styles.dashboard}>
-            <SummaryCard obligations={obligations ?? []} theme={theme} />
+            <SummaryCard aggregates={aggregates} theme={theme} />
             <InsightsPreview insights={insights ?? []} theme={theme} />
           </View>
         )}
@@ -85,17 +88,25 @@ export default function HomeTab() {
 }
 
 function SummaryCard({
-  // obligations is passed but currently unused in Phase 5 dummy implementation
+  aggregates,
   theme,
 }: {
-  obligations: readonly Obligation[]
+  aggregates: ReturnType<typeof useHomeAggregates>
   theme: ReturnType<typeof useTheme>
 }) {
   const { t } = useTranslation()
 
-  // Minimal placeholder implementation for "Total Monthly Commitments" and "Next Payment"
-  // Actual aggregation requires Phase 6 engine. Phase 5 uses hardcoded dummy strings or "pending"
-  // to avoid implementing unauthorized math (AI_AGENT_RULES).
+  const totalText =
+    aggregates.status === 'success' && aggregates.totalMonthlyCommitment
+      ? aggregates.includesEstimates === true
+        ? formatMoneyEstimate(aggregates.totalMonthlyCommitment, aggregates.totalMonthlyCommitment.currency)
+        : formatMoneyOfficial(aggregates.totalMonthlyCommitment, aggregates.totalMonthlyCommitment.currency)
+      : t('home.totalPending')
+
+  const nextPaymentText =
+    aggregates.status === 'success' && aggregates.nextDueAmount
+      ? formatMoneyEstimate(aggregates.nextDueAmount, aggregates.nextDueAmount.currency)
+      : t('home.totalPending')
 
   return (
     <View style={[styles.card, { backgroundColor: theme.bgElevated, borderColor: theme.border }]}>
@@ -104,7 +115,7 @@ function SummaryCard({
           {t('home.totalLabel')}
         </Text>
         <Text variant="amountLg" color="primary">
-          {t('home.totalPending')}
+          {totalText}
         </Text>
       </View>
       <View style={styles.metric}>
@@ -112,7 +123,7 @@ function SummaryCard({
           {t('home.nextPaymentLabel')}
         </Text>
         <Text variant="amountMd" color="secondary">
-          {t('home.totalPending')}
+          {nextPaymentText}
         </Text>
       </View>
     </View>

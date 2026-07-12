@@ -5,9 +5,15 @@
  * calculationIncomplete insight-signaling mechanism.
  */
 import { describe, it, expect } from 'vitest'
-import { deriveObligationStatus } from './derive-obligation-status.js'
+import {
+  deriveObligationStatus,
+  getNextDueInfo,
+  resolveMonthlyCommitment,
+  extractOfficialBalance,
+} from './derive-obligation-status.js'
 import { CALCULATION_REFUSED_INSIGHT_RULE_ID } from '../constants.js'
 import { Money, Rate } from '../value-objects/money.js'
+import { Percentage } from '../value-objects/percentage.js'
 import { brandId, toLocalDate, type LocalDate } from '../value-objects/id.js'
 import type { Provenance, Sourced } from '../value-objects/provenance.js'
 import type {
@@ -315,5 +321,108 @@ describe('deriveObligationStatus', () => {
     }
     const status = deriveObligationStatus({ obligation, payments: [], insights: [], today: TODAY })
     expect(status).toBe('unknown')
+  })
+})
+
+describe('getNextDueInfo', () => {
+  it('returns the next cadence due date and installment amount for a loan', () => {
+    const obligation = loan({ startDate: toLocalDate('2026-01-15') })
+    const info = getNextDueInfo(obligation, TODAY)
+    expect(info?.dueDate).toBe(toLocalDate('2026-07-15'))
+    expect(info?.amount.value.toStorageString()).toBe(
+      obligation.loanDetails.installment.value.toStorageString(),
+    )
+  })
+
+  it('returns undefined for a murabaha/loan with no future due date left in term', () => {
+    const obligation = loan({ startDate: toLocalDate('2026-01-15'), termMonths: sourced(1) })
+    const info = getNextDueInfo(obligation, TODAY)
+    expect(info).toBeUndefined()
+  })
+
+  it('resolves a known percent-with-floor minimum payment for a card due in the future', () => {
+    const obligation = card({
+      dueDate: toLocalDate('2026-07-20'),
+      currentBalance: sourced(Money.of('2350')),
+      minimumPaymentRule: { type: 'percent', value: Percentage.of('5'), floor: Money.of('20') },
+    })
+    const info = getNextDueInfo(obligation, TODAY)
+    expect(info?.dueDate).toBe(toLocalDate('2026-07-20'))
+    expect(info?.amount.value.toStorageString()).toBe('117.5')
+    expect(info?.amount.provenance.source).toBe('estimate')
+  })
+
+  it('excludes a card whose minimum payment rule is unknown', () => {
+    const obligation = card({
+      dueDate: toLocalDate('2026-07-20'),
+      minimumPaymentRule: { type: 'unknown' },
+    })
+    expect(getNextDueInfo(obligation, TODAY)).toBeUndefined()
+  })
+
+  it('excludes a card whose due date has already passed', () => {
+    const obligation = card({
+      dueDate: toLocalDate('2026-06-01'),
+      minimumPaymentRule: { type: 'fixed', value: Money.of('50') },
+    })
+    expect(getNextDueInfo(obligation, TODAY)).toBeUndefined()
+  })
+
+  it('returns undefined for kinds with no cadence/due-date concept (genericFacility)', () => {
+    const obligation = {
+      id: brandId<'obligation'>('obl-generic'),
+      userId,
+      kind: 'genericFacility' as const,
+      nickname: 'Test Facility',
+      institution: { name: 'Test Bank' },
+      currency: 'JOD',
+      openedDate: toLocalDate('2020-01-15'),
+      provenance: demoProvenance(),
+      createdAt: iso,
+      updatedAt: iso,
+    }
+    expect(getNextDueInfo(obligation, TODAY)).toBeUndefined()
+  })
+})
+
+describe('resolveMonthlyCommitment', () => {
+  it('returns the fixed installment for a loan regardless of cadence position', () => {
+    const obligation = loan()
+    const commitment = resolveMonthlyCommitment(obligation, TODAY)
+    expect(commitment?.value.toStorageString()).toBe(
+      obligation.loanDetails.installment.value.toStorageString(),
+    )
+  })
+
+  it('resolves a known card minimum-payment rule as an estimate', () => {
+    const obligation = card({
+      currentBalance: sourced(Money.of('1000')),
+      minimumPaymentRule: { type: 'fixed', value: Money.of('75') },
+    })
+    const commitment = resolveMonthlyCommitment(obligation, TODAY)
+    expect(commitment?.value.toStorageString()).toBe('75')
+    expect(commitment?.provenance.source).toBe('estimate')
+  })
+
+  it('excludes a card with no minimum-payment rule at all', () => {
+    const obligation = card()
+    expect(resolveMonthlyCommitment(obligation, TODAY)).toBeUndefined()
+  })
+})
+
+describe('extractOfficialBalance', () => {
+  it('returns the outstanding balance for a loan when present', () => {
+    const obligation = loan({ outstandingBalance: sourced(Money.of('15000')) })
+    expect(extractOfficialBalance(obligation)?.value.toStorageString()).toBe('15000')
+  })
+
+  it('returns undefined for murabaha (no official balance concept)', () => {
+    const obligation = murabaha()
+    expect(extractOfficialBalance(obligation)).toBeUndefined()
+  })
+
+  it('returns the current balance for a credit card', () => {
+    const obligation = card({ currentBalance: sourced(Money.of('2350')) })
+    expect(extractOfficialBalance(obligation)?.value.toStorageString()).toBe('2350')
   })
 })

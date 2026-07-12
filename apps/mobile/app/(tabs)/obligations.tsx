@@ -24,9 +24,11 @@ import {
   EmptyState,
 } from '@/core/design-system'
 import { useObligations } from '@/features/home/api/use-obligations'
+import { usePaymentsByObligation } from '@/features/home/api/use-payments-by-obligation'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
+import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { deriveObligationStatus } from '@eltizamati/domain'
-import type { Obligation, Id } from '@eltizamati/domain'
+import type { Obligation, Payment, Id } from '@eltizamati/domain'
 import { DEMO_DATE } from '@eltizamati/demo-data'
 
 export default function ObligationsTab() {
@@ -34,10 +36,17 @@ export default function ObligationsTab() {
   const theme = useTheme()
   const router = useRouter()
   const repos = useRepositories()
+  const activeUser = useActiveUser()
 
-  const userId = 'user-1' as Id<'user'>
+  const { data, isLoading, refetch } = useObligations(
+    repos.obligationRepository,
+    activeUser ?? ('' as Id<'user'>),
+  )
 
-  const { data, isLoading, refetch } = useObligations(repos.obligationRepository, userId)
+  const { data: paymentsByObligation, isLoading: isPaymentsLoading } = usePaymentsByObligation(
+    repos.paymentRepository,
+    data ?? [],
+  )
 
   // Minimal filter state (future extension)
   const filter = 'all'
@@ -51,7 +60,7 @@ export default function ObligationsTab() {
     return data
   }, [data, filter])
 
-  if (isLoading) {
+  if (isLoading || isPaymentsLoading || !activeUser) {
     return (
       <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: theme.bg }]}>
         <DemoBanner />
@@ -97,6 +106,7 @@ export default function ObligationsTab() {
         renderItem={({ item }) => (
           <ObligationRow
             obligation={item}
+            payments={paymentsByObligation.get(item.id) ?? []}
             onPress={() => {
               void router.push(`/obligation/${item.id}`)
             }}
@@ -107,11 +117,19 @@ export default function ObligationsTab() {
   )
 }
 
-function ObligationRow({ obligation, onPress }: { obligation: Obligation; onPress: () => void }) {
+function ObligationRow({
+  obligation,
+  payments,
+  onPress,
+}: {
+  obligation: Obligation
+  payments: readonly Payment[]
+  onPress: () => void
+}) {
   const { t } = useTranslation()
   const status = deriveObligationStatus({
     obligation,
-    payments: [],
+    payments,
     insights: [],
     today: DEMO_DATE,
   })
