@@ -1,18 +1,35 @@
-import { View, StyleSheet, ScrollView } from 'react-native'
+import { useState } from 'react'
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { Text, space, Card, FieldRow } from '@/core/design-system'
 import { useAmortizationScheduleViewModel } from '@/features/schedule/hooks/use-amortization-schedule-view-model'
+import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import type { Id } from '@eltizamati/domain'
+
+const PROJECTION_FORMULA_ID = 'variableProjection'
 
 export default function AmortizationScheduleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation()
   const viewModel = useAmortizationScheduleViewModel(id as Id<'obligation'>)
+  const [explainVisible, setExplainVisible] = useState(false)
 
   return (
     <>
-      <Stack.Screen options={{ title: t('schedule.title', 'Schedule') }} />
+      <Stack.Screen
+        options={{
+          title: t('schedule.title', 'Schedule'),
+          headerRight: () =>
+            viewModel.status === 'success' ? (
+              <TouchableOpacity onPress={() => setExplainVisible(true)}>
+                <Text variant="bodySmall" color="primary">
+                  {t('common.explain')}
+                </Text>
+              </TouchableOpacity>
+            ) : null,
+        }}
+      />
       <ScrollView contentContainerStyle={styles.scroll}>
         {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
         {viewModel.status === 'error' && (
@@ -55,6 +72,13 @@ export default function AmortizationScheduleScreen() {
           </Card>
         )}
       </ScrollView>
+
+      <ExplainSheet
+        visible={explainVisible}
+        onClose={() => setExplainVisible(false)}
+        obligationId={id as Id<'obligation'>}
+        formulaId={PROJECTION_FORMULA_ID}
+      />
     </>
   )
 }

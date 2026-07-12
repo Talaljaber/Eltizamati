@@ -8,9 +8,11 @@ export interface InsightBannerProps {
   body: string
   severity: 'urgent' | 'attention' | 'calm'
   action?: React.ReactNode
+  /** Unread insights (readAt undefined) get a visible marker (SCR-INS-CENTER read state). */
+  unread?: boolean
 }
 
-export function InsightBanner({ title, body, severity, action }: InsightBannerProps) {
+export function InsightBanner({ title, body, severity, action, unread }: InsightBannerProps) {
   const theme = useTheme()
   const icon = severity === 'urgent' ? '🚨' : severity === 'attention' ? '⚠️' : '✅'
   const bgColor =
@@ -21,7 +23,13 @@ export function InsightBanner({ title, body, severity, action }: InsightBannerPr
         : theme.positive + '20'
 
   return (
-    <View style={[styles.container, { backgroundColor: bgColor, borderColor: theme.border }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: bgColor, borderColor: theme.border },
+        unread === true && { borderLeftColor: theme.brand, borderLeftWidth: 3 },
+      ]}
+    >
       <View style={styles.iconContainer}>
         <Text variant="heading">{icon}</Text>
       </View>

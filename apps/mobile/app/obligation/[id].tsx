@@ -12,6 +12,10 @@ import {
   ProvenanceBadge,
   EmptyState,
   Button,
+  Card,
+  SectionHeader,
+  ListRow,
+  Amount,
 } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { deriveObligationStatus } from '@eltizamati/domain'
@@ -145,6 +149,43 @@ function ObligationDetailInner() {
             {t('obligationDetail.phaseNote')}
           </Text>
         )}
+
+        <View style={styles.paymentHistory}>
+          <SectionHeader title={t('obligationDetail.paymentHistory', 'Payment History')} />
+          {(viewModel.payments ?? []).length === 0 ? (
+            <Text variant="bodySmall" color="secondary">
+              {t('obligationDetail.noPayments', 'No payments recorded yet.')}
+            </Text>
+          ) : (
+            <Card>
+              {[...(viewModel.payments ?? [])]
+                .sort((a, b) => (a.date < b.date ? 1 : -1))
+                .map((payment) => (
+                  <ListRow
+                    key={payment.id}
+                    trailing={
+                      <Amount
+                        money={payment.amount}
+                        provenance={payment.provenance}
+                        precision={
+                          payment.provenance.source === 'estimate' ? 'estimate' : 'official'
+                        }
+                      />
+                    }
+                  >
+                    <Text variant="body">{payment.date}</Text>
+                    <Text variant="bodySmall" color="secondary">
+                      {payment.allocation === undefined
+                        ? t('obligationDetail.allocationUnknown', 'Split not available')
+                        : payment.allocation.allocationSource === 'estimated'
+                          ? t('obligationDetail.allocationEstimated', 'Estimated split')
+                          : t('obligationDetail.allocationOfficial', 'Official split')}
+                    </Text>
+                  </ListRow>
+                ))}
+            </Card>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   )
@@ -173,6 +214,9 @@ const styles = StyleSheet.create({
   },
   navigationGrid: {
     gap: space[3],
+    marginTop: space[4],
+  },
+  paymentHistory: {
     marginTop: space[4],
   },
 })
