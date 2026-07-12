@@ -22,18 +22,18 @@ config.resolver.nodeModulesPaths = [
 
 // 4. Handle `.js` imports pointing to `.ts`/`.tsx` files in workspace packages
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName.endsWith('.js')) {
+  // Only intercept relative imports ending in .js (like what TypeScript NodeNext does)
+  if (moduleName.startsWith('.') && moduleName.endsWith('.js')) {
+    const noExt = moduleName.replace(/\.js$/, '')
     try {
-      return context.resolveRequest(context, moduleName, platform)
+      // Try resolving without .js (Metro will use sourceExts to find .ts/.tsx)
+      return context.resolveRequest(context, noExt, platform)
     } catch (e) {
-      const noExt = moduleName.replace(/\.js$/, '')
-      try {
-        return context.resolveRequest(context, noExt, platform)
-      } catch (err2) {
-        throw e
-      }
+      // Ignore and fallback to standard resolution
     }
   }
+  
+  // Standard resolution
   return context.resolveRequest(context, moduleName, platform)
 }
 
