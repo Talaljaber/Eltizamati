@@ -1,19 +1,28 @@
 /**
  * Auth service context — Phase 4.
  *
- * Always mounted (unlike demo repositories, which boot conditionally): the
- * Supabase client is lazily constructed and cached by `getSupabaseClient()`,
- * so mounting this provider has no effect on demo mode and no network cost
- * until a screen actually calls a method. If env is missing/invalid, the
- * context holds a `Result` err instead of throwing — auth screens render
- * that as a fatal error state rather than crashing the app.
+ * Always mounted (unlike demo repositories, which boot conditionally). The
+ * real Supabase client (`getSupabaseClient()`) is constructed lazily, on
+ * first actual `getServices()` invocation, not at provider-mount time —
+ * this matters because constructing a `SupabaseClient` also constructs a
+ * `GoTrueClient`, whose constructor auto-runs session recovery/refresh
+ * against SecureStore/network regardless of the app's current `dataMode`.
+ * Eagerly constructing it at mount would silently touch the network in
+ * demo mode too, whenever a stale personal-mode session happens to be
+ * persisted in SecureStore from prior use on the same device — breaking
+ * the "demo mode is airplane-mode-safe" guarantee.
  *
- * Usage:
- *   const authServiceResult = useAuthService()
- *   if (!authServiceResult.ok) { ...render fatal state... }
+ * Two access patterns:
+ *   - `useAuthService()`/`useConsentRepository()` — eager, for the auth
+ *     screens (sign-in/sign-up/reset), which always need the real service
+ *     immediately since they're only ever reached on the personal-mode path.
+ *   - `useAuthServiceLazy()` — returns a getter instead of an already-
+ *     resolved `Result`, for hooks like `useActiveUser` that run on every
+ *     render of demo-mode screens too. Merely calling this hook must not
+ *     construct the real client; only invoking the returned getter does.
  */
 
-import { createContext, useContext, useMemo, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useRef, type ReactNode } from 'react'
 import {
   DomainInvariantError,
   err,
@@ -33,39 +42,64 @@ interface PersonalAuthServices {
   readonly consentRepository: ConsentRepository
 }
 
-const AuthServiceContext = createContext<Result<PersonalAuthServices, AppError> | null>(null)
+type ServicesGetter = () => Result<PersonalAuthServices, AppError>
+
+const AuthServiceContext = createContext<ServicesGetter | null>(null)
 
 export function AuthServiceProvider({ children }: { children: ReactNode }) {
-  const result = useMemo<Result<PersonalAuthServices, AppError>>(() => {
+  // A ref, not useMemo/useState: construction must happen lazily on first
+  // `getServices()` call, not eagerly during this provider's own render.
+  const cachedRef = useRef<Result<PersonalAuthServices, AppError> | undefined>(undefined)
+  const getServices = useCallback((): Result<PersonalAuthServices, AppError> => {
+    if (cachedRef.current !== undefined) return cachedRef.current
     const clientResult = getSupabaseClient()
-    if (!clientResult.ok) return err(clientResult.error)
+    if (!clientResult.ok) {
+      cachedRef.current = err(clientResult.error)
+      return cachedRef.current
+    }
     const client = clientResult.value
-    return ok({
+    cachedRef.current = ok({
       authService: new SupabaseAuthService(client),
       consentRepository: new SupabaseConsentRepository(client),
     })
+    return cachedRef.current
   }, [])
 
-  return <AuthServiceContext.Provider value={result}>{children}</AuthServiceContext.Provider>
+  return <AuthServiceContext.Provider value={getServices}>{children}</AuthServiceContext.Provider>
 }
 
-function usePersonalAuthServices(): Result<PersonalAuthServices, AppError> {
-  const result = useContext(AuthServiceContext)
-  if (result === null) {
+function useServicesGetter(): ServicesGetter {
+  const getServices = useContext(AuthServiceContext)
+  if (getServices === null) {
     throw new DomainInvariantError(
       'unexpected',
       'useAuthService must be used within AuthServiceProvider',
     )
   }
-  return result
+  return getServices
 }
 
 export function useAuthService(): Result<AuthService, AppError> {
-  const result = usePersonalAuthServices()
+  const result = useServicesGetter()()
   return result.ok ? ok(result.value.authService) : result
 }
 
 export function useConsentRepository(): Result<ConsentRepository, AppError> {
-  const result = usePersonalAuthServices()
+  const result = useServicesGetter()()
   return result.ok ? ok(result.value.consentRepository) : result
+}
+
+/**
+ * Lazy variant of `useAuthService()` — returns a getter instead of an
+ * already-resolved `Result`. Calling this hook is always safe/cheap in any
+ * `dataMode`; only calling the returned function constructs the real
+ * Supabase-backed `AuthService`. Callers (e.g. `useActiveUser`) must only
+ * invoke the getter once they know `dataMode === 'personal'`.
+ */
+export function useAuthServiceLazy(): () => Result<AuthService, AppError> {
+  const getServices = useServicesGetter()
+  return useCallback((): Result<AuthService, AppError> => {
+    const result = getServices()
+    return result.ok ? ok(result.value.authService) : result
+  }, [getServices])
 }

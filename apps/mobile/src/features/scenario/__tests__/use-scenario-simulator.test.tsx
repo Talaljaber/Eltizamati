@@ -14,7 +14,7 @@ jest.mock('@/features/demo/stores/demo-mode-store', () => ({
 }))
 
 jest.mock('@/features/auth/hooks/use-auth-service', () => ({
-  useAuthService: jest.fn(() => ({
+  useAuthServiceLazy: jest.fn(() => () => ({
     ok: true,
     value: {
       currentSession: jest.fn().mockResolvedValue({ ok: true, value: { user: { id: 'user-1' } } }),
@@ -45,18 +45,19 @@ describe('useScenarioSimulator', () => {
     if (!targetObligation) return
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )
 
     const { result } = renderHook(() => useScenarioSimulator(targetObligation.id), { wrapper })
 
     expect(result.current.status).toBe('loading')
 
-    await waitFor(() => {
-      expect(result.current.status).toBe('success')
-    }, { timeout: 2000 })
+    await waitFor(
+      () => {
+        expect(result.current.status).toBe('success')
+      },
+      { timeout: 2000 },
+    )
 
     expect(result.current.run).toBeDefined()
     if (result.current.run?.outcome.kind === 'result') {
