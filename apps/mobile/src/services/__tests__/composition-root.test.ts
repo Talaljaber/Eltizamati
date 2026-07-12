@@ -42,13 +42,13 @@ describe('createCompositionRoot', () => {
     if (isOk(result)) {
       expect(result.value.authService).toBeInstanceOf(SupabaseAuthService)
       const repos = result.value.repositories
-      expect(repos?.obligation).toBeInstanceOf(SupabaseObligationRepository)
-      expect(repos?.payment).toBeInstanceOf(SupabasePaymentRepository)
-      expect(repos?.ratePeriod).toBeInstanceOf(SupabaseRatePeriodRepository)
-      expect(repos?.calculationRun).toBeInstanceOf(SupabaseCalculationRunRepository)
-      expect(repos?.insight).toBeInstanceOf(SupabaseInsightRepository)
-      expect(repos?.consent).toBeInstanceOf(SupabaseConsentRepository)
-      expect(repos?.userProfile).toBeInstanceOf(SupabaseUserProfileRepository)
+      expect(repos?.obligationRepository).toBeInstanceOf(SupabaseObligationRepository)
+      expect(repos?.paymentRepository).toBeInstanceOf(SupabasePaymentRepository)
+      expect(repos?.ratePeriodRepository).toBeInstanceOf(SupabaseRatePeriodRepository)
+      expect(repos?.calculationRunRepository).toBeInstanceOf(SupabaseCalculationRunRepository)
+      expect(repos?.insightRepository).toBeInstanceOf(SupabaseInsightRepository)
+      expect(repos?.consentRepository).toBeInstanceOf(SupabaseConsentRepository)
+      expect(repos?.userProfileRepository).toBeInstanceOf(SupabaseUserProfileRepository)
     }
   })
 

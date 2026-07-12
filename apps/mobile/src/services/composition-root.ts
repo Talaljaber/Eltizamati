@@ -35,13 +35,15 @@ import { SupabaseInsightRepository } from './repositories/supabase/insight-repos
 import { SupabaseConsentRepository } from './repositories/supabase/consent-repository'
 
 export interface RepositoryRegistry {
-  readonly obligation: ObligationRepository
-  readonly payment: PaymentRepository
-  readonly ratePeriod: RatePeriodRepository
-  readonly calculationRun: CalculationRunRepository
-  readonly insight: InsightRepository
-  readonly consent: ConsentRepository
-  readonly userProfile: UserProfileRepository
+  readonly obligationRepository: ObligationRepository
+  readonly paymentRepository: PaymentRepository
+  readonly ratePeriodRepository: RatePeriodRepository
+  readonly calculationRunRepository: CalculationRunRepository
+  readonly insightRepository: InsightRepository
+  readonly consentRepository: ConsentRepository
+  readonly userProfileRepository: UserProfileRepository
+  /** Only present for the demo family — personal mode has no in-memory state to reset. */
+  readonly reset?: () => void
 }
 
 export interface CompositionRoot {
@@ -67,13 +69,13 @@ export function createCompositionRoot(dataMode: DataMode): Result<CompositionRoo
     queryClient,
     authService: new SupabaseAuthService(client),
     repositories: {
-      obligation: new SupabaseObligationRepository(client),
-      payment: new SupabasePaymentRepository(client),
-      ratePeriod: new SupabaseRatePeriodRepository(client),
-      calculationRun: new SupabaseCalculationRunRepository(client),
-      insight: new SupabaseInsightRepository(client),
-      consent: new SupabaseConsentRepository(client),
-      userProfile: new SupabaseUserProfileRepository(client),
+      obligationRepository: new SupabaseObligationRepository(client),
+      paymentRepository: new SupabasePaymentRepository(client),
+      ratePeriodRepository: new SupabaseRatePeriodRepository(client),
+      calculationRunRepository: new SupabaseCalculationRunRepository(client),
+      insightRepository: new SupabaseInsightRepository(client),
+      consentRepository: new SupabaseConsentRepository(client),
+      userProfileRepository: new SupabaseUserProfileRepository(client),
     },
   })
 }
