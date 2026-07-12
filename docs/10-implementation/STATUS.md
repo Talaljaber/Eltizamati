@@ -23,7 +23,10 @@
 
 - **Phase 3 (Supabase Schema and Security Foundation):** Complete (2026-07-11) — [PHASE-3-COMPLETION.md](completions/PHASE-3-COMPLETION.md). Two real bugs found and fixed during first genuine Docker-based verification: a typo'd index column (`created_at` → `calculated_at` in `calculation_runs`) and missing table-level `GRANT`s for `authenticated` (RLS policies alone don't grant table access — every table was unreachable until fixed). All local gates now genuinely green; GitHub Actions remains blocked by the unresolved external infrastructure issue (not a code defect).
 
-Phases 5–9: Planned.
+- **Phase 5 (Demo Data & Foundation UX):** Complete (2026-07-12) — [PHASE-5-COMPLETION.md](completions/PHASE-5-COMPLETION.md).
+- **Phase 6 (Core Financial Engine & Mobile Integration):** Complete (2026-07-12) — [PHASE-6-COMPLETION.md](completions/PHASE-6-COMPLETION.md).
+
+Phases 7–9: Planned.
 
 ## Checks (Phase 3, verified locally with Docker, prior session — `eada339`)
 
