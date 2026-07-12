@@ -16,6 +16,12 @@ jest.mock('expo-router', () => ({
 
 jest.mock('@/features/demo/stores/demo-mode-store', () => ({
   setOnboardingComplete: jest.fn().mockResolvedValue(undefined),
+  setDataMode: jest.fn().mockResolvedValue(undefined),
+}))
+
+const mockBootPersonalMode = jest.fn().mockResolvedValue(undefined)
+jest.mock('@/providers', () => ({
+  usePersonalBoot: () => mockBootPersonalMode,
 }))
 
 const mockAuthService = {
@@ -72,8 +78,10 @@ describe('SignUpScreen', () => {
     expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
   })
 
-  it('on a returned session, records consent and navigates to the tabs root', async () => {
+  it('on a returned session, records consent, sets personal data mode, boots personal mode, and navigates to the tabs root', async () => {
     mockAuthService.signUp.mockResolvedValue(ok(fakeSession))
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { setDataMode } = require('@/features/demo/stores/demo-mode-store')
     const { getByTestId } = renderScreen()
     fireEvent.changeText(getByTestId('sign-up-email'), 'new@example.com')
     fireEvent.changeText(getByTestId('sign-up-password'), 'secret123')
@@ -83,6 +91,21 @@ describe('SignUpScreen', () => {
     expect(mockConsentRepo.acknowledge).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-1' }),
     )
+    expect(setDataMode).toHaveBeenCalledWith('personal')
+    expect(mockBootPersonalMode).toHaveBeenCalledTimes(1)
+  })
+
+  it('on a consent-recording failure, does not navigate', async () => {
+    mockAuthService.signUp.mockResolvedValue(ok(fakeSession))
+    mockConsentRepo.acknowledge.mockResolvedValue(err(makeError('unexpected', {})))
+    const { getByTestId } = renderScreen()
+    fireEvent.changeText(getByTestId('sign-up-email'), 'new@example.com')
+    fireEvent.changeText(getByTestId('sign-up-password'), 'secret123')
+    fireEvent.press(getByTestId('sign-up-submit'))
+
+    await waitFor(() => expect(mockConsentRepo.acknowledge).toHaveBeenCalled())
+    expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
+    expect(mockBootPersonalMode).not.toHaveBeenCalled()
   })
 
   it('shows an inline error (form still visible) for a non-connectivity failure', async () => {

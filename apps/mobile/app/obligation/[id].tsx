@@ -22,17 +22,17 @@ import {
   radius,
 } from '@/core/design-system'
 import { useObligation } from '@/features/obligations/api/use-obligation'
-import { useDemoRepositories } from '@/features/demo/hooks/use-demo-repositories'
-import { RequireDemoRepositories } from '@/features/demo/components/RequireDemoRepositories'
+import { useRepositories } from '@/features/repositories/hooks/use-repositories'
+import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { deriveObligationStatus } from '@eltizamati/domain'
 import type { Id } from '@eltizamati/domain'
 import { DEMO_DATE } from '@eltizamati/demo-data'
 
 export default function ObligationDetailScreen() {
   return (
-    <RequireDemoRepositories>
+    <RequireRepositories>
       <ObligationDetailInner />
-    </RequireDemoRepositories>
+    </RequireRepositories>
   )
 }
 
@@ -40,7 +40,7 @@ function ObligationDetailInner() {
   const { t } = useTranslation()
   const theme = useTheme()
   const { id } = useLocalSearchParams<{ id: string }>()
-  const repos = useDemoRepositories()
+  const repos = useRepositories()
 
   const {
     data: obligation,

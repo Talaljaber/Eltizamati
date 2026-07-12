@@ -23,15 +23,15 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
 
       // Onboarding marked complete without a data mode is a poisoned state (an
       // earlier auth-screen bug wrote onboardingComplete without setDataMode):
-      // the tab screens are demo-only in this phase and crash without the demo
-      // repositories, so treat it as incomplete and re-run mode selection.
+      // the tab screens depend on a repository family being booted and crash
+      // without it, so treat it as incomplete and re-run mode selection.
       const effectivelyComplete = isComplete && mode !== null
 
       if (!effectivelyComplete && !inOnboardingGroup && !inAuthGroup) {
         // Redirect to onboarding. Deliberately do NOT setIsReady here:
         // navigation is async, and revealing children now would render the
         // navigator's current route (the demo-only tabs) for at least one
-        // commit before the redirect lands — crashing on useDemoRepositories.
+        // commit before the redirect lands — crashing on useRepositories.
         // The effect re-runs when `segments` changes; the post-navigation run
         // finds a consistent state and sets ready.
         router.replace('/onboarding/language')
