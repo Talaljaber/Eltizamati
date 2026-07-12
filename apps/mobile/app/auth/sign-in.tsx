@@ -17,13 +17,14 @@ import { useAuthService, useConsentRepository } from '@/features/auth/hooks/use-
 import { useSignInMutation } from '@/features/auth/api/use-auth-mutations'
 import { useRecordConsentMutation } from '@/features/auth/api/use-record-consent'
 import { setOnboardingComplete, setDataMode } from '@/features/demo/stores/demo-mode-store'
-import { useDemoBoot } from '@/providers'
+import { useDemoBoot, usePersonalBoot } from '@/providers'
 
 export default function SignInScreen() {
   const { t, i18n } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
   const bootDemoMode = useDemoBoot()
+  const bootPersonalMode = usePersonalBoot()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -42,10 +43,18 @@ export default function SignInScreen() {
       // rethrows by design; the UI reacts to mutation state, not this catch.
       return
     }
-    recordConsent.mutate({
-      userId: brandId(session.user.id),
-      locale: i18n.language === 'ar' ? 'ar' : 'en',
-    })
+    try {
+      await recordConsent.mutateAsync({
+        userId: brandId(session.user.id),
+        locale: i18n.language === 'ar' ? 'ar' : 'en',
+      })
+    } catch {
+      // Already captured in recordConsent.error — same convention as
+      // signIn above: don't navigate on failure.
+      return
+    }
+    await setDataMode('personal')
+    await bootPersonalMode()
     await setOnboardingComplete()
     router.replace('/(tabs)/')
   }

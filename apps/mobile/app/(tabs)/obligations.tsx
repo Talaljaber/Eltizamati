@@ -24,7 +24,7 @@ import {
   EmptyState,
 } from '@/core/design-system'
 import { useObligations } from '@/features/home/api/use-obligations'
-import { useDemoRepositories } from '@/features/demo/hooks/use-demo-repositories'
+import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { deriveObligationStatus } from '@eltizamati/domain'
 import type { Obligation, Id } from '@eltizamati/domain'
 import { DEMO_DATE } from '@eltizamati/demo-data'
@@ -33,7 +33,7 @@ export default function ObligationsTab() {
   const { t } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
-  const repos = useDemoRepositories()
+  const repos = useRepositories()
 
   const userId = 'user-1' as Id<'user'>
 

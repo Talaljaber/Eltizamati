@@ -30,6 +30,8 @@
 
 Phases 7–9: Planned.
 
+**Phase 10 (iOS Device Parity, Remote Push Notifications, and Saved Scenarios):** Planned, added after this session — [PHASE-10-ios-parity-push-and-saved-scenarios.md](phases/PHASE-10-ios-parity-push-and-saved-scenarios.md). Not part of the original 9-phase MVP scope; gated on Phase 9 closing first and on an Apple Developer Program membership existing (paid, user-side prerequisite for iOS device builds outside Expo Go).
+
 ## Checks (Phase 3, verified locally with Docker, prior session — `eada339`)
 
 | Check                                                   | State     | Notes                                                                                                                                                                                                                                                                  |

@@ -15,8 +15,10 @@ jest.mock('expo-router', () => ({
 }))
 
 const mockBootDemoMode = jest.fn().mockResolvedValue(undefined)
+const mockBootPersonalMode = jest.fn().mockResolvedValue(undefined)
 jest.mock('@/providers', () => ({
   useDemoBoot: () => mockBootDemoMode,
+  usePersonalBoot: () => mockBootPersonalMode,
 }))
 
 jest.mock('@/features/demo/stores/demo-mode-store', () => ({
@@ -80,7 +82,9 @@ describe('SignInScreen', () => {
     expect(submit.props.accessibilityState.disabled).toBe(false)
   })
 
-  it('on success, records consent and navigates to the tabs root', async () => {
+  it('on success, records consent, sets personal data mode, boots personal mode, and navigates to the tabs root', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { setDataMode } = require('@/features/demo/stores/demo-mode-store')
     const { getByTestId } = renderScreen()
     fireEvent.changeText(getByTestId('sign-in-email'), 'a@b.com')
     fireEvent.changeText(getByTestId('sign-in-password'), 'secret')
@@ -90,6 +94,20 @@ describe('SignInScreen', () => {
     expect(mockConsentRepo.acknowledge).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-1', docType: 'privacy-policy', version: 'v1' }),
     )
+    expect(setDataMode).toHaveBeenCalledWith('personal')
+    expect(mockBootPersonalMode).toHaveBeenCalledTimes(1)
+  })
+
+  it('on a consent-recording failure, does not navigate', async () => {
+    mockConsentRepo.acknowledge.mockResolvedValue(err(makeError('unexpected', {})))
+    const { getByTestId } = renderScreen()
+    fireEvent.changeText(getByTestId('sign-in-email'), 'a@b.com')
+    fireEvent.changeText(getByTestId('sign-in-password'), 'secret')
+    fireEvent.press(getByTestId('sign-in-submit'))
+
+    await waitFor(() => expect(mockConsentRepo.acknowledge).toHaveBeenCalled())
+    expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
+    expect(mockBootPersonalMode).not.toHaveBeenCalled()
   })
 
   it('shows an inline error (form still visible) for a non-connectivity failure', async () => {

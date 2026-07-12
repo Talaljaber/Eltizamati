@@ -1,13 +1,13 @@
 import { Tabs, Link } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { Pressable, Text } from 'react-native'
-import { RequireDemoRepositories } from '@/features/demo/components/RequireDemoRepositories'
+import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 
 export default function TabLayout() {
   const { t } = useTranslation()
 
   return (
-    <RequireDemoRepositories>
+    <RequireRepositories>
       <Tabs screenOptions={{ headerShown: true }}>
         <Tabs.Screen
           name="index"
@@ -39,6 +39,6 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-    </RequireDemoRepositories>
+    </RequireRepositories>
   )
 }

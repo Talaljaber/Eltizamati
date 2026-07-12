@@ -1,15 +1,15 @@
 /**
- * RequireDemoRepositories — structural gate regression test.
+ * RequireRepositories — structural gate regression test.
  *
- * Covers the fix for the OnboardingGuard crash: demo-only routes must not
- * mount their body (which calls the throwing useDemoRepositories) when no
- * DemoRepositoriesProvider is mounted — they should redirect instead.
+ * Covers the fix for the OnboardingGuard crash: repository-dependent routes
+ * must not mount their body (which calls the throwing useRepositories) when
+ * no RepositoriesProvider is mounted — they should redirect instead.
  */
 import React from 'react'
 import { render } from '@testing-library/react-native'
 import { Text } from 'react-native'
-import { RequireDemoRepositories } from '../RequireDemoRepositories'
-import { DemoRepositoriesProvider } from '@/features/demo/hooks/use-demo-repositories'
+import { RequireRepositories } from '../RequireRepositories'
+import { RepositoriesProvider } from '@/features/repositories/hooks/use-repositories'
 import { createDemoRepositories } from '@/services/repositories/demo'
 
 const mockRedirect = jest.fn((_props: { href: string }) => null)
@@ -20,19 +20,19 @@ jest.mock('expo-router', () => ({
   },
 }))
 
-describe('RequireDemoRepositories', () => {
+describe('RequireRepositories', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  it('renders children when wrapped in DemoRepositoriesProvider', () => {
+  it('renders children when wrapped in RepositoriesProvider', () => {
     const repositories = createDemoRepositories()
     const { getByText } = render(
-      <DemoRepositoriesProvider repositories={repositories}>
-        <RequireDemoRepositories>
+      <RepositoriesProvider repositories={repositories}>
+        <RequireRepositories>
           <Text>protected content</Text>
-        </RequireDemoRepositories>
-      </DemoRepositoriesProvider>,
+        </RequireRepositories>
+      </RepositoriesProvider>,
     )
 
     expect(getByText('protected content')).toBeTruthy()
@@ -41,9 +41,9 @@ describe('RequireDemoRepositories', () => {
 
   it('renders the redirect (not children) when no provider is present', () => {
     const { queryByText } = render(
-      <RequireDemoRepositories>
+      <RequireRepositories>
         <Text>protected content</Text>
-      </RequireDemoRepositories>,
+      </RequireRepositories>,
     )
 
     expect(queryByText('protected content')).toBeNull()

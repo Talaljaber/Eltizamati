@@ -15,12 +15,14 @@ import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { useAuthService, useConsentRepository } from '@/features/auth/hooks/use-auth-service'
 import { useSignUpMutation } from '@/features/auth/api/use-auth-mutations'
 import { useRecordConsentMutation } from '@/features/auth/api/use-record-consent'
-import { setOnboardingComplete } from '@/features/demo/stores/demo-mode-store'
+import { setOnboardingComplete, setDataMode } from '@/features/demo/stores/demo-mode-store'
+import { usePersonalBoot } from '@/providers'
 
 export default function SignUpScreen() {
   const { t, i18n } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
+  const bootPersonalMode = usePersonalBoot()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -44,10 +46,18 @@ export default function SignUpScreen() {
       setVerificationPending(true)
       return
     }
-    recordConsent.mutate({
-      userId: brandId(session.user.id),
-      locale: i18n.language === 'ar' ? 'ar' : 'en',
-    })
+    try {
+      await recordConsent.mutateAsync({
+        userId: brandId(session.user.id),
+        locale: i18n.language === 'ar' ? 'ar' : 'en',
+      })
+    } catch {
+      // Already captured in recordConsent.error — same convention as
+      // signUp above: don't navigate on failure.
+      return
+    }
+    await setDataMode('personal')
+    await bootPersonalMode()
     await setOnboardingComplete()
     router.replace('/(tabs)/')
   }

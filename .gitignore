@@ -24,3 +24,5 @@ packages/*/vitest.config.d.ts
 
 # Test coverage output
 coverage/
+.pnpm-store/
+.mcp.json

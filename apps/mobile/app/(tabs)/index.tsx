@@ -13,13 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text, space, useTheme, radius, DemoBanner, SkeletonCard } from '@/core/design-system'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { useInsights } from '@/features/home/api/use-insights'
-import { useDemoRepositories } from '@/features/demo/hooks/use-demo-repositories'
+import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import type { Insight, Obligation, Id } from '@eltizamati/domain'
 
 export default function HomeTab() {
   const { t } = useTranslation()
   const theme = useTheme()
-  const repos = useDemoRepositories()
+  const repos = useRepositories()
 
   // Phase 5 demo seed always uses 'user-1'
   const userId = 'user-1' as Id<'user'>

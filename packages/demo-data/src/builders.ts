@@ -19,6 +19,7 @@ import {
   addMonthsToLocalDate,
   addDaysToLocalDate,
   demoSourced,
+  DomainInvariantError,
   type LocalDate,
   type Id,
   type ConventionalLoan,
@@ -29,6 +30,13 @@ import {
   type Insight,
   type Provenance,
 } from '@eltizamati/domain'
+import {
+  evaluateRateIncreased,
+  evaluateInstallmentUnchangedAfterIncrease,
+  evaluateResidualRisk,
+  computeVariableProjection,
+  computeResidualDetection,
+} from '@eltizamati/finance-engine'
 
 import { DEMO_DATE, DEMO_SEED_VERSION } from './constants.js'
 
@@ -308,7 +316,69 @@ export function buildDemoLoanRatePeriods(demoDate: LocalDate = DEMO_DATE): reado
 export function buildDemoInsights(demoDate: LocalDate = DEMO_DATE): readonly Insight[] {
   const recordedAt = `${demoDate}T00:00:00.000Z`
   const loan = buildDemoLoan(demoDate)
-  const rateChangeDate = loan.loanDetails.ratePeriods[1]?.effectiveFrom ?? demoDate
+  const loanDetails = loan.loanDetails
+  const ratePeriods = loanDetails.ratePeriods
+  const rateChangeDate = ratePeriods[1]?.effectiveFrom ?? demoDate
+
+  // Derive the real triggerHash/params from the actual finance-engine
+  // evaluators/formulas rather than hardcoding placeholder strings — this
+  // keeps the seed in sync with what a live evaluation service (Phase 7's
+  // InsightEvaluationService) would independently compute, so it recognizes
+  // these seeded insights instead of raising duplicates.
+  const rateIncreasedCandidates = evaluateRateIncreased(loan.id, ratePeriods)
+  const rateIncreasedCandidate = rateIncreasedCandidates[rateIncreasedCandidates.length - 1]
+  if (rateIncreasedCandidate === undefined) {
+    throw new DomainInvariantError(
+      'validation',
+      'buildDemoInsights: expected the demo loan to have a rate increase',
+    )
+  }
+
+  // installmentUnchangedSinceLastIncrease = true: the seed's own design is
+  // that the 310 JOD installment stayed fixed across the 7.5% -> 9.25%
+  // reprice (see buildDemoLoan's docblock).
+  const installmentUnchangedCandidates = evaluateInstallmentUnchangedAfterIncrease(
+    loan.id,
+    ratePeriods,
+    true,
+  )
+  const installmentUnchangedCandidate =
+    installmentUnchangedCandidates[installmentUnchangedCandidates.length - 1]
+  if (installmentUnchangedCandidate === undefined) {
+    throw new DomainInvariantError(
+      'validation',
+      'buildDemoInsights: expected INSTALLMENT_UNCHANGED_AFTER_INCREASE to fire for the demo loan',
+    )
+  }
+
+  // Real residualDetection.v1 result, fed by a real variableProjection.v1
+  // run over the loan's actual principal/ratePeriods/term/installment with
+  // installmentPolicy: {kind: 'unchanged'} (matches "installment stayed the
+  // same" design) as of demoDate — never invented numbers.
+  const projection = computeVariableProjection(
+    loanDetails.originalPrincipal.value,
+    ratePeriods,
+    loanDetails.termMonths.value,
+    loanDetails.startDate,
+    loanDetails.installment.value,
+    { kind: 'unchanged' },
+    demoDate,
+  )
+  const residualDetection = computeResidualDetection(
+    projection.projectedResidualAtMaturity,
+    loanDetails.originalPrincipal.value,
+    loanDetails.installment.value,
+    { rateIncreasedWithUnchangedInstallment: true },
+    demoDate,
+  )
+  const residualRiskCandidates = evaluateResidualRisk(loan.id, residualDetection)
+  const residualRiskCandidate = residualRiskCandidates[residualRiskCandidates.length - 1]
+  if (residualRiskCandidate === undefined) {
+    throw new DomainInvariantError(
+      'validation',
+      'buildDemoInsights: expected the demo loan to have real residual risk (hasResidualRisk=false) — the seed narrative no longer holds',
+    )
+  }
 
   return [
     {
@@ -319,8 +389,8 @@ export function buildDemoInsights(demoDate: LocalDate = DEMO_DATE): readonly Ins
       severity: 'attention' as const,
       titleKey: 'insights.rateIncreased.title',
       bodyKey: 'insights.rateIncreased.body',
-      params: { fromRate: '7.5', toRate: '9.25' },
-      triggerHash: 'demo-rate-increased-v1',
+      params: rateIncreasedCandidate.params ?? {},
+      triggerHash: rateIncreasedCandidate.triggerHash,
       readAt: `${rateChangeDate}T12:00:00.000Z`, // already read
       createdAt: `${rateChangeDate}T00:00:00.000Z`,
     },
@@ -333,7 +403,7 @@ export function buildDemoInsights(demoDate: LocalDate = DEMO_DATE): readonly Ins
       titleKey: 'insights.installmentUnchanged.title',
       bodyKey: 'insights.installmentUnchanged.body',
       params: { installment: '310' },
-      triggerHash: 'demo-installment-unchanged-v1',
+      triggerHash: installmentUnchangedCandidate.triggerHash,
       // unread — will trigger attentionRequired status on the loan
       createdAt: `${rateChangeDate}T00:00:00.000Z`,
     },
@@ -345,8 +415,9 @@ export function buildDemoInsights(demoDate: LocalDate = DEMO_DATE): readonly Ins
       severity: 'urgent' as const,
       titleKey: 'insights.residualRisk.title',
       bodyKey: 'insights.residualRisk.body',
-      triggerHash: 'demo-residual-risk-v1',
-      // unread — Phase 6 will enrich with engine data
+      params: residualRiskCandidate.params ?? {},
+      triggerHash: residualRiskCandidate.triggerHash,
+      // unread
       createdAt: recordedAt,
     },
   ]
