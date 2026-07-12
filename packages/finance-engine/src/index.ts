@@ -1,24 +1,22 @@
 /**
  * Finance engine — public API.
  *
- * M0: Registry scaffold only. Formula implementations land in M3.
- *
- * INVARIANTS (enforced by M3 property tests):
- *   INV-1: total paid = principal repaid + total interest over the schedule
- *   INV-2: outstanding balance decreases monotonically (conventional, on-schedule)
- *   INV-3: extra payment scenario payoff date ≤ base payoff date
- *   INV-4: residual balance = 0 for fixed-rate on-schedule loans
- *   INV-5: determinism — same inputs + asOf → same outputs (hash-verified)
- *   INV-6: confidence only downgrades through composition, never upgrades
- *   INV-7: Murabaha total paid = totalSalePrice (fixed contract)
- *
- * RULES (financial-calculation-spec.md):
- *   - Engine receives explicit asOf date — NEVER reads the system clock.
- *   - Engine is pure: no I/O, no network, no database.
- *   - All monetary computation via Money VO (AI_AGENT_RULES §5).
- *   - Formula changes require version bump + vector update + ADR note (AI_AGENT_RULES §7).
+ * M3/Phase 6: Exposing the fully typed pure financial formulas, types, and refusal logic.
  */
 
-// M0: exports are stubs. M3 will add formula implementations.
 export type { FormulaId, FormulaVersion, CalculationConfidence } from './registry/types.js'
 export { FORMULA_REGISTRY } from './registry/formula-registry.js'
+
+export * from './types.js'
+export * from './refusal.js'
+
+export * from './formulas/amortization.js'
+export * from './formulas/variable-projection.js'
+export * from './formulas/residual-detection.js'
+export * from './formulas/allocation-estimate.js'
+export * from './formulas/murabaha-progress.js'
+export * from './formulas/extra-payment-scenario.js'
+export * from './formulas/card-payoff.js'
+export * from './formulas/aggregates.js'
+
+export * from './insights/rules.js'
