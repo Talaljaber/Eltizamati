@@ -5,7 +5,7 @@
  */
 
 export type { FormulaId, FormulaVersion, CalculationConfidence } from './registry/types.js'
-export { FORMULA_REGISTRY } from './registry/formula-registry.js'
+export { FORMULA_REGISTRY, resolveFormula } from './registry/formula-registry.js'
 
 export * from './types.js'
 export * from './refusal.js'

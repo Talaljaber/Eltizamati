@@ -36,7 +36,7 @@ describe('INV-1 — balances never negative; schedules never contain negative pa
           }
         },
       ),
-      { seed: FIXED_SEED, numRuns: 200 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 
@@ -87,7 +87,7 @@ describe('INV-1 — balances never negative; schedules never contain negative pa
           }
         },
       ),
-      { seed: FIXED_SEED, numRuns: 200 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 })
@@ -109,7 +109,7 @@ describe('INV-2 — per period: principal + cost = payment within CONV-5 toleran
           }
         },
       ),
-      { seed: FIXED_SEED, numRuns: 200 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 })
@@ -132,7 +132,7 @@ describe('INV-6 — sum of schedule principal = original principal (± CONV-5 sc
           expect(finalEntry?.closingBalance.isZero()).toBe(true)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 200 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 
@@ -181,7 +181,7 @@ describe('INV-6 — sum of schedule principal = original principal (± CONV-5 sc
           expect(diff.isGreaterThan(tolerance)).toBe(false)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 200 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 })

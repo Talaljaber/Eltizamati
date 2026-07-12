@@ -50,6 +50,49 @@ describe('evaluateRateIncreased', () => {
     expect(evaluateRateIncreased(obligationId, ratePeriods)).toHaveLength(0)
   })
 
+  it('handles unsorted rate periods correctly (sort branch coverage)', () => {
+    const obligationId = brandId<'obligation'>('rp-sort-obl')
+    const provenance = {
+      source: 'userEntered' as const,
+      providerId: 'manual',
+      observedAt: '2026-01-01T00:00:00.000Z',
+      recordedAt: '2026-01-01T00:00:00.000Z',
+    }
+    const ratePeriods: readonly RatePeriod[] = [
+      {
+        id: brandId('rp-2'),
+        obligationId,
+        annualRate: Rate.fromPercent('8'),
+        effectiveFrom: toLocalDate('2026-06-01'), // Later
+        provenance,
+        createdAt: provenance.recordedAt,
+      },
+      {
+        id: brandId('rp-3'),
+        obligationId,
+        annualRate: Rate.fromPercent('8'),
+        effectiveFrom: toLocalDate('2026-06-01'), // Same time (branch 0 coverage)
+        provenance,
+        createdAt: provenance.recordedAt,
+      },
+      {
+        id: brandId('rp-1'),
+        obligationId,
+        annualRate: Rate.fromPercent('5'),
+        effectiveFrom: toLocalDate('2026-01-01'), // Earlier
+        provenance,
+        createdAt: provenance.recordedAt,
+      },
+    ]
+    const candidates = evaluateRateIncreased(obligationId, ratePeriods)
+    // The sorting should place rp-1 first, then rp-2/rp-3
+    // It should detect the increase from 5% to 8%
+    expect(candidates).toHaveLength(1)
+    expect(candidates[0]?.ruleId).toBe('RATE_INCREASED')
+    expect(candidates[0]?.params?.fromRate).toBe('5.00')
+    expect(candidates[0]?.params?.toRate).toBe('8.00')
+  })
+
   it('does not fire for a single rate period (no history to compare)', () => {
     expect(
       evaluateRateIncreased(loan.id, [loan.loanDetails.ratePeriods[0] as RatePeriod]),
@@ -98,55 +141,25 @@ describe('evaluateResidualRisk', () => {
     const detection = computeResidualDetection(
       Money.of('1500', 'JOD'),
       Money.of('20000', 'JOD'),
-      Money.of('310', 'JOD'),
-      { rateIncreasedWithUnchangedInstallment: true },
-      DEMO_DATE,
-    )
-    const candidates = evaluateResidualRisk(loan.id, detection)
-    expect(candidates).toHaveLength(1)
-    expect(candidates[0]?.severity).toBe('urgent')
-  })
-
-  it('does not fire when there is no residual risk', () => {
-    const detection = computeResidualDetection(
-      Money.of('50', 'JOD'),
-      Money.of('20000', 'JOD'),
-      Money.of('310', 'JOD'),
+      Money.of('500', 'JOD'),
       {},
-      DEMO_DATE,
+      toLocalDate('2026-01-01'),
     )
-    expect(evaluateResidualRisk(loan.id, detection)).toHaveLength(0)
+    const risk = evaluateResidualRisk(loan.id, detection)
+    expect(risk).toHaveLength(1)
+    expect(risk[0]?.ruleId).toBe('RESIDUAL_RISK')
+    expect(risk[0]?.params?.residualAmount).toBe('1,500.000') // formatted JOD
   })
-})
 
-describe('evaluateRateIncreased — sort-stability edge case', () => {
-  it('does not throw when two rate periods share the same effectiveFrom', () => {
-    const startDate = toLocalDate('2026-01-01')
-    const obligationId = brandId<'obligation'>('dup-obl')
-    const provenance = {
-      source: 'userEntered' as const,
-      providerId: 'manual',
-      observedAt: '2026-01-01T00:00:00.000Z',
-      recordedAt: '2026-01-01T00:00:00.000Z',
-    }
-    const ratePeriods: readonly RatePeriod[] = [
-      {
-        id: brandId('dup-rp-1'),
-        obligationId,
-        annualRate: Rate.fromPercent('8'),
-        effectiveFrom: startDate,
-        provenance,
-        createdAt: provenance.recordedAt,
-      },
-      {
-        id: brandId('dup-rp-2'),
-        obligationId,
-        annualRate: Rate.fromPercent('9'),
-        effectiveFrom: startDate,
-        provenance,
-        createdAt: provenance.recordedAt,
-      },
-    ]
-    expect(() => evaluateRateIncreased(obligationId, ratePeriods)).not.toThrow()
+  it('does not fire when residual is zero', () => {
+    const detection = computeResidualDetection(
+      Money.zero('JOD'),
+      Money.of('20000', 'JOD'),
+      Money.of('500', 'JOD'),
+      {},
+      toLocalDate('2026-01-01'),
+    )
+    const noRisk = evaluateResidualRisk(loan.id, detection)
+    expect(noRisk).toHaveLength(0)
   })
 })

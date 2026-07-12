@@ -28,7 +28,7 @@ describe('INV-7 — outstanding + paid = totalSalePrice exactly', () => {
           expect(result.outstanding.isNegative()).toBe(false)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 300 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 })

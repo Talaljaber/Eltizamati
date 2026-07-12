@@ -7,7 +7,7 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     // Property tests run hundreds of iterations over full schedule builds;
     // under v8 coverage instrumentation that exceeds vitest's 5s default.
-    testTimeout: 30_000,
+    testTimeout: 120_000,
     coverage: {
       provider: 'v8',
       // ≥95% engine coverage is a CI gate (ADR-0011, ci-cd-environments.md §1)

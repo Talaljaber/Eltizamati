@@ -46,7 +46,7 @@ describe('INV-5 — determinism (amortization.v1)', () => {
           expect(hashA).toBe(hashB)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 100 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 })
@@ -104,7 +104,7 @@ describe('INV-5 — determinism (variableProjection.v1)', () => {
           expect(canonicalJsonStringOf(runA)).toBe(canonicalJsonStringOf(runB))
         },
       ),
-      { seed: FIXED_SEED, numRuns: 100 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 })
@@ -124,7 +124,7 @@ describe('INV-5 — determinism (murabahaProgress.v1)', () => {
           expect(canonicalJsonStringOf(runA)).toBe(canonicalJsonStringOf(runB))
         },
       ),
-      { seed: FIXED_SEED, numRuns: 100 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 })

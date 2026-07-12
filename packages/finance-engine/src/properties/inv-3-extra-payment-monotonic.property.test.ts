@@ -75,7 +75,7 @@ describe('INV-3 — more payment never worsens payoff', () => {
           expect(result.costSaved.isNegative()).toBe(false)
         },
       ),
-      { seed: FIXED_SEED, numRuns: 150 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 })

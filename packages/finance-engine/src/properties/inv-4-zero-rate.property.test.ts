@@ -36,7 +36,7 @@ describe('INV-4 — zero rate ⇒ zero cost; total paid = principal exactly', ()
           }
         },
       ),
-      { seed: FIXED_SEED, numRuns: 200 },
+      { seed: FIXED_SEED, numRuns: 1000, endOnFailure: false },
     )
   })
 })

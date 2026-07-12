@@ -66,6 +66,30 @@ describe('residualDetection.v1', () => {
     )
     expect(belowOnePercent.hasResidualRisk).toBe(false)
   })
+
+  it('reports no risk when exactly on the threshold', () => {
+    // 1% of 20000 = 200. Max(200, 310) = 310.
+    const result = computeResidualDetection(
+      Money.of('310', 'JOD'),
+      Money.of('20000', 'JOD'),
+      Money.of('310', 'JOD'),
+      {},
+      asOf,
+    )
+    expect(result.hasResidualRisk).toBe(false)
+  })
+
+  it('reports risk when barely above the threshold', () => {
+    // Threshold is 310. Residual is 310.001.
+    const result = computeResidualDetection(
+      Money.of('310.001', 'JOD'),
+      Money.of('20000', 'JOD'),
+      Money.of('310', 'JOD'),
+      {},
+      asOf,
+    )
+    expect(result.hasResidualRisk).toBe(true)
+  })
 })
 
 describe('residualDetection — engine refusal (BR-CALC-016)', () => {
