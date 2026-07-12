@@ -20,4 +20,21 @@ config.resolver.nodeModulesPaths = [
 // This removes the need for configuring `alias` in `babel.config.js`
 // config.resolver.disableHierarchicalLookup = true;
 
+// 4. Handle `.js` imports pointing to `.ts`/`.tsx` files in workspace packages
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName.endsWith('.js')) {
+    try {
+      return context.resolveRequest(context, moduleName, platform)
+    } catch (e) {
+      const noExt = moduleName.replace(/\.js$/, '')
+      try {
+        return context.resolveRequest(context, noExt, platform)
+      } catch (err2) {
+        throw e
+      }
+    }
+  }
+  return context.resolveRequest(context, moduleName, platform)
+}
+
 module.exports = config
