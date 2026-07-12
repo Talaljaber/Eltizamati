@@ -148,7 +148,9 @@ describe('evaluateResidualRisk', () => {
     const risk = evaluateResidualRisk(loan.id, detection)
     expect(risk).toHaveLength(1)
     expect(risk[0]?.ruleId).toBe('RESIDUAL_RISK')
-    expect(risk[0]?.params?.residualAmount).toBe('1,500.000') // formatted JOD
+    // Raw storage-precision value, not display-formatted — formatting is a
+    // Phase 7 / core/formatting concern, never baked into engine output.
+    expect(risk[0]?.params?.['residual']).toBe('1500')
   })
 
   it('does not fire when residual is zero', () => {
