@@ -20,6 +20,7 @@ import {
   Rate,
   type UserProfile,
   type Obligation,
+  type GenericFacility,
   type Payment,
   type RatePeriod,
   type Insight,
@@ -311,6 +312,149 @@ describe('Phase 4 personal-mode integration (live local Supabase)', () => {
     expect(isOk(insights)).toBe(true)
     if (isOk(insights)) expect(insights.value.some((i) => i.id === insight.id)).toBe(true)
   }, 30_000)
+
+  // The six repository contract suites (`*.contract.ts`) fabricate a second
+  // synthetic user id and write rows for it through the same `repoFactory()`
+  // instance — fine for the demo repositories' unauthenticated in-memory
+  // store, but not reusable here: Supabase's RLS insert policies require
+  // `user_id = auth.uid()` of the actually-authenticated client, so a
+  // mismatched synthetic id would simply be rejected. This suite instead
+  // covers each contract's remaining (non-cross-user) behaviors for real,
+  // reusing userA's already-persisted obligation from the test above.
+  it('rate periods are append-only: a second period never mutates history (BR-RATE-001)', async () => {
+    const ratePeriodRepo = new SupabaseRatePeriodRepository(clientA)
+    const now = new Date().toISOString()
+    const secondPeriod: RatePeriod = {
+      id: brandId<'ratePeriod'>(crypto.randomUUID()),
+      obligationId: brandId(obligationId),
+      annualRate: Rate.fromPercent('9.25'),
+      effectiveFrom: '2024-08-01' as RatePeriod['effectiveFrom'],
+      provenance: userEntered(undefined, now).provenance,
+      createdAt: now,
+    }
+    expect(isOk(await ratePeriodRepo.append(secondPeriod))).toBe(true)
+
+    const history = await ratePeriodRepo.historyFor(brandId(obligationId))
+    expect(isOk(history)).toBe(true)
+    if (isOk(history)) {
+      expect(history.value.length).toBeGreaterThanOrEqual(2)
+      const first = history.value.find((p) => p.annualRate.equals(Rate.fromPercent('7.5')))
+      expect(first).toBeDefined()
+    }
+
+    const emptyHistory = await ratePeriodRepo.historyFor(brandId(crypto.randomUUID()))
+    expect(isOk(emptyHistory)).toBe(true)
+    if (isOk(emptyHistory)) expect(emptyHistory.value).toHaveLength(0)
+  }, 15_000)
+
+  it('payments listFor only returns payments for the requested obligation', async () => {
+    const obligationRepo = new SupabaseObligationRepository(clientA)
+    const paymentRepo = new SupabasePaymentRepository(clientA)
+    const userId = brandId<'user'>(userA.userId)
+    const now = new Date().toISOString()
+
+    // A second real obligation (Supabase's listFor looks up the parent
+    // obligation for its currency, so an unknown id returns `notFound`
+    // rather than an empty list — unlike the demo repo's in-memory map;
+    // isolation must be proven with a second real obligation instead).
+    const otherObligationId = brandId<'obligation'>(crypto.randomUUID())
+    const otherObligation: GenericFacility = {
+      id: otherObligationId,
+      userId,
+      kind: 'genericFacility',
+      nickname: 'Payment isolation fixture',
+      institution: { name: 'Test Bank' },
+      currency: 'JOD',
+      openedDate: '2026-01-01' as GenericFacility['openedDate'],
+      provenance: userEntered(undefined, now).provenance,
+      createdAt: now,
+      updatedAt: now,
+    }
+    expect(isOk(await obligationRepo.save(otherObligation))).toBe(true)
+
+    const listForOther = await paymentRepo.listFor(otherObligationId)
+    expect(isOk(listForOther)).toBe(true)
+    if (isOk(listForOther)) expect(listForOther.value).toHaveLength(0)
+
+    await obligationRepo.delete(otherObligationId)
+  }, 15_000)
+
+  it('insight markRead sets readAt without deleting the insight', async () => {
+    const insightRepo = new SupabaseInsightRepository(clientA)
+    const userId = brandId<'user'>(userA.userId)
+
+    const before = await insightRepo.list(userId)
+    expect(isOk(before)).toBe(true)
+    if (!isOk(before)) return
+    const target = before.value[0]
+    expect(target).toBeDefined()
+    if (target === undefined) return
+    expect(target.readAt).toBeUndefined()
+
+    const marked = await insightRepo.markRead(target.id)
+    expect(isOk(marked)).toBe(true)
+
+    const after = await insightRepo.list(userId)
+    expect(isOk(after)).toBe(true)
+    if (isOk(after)) {
+      const found = after.value.find((i) => i.id === target.id)
+      expect(found).toBeDefined()
+      expect(found?.readAt).toBeDefined()
+    }
+  }, 15_000)
+
+  it('consent re-acknowledging a version bump appends a new record rather than overwriting', async () => {
+    const consentRepo = new SupabaseConsentRepository(clientA)
+    const userId = brandId<'user'>(userA.userId)
+    const now = new Date().toISOString()
+    const consentV2: ConsentRecord = {
+      id: brandId<'consentRecord'>(crypto.randomUUID()),
+      userId,
+      docType: 'privacy-policy',
+      version: 'v2',
+      locale: 'en',
+      acknowledgedAt: now,
+    }
+    expect(isOk(await consentRepo.acknowledge(consentV2))).toBe(true)
+
+    const status = await consentRepo.status(userId)
+    expect(isOk(status)).toBe(true)
+    if (isOk(status)) {
+      expect(status.value.some((r) => r.version === 'v1')).toBe(true)
+      expect(status.value.some((r) => r.version === 'v2')).toBe(true)
+    }
+  }, 15_000)
+
+  it('obligation archive sets closedDate without deleting; delete removes the obligation', async () => {
+    const obligationRepo = new SupabaseObligationRepository(clientA)
+    const userId = brandId<'user'>(userA.userId)
+    const now = new Date().toISOString()
+    const archId = brandId<'obligation'>(crypto.randomUUID())
+    const toArchive: GenericFacility = {
+      id: archId,
+      userId,
+      kind: 'genericFacility',
+      nickname: 'To archive',
+      institution: { name: 'Test Bank' },
+      currency: 'JOD',
+      openedDate: '2026-01-01' as GenericFacility['openedDate'],
+      provenance: userEntered(undefined, now).provenance,
+      createdAt: now,
+      updatedAt: now,
+    }
+    expect(isOk(await obligationRepo.save(toArchive))).toBe(true)
+
+    const archived = await obligationRepo.archive(archId)
+    expect(isOk(archived)).toBe(true)
+    const stillThere = await obligationRepo.get(archId)
+    expect(isOk(stillThere)).toBe(true)
+    if (isOk(stillThere)) expect(stillThere.value.closedDate).toBeDefined()
+
+    const deleted = await obligationRepo.delete(archId)
+    expect(isOk(deleted)).toBe(true)
+    const gone = await obligationRepo.get(archId)
+    expect(isErr(gone)).toBe(true)
+  }, 15_000)
 
   it('cross-user isolation holds through the client, not just SQL (exit criterion 3)', async () => {
     const obligationRepoB = new SupabaseObligationRepository(clientB)
