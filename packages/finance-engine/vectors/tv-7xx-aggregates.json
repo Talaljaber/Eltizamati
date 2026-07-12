@@ -1,0 +1,48 @@
+[
+  {
+    "id": "TV-701",
+    "formulaId": "aggregates",
+    "version": 1,
+    "description": "Demo seed set ⇒ total outstanding = loan est. + murabaha official + card official, labeled includes estimates (BR-PROV-004)",
+    "inputs": { "seed": "buildDemoSeed(DEMO_DATE)" },
+    "asOf": "2026-07-01",
+    "expected": {
+      "totalMonthlyCommitment": "690.500",
+      "includesEstimates": true,
+      "excludedCount": 0
+    },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-702",
+    "formulaId": "aggregates",
+    "version": 1,
+    "description": "One obligation with no balance ⇒ excluded + named (BR-PROV-005)",
+    "inputs": {
+      "balances": [
+        {
+          "obligationId": "obl-1",
+          "nickname": "Personal Loan",
+          "balance": "5000",
+          "isEstimate": false
+        },
+        {
+          "obligationId": "obl-2",
+          "nickname": "Old Facility",
+          "balance": null,
+          "isEstimate": false
+        }
+      ]
+    },
+    "asOf": "2026-07-01",
+    "expected": {
+      "totalOutstanding": "5000.000",
+      "excludedFromOutstanding": [{ "obligationId": "obl-2", "nickname": "Old Facility" }]
+    },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  }
+]

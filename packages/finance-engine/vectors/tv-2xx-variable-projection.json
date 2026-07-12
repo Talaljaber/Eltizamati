@@ -1,0 +1,108 @@
+[
+  {
+    "id": "TV-201",
+    "formulaId": "variableProjection",
+    "version": 1,
+    "description": "TV-103 loan, rate 12%→12% no-op reprice at month 6 — schedule identical to plain amortization (regression guard)",
+    "inputs": {
+      "principal": "1000",
+      "startDate": "2026-01-01",
+      "termMonths": 12,
+      "installmentPercent": "12",
+      "ratePeriods": [
+        { "effectiveFromPeriod": 1, "annualRatePercent": "12" },
+        { "effectiveFromPeriod": 6, "annualRatePercent": "12" }
+      ],
+      "installmentPolicy": "recalculated"
+    },
+    "asOf": "2026-01-01",
+    "expected": "structural-only",
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-202",
+    "formulaId": "variableProjection",
+    "version": 1,
+    "description": "P=10000, 8%→10% at month 13 of 60, policy recalculated — new installment amortizes remaining balance over remaining 48 periods; maturity unchanged; residual = 0",
+    "inputs": {
+      "principal": "10000",
+      "startDate": "2026-01-01",
+      "termMonths": 60,
+      "ratePeriods": [
+        { "effectiveFromPeriod": 1, "annualRatePercent": "8" },
+        { "effectiveFromPeriod": 13, "annualRatePercent": "10" }
+      ],
+      "installmentPolicy": "recalculated"
+    },
+    "asOf": "2026-01-01",
+    "expected": { "scheduleLength": 60, "residual": "0" },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-203",
+    "formulaId": "variableProjection",
+    "version": 1,
+    "description": "Same as TV-202, policy unchanged — residual at maturity > 0 (exact value PENDING-FINANCE); residualDetection.v1 fires rateIncreaseWithUnchangedInstallment",
+    "inputs": {
+      "principal": "10000",
+      "startDate": "2026-01-01",
+      "termMonths": 60,
+      "ratePeriods": [
+        { "effectiveFromPeriod": 1, "annualRatePercent": "8" },
+        { "effectiveFromPeriod": 13, "annualRatePercent": "10" }
+      ],
+      "installmentPolicy": "unchanged"
+    },
+    "asOf": "2026-01-01",
+    "expected": { "residualPositive": true, "residualExactValue": "PENDING-FINANCE" },
+    "tolerance": "0.005",
+    "source": "finance-team",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-204",
+    "formulaId": "variableProjection",
+    "version": 1,
+    "description": "Rate decrease, policy unchanged — loan closes early (payoff before maturity); residual = 0",
+    "inputs": {
+      "principal": "10000",
+      "startDate": "2026-01-01",
+      "termMonths": 60,
+      "ratePeriods": [
+        { "effectiveFromPeriod": 1, "annualRatePercent": "10" },
+        { "effectiveFromPeriod": 13, "annualRatePercent": "8" }
+      ],
+      "installmentPolicy": "unchanged"
+    },
+    "asOf": "2026-01-01",
+    "expected": { "payoffBeforeMaturity": true, "residual": "0" },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-205",
+    "formulaId": "variableProjection",
+    "version": 1,
+    "description": "Effective date mid-period (day 14) — applied at next period boundary; CONV-4 assumption note present",
+    "inputs": {
+      "principal": "10000",
+      "startDate": "2026-01-01",
+      "termMonths": 24,
+      "ratePeriods": [
+        { "effectiveFromDate": "2026-01-01", "annualRatePercent": "8" },
+        { "effectiveFromDate": "2026-07-14", "annualRatePercent": "9" }
+      ],
+      "installmentPolicy": "recalculated"
+    },
+    "asOf": "2026-01-01",
+    "expected": { "midPeriodAssumptionNotePresent": true },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  }
+]

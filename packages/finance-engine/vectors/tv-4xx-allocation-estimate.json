@@ -1,0 +1,56 @@
+[
+  {
+    "id": "TV-401",
+    "formulaId": "allocationEstimate",
+    "version": 1,
+    "description": "Unknown split mid-loan — cost = balance·i, labeled estimated",
+    "inputs": {
+      "balanceBeforePayment": "5000",
+      "paymentAmount": "310",
+      "annualRatePercent": "9"
+    },
+    "asOf": "2026-07-01",
+    "expected": { "cost": "37.500", "principal": "272.500", "closingBalance": "4727.500" },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-402",
+    "formulaId": "allocationEstimate",
+    "version": 1,
+    "description": "Overpayment beyond balance → overpayment state, no negative balance (INV-1)",
+    "inputs": {
+      "balanceBeforePayment": "200",
+      "paymentAmount": "5000",
+      "annualRatePercent": "9"
+    },
+    "asOf": "2026-07-01",
+    "expected": {
+      "cost": "1.500",
+      "principal": "200.000",
+      "overpayment": "4798.500",
+      "closingBalance": "0"
+    },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-403",
+    "formulaId": "allocationEstimate",
+    "version": 1,
+    "description": "Payment before a repricing boundary — caller-resolved rate correctly drives the estimate across two different periods (US-005 edge)",
+    "inputs": {
+      "balanceBeforePayment": "10000",
+      "paymentAmount": "310",
+      "rateBeforeBoundaryPercent": "7.5",
+      "rateAfterBoundaryPercent": "9.25"
+    },
+    "asOf": "2026-07-01",
+    "expected": "structural-only",
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  }
+]

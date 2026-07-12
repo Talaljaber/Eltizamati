@@ -1,0 +1,99 @@
+[
+  {
+    "id": "TV-101",
+    "formulaId": "amortization",
+    "version": 1,
+    "description": "Zero-rate loan — INV-4 closed form",
+    "inputs": {
+      "principal": "12000",
+      "annualRatePercent": "0",
+      "termMonths": 24,
+      "startDate": "2026-01-01"
+    },
+    "asOf": "2026-01-01",
+    "expected": {
+      "computedInstallment": "500.000",
+      "totalCost": "0",
+      "finalClosingBalance": "0"
+    },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-102",
+    "formulaId": "amortization",
+    "version": 1,
+    "description": "One-period closed form",
+    "inputs": {
+      "principal": "10000",
+      "annualRatePercent": "12",
+      "termMonths": 1,
+      "startDate": "2026-01-01"
+    },
+    "asOf": "2026-01-01",
+    "expected": {
+      "singlePayment": "10100.000",
+      "finalClosingBalance": "0"
+    },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-103",
+    "formulaId": "amortization",
+    "version": 1,
+    "description": "Standard textbook annuity: 1000*0.01/(1-1.01^-12)",
+    "inputs": {
+      "principal": "1000",
+      "annualRatePercent": "12",
+      "termMonths": 12,
+      "startDate": "2026-01-01"
+    },
+    "asOf": "2026-01-01",
+    "expected": {
+      "computedInstallment": "88.849",
+      "finalClosingBalance": "0"
+    },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-104",
+    "formulaId": "amortization",
+    "version": 1,
+    "description": "Demo seed loan pre-reprice — awaiting finance sign-off",
+    "inputs": {
+      "principal": "20000",
+      "annualRatePercent": "7.5",
+      "termMonths": 84,
+      "startDate": "2026-01-01"
+    },
+    "asOf": "2026-01-01",
+    "expected": "PENDING-FINANCE",
+    "tolerance": "0.005",
+    "source": "finance-team",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-105",
+    "formulaId": "amortization",
+    "version": 1,
+    "description": "Rounding-drift case — final payment absorbs drift, schedule closes to exactly 0 (BR-CALC-008)",
+    "inputs": {
+      "principal": "1000",
+      "annualRatePercent": "7",
+      "termMonths": 36,
+      "startDate": "2026-01-01"
+    },
+    "asOf": "2026-01-01",
+    "expected": {
+      "finalClosingBalance": "0"
+    },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  }
+]
