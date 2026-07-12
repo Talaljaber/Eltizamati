@@ -11,7 +11,6 @@
  * client (not SQL) → sign-out → sign-in → session-restored read.
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { runCalculationRunContractTests } from '../../../calculation-run.contract'
 import {
   brandId,
   isOk,
@@ -227,25 +226,72 @@ describe('Phase 4 personal-mode integration (live local Supabase)', () => {
     expect(isOk(payments)).toBe(true)
     if (isOk(payments)) expect(payments.value).toHaveLength(1)
 
-    // ── CalculationRun ──
+    // ── CalculationRun (successful outcome, obligation-scoped) ──
+    // formulaId is the plain registry key ('amortization'), matching what
+    // CalculationService/FORMULA_REGISTRY actually persist — not the
+    // dotted 'amortization.v1' doc-comment notation used elsewhere.
     const runRepo = new SupabaseCalculationRunRepository(clientA)
     const run: CalculationRun = {
       id: brandId<'calculationRun'>(crypto.randomUUID()),
       userId,
       obligationId: oblId,
-      formulaId: 'amortization.v1',
+      formulaId: 'amortization',
       formulaVersion: 1,
       asOf: '2026-07-01' as CalculationRun['asOf'],
-      inputsSnapshot: { principal: '20000' },
-      inputsHash: 'test-hash',
+      inputsSnapshot: { principal: '20000', annualRate: '0.075' },
+      inputsHash: 'test-hash-ok',
       outcome: { kind: 'result', confidence: 'high', resultSnapshot: { residual: '19693' } },
+      assumptions: ['ASM-008: monthly payment frequency assumed'],
+      calculatedAt: now,
+    }
+    const persisted = await runRepo.persist(run)
+    expect(isOk(persisted)).toBe(true)
+    const latestRun = await runRepo.latestFor(oblId, 'amortization')
+    expect(isOk(latestRun)).toBe(true)
+    if (isOk(latestRun)) {
+      expect(latestRun.value?.id).toBe(run.id)
+      expect(latestRun.value?.formulaId).toBe('amortization')
+      expect(latestRun.value?.inputsHash).toBe('test-hash-ok')
+      expect(latestRun.value?.inputsSnapshot).toEqual(run.inputsSnapshot)
+      expect(latestRun.value?.outcome).toEqual(run.outcome)
+      expect(latestRun.value?.assumptions).toEqual(run.assumptions)
+    }
+
+    // ── CalculationRun (refused outcome, aggregate/unscoped) — round trip
+    // must preserve missingFields and the honestly-partial snapshot. ──
+    const refusedRun: CalculationRun = {
+      id: brandId<'calculationRun'>(crypto.randomUUID()),
+      userId,
+      obligationId: undefined,
+      formulaId: 'aggregates',
+      formulaVersion: 1,
+      asOf: '2026-07-01' as CalculationRun['asOf'],
+      inputsSnapshot: { balances: [] },
+      inputsHash: 'test-hash-refused',
+      outcome: {
+        kind: 'refused',
+        missingFields: ['balances'],
+        partialSnapshot: { includesEstimates: false },
+      },
       assumptions: [],
       calculatedAt: now,
     }
-    expect(isOk(await runRepo.persist(run))).toBe(true)
-    const latestRun = await runRepo.latestFor(oblId, 'amortization.v1')
-    expect(isOk(latestRun)).toBe(true)
-    if (isOk(latestRun)) expect(latestRun.value?.id).toBe(run.id)
+    const persistedRefused = await runRepo.persist(refusedRun)
+    expect(isOk(persistedRefused)).toBe(true)
+    const latestRefused = await runRepo.latestFor(undefined, 'aggregates')
+    expect(isOk(latestRefused)).toBe(true)
+    if (isOk(latestRefused)) {
+      expect(latestRefused.value?.id).toBe(refusedRun.id)
+      expect(latestRefused.value?.outcome).toEqual(refusedRun.outcome)
+    }
+
+    // ── Scope isolation: an obligation-scoped lookup must never return the
+    // aggregate (unscoped) run, and vice versa. ──
+    const scopedLookupForAggregateFormula = await runRepo.latestFor(oblId, 'aggregates')
+    expect(isOk(scopedLookupForAggregateFormula)).toBe(true)
+    if (isOk(scopedLookupForAggregateFormula)) {
+      expect(scopedLookupForAggregateFormula.value).toBeUndefined()
+    }
 
     // ── Insight ──
     const insightRepo = new SupabaseInsightRepository(clientA)
