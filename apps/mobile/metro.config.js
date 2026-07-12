@@ -3,6 +3,7 @@ const path = require('path')
 
 const projectRoot = __dirname
 const workspaceRoot = path.resolve(projectRoot, '../..')
+const workspacePackagesRoot = path.resolve(workspaceRoot, 'packages')
 
 const config = getDefaultConfig(projectRoot)
 
@@ -16,24 +17,29 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ]
 
-// 3. Force Metro to resolve (sub)dependencies only from the `nodeModulesPaths`
-// This removes the need for configuring `alias` in `babel.config.js`
-// config.resolver.disableHierarchicalLookup = true;
+// pnpm's node_modules is symlink-heavy (content-addressable store). Without
+// this, Metro can resolve two physical copies of the same package through
+// different symlink paths, breaking module singletons.
+config.resolver.unstable_enableSymlinks = true
 
-// 4. Handle `.js` imports pointing to `.ts`/`.tsx` files in workspace packages
+// 3. Handle `.js` imports pointing to `.ts`/`.tsx` files in workspace
+// packages (NodeNext-style specifiers on TypeScript source). Scoped to
+// packages/* only — importing files from node_modules, Expo, React Native,
+// or any other dependency never has a reason to be rewritten this way, and
+// doing it unconditionally risks silently redirecting an unrelated package's
+// internal `.js` import.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  // Only intercept relative imports ending in .js (like what TypeScript NodeNext does)
-  if (moduleName.startsWith('.') && moduleName.endsWith('.js')) {
-    const noExt = moduleName.replace(/\.js$/, '')
+  const fromWorkspacePackage = context.originModulePath.startsWith(workspacePackagesRoot)
+
+  if (fromWorkspacePackage && moduleName.startsWith('.') && moduleName.endsWith('.js')) {
+    const withoutJs = moduleName.slice(0, -3)
     try {
-      // Try resolving without .js (Metro will use sourceExts to find .ts/.tsx)
-      return context.resolveRequest(context, noExt, platform)
-    } catch (e) {
-      // Ignore and fallback to standard resolution
+      return context.resolveRequest(context, withoutJs, platform)
+    } catch {
+      // Fall through to normal resolution.
     }
   }
 
-  // Standard resolution
   return context.resolveRequest(context, moduleName, platform)
 }
 
