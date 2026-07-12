@@ -1,17 +1,27 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import type { Id, Obligation, CalculationRun, Payment, Confidence } from '@eltizamati/domain'
-import { DEMO_DATE } from '@eltizamati/demo-data'
+import {
+  Money,
+  engineEstimate,
+  type Id,
+  type Obligation,
+  type CalculationRun,
+  type Payment,
+  type Confidence,
+  type Provenance,
+} from '@eltizamati/domain'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotMoneyAmount } from '@/services/calculation-snapshot'
+import { calculationAsOf } from '@/services/calculation-as-of'
 
 export interface LoanDetailHeroModel {
-  officialBalance: string
-  officialBalanceSource: string
-  officialBalanceAsOf: string
-  estimatedResidual: string | undefined
+  currentBalance: Money
+  currentBalanceProvenance: Provenance
+  currentBalancePrecision: 'official' | 'estimate'
+  estimatedResidual: Money | undefined
+  estimatedResidualProvenance: Provenance | undefined
   residualConfidence: Confidence | undefined
   residualCalculationRunId: string | undefined
 }
@@ -69,6 +79,7 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
         return null
       }
       // Orchestrate the financial engine call through CalculationService
+      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,
@@ -81,9 +92,9 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
           startDate: obligation.loanDetails.startDate,
           installment: obligation.loanDetails.installment.value,
           installmentPolicy: { kind: 'unchanged' }, // Seed assumption
-          asOf: DEMO_DATE,
+          asOf,
         },
-        DEMO_DATE,
+        asOf,
       )
 
       if (!result.ok) throw result.error
@@ -111,11 +122,29 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
     projectionRun.outcome.kind === 'result'
   ) {
     const snapshot = snapshotRecord(projectionRun.outcome.resultSnapshot)
+    const estimatedOutstanding = snapshotMoneyAmount(snapshot.outstandingAsOf)
+    const estimatedResidual = snapshotMoneyAmount(snapshot.projectedResidualAtMaturity)
+    const sourcedBalance = obligation.loanDetails.outstandingBalance
+    const currentBalance =
+      sourcedBalance?.value ?? Money.of(estimatedOutstanding ?? '0', obligation.currency)
     hero = {
-      officialBalance: obligation.loanDetails.originalPrincipal.value.toStorageString(), // Assuming original for now, MVP uses whatever official is available
-      officialBalanceSource: obligation.provenance.source,
-      officialBalanceAsOf: obligation.openedDate,
-      estimatedResidual: snapshotMoneyAmount(snapshot.projectedResidualAtMaturity),
+      currentBalance,
+      currentBalanceProvenance:
+        sourcedBalance?.provenance ??
+        engineEstimate(currentBalance, projectionRun.id, projectionRun.calculatedAt).provenance,
+      currentBalancePrecision: sourcedBalance === undefined ? 'estimate' : 'official',
+      estimatedResidual:
+        estimatedResidual === undefined
+          ? undefined
+          : Money.of(estimatedResidual, obligation.currency),
+      estimatedResidualProvenance:
+        estimatedResidual === undefined
+          ? undefined
+          : engineEstimate(
+              Money.of(estimatedResidual, obligation.currency),
+              projectionRun.id,
+              projectionRun.calculatedAt,
+            ).provenance,
       residualConfidence: projectionRun.outcome.confidence,
       residualCalculationRunId: projectionRun.id,
     }

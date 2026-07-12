@@ -24,6 +24,7 @@ import { DEMO_DATE } from '@eltizamati/demo-data'
 import { useLoanDetailViewModel } from '@/features/loan-detail/hooks/use-loan-detail-view-model'
 import { LoanDetailHero } from '@/features/loan-detail/components/LoanDetailHero'
 import { useInsightsViewModel } from '@/features/insights/hooks/use-insights-view-model'
+import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 
 export default function ObligationDetailScreen() {
   return (
@@ -41,6 +42,8 @@ function ObligationDetailInner() {
 
   const viewModel = useLoanDetailViewModel(id as Id<'obligation'>)
   const insightsViewModel = useInsightsViewModel(id as Id<'obligation'>)
+  const repositories = useRepositories()
+  const isDemo = typeof repositories.reset === 'function'
 
   if (viewModel.status === 'error') {
     return (
@@ -48,7 +51,7 @@ function ObligationDetailInner() {
         edges={['bottom', 'left', 'right']}
         style={[styles.root, { backgroundColor: theme.bg }]}
       >
-        <DemoBanner />
+        {isDemo && <DemoBanner />}
         <EmptyState
           title={t('obligationDetail.notFoundTitle')}
           subtitle={t('obligationDetail.notFoundSubtitle')}
@@ -63,7 +66,7 @@ function ObligationDetailInner() {
         edges={['bottom', 'left', 'right']}
         style={[styles.root, { backgroundColor: theme.bg }]}
       >
-        <DemoBanner />
+        {isDemo && <DemoBanner />}
         <View style={styles.loadingGroup}>
           <SkeletonCard />
         </View>
@@ -96,7 +99,7 @@ function ObligationDetailInner() {
           ),
         }}
       />
-      <DemoBanner />
+      {isDemo && <DemoBanner />}
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
