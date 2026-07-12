@@ -25,10 +25,11 @@ import {
 } from '@/core/design-system'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { usePaymentsByObligation } from '@/features/home/api/use-payments-by-obligation'
+import { useInsightsByObligation } from '@/features/home/api/use-insights-by-obligation'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { deriveObligationStatus } from '@eltizamati/domain'
-import type { Obligation, Payment, Id } from '@eltizamati/domain'
+import type { Obligation, Payment, Insight, Id } from '@eltizamati/domain'
 import { DEMO_DATE } from '@eltizamati/demo-data'
 
 export default function ObligationsTab() {
@@ -48,6 +49,11 @@ export default function ObligationsTab() {
     data ?? [],
   )
 
+  const { data: insightsByObligation, isLoading: isInsightsLoading } = useInsightsByObligation(
+    repos.insightRepository,
+    activeUser,
+  )
+
   // Minimal filter state (future extension)
   const filter = 'all'
 
@@ -60,7 +66,7 @@ export default function ObligationsTab() {
     return data
   }, [data, filter])
 
-  if (isLoading || isPaymentsLoading || !activeUser) {
+  if (isLoading || isPaymentsLoading || isInsightsLoading || !activeUser) {
     return (
       <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: theme.bg }]}>
         <DemoBanner />
@@ -107,6 +113,7 @@ export default function ObligationsTab() {
           <ObligationRow
             obligation={item}
             payments={paymentsByObligation.get(item.id) ?? []}
+            insights={insightsByObligation.get(item.id) ?? []}
             onPress={() => {
               void router.push(`/obligation/${item.id}`)
             }}
@@ -120,17 +127,19 @@ export default function ObligationsTab() {
 function ObligationRow({
   obligation,
   payments,
+  insights,
   onPress,
 }: {
   obligation: Obligation
   payments: readonly Payment[]
+  insights: readonly Insight[]
   onPress: () => void
 }) {
   const { t } = useTranslation()
   const status = deriveObligationStatus({
     obligation,
     payments,
-    insights: [],
+    insights,
     today: DEMO_DATE,
   })
 
