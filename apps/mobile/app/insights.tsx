@@ -42,8 +42,27 @@ export default function InsightsScreen() {
       }
     }
     if (insight.obligationId !== undefined) {
-      router.push(`/obligation/${insight.obligationId}`)
+      const isRateImpactInsight = [
+        'RATE_INCREASED',
+        'INSTALLMENT_UNCHANGED_AFTER_INCREASE',
+        'RESIDUAL_RISK',
+      ].includes(insight.ruleId)
+      router.push(
+        isRateImpactInsight
+          ? `/obligation/${insight.obligationId}/rate-impact`
+          : `/obligation/${insight.obligationId}`,
+      )
     }
+  }
+
+  async function handleWhy(insight: Insight) {
+    if (activeUser && insight.readAt === undefined) {
+      const result = await repos.insightRepository.markRead(insight.id)
+      if (result.ok) {
+        await queryClient.invalidateQueries({ queryKey: insightKeys.list(activeUser) })
+      }
+    }
+    setExpandedId(expandedId === insight.id ? undefined : insight.id)
   }
 
   // Group by obligation so judges/users see insights in the context of the loan they're about.
@@ -109,14 +128,12 @@ export default function InsightsScreen() {
                       <Button
                         label={t('insights.whyLabel', 'Why did I get this?')}
                         variant="secondary"
-                        onPress={() =>
-                          setExpandedId(expandedId === insight.id ? undefined : insight.id)
-                        }
+                        onPress={() => void handleWhy(insight)}
                         testID={`insight-why-${insight.id}`}
                       />
                       {expandedId === insight.id && (
                         <Text variant="bodySmall" color="secondary">
-                          {t('insights.whyRule', { rule: insight.ruleId })}
+                          {t(insight.bodyKey, insight.params)}
                         </Text>
                       )}
                     </View>
