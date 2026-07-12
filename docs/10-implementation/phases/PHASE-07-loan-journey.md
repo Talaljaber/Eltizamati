@@ -19,7 +19,7 @@ Phases 5 and 6 complete. TV-30x finance sign-off **in progress** (gates this pha
 ## In Scope
 
 1. **SCR-OBL-DETAIL-LOAN (full):** all fields with unknown-as-"unknown" handling (FR-OBL-003, BR-CALC-016), provenance badges throughout, **"two numbers" comparison hero** (official balance vs projected true cost — SRC-4 promotion), payment history section (SCR-PAY-LIST read view), links to rate history/schedule/simulator.
-2. **SCR-RATE-HIST:** rate timeline (append-only periods), cumulative extra-interest annotation.
+2. **SCR-RATE-HIST:** rate timeline (append-only periods). Cumulative extra-interest annotation is deliberately not implemented in this phase.
 3. **SCR-RATE-IMPACT ⭐:** before/after projection, added total cost, `projectedResidualAtMaturity` with cause language (BR-CALC-012/013 — contractual balloon vs detected residual distinct), confidence/estimate framing (BR-CALC-014).
 4. **SCR-EXPLAIN ⭐ (reusable sheet):** parameterized by calculation-run id — inputs snapshot, sources/provenance, formula id+version, assumptions, confidence; deep-linked from every material figure (`Amount` onPress wiring).
 5. **SCR-OBL-SCHEDULE:** amortization schedule view (estimate-labeled).
