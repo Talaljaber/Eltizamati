@@ -17,13 +17,13 @@
  * No Supabase imports anywhere in this directory (depcruise enforced).
  */
 
-import { DemoObligationRepository } from './demo-obligation-repository.js'
-import { DemoPaymentRepository } from './demo-payment-repository.js'
-import { DemoRatePeriodRepository } from './demo-rate-period-repository.js'
-import { DemoInsightRepository } from './demo-insight-repository.js'
-import { DemoConsentRepository } from './demo-consent-repository.js'
-import { DemoUserProfileRepository } from './demo-user-profile-repository.js'
-import { DemoCalculationRunRepository } from './demo-calculation-run-repository.js'
+import { DemoObligationRepository } from './demo-obligation-repository'
+import { DemoPaymentRepository } from './demo-payment-repository'
+import { DemoRatePeriodRepository } from './demo-rate-period-repository'
+import { DemoInsightRepository } from './demo-insight-repository'
+import { DemoConsentRepository } from './demo-consent-repository'
+import { DemoUserProfileRepository } from './demo-user-profile-repository'
+import { DemoCalculationRunRepository } from './demo-calculation-run-repository'
 
 export interface DemoRepositories {
   readonly obligationRepository: DemoObligationRepository
@@ -72,10 +72,10 @@ export function createDemoRepositories(): DemoRepositories {
   }
 }
 
-export { DemoObligationRepository } from './demo-obligation-repository.js'
-export { DemoPaymentRepository } from './demo-payment-repository.js'
-export { DemoRatePeriodRepository } from './demo-rate-period-repository.js'
-export { DemoInsightRepository } from './demo-insight-repository.js'
-export { DemoConsentRepository } from './demo-consent-repository.js'
-export { DemoUserProfileRepository } from './demo-user-profile-repository.js'
-export { DemoCalculationRunRepository } from './demo-calculation-run-repository.js'
+export { DemoObligationRepository } from './demo-obligation-repository'
+export { DemoPaymentRepository } from './demo-payment-repository'
+export { DemoRatePeriodRepository } from './demo-rate-period-repository'
+export { DemoInsightRepository } from './demo-insight-repository'
+export { DemoConsentRepository } from './demo-consent-repository'
+export { DemoUserProfileRepository } from './demo-user-profile-repository'
+export { DemoCalculationRunRepository } from './demo-calculation-run-repository'

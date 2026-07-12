@@ -5,7 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { isOk, type InsightRepository, type Id } from '@eltizamati/domain'
-import { insightKeys } from './keys.js'
+import { insightKeys } from './keys'
 
 export function useInsights(repository: InsightRepository, userId: Id<'user'>) {
   return useQuery({

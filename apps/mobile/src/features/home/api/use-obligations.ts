@@ -11,7 +11,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { isOk, type ObligationRepository, type Id } from '@eltizamati/domain'
-import { obligationKeys } from './keys.js'
+import { obligationKeys } from './keys'
 
 export function useObligations(repository: ObligationRepository, userId: Id<'user'>) {
   return useQuery({
