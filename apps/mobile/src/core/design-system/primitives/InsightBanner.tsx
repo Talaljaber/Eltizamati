@@ -23,15 +23,11 @@ export function InsightBanner({ title, body, severity, action }: InsightBannerPr
   return (
     <View style={[styles.container, { backgroundColor: bgColor, borderColor: theme.border }]}>
       <View style={styles.iconContainer}>
-        <Text variant="heading">
-          {icon}
-        </Text>
+        <Text variant="heading">{icon}</Text>
       </View>
       <View style={styles.content}>
         <View style={styles.titleContainer}>
-          <Text variant="heading">
-            {title}
-          </Text>
+          <Text variant="heading">{title}</Text>
         </View>
         <Text variant="bodySmall" color="secondary">
           {body}

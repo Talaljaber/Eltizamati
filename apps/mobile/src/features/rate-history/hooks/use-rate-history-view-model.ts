@@ -29,7 +29,7 @@ export function useRateHistoryViewModel(obligationId: Id<'obligation'>): RateHis
 
   // Sort periods by effectiveFrom descending (newest first)
   const sorted = [...periods].sort(
-    (a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime()
+    (a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime(),
   )
 
   return {

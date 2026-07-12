@@ -67,7 +67,12 @@ export function ExplainSheet({ visible, onClose, obligationId, formulaId }: Expl
           <View style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
             <Text variant="heading">{t('explain.inputs', 'Snapshot Inputs')}</Text>
           </View>
-          <View style={[styles.codeBox, { backgroundColor: theme.bgElevated, borderColor: theme.border }]}>
+          <View
+            style={[
+              styles.codeBox,
+              { backgroundColor: theme.bgElevated, borderColor: theme.border },
+            ]}
+          >
             <Text variant="bodySmall">{JSON.stringify(run.inputsSnapshot, null, 2)}</Text>
           </View>
         </ScrollView>

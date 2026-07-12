@@ -21,7 +21,11 @@ export default function InsightsScreen() {
       <Stack.Screen options={{ title: t('insights.title') }} />
       <ScrollView contentContainerStyle={styles.scroll}>
         {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
-        {viewModel.status === 'error' && <Text variant="body" color="critical">{t('insights.error')}</Text>}
+        {viewModel.status === 'error' && (
+          <Text variant="body" color="critical">
+            {t('insights.error')}
+          </Text>
+        )}
 
         {viewModel.status === 'success' && viewModel.insights.length === 0 && (
           <View style={styles.empty}>
@@ -31,14 +35,15 @@ export default function InsightsScreen() {
           </View>
         )}
 
-        {viewModel.status === 'success' && viewModel.insights.map((insight) => (
-          <InsightBanner
-            key={insight.id}
-            title={t(insight.titleKey)}
-            body={t(insight.bodyKey, insight.params)}
-            severity={toBannerSeverity(insight.severity)}
-          />
-        ))}
+        {viewModel.status === 'success' &&
+          viewModel.insights.map((insight) => (
+            <InsightBanner
+              key={insight.id}
+              title={t(insight.titleKey)}
+              body={t(insight.bodyKey, insight.params)}
+              severity={toBannerSeverity(insight.severity)}
+            />
+          ))}
       </ScrollView>
     </>
   )

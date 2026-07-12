@@ -13,12 +13,7 @@ export interface SheetProps {
 export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const theme = useTheme()
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay} />
       </TouchableWithoutFeedback>
@@ -27,11 +22,9 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
           <View style={[styles.handle, { backgroundColor: theme.border }]} />
         </View>
         {title !== undefined && title !== '' && (
-            <View style={{ marginBottom: 16 }}>
-              <Text variant="heading">
-                {title}
-              </Text>
-            </View>
+          <View style={{ marginBottom: 16 }}>
+            <Text variant="heading">{title}</Text>
+          </View>
         )}
         <View style={styles.content}>{children}</View>
       </View>

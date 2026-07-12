@@ -20,7 +20,9 @@ export default function BankQuestionsScreen() {
           </View>
           {viewModel.questions.map((q, idx) => (
             <View key={q.id} style={styles.questionItem}>
-              <Text variant="body">{idx + 1}. {q.text}</Text>
+              <Text variant="body">
+                {idx + 1}. {q.text}
+              </Text>
             </View>
           ))}
         </Card>
