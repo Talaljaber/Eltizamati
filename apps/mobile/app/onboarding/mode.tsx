@@ -77,14 +77,13 @@ export default function ModeScreen() {
             theme={theme}
           />
 
-          {/* Account — honestly disabled */}
+          {/* Account — FR-ONB-006, now wired to SCR-AUTH-SIGNIN */}
           <ModeCard
             icon="🔐"
             label={t('onboarding.modeAccount')}
             subtitle={t('onboarding.modeAccountSubtitle')}
-            badge={t('onboarding.modeAccountBadge')}
-            onPress={() => undefined}
-            enabled={false}
+            onPress={() => router.push('/auth/sign-in')}
+            enabled
             testID="mode-account"
             theme={theme}
           />

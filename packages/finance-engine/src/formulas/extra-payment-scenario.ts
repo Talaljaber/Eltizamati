@@ -13,7 +13,7 @@ import { Money, DomainInvariantError, type LocalDate, type RatePeriod } from '@e
 import { engineOk, refused, type EngineOutcome, type FieldRef } from '../refusal.js'
 import type { ScheduleEntry } from '../types.js'
 import { computeVariableProjection, type InstallmentPolicy } from './variable-projection.js'
-import { FORMULA_REGISTRY } from '../registry/formula-registry.js'
+import { FORMULA_ASSUMPTIONS } from '../registry/formula-assumptions.js'
 
 export interface OneTimeExtraPayment {
   readonly amount: Money
@@ -82,7 +82,7 @@ export function extraPaymentScenario(
   )
 
   const assumptions = [
-    ...FORMULA_REGISTRY.extraPaymentScenario.assumptions,
+    ...FORMULA_ASSUMPTIONS.extraPaymentScenario,
     'assumes your bank applies extra payments to principal immediately — confirm with your lender',
   ]
 

@@ -20,6 +20,10 @@
  * integrity or audit signature over untrusted input.
  */
 
+import { err, makeError, ok, type AppError, type Result } from '../errors/app-error.js'
+import { Money, Rate } from '../value-objects/money.js'
+import { Percentage } from '../value-objects/percentage.js'
+
 export type CanonicalJsonValue =
   | string
   | number
@@ -27,6 +31,76 @@ export type CanonicalJsonValue =
   | null
   | readonly CanonicalJsonValue[]
   | { readonly [key: string]: CanonicalJsonValue }
+
+/**
+ * Converts runtime finance values into actual JSON data before persistence or
+ * hashing. Private fields in value objects must never disappear through a
+ * type assertion/JSON.stringify call.
+ */
+export function toCanonicalJsonValue(value: unknown): Result<CanonicalJsonValue, AppError> {
+  return normalizeCanonicalValue(value, '$', new Set<object>())
+}
+
+function normalizeCanonicalValue(
+  value: unknown,
+  path: string,
+  ancestors: Set<object>,
+): Result<CanonicalJsonValue, AppError> {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') {
+    return ok(value)
+  }
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? ok(value) : canonicalValidationError(path, 'nonFiniteNumber')
+  }
+  if (value instanceof Money) {
+    return ok({
+      type: 'Money',
+      amount: value.toStorageString(),
+      currency: value.currency,
+    })
+  }
+  if (value instanceof Rate) {
+    return ok({ type: 'Rate', annualRate: value.toStorageString() })
+  }
+  if (value instanceof Percentage) {
+    return ok({ type: 'Percentage', percent: value.toStorageString() })
+  }
+  if (typeof value !== 'object') {
+    return canonicalValidationError(path, `unsupported:${typeof value}`)
+  }
+  if (ancestors.has(value)) return canonicalValidationError(path, 'circularReference')
+
+  ancestors.add(value)
+  if (Array.isArray(value)) {
+    const normalized: CanonicalJsonValue[] = []
+    for (let index = 0; index < value.length; index++) {
+      const item = normalizeCanonicalValue(value[index], `${path}[${String(index)}]`, ancestors)
+      if (!item.ok) return item
+      normalized.push(item.value)
+    }
+    ancestors.delete(value)
+    return ok(normalized)
+  }
+
+  const prototype = Object.getPrototypeOf(value)
+  if (prototype !== Object.prototype && prototype !== null) {
+    ancestors.delete(value)
+    return canonicalValidationError(path, 'unsupportedClassInstance')
+  }
+
+  const normalized: Record<string, CanonicalJsonValue> = {}
+  for (const [key, child] of Object.entries(value)) {
+    const item = normalizeCanonicalValue(child, `${path}.${key}`, ancestors)
+    if (!item.ok) return item
+    normalized[key] = item.value
+  }
+  ancestors.delete(value)
+  return ok(normalized)
+}
+
+function canonicalValidationError(path: string, reason: string): Result<never, AppError> {
+  return err(makeError('validation', { safeMetadata: { path, reason } }))
+}
 
 /** Deterministically stringify a JSON-serializable value with recursively sorted object keys. */
 export function canonicalStringify(value: CanonicalJsonValue): string {

@@ -20,7 +20,7 @@ import {
   type MinimumPaymentRule,
 } from '@eltizamati/domain'
 import { engineOk, refused, type EngineOutcome, type FieldRef } from '../refusal.js'
-import { FORMULA_REGISTRY } from '../registry/formula-registry.js'
+import { FORMULA_ASSUMPTIONS } from '../registry/formula-assumptions.js'
 
 const MAX_PERIODS = 600 // 50-year cap (financial-calculation-spec.md §4.6)
 
@@ -68,7 +68,7 @@ export function cardPayoff(inputs: CardPayoffInputs): EngineOutcome<CardPayoffRe
   )
 
   return engineOk(result, 'high', [
-    ...FORMULA_REGISTRY.cardPayoff.assumptions,
+    ...FORMULA_ASSUMPTIONS.cardPayoff,
     'minimum payment recomputed each period from the opening balance (statement-balance convention)',
   ])
 }

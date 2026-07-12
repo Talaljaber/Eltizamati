@@ -8,6 +8,7 @@ import {
   isOk,
   isErr,
   hashCanonicalJson,
+  toCanonicalJsonValue,
 } from '@eltizamati/domain'
 import type { FormulaId } from '@eltizamati/finance-engine'
 
@@ -43,7 +44,12 @@ describe('CalculationService', () => {
     if (isOk(result)) {
       expect(result.value.formulaId).toBe('amortization')
       expect(result.value.outcome.kind).toBe('result')
-      expect(result.value.inputsHash).toBe(hashCanonicalJson(inputs as any))
+      const expectedSnapshot = toCanonicalJsonValue(inputs)
+      // Test-setup fail-fast, not application error handling — ADR-0014's
+      // AppError taxonomy governs app code paths, not test assertions.
+      // eslint-disable-next-line no-restricted-syntax
+      if (!expectedSnapshot.ok) throw new Error('expected ok')
+      expect(result.value.inputsHash).toBe(hashCanonicalJson(expectedSnapshot.value))
       expect(result.value.calculatedAt).toBe(calculatedAt)
       expect(result.value.assumptions.length).toBeGreaterThan(0) // comes from registry
     }
@@ -92,7 +98,7 @@ describe('CalculationService', () => {
       undefined,
       'nonexistent' as FormulaId,
       1,
-      {},
+      { asOf: toLocalDate('2026-01-01') },
       toLocalDate('2026-01-01'),
     )
 
@@ -111,7 +117,7 @@ describe('CalculationService', () => {
       undefined,
       'amortization',
       999 as 1,
-      {},
+      { asOf: toLocalDate('2026-01-01') },
       toLocalDate('2026-01-01'),
     )
 

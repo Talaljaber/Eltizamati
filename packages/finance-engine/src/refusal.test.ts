@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { engineOk, isEngineOk, isRefused, refused } from './refusal.js'
-import { cardPayoff } from './formulas/card-payoff.js'
-import { extraPaymentScenario } from './formulas/extra-payment-scenario.js'
-import { residualDetection } from './formulas/residual-detection.js'
-import { variableProjection } from './formulas/variable-projection.js'
-import { aggregates } from './formulas/aggregates.js'
-import { allocationEstimate } from './formulas/allocation-estimate.js'
+import { cardPayoff, type CardPayoffInputs } from './formulas/card-payoff.js'
+import {
+  extraPaymentScenario,
+  type ExtraPaymentScenarioInputs,
+} from './formulas/extra-payment-scenario.js'
+import { residualDetection, type ResidualDetectionInputs } from './formulas/residual-detection.js'
+import {
+  variableProjection,
+  type VariableProjectionInputs,
+} from './formulas/variable-projection.js'
+import { aggregates, type AggregatesInputs } from './formulas/aggregates.js'
+import {
+  allocationEstimate,
+  type AllocationEstimateInputs,
+} from './formulas/allocation-estimate.js'
 
 describe('refused()', () => {
   it('omits partial when not provided', () => {
@@ -32,32 +41,32 @@ describe('engineOk()', () => {
 
 describe('formula refusal paths (missing parameters)', () => {
   it('cardPayoff refuses empty inputs', () => {
-    const result = cardPayoff({} as any)
+    const result = cardPayoff({} as unknown as CardPayoffInputs)
     expect(isRefused(result)).toBe(true)
   })
 
   it('extraPaymentScenario refuses empty inputs', () => {
-    const result = extraPaymentScenario({} as any)
+    const result = extraPaymentScenario({} as unknown as ExtraPaymentScenarioInputs)
     expect(isRefused(result)).toBe(true)
   })
 
   it('residualDetection refuses empty inputs', () => {
-    const result = residualDetection({} as any)
+    const result = residualDetection({} as unknown as ResidualDetectionInputs)
     expect(isRefused(result)).toBe(true)
   })
 
   it('variableProjection refuses empty inputs', () => {
-    const result = variableProjection({} as any)
+    const result = variableProjection({} as unknown as VariableProjectionInputs)
     expect(isRefused(result)).toBe(true)
   })
 
   it('aggregates refuses empty inputs', () => {
-    const result = aggregates({} as any)
+    const result = aggregates({} as unknown as AggregatesInputs)
     expect(isRefused(result)).toBe(true)
   })
 
   it('allocationEstimate refuses empty inputs', () => {
-    const result = allocationEstimate({} as any)
+    const result = allocationEstimate({} as unknown as AllocationEstimateInputs)
     expect(isRefused(result)).toBe(true)
   })
 })

@@ -4,8 +4,20 @@
  * M3/Phase 6: Exposing the fully typed pure financial formulas, types, and refusal logic.
  */
 
-export type { FormulaId, FormulaVersion, CalculationConfidence } from './registry/types.js'
-export { FORMULA_REGISTRY, resolveFormula } from './registry/formula-registry.js'
+export type {
+  ExecutableFormula,
+  FormulaContracts,
+  FormulaId,
+  FormulaInput,
+  FormulaOutput,
+  FormulaVersion,
+} from './registry/types.js'
+export {
+  FORMULA_REGISTRY,
+  isFormulaId,
+  resolveFormula,
+  resolveRuntimeFormula,
+} from './registry/formula-registry.js'
 
 export * from './types.js'
 export * from './refusal.js'

@@ -21,9 +21,11 @@ export default defineConfig({
       exclude: [
         'src/index.ts',
         '**/*.test.ts',
-        'vitest.config.ts',
+        '**/vitest.config.ts',
         'src/registry/types.ts',
+        'src/types.ts',
         'src/test-support/**',
+        'dist/**',
       ],
     },
   },

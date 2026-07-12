@@ -7,7 +7,12 @@
  * (the only executable code is the registry object).
  */
 import { describe, it, expect } from 'vitest'
-import { FORMULA_REGISTRY, resolveFormula } from '../registry/formula-registry.js'
+import {
+  FORMULA_REGISTRY,
+  isFormulaId,
+  resolveFormula,
+  resolveRuntimeFormula,
+} from '../registry/formula-registry.js'
 import type { FormulaId } from './types.js'
 import { isErr, isOk } from '@eltizamati/domain'
 
@@ -80,6 +85,44 @@ describe('resolveFormula', () => {
     if (isErr(result)) {
       expect(result.error.code).toBe('calculationUnsupported')
       expect(result.error.cause).toMatch(/Requested version 999 not available/)
+    }
+  })
+})
+
+describe('isFormulaId', () => {
+  it('returns true for every real formula id', () => {
+    for (const id of Object.keys(FORMULA_REGISTRY)) {
+      expect(isFormulaId(id)).toBe(true)
+    }
+  })
+
+  it('returns false for an untrusted/unknown string', () => {
+    expect(isFormulaId('not-a-real-formula')).toBe(false)
+  })
+})
+
+describe('resolveRuntimeFormula — untrusted id/version boundary', () => {
+  it('resolves a valid runtime id and version', () => {
+    const result = resolveRuntimeFormula('amortization', 1)
+    expect(isOk(result)).toBe(true)
+    if (isOk(result)) {
+      expect(result.value.id).toBe('amortization')
+    }
+  })
+
+  it('fails safely for an untrusted id that is not in the registry', () => {
+    const result = resolveRuntimeFormula('drop-table-obligations', 1)
+    expect(isErr(result)).toBe(true)
+    if (isErr(result)) {
+      expect(result.error.code).toBe('calculationUnsupported')
+    }
+  })
+
+  it('fails safely for an untrusted version that is not 1', () => {
+    const result = resolveRuntimeFormula('amortization', 2)
+    expect(isErr(result)).toBe(true)
+    if (isErr(result)) {
+      expect(result.error.code).toBe('calculationUnsupported')
     }
   })
 })

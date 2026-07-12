@@ -17,7 +17,7 @@
 import type { Money } from '@eltizamati/domain'
 import { type LocalDate } from '@eltizamati/domain'
 import { engineOk, refused, type EngineOutcome, type FieldRef } from '../refusal.js'
-import { FORMULA_REGISTRY } from '../registry/formula-registry.js'
+import { FORMULA_ASSUMPTIONS } from '../registry/formula-assumptions.js'
 
 export type ResidualCause =
   'rateIncreaseWithUnchangedInstallment' | 'paymentShortfall' | 'contractualBalloon' | 'unknown'
@@ -64,7 +64,7 @@ export function residualDetection(
     inputs.asOf,
   )
 
-  return engineOk(result, 'high', [...FORMULA_REGISTRY.residualDetection.assumptions])
+  return engineOk(result, 'high', FORMULA_ASSUMPTIONS.residualDetection)
 }
 
 export function computeResidualDetection(

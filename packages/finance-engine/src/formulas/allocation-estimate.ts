@@ -13,7 +13,7 @@
 import type { Rate } from '@eltizamati/domain'
 import { Money, type LocalDate } from '@eltizamati/domain'
 import { engineOk, refused, type EngineOutcome, type FieldRef } from '../refusal.js'
-import { FORMULA_REGISTRY } from '../registry/formula-registry.js'
+import { FORMULA_ASSUMPTIONS } from '../registry/formula-assumptions.js'
 
 export interface AllocationEstimateInputs {
   readonly balanceBeforePayment?: Money
@@ -48,7 +48,7 @@ export function allocationEstimate(
     inputs.asOf,
   )
 
-  return engineOk(result, 'medium', [...FORMULA_REGISTRY.allocationEstimate.assumptions])
+  return engineOk(result, 'medium', FORMULA_ASSUMPTIONS.allocationEstimate)
 }
 
 export function computeAllocationEstimate(

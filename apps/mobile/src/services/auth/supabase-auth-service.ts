@@ -9,7 +9,26 @@ function toAppSession(session: Session): AppAuthSession {
   }
 }
 
-function toAuthAppError(error: { code: string | undefined; message: string }): AppError {
+/**
+ * supabase-js's AuthError leaves `status` undefined specifically for
+ * failures that occurred before any HTTP response was received (network
+ * unreachable, DNS failure, request timeout) — as opposed to a real
+ * rejection from the server (invalid credentials, email in use), which
+ * always carries a status code. Classifying the former as `connectivity`
+ * (not `auth`) is what lets `toErrorUiState` show the offline surface
+ * instead of an incorrect "check your credentials" message.
+ */
+function toAuthAppError(error: {
+  code: string | undefined
+  status?: number | undefined
+  message: string
+}): AppError {
+  if (error.status === undefined) {
+    return makeError('connectivity', {
+      safeMetadata: { authErrorCode: error.code ?? 'unknown' },
+      cause: error,
+    })
+  }
   return makeError('auth', {
     safeMetadata: { authErrorCode: error.code ?? 'unknown' },
     cause: error,
@@ -36,6 +55,12 @@ export class SupabaseAuthService implements AuthService {
 
   async signOut(): Promise<Result<void, AppError>> {
     const { error } = await this.client.auth.signOut()
+    if (error) return err(toAuthAppError(error))
+    return ok(undefined)
+  }
+
+  async resetPassword(email: string): Promise<Result<void, AppError>> {
+    const { error } = await this.client.auth.resetPasswordForEmail(email)
     if (error) return err(toAuthAppError(error))
     return ok(undefined)
   }

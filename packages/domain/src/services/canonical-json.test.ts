@@ -7,7 +7,13 @@
  * Node's own `crypto.createHash('sha256')`.
  */
 import { describe, it, expect } from 'vitest'
-import { canonicalStringify, hashCanonicalJson, sha256Hex } from './canonical-json.js'
+import {
+  canonicalStringify,
+  hashCanonicalJson,
+  sha256Hex,
+  toCanonicalJsonValue,
+} from './canonical-json.js'
+import { Money, Rate } from '../value-objects/money.js'
 
 describe('canonicalStringify', () => {
   it('produces byte-identical output regardless of key order', () => {
@@ -75,5 +81,57 @@ describe('hashCanonicalJson', () => {
     expect(hashCanonicalJson(value)).toBe(
       '50971125b7bc24e7161c28c922d10cc408926ec792bccf38175e36d329461ce3',
     )
+  })
+})
+
+describe('toCanonicalJsonValue', () => {
+  it('preserves Money amounts and Rate values instead of losing private fields', () => {
+    const result = toCanonicalJsonValue({
+      principal: Money.of('1000.500', 'JOD'),
+      annualRate: Rate.fromPercent('9.25'),
+    })
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.value).toEqual({
+        principal: { type: 'Money', amount: '1000.5', currency: 'JOD' },
+        annualRate: { type: 'Rate', annualRate: '0.0925' },
+      })
+    }
+  })
+
+  it('rejects undefined and unsupported class instances before hashing', () => {
+    expect(toCanonicalJsonValue({ amount: undefined }).ok).toBe(false)
+    expect(toCanonicalJsonValue(new Date('2026-07-01T00:00:00.000Z')).ok).toBe(false)
+  })
+
+  it('normalizes nested objects independently of key insertion order', () => {
+    const first = toCanonicalJsonValue({ outer: { principal: '1000.000', rate: '0.075' } })
+    const second = toCanonicalJsonValue({ outer: { rate: '0.075', principal: '1000.000' } })
+    expect(first.ok).toBe(true)
+    expect(second.ok).toBe(true)
+    if (first.ok && second.ok) {
+      expect(hashCanonicalJson(first.value)).toBe(hashCanonicalJson(second.value))
+    }
+  })
+
+  it('regression: distinct Money/Rate inputs never collide to the same hash (the private-field pitfall)', () => {
+    // Money/Rate store their value in a JS `#` private field, invisible to
+    // JSON.stringify/Object.keys — a raw `as unknown as CanonicalJsonValue`
+    // cast previously reduced every Money to `{"currency":"JOD"}` and every
+    // Rate to `{}`, so financially distinct CalculationRun inputs hashed
+    // identically. This must never regress.
+    const a = toCanonicalJsonValue({
+      principal: Money.of('1000', 'JOD'),
+      annualRate: Rate.fromPercent('10'),
+    })
+    const b = toCanonicalJsonValue({
+      principal: Money.of('2000', 'JOD'),
+      annualRate: Rate.fromPercent('20'),
+    })
+    expect(a.ok).toBe(true)
+    expect(b.ok).toBe(true)
+    if (a.ok && b.ok) {
+      expect(hashCanonicalJson(a.value)).not.toBe(hashCanonicalJson(b.value))
+    }
   })
 })
