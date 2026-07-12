@@ -17,8 +17,9 @@ import { snapshotRecord, snapshotMoneyAmount } from '@/services/calculation-snap
 import { calculationAsOf } from '@/services/calculation-as-of'
 
 export interface LoanDetailHeroModel {
-  currentBalance: Money
-  currentBalanceProvenance: Provenance
+  /** Undefined when neither an official balance nor an engine estimate is available — render as "unknown", never a fabricated amount. */
+  currentBalance: Money | undefined
+  currentBalanceProvenance: Provenance | undefined
   currentBalancePrecision: 'official' | 'estimate'
   estimatedResidual: Money | undefined
   estimatedResidualProvenance: Provenance | undefined
@@ -126,12 +127,18 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
     const estimatedResidual = snapshotMoneyAmount(snapshot.projectedResidualAtMaturity)
     const sourcedBalance = obligation.loanDetails.outstandingBalance
     const currentBalance =
-      sourcedBalance?.value ?? Money.of(estimatedOutstanding ?? '0', obligation.currency)
+      sourcedBalance?.value ??
+      (estimatedOutstanding === undefined
+        ? undefined
+        : Money.of(estimatedOutstanding, obligation.currency))
     hero = {
       currentBalance,
       currentBalanceProvenance:
         sourcedBalance?.provenance ??
-        engineEstimate(currentBalance, projectionRun.id, projectionRun.calculatedAt).provenance,
+        (currentBalance === undefined
+          ? undefined
+          : engineEstimate(currentBalance, projectionRun.id, projectionRun.calculatedAt)
+              .provenance),
       currentBalancePrecision: sourcedBalance === undefined ? 'estimate' : 'official',
       estimatedResidual:
         estimatedResidual === undefined

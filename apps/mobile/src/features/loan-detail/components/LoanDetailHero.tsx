@@ -28,11 +28,15 @@ export function LoanDetailHero({
           <FieldRow
             label={t('loanDetail.currentBalance', 'Current balance')}
             value={
-              <Amount
-                money={hero.currentBalance}
-                provenance={hero.currentBalanceProvenance}
-                precision={hero.currentBalancePrecision}
-              />
+              hero.currentBalance && hero.currentBalanceProvenance ? (
+                <Amount
+                  money={hero.currentBalance}
+                  provenance={hero.currentBalanceProvenance}
+                  precision={hero.currentBalancePrecision}
+                />
+              ) : (
+                t('common.unknown', 'Unknown')
+              )
             }
           />
         </View>

@@ -51,7 +51,15 @@ export function ExplainSheet({ visible, onClose, obligationId, formulaId }: Expl
           <FieldRow label={t('explain.calculatedAt', 'Calculated at')} value={run.calculatedAt} />
           <FieldRow
             label={t('explain.source', 'Source')}
-            value={<ProvenanceBadge source="estimate" />}
+            value={
+              <ProvenanceBadge
+                source={
+                  run.outcome.kind === 'result' && run.outcome.confidence === 'official'
+                    ? 'official'
+                    : 'estimate'
+                }
+              />
+            }
           />
           {run.outcome.kind === 'result' && (
             <FieldRow

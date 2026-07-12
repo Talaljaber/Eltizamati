@@ -22,6 +22,7 @@ export interface RateImpactViewModel {
   residualConfidence?: Confidence
   residualCauses: readonly ResidualCause[]
   residualCalculationRunId?: string
+  residualCalculatedAt?: string
   /** TV-305 (added total cost from repricing) is PENDING-FINANCE — no signed
    * formula output exists yet, so this stays false until finance sign-off
    * lands; the UI must show an honest "pending" state, never a fabricated
@@ -221,6 +222,7 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
       residualRun?.outcome.kind === 'result' ? residualRun.outcome.confidence : undefined,
     residualCauses,
     residualCalculationRunId: residualRun?.id,
+    residualCalculatedAt: residualRun?.calculatedAt,
     addedCostAvailable: false,
   }
 }

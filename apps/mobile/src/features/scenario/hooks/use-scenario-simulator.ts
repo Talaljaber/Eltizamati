@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Money, DomainInvariantError, type Id, type CalculationRun } from '@eltizamati/domain'
+import {
+  Money,
+  DomainInvariantError,
+  type Id,
+  type CalculationRun,
+  type LocalDate,
+} from '@eltizamati/domain'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
@@ -8,6 +14,20 @@ import { calculationAsOf } from '@/services/calculation-as-of'
 
 /** NFR-PERF-002 — debounce the recalculation trigger, not every keystroke. */
 const SCENARIO_INPUT_DEBOUNCE_MS = 300
+
+/**
+ * The amortization schedule dates period `n` as `startDate + n` months
+ * (see `amortization.ts`), so this is the period whose payment date falls
+ * closest to `asOf` — i.e. "if I made a one-time payment today, which
+ * scheduled installment does that correspond to?" Clamped to at least 1;
+ * never applied before the loan starts.
+ */
+function currentPeriodFor(startDate: LocalDate, asOf: LocalDate): number {
+  const [startYear, startMonth] = startDate.split('-').map(Number)
+  const [asOfYear, asOfMonth] = asOf.split('-').map(Number)
+  const monthsElapsed = (asOfYear - startYear) * 12 + (asOfMonth - startMonth)
+  return Math.max(1, monthsElapsed)
+}
 
 export interface ScenarioSimulatorViewModel {
   status: 'loading' | 'error' | 'unsupported' | 'refused' | 'success'
@@ -95,7 +115,12 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
             obligation.loanDetails.originalPrincipal.value.currency,
           ),
           ...(oneTimeAmount > 0
-            ? { oneTime: { amount: Money.of(oneTimeAmount, obligation.currency), period: 1 } }
+            ? {
+                oneTime: {
+                  amount: Money.of(oneTimeAmount, obligation.currency),
+                  period: currentPeriodFor(obligation.loanDetails.startDate, asOf),
+                },
+              }
             : {}),
           asOf,
         },

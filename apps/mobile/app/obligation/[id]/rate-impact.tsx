@@ -53,14 +53,15 @@ export default function RateImpactScreen() {
                 <FieldRow
                   label={t('rateImpact.residualAmount')}
                   value={
-                    viewModel.residualCalculationRunId !== undefined ? (
+                    viewModel.residualCalculationRunId !== undefined &&
+                    viewModel.residualCalculatedAt !== undefined ? (
                       <Amount
                         money={Money.of(viewModel.residualAmount, 'JOD')}
                         provenance={
                           engineEstimate(
                             Money.of(viewModel.residualAmount, 'JOD'),
                             viewModel.residualCalculationRunId,
-                            new Date().toISOString(),
+                            viewModel.residualCalculatedAt,
                           ).provenance
                         }
                         precision="estimate"
