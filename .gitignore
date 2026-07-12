@@ -4,6 +4,11 @@ node_modules/
 build/
 dist/
 *.lock
+# This repo is pnpm-only (pnpm-lock.yaml is the committed lockfile) — a
+# stray npm/yarn lockfile is always an accidental artifact of running the
+# wrong package manager, never intentional.
+package-lock.json
+yarn.lock
 .env*
 !.env.example
 !apps/mobile/.env.example
