@@ -14,7 +14,7 @@ import type { FormulaId } from '@eltizamati/finance-engine'
 export function runCalculationRunContractTests(
   repoFactory: () => CalculationRunRepository,
   createTestUserId: () => Id<'user'>,
-  cleanup: () => Promise<void> | void = () => {},
+  cleanup: () => Promise<void> | void = () => undefined,
 ) {
   describe('CalculationRunRepository Contract', () => {
     it('matches strictly on scope and formulaId', async () => {
@@ -65,6 +65,9 @@ export function runCalculationRunContractTests(
 
       // 1. An obligation-A run is returned for obligation A.
       const resA = await repo.latestFor(obligationA, formulaId)
+      // Test-setup fail-fast, not application error handling — ADR-0014's
+      // AppError taxonomy governs app code paths, not test assertions.
+      // eslint-disable-next-line no-restricted-syntax
       if (!resA.ok) throw new Error('expected ok')
       expect(resA.value?.id).toBe('run-a')
 
@@ -73,6 +76,7 @@ export function runCalculationRunContractTests(
 
       // 3. An aggregate run is returned for undefined scope.
       const resUnscoped = await repo.latestFor(undefined, formulaId)
+      // eslint-disable-next-line no-restricted-syntax
       if (!resUnscoped.ok) throw new Error('expected ok')
       expect(resUnscoped.value?.id).toBe('run-unscoped')
 
@@ -105,6 +109,7 @@ export function runCalculationRunContractTests(
 
       // 5. latestFor(undefined) returns undefined when only scoped runs exist
       const res = await repo.latestFor(undefined, 'amortization')
+      // eslint-disable-next-line no-restricted-syntax
       if (!res.ok) throw new Error('expected ok')
       expect(res.value).toBeUndefined()
 
@@ -141,6 +146,7 @@ export function runCalculationRunContractTests(
       await repo.persist(runNew)
 
       const res = await repo.latestFor(obligationId, 'amortization')
+      // eslint-disable-next-line no-restricted-syntax
       if (!res.ok) throw new Error('expected ok')
       expect(res.value?.id).toBe('new')
 

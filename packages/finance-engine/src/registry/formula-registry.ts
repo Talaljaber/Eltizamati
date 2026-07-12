@@ -3,12 +3,7 @@
  * All formulas are registered here. If a formula id doesn't appear here,
  * the engine cannot use it (prevents ad-hoc formula creation in features).
  */
-import type {
-  ExecutableFormula,
-  FormulaId,
-  FormulaRegistry,
-  FormulaVersion,
-} from './types.js'
+import type { ExecutableFormula, FormulaId, FormulaRegistry, FormulaVersion } from './types.js'
 import { amortization } from '../formulas/amortization.js'
 import { variableProjection } from '../formulas/variable-projection.js'
 import { residualDetection } from '../formulas/residual-detection.js'

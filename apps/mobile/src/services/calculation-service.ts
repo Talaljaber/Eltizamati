@@ -8,7 +8,13 @@ import type {
   Result,
   AppError,
 } from '@eltizamati/domain'
-import { hashCanonicalJson, toCanonicalJsonValue, brandId, err, makeError } from '@eltizamati/domain'
+import {
+  hashCanonicalJson,
+  toCanonicalJsonValue,
+  brandId,
+  err,
+  makeError,
+} from '@eltizamati/domain'
 import {
   resolveFormula,
   type FormulaId,

@@ -45,6 +45,9 @@ describe('CalculationService', () => {
       expect(result.value.formulaId).toBe('amortization')
       expect(result.value.outcome.kind).toBe('result')
       const expectedSnapshot = toCanonicalJsonValue(inputs)
+      // Test-setup fail-fast, not application error handling — ADR-0014's
+      // AppError taxonomy governs app code paths, not test assertions.
+      // eslint-disable-next-line no-restricted-syntax
       if (!expectedSnapshot.ok) throw new Error('expected ok')
       expect(result.value.inputsHash).toBe(hashCanonicalJson(expectedSnapshot.value))
       expect(result.value.calculatedAt).toBe(calculatedAt)

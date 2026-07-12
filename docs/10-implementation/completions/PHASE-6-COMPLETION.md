@@ -4,7 +4,7 @@
 > report's original claims did not hold up: the merged code did not
 > typecheck (`pnpm run check` was never actually green — 11 real `tsc`
 > errors in `calculation-run.contract.ts`), the registry's `execute(inputs:
-> any)` gave zero compile-time protection against a formula/input mismatch,
+any)` gave zero compile-time protection against a formula/input mismatch,
 > and — most seriously — `CalculationService` cast `Money`/`Rate`/
 > `Percentage` values (which store their amount in JS `#` private fields)
 > directly to `CanonicalJsonValue`, so **financially distinct
@@ -34,15 +34,15 @@ The `finance-engine` API exposes the following exact formulas via its registry a
 
 All analytical test vectors pass against the core engine and orchestrating `CalculationService`:
 
-| Family     | Formula              | Pass Status    | Notes                                   |
-| ---------- | -------------------- | -------------- | --------------------------------------- |
-| **TV-1xx** | `amortization`       | ✅ PASS (5/5)  | Analytical anchors                      |
-| **TV-2xx** | `variableProjection` | ✅ PASS (5/5)  | Includes `recalculated` & `unchanged`   |
+| Family     | Formula              | Pass Status               | Notes                                                                                                                                                                                                                                                                     |
+| ---------- | -------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TV-1xx** | `amortization`       | ✅ PASS (5/5)             | Analytical anchors                                                                                                                                                                                                                                                        |
+| **TV-2xx** | `variableProjection` | ✅ PASS (5/5)             | Includes `recalculated` & `unchanged`                                                                                                                                                                                                                                     |
 | **TV-3xx** | `demo-seed-vectors`  | ⚠ WIRED / PENDING-FINANCE | Structurally verified against the real demo-seed fixture (schedule shape, residual > threshold, extra-payment scenario saves months/cost) — **exact numeric expected values are not yet finance-team signed off**, per `calculation-test-vectors.md`. Not a numeric PASS. |
-| **TV-4xx** | `allocationEstimate` | ✅ PASS (3/3)  | Cost estimates                          |
-| **TV-5xx** | `murabahaProgress`   | ✅ PASS (2/2)  | Subtraction exactness                   |
-| **TV-6xx** | `cardPayoff`         | ✅ PASS (3/3)  | Includes `neverPaysOff` guard           |
-| **TV-7xx** | `aggregates`         | ✅ PASS (2/2)  | Portfolio aggregate handling            |
+| **TV-4xx** | `allocationEstimate` | ✅ PASS (3/3)             | Cost estimates                                                                                                                                                                                                                                                            |
+| **TV-5xx** | `murabahaProgress`   | ✅ PASS (2/2)             | Subtraction exactness                                                                                                                                                                                                                                                     |
+| **TV-6xx** | `cardPayoff`         | ✅ PASS (3/3)             | Includes `neverPaysOff` guard                                                                                                                                                                                                                                             |
+| **TV-7xx** | `aggregates`         | ✅ PASS (2/2)             | Portfolio aggregate handling                                                                                                                                                                                                                                              |
 
 ## 3. Property Tests (Invariants)
 

@@ -50,9 +50,7 @@ function normalizeCanonicalValue(
     return ok(value)
   }
   if (typeof value === 'number') {
-    return Number.isFinite(value)
-      ? ok(value)
-      : canonicalValidationError(path, 'nonFiniteNumber')
+    return Number.isFinite(value) ? ok(value) : canonicalValidationError(path, 'nonFiniteNumber')
   }
   if (value instanceof Money) {
     return ok({
@@ -100,10 +98,7 @@ function normalizeCanonicalValue(
   return ok(normalized)
 }
 
-function canonicalValidationError(
-  path: string,
-  reason: string,
-): Result<never, AppError> {
+function canonicalValidationError(path: string, reason: string): Result<never, AppError> {
   return err(makeError('validation', { safeMetadata: { path, reason } }))
 }
 
