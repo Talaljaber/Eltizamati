@@ -39,3 +39,13 @@ export function useDemoRepositories(): DemoRepositories {
   }
   return repos
 }
+
+/**
+ * Nullable variant for structural guards: returns null when no provider is
+ * mounted instead of throwing. Screens should not use this directly —
+ * RequireDemoRepositories consumes it to make demo-only routes unreachable
+ * without the provider.
+ */
+export function useDemoRepositoriesIfAvailable(): DemoRepositories | null {
+  return useContext(DemoRepositoriesContext)
+}

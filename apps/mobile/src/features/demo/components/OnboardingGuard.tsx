@@ -13,16 +13,34 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function checkState() {
       const isComplete = await getOnboardingComplete()
-      const _mode = await getDataMode()
+      const mode = await getDataMode()
 
       const inOnboardingGroup = segments[0] === 'onboarding'
+      // The account step (FR-ONB-006) leaves the onboarding route group for
+      // /auth/* before onboarding is marked complete — without this, the
+      // guard would bounce the user straight back to /onboarding/language.
+      const inAuthGroup = segments[0] === 'auth'
 
-      if (!isComplete && !inOnboardingGroup) {
-        // Redirect to onboarding if not complete
+      // Onboarding marked complete without a data mode is a poisoned state (an
+      // earlier auth-screen bug wrote onboardingComplete without setDataMode):
+      // the tab screens are demo-only in this phase and crash without the demo
+      // repositories, so treat it as incomplete and re-run mode selection.
+      const effectivelyComplete = isComplete && mode !== null
+
+      if (!effectivelyComplete && !inOnboardingGroup && !inAuthGroup) {
+        // Redirect to onboarding. Deliberately do NOT setIsReady here:
+        // navigation is async, and revealing children now would render the
+        // navigator's current route (the demo-only tabs) for at least one
+        // commit before the redirect lands — crashing on useDemoRepositories.
+        // The effect re-runs when `segments` changes; the post-navigation run
+        // finds a consistent state and sets ready.
         router.replace('/onboarding/language')
-      } else if (isComplete && inOnboardingGroup) {
-        // Redirect to main app if onboarding is already complete
+        return
+      }
+      if (effectivelyComplete && inOnboardingGroup) {
+        // Same reasoning: don't reveal children until the redirect lands.
         router.replace('/(tabs)/')
+        return
       }
 
       setIsReady(true)
