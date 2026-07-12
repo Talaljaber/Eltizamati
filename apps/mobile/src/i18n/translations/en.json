@@ -7,7 +7,11 @@
     "skip": "Skip",
     "done": "Done",
     "errorTitle": "Something went wrong",
-    "retry": "Try again"
+    "retry": "Try again",
+    "explain": "Explain",
+    "yes": "Yes",
+    "no": "No",
+    "unknown": "Unknown"
   },
   "error": {
     "offlineTitle": "You're offline",
@@ -99,6 +103,76 @@
     "phaseNote": "Detailed calculation view coming in a future update.",
     "notFoundTitle": "Obligation not found",
     "notFoundSubtitle": "This obligation may have been removed or the link is invalid."
+  },
+  "loanDetail": {
+    "heroTitle": "Loan Overview",
+    "officialBalance": "Official Balance",
+    "projectedResidual": "Estimated Residual at Maturity",
+    "source": "Source",
+    "asOf": "As of",
+    "deterministic": "Deterministic",
+    "estimated": "Estimated",
+    "navRateHistory": "Rate History",
+    "navRateImpact": "Rate Impact",
+    "navSchedule": "Schedule",
+    "navScenario": "Simulator",
+    "navBankQuestions": "Bank Questions"
+  },
+  "rateHistory": {
+    "title": "Rate History",
+    "effectiveFrom": "Effective from",
+    "error": "Error loading rate history.",
+    "empty": "No rate periods on file."
+  },
+  "rateImpact": {
+    "title": "Rate Impact",
+    "summary": "Impact Summary",
+    "hasResidual": "Detected Residual Risk",
+    "addedCost": "Added Total Cost",
+    "addedCostPending": "Pending finance validation",
+    "error": "Error loading rate impact.",
+    "unsupported": "Rate impact isn't available for this obligation type yet."
+  },
+  "schedule": {
+    "title": "Schedule",
+    "period": "Period",
+    "installment": "Installment",
+    "principalPortion": "Principal",
+    "interestPortion": "Interest",
+    "endingBalance": "Ending Balance",
+    "error": "Error loading schedule.",
+    "unsupported": "Schedule isn't available for this obligation type yet.",
+    "empty": "No schedule entries available."
+  },
+  "scenario": {
+    "title": "Scenario Simulator",
+    "whatIf": "What if you pay +{{amount}} JOD?",
+    "monthsSaved": "Months Saved",
+    "costSaved": "Cost Saved",
+    "error": "Error loading scenario.",
+    "unsupported": "The simulator isn't available for this obligation type yet."
+  },
+  "bankQuestions": {
+    "title": "Bank Questions",
+    "header": "Questions to ask your bank",
+    "q1": "What is the current outstanding principal and interest on this loan?",
+    "q2": "Can you provide the exact calculation for the new installment amount after the recent rate increase?",
+    "q3": "If I keep my installment unchanged, what is the estimated balloon payment at maturity?",
+    "q4": "Are there any penalties for making extra monthly payments towards the principal?",
+    "q5": "Can I extend the loan term to eliminate the residual risk without increasing my monthly installment?"
+  },
+  "explain": {
+    "title": "Calculation Details",
+    "provenance": "Provenance",
+    "formula": "Formula",
+    "version": "Version",
+    "confidence": "Confidence",
+    "confidenceHigh": "High (Deterministic)",
+    "confidenceEstimate": "Estimate",
+    "assumptions": "Assumptions",
+    "noAssumptions": "No derived assumptions. Exact calculation.",
+    "inputs": "Snapshot Inputs",
+    "notFound": "Calculation record not found."
   },
   "onboarding": {
     "languageTitle": "Choose your language",
@@ -197,6 +271,9 @@
     "demo": "Demo data"
   },
   "insights": {
+    "title": "Insights Center",
+    "empty": "All calm. No new insights.",
+    "error": "Error loading insights.",
     "rateIncreased": {
       "title": "Rate increased",
       "body": "Your interest rate increased from {{fromRate}}% to {{toRate}}%."
