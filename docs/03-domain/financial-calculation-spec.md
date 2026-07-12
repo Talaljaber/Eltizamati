@@ -132,3 +132,9 @@ Confidence downgrade rules are part of each formula's spec and tested. Confidenc
 ## 10. Explicitly out of scope (do not implement without a new spec + ADR)
 
 Day-count proration (ACT/360 etc.), mid-period repricing proration, fee capitalization rules, penalty interest, payment holidays, early-settlement fee math (conventional or Islamic), multi-currency conversion, credit-score modeling.
+
+## 11. Phase 6 Integration Status
+
+- **Status:** COMPLETE
+- **CalculationService:** Implemented in `apps/mobile/src/services/calculation-service.ts`. It orchestrates formula execution, handles fallback logic, and persists runs via `CalculationRunRepository`.
+- **Edge cases handled/ignored:** Clock manipulation is avoided (it injects deterministic pseudo-UUIDs and uses `new Date().toISOString()` strictly for `calculatedAt` persistence metadata, which does not impact reproducible engine math).

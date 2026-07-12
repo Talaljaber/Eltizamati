@@ -11,6 +11,7 @@
  * client (not SQL) → sign-out → sign-in → session-restored read.
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { runCalculationRunContractTests } from '../../../calculation-run.contract'
 import {
   brandId,
   isOk,

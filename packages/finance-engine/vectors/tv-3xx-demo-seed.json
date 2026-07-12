@@ -1,0 +1,66 @@
+[
+  {
+    "id": "TV-301",
+    "formulaId": "variableProjection",
+    "version": 1,
+    "description": "Outstanding balance at month 30 (estimate) for the demo seed loan — exact figure PENDING-FINANCE",
+    "inputs": { "seed": "buildDemoLoan(DEMO_DATE)" },
+    "asOf": "2026-07-01",
+    "expected": "PENDING-FINANCE",
+    "tolerance": "0.005",
+    "source": "finance-team",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-302",
+    "formulaId": "variableProjection",
+    "version": 1,
+    "description": "Projected residual at maturity for the demo seed loan — must exceed the residualDetection.v1 threshold; exact figure PENDING-FINANCE",
+    "inputs": { "seed": "buildDemoLoan(DEMO_DATE)" },
+    "asOf": "2026-07-01",
+    "expected": { "residualExceedsThreshold": true, "exactValue": "PENDING-FINANCE" },
+    "tolerance": "0.005",
+    "source": "finance-team",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-303",
+    "formulaId": "variableProjection",
+    "version": 1,
+    "description": "\"≈ X JOD less of each installment reduces principal\" — old (period 14) vs new (period 15) principal share at the unchanged 310 JOD installment; exact figure PENDING-FINANCE",
+    "inputs": { "seed": "buildDemoLoan(DEMO_DATE)" },
+    "asOf": "2026-07-01",
+    "expected": { "newPeriodPrincipalLessThanOld": true, "exactValue": "PENDING-FINANCE" },
+    "tolerance": "0.005",
+    "source": "finance-team",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-304",
+    "formulaId": "extraPaymentScenario",
+    "version": 1,
+    "description": "Scenario +50 JOD/month from month 31 ⇒ residual → PENDING-FINANCE (seed chosen so residual ≈ 0, months saved > 0) — the demo's money shot",
+    "inputs": {
+      "seed": "buildDemoLoan(DEMO_DATE)",
+      "extraMonthly": "50",
+      "scenarioStartPeriod": 31
+    },
+    "asOf": "2026-07-01",
+    "expected": { "monthsSavedPositive": true, "exactValue": "PENDING-FINANCE" },
+    "tolerance": "0.005",
+    "source": "finance-team",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-305",
+    "formulaId": "variableProjection",
+    "version": 1,
+    "description": "Estimated added total cost from repricing (actual 7.5%→9.25% schedule vs hypothetical no-reprice-at-7.5% schedule) — exact figure PENDING-FINANCE",
+    "inputs": { "seed": "buildDemoLoan(DEMO_DATE)" },
+    "asOf": "2026-07-01",
+    "expected": { "actualCostExceedsHypothetical": true, "exactValue": "PENDING-FINANCE" },
+    "tolerance": "0.005",
+    "source": "finance-team",
+    "reviewedBy": null
+  }
+]

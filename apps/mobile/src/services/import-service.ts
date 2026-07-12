@@ -24,7 +24,7 @@
 import { ok, err, makeError, isErr, type Result, type AppError } from '@eltizamati/domain'
 
 import type { DemoSeed } from '@eltizamati/demo-data'
-import type { DemoRepositories } from './repositories/demo/index.js'
+import type { DemoRepositories } from './repositories/demo/index'
 
 export interface ImportSummary {
   readonly obligationCount: number

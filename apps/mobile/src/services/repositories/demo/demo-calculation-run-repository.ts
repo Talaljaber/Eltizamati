@@ -24,7 +24,9 @@ export class DemoCalculationRunRepository implements CalculationRunRepository {
       .filter(
         (r) =>
           r.formulaId === formulaId &&
-          (obligationId === undefined || r.obligationId === obligationId),
+          (obligationId === undefined
+            ? r.obligationId === undefined
+            : r.obligationId === obligationId),
       )
       .sort((a, b) => b.calculatedAt.localeCompare(a.calculatedAt))
     return ok(matching[0])

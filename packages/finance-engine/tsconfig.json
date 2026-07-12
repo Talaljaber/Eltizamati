@@ -6,7 +6,7 @@
     "composite": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
-  "references": [{ "path": "../domain" }],
+  "references": [{ "path": "../domain" }, { "path": "../demo-data" }],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

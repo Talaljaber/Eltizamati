@@ -58,3 +58,7 @@ TV-701 demo seed set ⇒ total outstanding = loan est. + murabaha official + car
 ## Property-test charter (fast-check, runs alongside vectors)
 
 Generators: principal 100–1,000,000 JOD (3dp), rate 0–30%, term 1–480, up to 5 rate periods, payment sequences with jitter. Properties: INV-1…INV-7 (see calc spec §8). Seeded runs for reproducibility; failures minimized and committed as new fixed vectors (ratchet).
+
+## Phase 6 Integration Status
+
+All test vectors (TV-1xx through TV-7xx) pass locally within the `finance-engine` test suite and the orchestrating `CalculationService` in `apps/mobile` (18 test files, 119 tests passing total across finance-engine). Line coverage is 100%.

@@ -1,0 +1,53 @@
+[
+  {
+    "id": "TV-601",
+    "formulaId": "cardPayoff",
+    "version": 1,
+    "description": "Balance 2,350, APR 24%, min 3% floor 10 ⇒ months + total charges PENDING-FINANCE; monotonicity vs fixed-100 path (INV-3)",
+    "inputs": {
+      "balance": "2350",
+      "annualRatePercent": "24",
+      "minimumPaymentRule": { "type": "percent", "value": "3", "floor": "10" },
+      "fixedPaymentAmount": "100"
+    },
+    "asOf": "2026-07-01",
+    "expected": { "months": "PENDING-FINANCE", "totalCharges": "PENDING-FINANCE" },
+    "tolerance": "0.005",
+    "source": "finance-team",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-602",
+    "formulaId": "cardPayoff",
+    "version": 1,
+    "description": "Payment 40 < first charge 47 ⇒ neverPaysOff",
+    "inputs": {
+      "balance": "2350",
+      "annualRatePercent": "24",
+      "minimumPaymentRule": { "type": "fixed", "value": "40" },
+      "fixedPaymentAmount": "40"
+    },
+    "asOf": "2026-07-01",
+    "expected": { "neverPaysOff": true, "firstPeriodCharge": "47.000" },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-603",
+    "formulaId": "cardPayoff",
+    "version": 1,
+    "description": "APR 0 ⇒ months = ceil(balance/payment), charges 0 (INV-4)",
+    "inputs": {
+      "balance": "1200",
+      "annualRatePercent": "0",
+      "minimumPaymentRule": { "type": "fixed", "value": "100" },
+      "fixedPaymentAmount": "100"
+    },
+    "asOf": "2026-07-01",
+    "expected": { "months": 12, "totalCharges": "0" },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  }
+]

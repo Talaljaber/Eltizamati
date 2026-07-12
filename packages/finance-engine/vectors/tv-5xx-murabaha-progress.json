@@ -1,0 +1,30 @@
+[
+  {
+    "id": "TV-501",
+    "formulaId": "murabahaProgress",
+    "version": 1,
+    "description": "Demo seed: total 18,600, 22 payments of 310 ⇒ paid 6,820.000, outstanding 11,780.000, progress 36.67% (2dp display) — INV-7 exactness",
+    "inputs": { "totalSalePrice": "18600", "paymentsTotal": "6820" },
+    "asOf": "2026-07-01",
+    "expected": {
+      "paidToDate": "6820.000",
+      "outstanding": "11780.000",
+      "progressPercent2dp": "36.67"
+    },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  },
+  {
+    "id": "TV-502",
+    "formulaId": "murabahaProgress",
+    "version": 1,
+    "description": "Completed financing ⇒ outstanding 0, status completed",
+    "inputs": { "totalSalePrice": "18600", "paymentsTotal": "18600" },
+    "asOf": "2026-07-01",
+    "expected": { "outstanding": "0", "status": "completed" },
+    "tolerance": "0",
+    "source": "analytical",
+    "reviewedBy": null
+  }
+]
