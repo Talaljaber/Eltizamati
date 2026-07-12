@@ -74,7 +74,9 @@
     "ratePeriodCount": "{{count}} rate period",
     "ratePeriodCount_plural": "{{count}} rate periods",
     "noRatePeriods": "No rate periods on file",
-    "phaseNote": "Detailed calculation view coming in a future update."
+    "phaseNote": "Detailed calculation view coming in a future update.",
+    "notFoundTitle": "Obligation not found",
+    "notFoundSubtitle": "This obligation may have been removed or the link is invalid."
   },
   "onboarding": {
     "languageTitle": "Choose your language",
@@ -83,6 +85,9 @@
     "arabic": "العربية",
     "introTitle": "Know every obligation",
     "introBody": "Track loans, Islamic financing, and credit cards in one honest place. Every number is labeled by source and confidence.",
+    "introFeatureProvenance": "Every figure labeled by source and confidence",
+    "introFeatureMath": "Honest financial math — no hidden rounding",
+    "introFeatureOffline": "Works completely offline",
     "consentTitle": "Demonstration mode",
     "consentBody": "This demo uses fictional data for illustrative purposes only. All figures are invented — they do not represent real accounts, real balances, or real financial advice.",
     "consentAcknowledge": "I understand this is demonstration data",

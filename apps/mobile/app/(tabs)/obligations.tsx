@@ -26,7 +26,8 @@ import {
 import { useObligations } from '@/features/home/api/use-obligations'
 import { useDemoRepositories } from '@/features/demo/hooks/use-demo-repositories'
 import { deriveObligationStatus } from '@eltizamati/domain'
-import type { Obligation, Id, LocalDate } from '@eltizamati/domain'
+import type { Obligation, Id } from '@eltizamati/domain'
+import { DEMO_DATE } from '@eltizamati/demo-data'
 
 export default function ObligationsTab() {
   const { t } = useTranslation()
@@ -112,7 +113,7 @@ function ObligationRow({ obligation, onPress }: { obligation: Obligation; onPres
     obligation,
     payments: [],
     insights: [],
-    today: '2026-07-01' as LocalDate,
+    today: DEMO_DATE,
   })
 
   const leading = (

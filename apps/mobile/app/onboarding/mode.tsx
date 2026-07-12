@@ -18,18 +18,23 @@ import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text, Button, space, useTheme, radius, minTouchTarget } from '@/core/design-system'
 import { setDataMode, setOnboardingComplete } from '@/features/demo/stores/demo-mode-store'
+import { useDemoBoot } from '@/providers'
 
 export default function ModeScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
   const [loading, setLoading] = useState(false)
+  const bootDemoMode = useDemoBoot()
 
   async function handleSelectDemo() {
     setLoading(true)
     try {
       await setDataMode('demo')
       await setOnboardingComplete()
-      // Navigate to main app — seed import happens in root layout
+      // AppProviders only checks dataMode once, at initial mount, so it never
+      // sees a mode chosen during this session — boot demo repos explicitly
+      // before navigating, or the home tab crashes on first render.
+      await bootDemoMode()
       router.replace('/(tabs)/')
     } finally {
       setLoading(false)

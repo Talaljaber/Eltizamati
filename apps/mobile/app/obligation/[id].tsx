@@ -18,12 +18,14 @@ import {
   SkeletonCard,
   StatusChip,
   ProvenanceBadge,
+  EmptyState,
   radius,
 } from '@/core/design-system'
 import { useObligation } from '@/features/obligations/api/use-obligation'
 import { useDemoRepositories } from '@/features/demo/hooks/use-demo-repositories'
 import { deriveObligationStatus } from '@eltizamati/domain'
-import type { Id, LocalDate } from '@eltizamati/domain'
+import type { Id } from '@eltizamati/domain'
+import { DEMO_DATE } from '@eltizamati/demo-data'
 
 export default function ObligationDetailScreen() {
   const { t } = useTranslation()
@@ -31,10 +33,26 @@ export default function ObligationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const repos = useDemoRepositories()
 
-  const { data: obligation, isLoading } = useObligation(
-    repos.obligationRepository,
-    id as Id<'obligation'>,
-  )
+  const {
+    data: obligation,
+    isLoading,
+    isError,
+  } = useObligation(repos.obligationRepository, id as Id<'obligation'>)
+
+  if (isError) {
+    return (
+      <SafeAreaView
+        edges={['bottom', 'left', 'right']}
+        style={[styles.root, { backgroundColor: theme.bg }]}
+      >
+        <DemoBanner />
+        <EmptyState
+          title={t('obligationDetail.notFoundTitle')}
+          subtitle={t('obligationDetail.notFoundSubtitle')}
+        />
+      </SafeAreaView>
+    )
+  }
 
   if (isLoading || !obligation) {
     return (
@@ -54,7 +72,7 @@ export default function ObligationDetailScreen() {
     obligation,
     payments: [],
     insights: [],
-    today: '2026-07-01' as LocalDate,
+    today: DEMO_DATE,
   })
 
   return (

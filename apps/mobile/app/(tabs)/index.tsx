@@ -158,7 +158,7 @@ function InsightsPreview({
           <View key={insight.id} style={[styles.insightCard, { backgroundColor: theme.infoSoft }]}>
             <Text variant="bodySmall" color="primary">
               {/* Note: insight body template resolution is simplified here */}
-              {t(`insights.${insight.ruleId}.title`) ?? insight.ruleId}
+              {t(`insights.${insight.ruleId}.title`, { defaultValue: insight.ruleId })}
             </Text>
           </View>
         ))}

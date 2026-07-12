@@ -32,21 +32,9 @@ export default function IntroScreen() {
         </View>
 
         <View style={styles.features}>
-          <FeatureRow
-            icon="🔍"
-            label="Every figure labeled by source and confidence"
-            labelAr="كل رقم مُصنَّف حسب مصدره"
-          />
-          <FeatureRow
-            icon="📐"
-            label="Honest financial math — no hidden rounding"
-            labelAr="حساب مالي شفاف بلا تقريب مخفي"
-          />
-          <FeatureRow
-            icon="✈️"
-            label="Works completely offline"
-            labelAr="يعمل بالكامل بدون إنترنت"
-          />
+          <FeatureRow icon="🔍" label={t('onboarding.introFeatureProvenance')} />
+          <FeatureRow icon="📐" label={t('onboarding.introFeatureMath')} />
+          <FeatureRow icon="✈️" label={t('onboarding.introFeatureOffline')} />
         </View>
 
         <Button
@@ -60,9 +48,7 @@ export default function IntroScreen() {
   )
 }
 
-function FeatureRow({ icon, label, labelAr }: { icon: string; label: string; labelAr: string }) {
-  const { i18n } = useTranslation()
-  const isAr = i18n.language === 'ar'
+function FeatureRow({ icon, label }: { icon: string; label: string }) {
   const theme = useTheme()
 
   return (
@@ -71,7 +57,7 @@ function FeatureRow({ icon, label, labelAr }: { icon: string; label: string; lab
     >
       <Text variant="body">{icon}</Text>
       <Text variant="bodySmall" color="secondary">
-        {isAr ? labelAr : label}
+        {label}
       </Text>
     </View>
   )
