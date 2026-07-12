@@ -162,6 +162,9 @@ importers:
       '@eltizamati/domain':
         specifier: workspace:*
         version: link:../domain
+      '@eltizamati/finance-engine':
+        specifier: workspace:*
+        version: link:../finance-engine
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^3.2.4
