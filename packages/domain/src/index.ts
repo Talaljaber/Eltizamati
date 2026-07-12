@@ -81,8 +81,13 @@ export type {
 } from './entities/calculation-run.js'
 
 // ─── Services ────────────────────────────────────────────────────────────────
-export { deriveObligationStatus } from './services/derive-obligation-status.js'
-export type { StatusDerivationInputs } from './services/derive-obligation-status.js'
+export {
+  deriveObligationStatus,
+  getNextDueInfo,
+  resolveMonthlyCommitment,
+  extractOfficialBalance,
+} from './services/derive-obligation-status.js'
+export type { StatusDerivationInputs, NextDueInfo } from './services/derive-obligation-status.js'
 export { validateRatePeriods } from './services/validate-rate-periods.js'
 export { validateMurabahaFinancing } from './services/validate-murabaha.js'
 export { validatePaymentAllocation } from './services/validate-payment-allocation.js'

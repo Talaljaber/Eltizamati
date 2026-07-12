@@ -33,7 +33,8 @@ import type { Insight } from '../entities/insight.js'
 import type { Id, LocalDate } from '../value-objects/id.js'
 import { Money } from '../value-objects/money.js'
 import type { Provenance, Sourced } from '../value-objects/provenance.js'
-import { isStale } from '../value-objects/provenance.js'
+import { isStale, engineEstimate } from '../value-objects/provenance.js'
+import { resolveMinimumPaymentDue } from './resolve-minimum-payment.js'
 import {
   addMonthsToLocalDate,
   compareLocalDate,
@@ -57,7 +58,8 @@ export interface StatusDerivationInputs {
 
 // ─── Step 1: completed ────────────────────────────────────────────────────────
 
-function extractOfficialBalance(obligation: Obligation): Sourced<Money> | undefined {
+/** Best-available official balance per BR-PROV-001 — shared with dashboard aggregation. */
+export function extractOfficialBalance(obligation: Obligation): Sourced<Money> | undefined {
   switch (obligation.kind) {
     case 'conventionalLoan':
       return obligation.loanDetails.outstandingBalance
@@ -235,6 +237,64 @@ function hasStaleOfficialData(obligation: Obligation, today: LocalDate): boolean
   return collectProvenances(obligation).some(
     (p) => (p.source === 'official' || p.source === 'bureau') && isStale(p, nowIso),
   )
+}
+
+// ─── Monthly commitment (dashboard aggregation — financial-calculation-spec.md
+// §4.7 aggregates.v1: "current installments + card minimum, estimated where
+// rule known") ──────────────────────────────────────────────────────────────
+
+export function resolveMonthlyCommitment(
+  obligation: Obligation,
+  today: LocalDate,
+): Sourced<Money> | undefined {
+  if (obligation.kind === 'conventionalLoan') return obligation.loanDetails.installment
+  if (obligation.kind === 'murabaha') return obligation.murabahaDetails.installment
+
+  if (obligation.kind === 'creditCard') {
+    const { minimumPaymentRule, currentBalance } = obligation.cardDetails
+    if (minimumPaymentRule === undefined) return undefined
+    const resolution = resolveMinimumPaymentDue(minimumPaymentRule, currentBalance.value)
+    if (resolution.kind === 'unknown') return undefined
+    return engineEstimate(resolution.amount, 'resolveMinimumPaymentDue', today)
+  }
+
+  return undefined
+}
+
+// ─── Next due payment (dashboard aggregation — FR-CALC-006 companion) ────────
+// Reuses the same cadence/due-date logic as steps 3–4/8 above rather than
+// re-deriving it, so "next payment" never drifts from the status precedence
+// it's read alongside.
+
+export interface NextDueInfo {
+  readonly dueDate: LocalDate
+  readonly amount: Sourced<Money>
+}
+
+export function getNextDueInfo(obligation: Obligation, today: LocalDate): NextDueInfo | undefined {
+  if (obligation.kind === 'conventionalLoan' || obligation.kind === 'murabaha') {
+    const cadence = buildCadence(obligation, today)
+    if (!cadence?.nextDueDate) return undefined
+    const installment =
+      obligation.kind === 'conventionalLoan'
+        ? obligation.loanDetails.installment
+        : obligation.murabahaDetails.installment
+    return { dueDate: cadence.nextDueDate, amount: installment }
+  }
+
+  if (obligation.kind === 'creditCard') {
+    const { dueDate, minimumPaymentRule, currentBalance } = obligation.cardDetails
+    if (dueDate === undefined || compareLocalDate(dueDate, today) < 0) return undefined
+    if (minimumPaymentRule === undefined) return undefined
+    const resolution = resolveMinimumPaymentDue(minimumPaymentRule, currentBalance.value)
+    if (resolution.kind === 'unknown') return undefined
+    return {
+      dueDate,
+      amount: engineEstimate(resolution.amount, 'resolveMinimumPaymentDue', today),
+    }
+  }
+
+  return undefined
 }
 
 // ─── Main derivation ──────────────────────────────────────────────────────────
