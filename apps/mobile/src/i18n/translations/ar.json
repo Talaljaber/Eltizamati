@@ -103,7 +103,12 @@
     "noRatePeriods": "لا توجد فترات فائدة مسجّلة",
     "phaseNote": "سيتوفر عرض الحساب التفصيلي في تحديث قادم.",
     "notFoundTitle": "الالتزام غير موجود",
-    "notFoundSubtitle": "ربما تمت إزالة هذا الالتزام أو أن الرابط غير صالح."
+    "notFoundSubtitle": "ربما تمت إزالة هذا الالتزام أو أن الرابط غير صالح.",
+    "paymentHistory": "سجل الدفعات",
+    "noPayments": "لا توجد دفعات مسجّلة بعد.",
+    "allocationEstimated": "تقسيم مقدّر",
+    "allocationOfficial": "تقسيم رسمي",
+    "allocationUnknown": "التقسيم غير متاح"
   },
   "loanDetail": {
     "heroTitle": "نظرة عامة على القرض",
@@ -296,6 +301,10 @@
     "title": "مركز التنبيهات",
     "empty": "كل شيء هادئ. لا توجد تنبيهات جديدة.",
     "error": "تعذّر تحميل التنبيهات.",
+    "generalGroup": "عام",
+    "viewObligation": "عرض الالتزام",
+    "whyLabel": "لماذا تلقيت هذا؟",
+    "whyRule": "نتج عن القاعدة: {{rule}}",
     "rateIncreased": {
       "title": "ارتفعت الفائدة",
       "body": "ارتفعت فائدتك من {{fromRate}}٪ إلى {{toRate}}٪."

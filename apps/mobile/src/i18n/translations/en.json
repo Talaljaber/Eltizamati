@@ -103,7 +103,12 @@
     "noRatePeriods": "No rate periods on file",
     "phaseNote": "Detailed calculation view coming in a future update.",
     "notFoundTitle": "Obligation not found",
-    "notFoundSubtitle": "This obligation may have been removed or the link is invalid."
+    "notFoundSubtitle": "This obligation may have been removed or the link is invalid.",
+    "paymentHistory": "Payment History",
+    "noPayments": "No payments recorded yet.",
+    "allocationEstimated": "Estimated split",
+    "allocationOfficial": "Official split",
+    "allocationUnknown": "Split not available"
   },
   "loanDetail": {
     "heroTitle": "Loan Overview",
@@ -296,6 +301,10 @@
     "title": "Insights Center",
     "empty": "All calm. No new insights.",
     "error": "Error loading insights.",
+    "generalGroup": "General",
+    "viewObligation": "View obligation",
+    "whyLabel": "Why did I get this?",
+    "whyRule": "Triggered by rule: {{rule}}",
     "rateIncreased": {
       "title": "Rate increased",
       "body": "Your interest rate increased from {{fromRate}}% to {{toRate}}%."

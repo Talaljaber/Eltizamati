@@ -127,11 +127,15 @@ Phases 7–9: Planned.
 
 ## Current task
 
-Continue Phase 7 (loan journey) implementation — see the 2026-07-13 addendum above. Not closeable yet:
+Continue Phase 7 (loan journey) implementation. Not closeable yet:
 TV-30x finance sign-off and the mandatory AR/EN airplane-mode walkthrough recording are still
 outstanding per the phase file's exit criteria.
 
+**Note:** The `rate-history` cumulative-extra-interest annotation (originally planned for SCR-RATE-HIST) is deliberately not implemented in this phase.
+
 ## Blockers
+
+- **TV-30x / TV-104 / TV-203 / TV-601 expected values** — finance-team sign-off; gates Phase 7's final closure.
 
 - **GitHub Actions still executes zero steps on every run** (last confirmed at `eada339`, not re-checked this session — no network/gh access here) — needs the repository owner to check GitHub's Settings → Actions and Billing for this repo/account. Not blocking phase closure: local verification (Docker-based) is comprehensive.
 - Node LTS install on the dev machine — needed for expo-doctor/EAS reliability (unrelated to Phase 3/4).

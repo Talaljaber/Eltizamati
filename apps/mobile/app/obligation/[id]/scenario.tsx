@@ -1,8 +1,10 @@
-import { View, StyleSheet, ScrollView, TextInput } from 'react-native'
+import { useState } from 'react'
+import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { Text, space, radius, useTheme, Card, FieldRow } from '@/core/design-system'
 import { useScenarioSimulator } from '@/features/scenario/hooks/use-scenario-simulator'
+import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import {
   snapshotRecord,
   snapshotNumber,
@@ -10,11 +12,14 @@ import {
 } from '@/services/calculation-snapshot'
 import type { Id } from '@eltizamati/domain'
 
+const SCENARIO_FORMULA_ID = 'extraPaymentScenario'
+
 export default function ScenarioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation()
   const theme = useTheme()
   const viewModel = useScenarioSimulator(id as Id<'obligation'>)
+  const [explainVisible, setExplainVisible] = useState(false)
 
   return (
     <>
@@ -129,6 +134,15 @@ export default function ScenarioScreen() {
                           {t('scenario.perfLabel', { ms: Math.round(viewModel.perfMs) })}
                         </Text>
                       )}
+
+                      <TouchableOpacity
+                        onPress={() => setExplainVisible(true)}
+                        style={styles.explainLink}
+                      >
+                        <Text variant="bodySmall" color="primary">
+                          {t('common.explain')}
+                        </Text>
+                      </TouchableOpacity>
                     </>
                   )
                 })()}
@@ -136,6 +150,13 @@ export default function ScenarioScreen() {
             )}
         </Card>
       </ScrollView>
+
+      <ExplainSheet
+        visible={explainVisible}
+        onClose={() => setExplainVisible(false)}
+        obligationId={id as Id<'obligation'>}
+        formulaId={SCENARIO_FORMULA_ID}
+      />
     </>
   )
 }
@@ -163,5 +184,8 @@ const styles = StyleSheet.create({
   comparisonColumn: {
     flex: 1,
     gap: space[1],
+  },
+  explainLink: {
+    marginTop: space[3],
   },
 })
