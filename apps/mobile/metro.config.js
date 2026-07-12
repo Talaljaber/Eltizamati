@@ -32,7 +32,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       // Ignore and fallback to standard resolution
     }
   }
-  
+
   // Standard resolution
   return context.resolveRequest(context, moduleName, platform)
 }
