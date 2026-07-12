@@ -9,8 +9,7 @@ import type {
   AppError,
 } from '@eltizamati/domain'
 import { hashCanonicalJson, brandId, err, makeError } from '@eltizamati/domain'
-import type { EngineOutcome, FormulaId } from '@eltizamati/finance-engine'
-import { FORMULA_REGISTRY, isEngineOk, isRefused } from '@eltizamati/finance-engine'
+import { resolveFormula, type FormulaId, type FormulaVersion } from '@eltizamati/finance-engine'
 
 function generateId(): string {
   return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
@@ -30,27 +29,33 @@ export class CalculationService {
   /**
    * Executes a finance-engine formula and persists the result.
    */
-  async runCalculation<TInputs, TResult>(
+  async runCalculation<TInputs>(
     userId: Id<'user'>,
     obligationId: Id<'obligation'> | undefined,
     formulaId: FormulaId,
+    formulaVersion: FormulaVersion,
     inputs: TInputs,
     asOf: LocalDate,
-    executor: (inputs: TInputs) => EngineOutcome<TResult>,
+    calculatedAt: string = new Date().toISOString(),
   ): Promise<Result<CalculationRun, AppError>> {
-    const outcome = executor(inputs)
+    const registryResult = resolveFormula(formulaId, formulaVersion)
+    if (!registryResult.ok) {
+      return err(registryResult.error)
+    }
+    const formulaMeta = registryResult.value
+    const outcome = formulaMeta.execute(inputs)
 
     const inputsSnapshot = inputs as unknown as CanonicalJsonValue
     const inputsHash = hashCanonicalJson(inputsSnapshot)
 
     let calculationOutcome: CalculationOutcome
-    if (isEngineOk(outcome)) {
+    if (outcome.kind === 'ok') {
       calculationOutcome = {
         kind: 'result',
         confidence: outcome.confidence,
         resultSnapshot: outcome.value as unknown as CanonicalJsonValue,
       }
-    } else if (isRefused(outcome)) {
+    } else if (outcome.kind === 'refused') {
       calculationOutcome = {
         kind: 'refused',
         missingFields: outcome.missing.map((m) => m.field),
@@ -64,21 +69,20 @@ export class CalculationService {
       )
     }
 
-    const formulaMeta = FORMULA_REGISTRY[formulaId]
-    const assumptions = isEngineOk(outcome) ? outcome.assumptions : []
+    const assumptions = outcome.kind === 'ok' ? outcome.assumptions : []
 
     const run: CalculationRun = {
       id: brandId<'calculationRun'>(generateId()),
       userId,
       obligationId,
       formulaId,
-      formulaVersion: formulaMeta.version,
+      formulaVersion,
       asOf,
       inputsSnapshot,
       inputsHash,
       outcome: calculationOutcome,
       assumptions,
-      calculatedAt: new Date().toISOString(),
+      calculatedAt,
     }
 
     return this.repo.persist(run)
