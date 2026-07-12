@@ -31,7 +31,7 @@ import {
 import { engineOk, refused, type EngineOutcome, type FieldRef } from '../refusal.js'
 import type { ScheduleEntry, ScheduleTotals } from '../types.js'
 import { totalsFor } from './amortization.js'
-import { FORMULA_REGISTRY } from '../registry/formula-registry.js'
+import { FORMULA_ASSUMPTIONS } from '../registry/formula-assumptions.js'
 
 export interface ExplicitInstallmentEntry {
   readonly fromPeriod: number
@@ -100,7 +100,7 @@ export function variableProjection(
     inputs.asOf,
   )
 
-  const assumptions = [...FORMULA_REGISTRY.variableProjection.assumptions]
+  const assumptions: string[] = [...FORMULA_ASSUMPTIONS.variableProjection]
   if (result.hasMidPeriodEffectiveDate) {
     assumptions.push(
       'CONV-4: a rate change effective date fell mid-period — applied at the next period boundary',

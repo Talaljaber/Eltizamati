@@ -14,7 +14,7 @@
  */
 import { Money, type LocalDate } from '@eltizamati/domain'
 import { engineOk, refused, type EngineOutcome, type FieldRef } from '../refusal.js'
-import { FORMULA_REGISTRY } from '../registry/formula-registry.js'
+import { FORMULA_ASSUMPTIONS } from '../registry/formula-assumptions.js'
 
 export interface ExcludedObligation {
   readonly obligationId: string
@@ -67,7 +67,7 @@ export function aggregates(inputs: AggregatesInputs): EngineOutcome<AggregatesRe
     inputs.asOf,
   )
 
-  return engineOk(result, 'high', [...FORMULA_REGISTRY.aggregates.assumptions])
+  return engineOk(result, 'high', FORMULA_ASSUMPTIONS.aggregates)
 }
 
 export function computeAggregates(

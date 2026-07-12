@@ -11,7 +11,7 @@
 import type { Money } from '@eltizamati/domain'
 import { Percentage, type LocalDate } from '@eltizamati/domain'
 import { engineOk, refused, type EngineOutcome, type FieldRef } from '../refusal.js'
-import { FORMULA_REGISTRY } from '../registry/formula-registry.js'
+import { FORMULA_ASSUMPTIONS } from '../registry/formula-assumptions.js'
 
 export interface MurabahaProgressInputs {
   readonly totalSalePrice?: Money
@@ -46,7 +46,7 @@ export function murabahaProgress(
   // (PHASE-02-DECISION-LOG §2) — this is engine arithmetic over contract
   // facts, with no CONV-* modeling assumptions (BR-CALC-020 forbids any),
   // so 'high' is the correct ceiling.
-  return engineOk(result, 'high', [...FORMULA_REGISTRY.murabahaProgress.assumptions])
+  return engineOk(result, 'high', FORMULA_ASSUMPTIONS.murabahaProgress)
 }
 
 export function computeMurabahaProgress(

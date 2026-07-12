@@ -18,7 +18,7 @@ import {
 } from '@eltizamati/domain'
 import { engineOk, refused, type EngineOutcome, type FieldRef } from '../refusal.js'
 import type { ScheduleEntry, ScheduleTotals, DataConsistencyNotice } from '../types.js'
-import { FORMULA_REGISTRY } from '../registry/formula-registry.js'
+import { FORMULA_ASSUMPTIONS } from '../registry/formula-assumptions.js'
 
 export interface AmortizationInputs {
   readonly principal?: Money
@@ -61,7 +61,7 @@ export function amortization(inputs: AmortizationInputs): EngineOutcome<Amortiza
     inputs.installmentOverride,
   )
 
-  return engineOk(result, 'high', [...FORMULA_REGISTRY.amortization.assumptions])
+  return engineOk(result, 'high', FORMULA_ASSUMPTIONS.amortization)
 }
 
 /**
