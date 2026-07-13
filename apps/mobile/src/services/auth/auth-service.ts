@@ -25,4 +25,6 @@ export interface AuthService {
   currentSession(): Promise<Result<AppAuthSession | undefined, AppError>>
   /** Returns an unsubscribe function. */
   onAuthStateChange(callback: (session: AppAuthSession | undefined) => void): () => void
+  /** FR-SET-003 (personal mode): server-side erasure via the `delete-account` Edge Function. */
+  deleteAccount(): Promise<Result<void, AppError>>
 }

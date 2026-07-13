@@ -12,7 +12,12 @@
  * same canonical-JSON SHA-256 the rest of the engine uses for reproducible
  * hashing (INV-5's mechanism, reused here for dedup stability).
  */
-import { hashCanonicalJson, type RatePeriod, type InsightSeverity } from '@eltizamati/domain'
+import {
+  hashCanonicalJson,
+  type Money,
+  type RatePeriod,
+  type InsightSeverity,
+} from '@eltizamati/domain'
 import type { ResidualDetectionResult } from '../formulas/residual-detection.js'
 
 export interface InsightCandidate {
@@ -96,6 +101,67 @@ export function evaluateInstallmentUnchangedAfterIncrease(
         rule: 'INSTALLMENT_UNCHANGED_AFTER_INCREASE',
         obligationId,
         basis: mostRecent.triggerHash,
+      }),
+    },
+  ]
+}
+
+const HIGH_UTILIZATION_THRESHOLD_PERCENT = 70
+
+/** HIGH_CARD_UTILIZATION — fires when a card's balance/limit ratio exceeds 70% (FR-INS-001). */
+export function evaluateHighCardUtilization(
+  obligationId: string,
+  utilizationPercent: number,
+): readonly InsightCandidate[] {
+  if (utilizationPercent <= HIGH_UTILIZATION_THRESHOLD_PERCENT) return []
+  const roundedPercent = Math.round(utilizationPercent)
+  return [
+    {
+      ruleId: 'HIGH_CARD_UTILIZATION',
+      obligationId,
+      severity: 'attention',
+      titleKey: 'insights.highUtilization.title',
+      bodyKey: 'insights.highUtilization.body',
+      params: { percent: roundedPercent },
+      triggerHash: hashCanonicalJson({
+        rule: 'HIGH_CARD_UTILIZATION',
+        obligationId,
+        percent: roundedPercent,
+      }),
+    },
+  ]
+}
+
+/**
+ * USER_THRESHOLD_REACHED — FR-INS-001 "user-defined threshold reached"
+ * (FR-SET-006 stores the threshold). Fires when the obligation's projected
+ * gap amount (e.g. the same residual/shortfall figure shown on Rate Impact)
+ * exceeds the user's own configured JOD threshold — a customizable
+ * companion to the fixed-logic RESIDUAL_RISK rule above, not a replacement
+ * for it.
+ */
+export function evaluateUserThresholdReached(
+  obligationId: string,
+  gapAmount: Money,
+  thresholdAmount: Money,
+): readonly InsightCandidate[] {
+  if (!gapAmount.isGreaterThan(thresholdAmount)) return []
+  return [
+    {
+      ruleId: 'USER_THRESHOLD_REACHED',
+      obligationId,
+      severity: 'attention',
+      titleKey: 'insights.userThreshold.title',
+      bodyKey: 'insights.userThreshold.body',
+      params: {
+        gap: gapAmount.toStorageString(),
+        threshold: thresholdAmount.toStorageString(),
+      },
+      triggerHash: hashCanonicalJson({
+        rule: 'USER_THRESHOLD_REACHED',
+        obligationId,
+        gap: gapAmount.toStorageString(),
+        threshold: thresholdAmount.toStorageString(),
       }),
     },
   ]

@@ -1,0 +1,240 @@
+import { useState } from 'react'
+import { View, StyleSheet, ScrollView } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { useRouter, Stack } from 'expo-router'
+import { Text, Button, Card, space } from '@/core/design-system'
+import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
+import { useRepositories } from '@/features/repositories/hooks/use-repositories'
+import { useActiveUser } from '@/features/auth/hooks/use-active-user'
+import { useQueryClient } from '@tanstack/react-query'
+import { toLocalDate, type ObligationKind } from '@eltizamati/domain'
+import { ObligationService } from '@/services/obligation-service'
+import { LoanFormFields } from '@/features/obligation-form/components/LoanFormFields'
+import { MurabahaFormFields } from '@/features/obligation-form/components/MurabahaFormFields'
+import { CardFormFields } from '@/features/obligation-form/components/CardFormFields'
+import {
+  emptyLoanFormState,
+  emptyMurabahaFormState,
+  emptyCardFormState,
+  type LoanFormState,
+  type MurabahaFormState,
+  type CardFormState,
+} from '@/features/obligation-form/types'
+import {
+  validateLoanForm,
+  validateMurabahaForm,
+  validateCardForm,
+} from '@/features/obligation-form/validation'
+
+const service = new ObligationService()
+
+type AddableKind = Extract<ObligationKind, 'conventionalLoan' | 'murabaha' | 'creditCard'>
+
+export default function AddObligationScreen() {
+  return (
+    <RequireRepositories>
+      <AddObligationInner />
+    </RequireRepositories>
+  )
+}
+
+function AddObligationInner() {
+  const { t } = useTranslation()
+  const router = useRouter()
+  const repos = useRepositories()
+  const activeUser = useActiveUser()
+  const queryClient = useQueryClient()
+
+  const [kind, setKind] = useState<AddableKind | null>(null)
+  const [loanState, setLoanState] = useState<LoanFormState>(emptyLoanFormState)
+  const [murabahaState, setMurabahaState] = useState<MurabahaFormState>(emptyMurabahaFormState)
+  const [cardState, setCardState] = useState<CardFormState>(emptyCardFormState)
+  const [error, setError] = useState<string | undefined>(undefined)
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    if (!activeUser || kind === null) return
+    setError(undefined)
+
+    if (kind === 'conventionalLoan') {
+      const validationKey = validateLoanForm(loanState, true)
+      if (validationKey !== undefined) return setError(t(validationKey))
+      setSaving(true)
+      const result = await service.createLoan(
+        activeUser,
+        {
+          nickname: loanState.nickname,
+          institutionName: loanState.institutionName,
+          openedDate: toLocalDate(loanState.openedDate),
+          originalPrincipal: loanState.originalPrincipal,
+          outstandingBalance:
+            loanState.outstandingBalance === '' ? undefined : loanState.outstandingBalance,
+          installment: loanState.installment,
+          rateType: loanState.rateType,
+          termMonths: Number(loanState.termMonths),
+          startDate: toLocalDate(loanState.startDate),
+          maturityDate: toLocalDate(loanState.maturityDate),
+        },
+        loanState.annualRatePercent,
+        repos,
+      )
+      setSaving(false)
+      if (!result.ok) return setError(t('obligationForm.errors.saveFailed'))
+      await queryClient.invalidateQueries()
+      router.replace(`/obligation/${result.value.id}`)
+      return
+    }
+
+    if (kind === 'murabaha') {
+      const validationKey = validateMurabahaForm(murabahaState)
+      if (validationKey !== undefined) return setError(t(validationKey))
+      setSaving(true)
+      const result = await service.createMurabaha(
+        activeUser,
+        {
+          nickname: murabahaState.nickname,
+          institutionName: murabahaState.institutionName,
+          openedDate: toLocalDate(murabahaState.openedDate),
+          totalSalePrice: murabahaState.totalSalePrice,
+          assetCost: murabahaState.assetCost,
+          disclosedProfit: murabahaState.disclosedProfit,
+          installment: murabahaState.installment,
+          termMonths: Number(murabahaState.termMonths),
+          startDate: toLocalDate(murabahaState.startDate),
+          profitRateDisclosedPercent:
+            murabahaState.profitRateDisclosedPercent === ''
+              ? undefined
+              : murabahaState.profitRateDisclosedPercent,
+        },
+        repos,
+      )
+      setSaving(false)
+      if (!result.ok) return setError(t('obligationForm.errors.saveFailed'))
+      await queryClient.invalidateQueries()
+      router.replace(`/obligation/${result.value.id}`)
+      return
+    }
+
+    if (kind === 'creditCard') {
+      const validationKey = validateCardForm(cardState)
+      if (validationKey !== undefined) return setError(t(validationKey))
+      setSaving(true)
+      const result = await service.createCard(
+        activeUser,
+        {
+          nickname: cardState.nickname,
+          institutionName: cardState.institutionName,
+          openedDate: toLocalDate(cardState.openedDate),
+          creditLimit: cardState.creditLimit,
+          currentBalance: cardState.currentBalance,
+          purchaseAprPercent:
+            cardState.purchaseAprPercent === '' ? undefined : cardState.purchaseAprPercent,
+          cashAdvanceAprPercent:
+            cardState.cashAdvanceAprPercent === '' ? undefined : cardState.cashAdvanceAprPercent,
+          dueDate: cardState.dueDate === '' ? undefined : toLocalDate(cardState.dueDate),
+        },
+        repos,
+      )
+      setSaving(false)
+      if (!result.ok) return setError(t('obligationForm.errors.saveFailed'))
+      await queryClient.invalidateQueries()
+      router.replace(`/obligation/${result.value.id}`)
+    }
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.scroll}>
+      <Stack.Screen options={{ title: t('obligationForm.addTitle') }} />
+
+      {kind === null ? (
+        <View style={styles.pickerGroup}>
+          <Text variant="bodySmall" color="secondary">
+            {t('obligationForm.pickKind')}
+          </Text>
+          <Card>
+            <Button
+              label={t('obligationKind.conventionalLoan')}
+              variant="secondary"
+              onPress={() => setKind('conventionalLoan')}
+            />
+          </Card>
+          <Card>
+            <Button
+              label={t('obligationKind.murabaha')}
+              variant="secondary"
+              onPress={() => setKind('murabaha')}
+            />
+          </Card>
+          <Card>
+            <Button
+              label={t('obligationKind.creditCard')}
+              variant="secondary"
+              onPress={() => setKind('creditCard')}
+            />
+          </Card>
+        </View>
+      ) : (
+        <View style={styles.formGroup}>
+          {kind === 'conventionalLoan' && (
+            <LoanFormFields
+              state={loanState}
+              onChange={(patch) => setLoanState((s) => ({ ...s, ...patch }))}
+              showInitialRate
+            />
+          )}
+          {kind === 'murabaha' && (
+            <MurabahaFormFields
+              state={murabahaState}
+              onChange={(patch) => setMurabahaState((s) => ({ ...s, ...patch }))}
+            />
+          )}
+          {kind === 'creditCard' && (
+            <CardFormFields
+              state={cardState}
+              onChange={(patch) => setCardState((s) => ({ ...s, ...patch }))}
+            />
+          )}
+
+          {error !== undefined && (
+            <Text variant="bodySmall" color="critical">
+              {error}
+            </Text>
+          )}
+
+          <View style={styles.actions}>
+            <Button
+              label={t('common.cancel')}
+              variant="ghost"
+              onPress={() => setKind(null)}
+              disabled={saving}
+            />
+            <Button
+              label={t('obligationForm.save')}
+              onPress={() => void handleSave()}
+              loading={saving}
+            />
+          </View>
+        </View>
+      )}
+    </ScrollView>
+  )
+}
+
+const styles = StyleSheet.create({
+  scroll: {
+    padding: space[4],
+    gap: space[4],
+    paddingBottom: space[8],
+  },
+  pickerGroup: {
+    gap: space[3],
+  },
+  formGroup: {
+    gap: space[4],
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: space[3],
+  },
+})

@@ -8,9 +8,11 @@ import React from 'react'
 import { Alert } from 'react-native'
 import { render, fireEvent, waitFor } from '@testing-library/react-native'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ok } from '@eltizamati/domain'
 import SettingsScreen from '../index'
 import { ImportService } from '@/services/import-service'
 import * as useReposModule from '@/features/repositories/hooks/use-repositories'
+import * as useAuthServiceModule from '@/features/auth/hooks/use-auth-service'
 
 jest.mock('@/i18n', () => ({
   changeLanguage: jest.fn().mockResolvedValue(undefined),
@@ -83,5 +85,49 @@ describe('SettingsScreen', () => {
 
     await waitFor(() => expect(resetDemoSpy).toHaveBeenCalledTimes(1))
     expect(invalidateSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the account section with sign-out/delete-account controls in personal mode', async () => {
+    jest.spyOn(useReposModule, 'useRepositoriesIfAvailable').mockReturnValue({
+      obligationRepository: {},
+      paymentRepository: {},
+      ratePeriodRepository: {},
+      calculationRunRepository: {},
+      insightRepository: {},
+      consentRepository: {},
+      userProfileRepository: {},
+      // no `reset` key — personal mode
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    const signOut = jest.fn().mockResolvedValue(ok(undefined))
+    const deleteAccount = jest.fn().mockResolvedValue(ok(undefined))
+    const currentSession = jest
+      .fn()
+      .mockResolvedValue(
+        ok({ user: { id: 'user-1', email: 'user@example.com' }, expiresAt: undefined }),
+      )
+    jest.spyOn(useAuthServiceModule, 'useAuthServiceIfAvailable').mockReturnValue(
+      ok({
+        signOut,
+        deleteAccount,
+        currentSession,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any),
+    )
+
+    jest.spyOn(Alert, 'alert').mockImplementation((_title, _body, buttons) => {
+      const destructive = buttons?.find((b) => b.style === 'destructive')
+      destructive?.onPress?.()
+    })
+
+    const { getByTestId, findByText } = renderScreen(client)
+    await findByText('settings.signedInAs')
+
+    fireEvent.press(getByTestId('settings-sign-out'))
+    await waitFor(() => expect(signOut).toHaveBeenCalledTimes(1))
+
+    fireEvent.press(getByTestId('settings-delete-account'))
+    await waitFor(() => expect(deleteAccount).toHaveBeenCalledTimes(1))
   })
 })

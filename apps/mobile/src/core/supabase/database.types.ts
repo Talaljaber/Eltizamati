@@ -453,22 +453,28 @@ export type Database = {
           created_at: string
           data_mode: string
           locale: string
+          reminder_day_of_month: number | null
           updated_at: string
           user_id: string
+          user_threshold_amount: number | null
         }
         Insert: {
           created_at?: string
           data_mode: string
           locale: string
+          reminder_day_of_month?: number | null
           updated_at?: string
           user_id: string
+          user_threshold_amount?: number | null
         }
         Update: {
           created_at?: string
           data_mode?: string
           locale?: string
+          reminder_day_of_month?: number | null
           updated_at?: string
           user_id?: string
+          user_threshold_amount?: number | null
         }
         Relationships: []
       }

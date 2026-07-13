@@ -100,6 +100,8 @@ describe('SupabaseUserProfileRepository', () => {
         data_mode: profile.dataMode,
         created_at: profile.createdAt,
         updated_at: profile.updatedAt,
+        reminder_day_of_month: null,
+        user_threshold_amount: null,
       })
     })
 

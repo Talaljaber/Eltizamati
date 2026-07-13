@@ -11,6 +11,8 @@ describe('user-profile-mapper', () => {
     data_mode: 'personal',
     created_at: '2026-07-01T00:00:00.000Z',
     updated_at: '2026-07-02T00:00:00.000Z',
+    reminder_day_of_month: null,
+    user_threshold_amount: null,
   }
 
   const profile: UserProfile = {
@@ -19,6 +21,8 @@ describe('user-profile-mapper', () => {
     dataMode: 'personal',
     createdAt: '2026-07-01T00:00:00.000Z',
     updatedAt: '2026-07-02T00:00:00.000Z',
+    reminderDayOfMonth: undefined,
+    userThresholdAmount: undefined,
   }
 
   it('profileRowToDomain maps every column to its domain field', () => {
@@ -43,5 +47,17 @@ describe('user-profile-mapper', () => {
     expect(() => profileRowToDomain({ ...row, data_mode: 'guest' })).toThrow(
       /Unexpected profiles.data_mode value/,
     )
+  })
+
+  it('maps reminder_day_of_month and user_threshold_amount when set', () => {
+    const rowWithPrefs: ProfileRow = {
+      ...row,
+      reminder_day_of_month: 5,
+      user_threshold_amount: 150.5,
+    }
+    const domain = profileRowToDomain(rowWithPrefs)
+    expect(domain.reminderDayOfMonth).toBe(5)
+    expect(domain.userThresholdAmount).toBe('150.5')
+    expect(profileDomainToRow(domain)).toEqual(rowWithPrefs)
   })
 })

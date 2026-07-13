@@ -38,3 +38,9 @@ export function snapshotMoneyAmount(value: CanonicalJsonValue | undefined): stri
 export function snapshotNumber(value: CanonicalJsonValue | undefined): number | undefined {
   return typeof value === 'number' ? value : undefined
 }
+
+/** Extracts the decimal string from a canonicalized `Percentage` value (`{ type: 'Percentage', percent }`). */
+export function snapshotPercent(value: CanonicalJsonValue | undefined): string | undefined {
+  const percent = asRecord(value).percent
+  return typeof percent === 'string' ? percent : undefined
+}

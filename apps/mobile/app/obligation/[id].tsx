@@ -1,6 +1,8 @@
-import { View, StyleSheet, ScrollView } from 'react-native'
+import { useMemo, useState } from 'react'
+import { View, StyleSheet, ScrollView, Alert } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   Text,
@@ -25,6 +27,12 @@ import { useLoanDetailViewModel } from '@/features/loan-detail/hooks/use-loan-de
 import { LoanDetailHero } from '@/features/loan-detail/components/LoanDetailHero'
 import { useInsightsViewModel } from '@/features/insights/hooks/use-insights-view-model'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
+import { useMurabahaDetailViewModel } from '@/features/murabaha-detail/hooks/use-murabaha-detail-view-model'
+import { MurabahaDetailSection } from '@/features/murabaha-detail/components/MurabahaDetailSection'
+import { CardDetailSection } from '@/features/card-detail/components/CardDetailSection'
+import { useCardInsightEvaluation } from '@/features/card-detail/hooks/use-card-insight-evaluation'
+import { useUserThresholdInsightEvaluation } from '@/features/loan-detail/hooks/use-user-threshold-insight-evaluation'
+import { ObligationService } from '@/services/obligation-service'
 
 export default function ObligationDetailScreen() {
   return (
@@ -42,8 +50,20 @@ function ObligationDetailInner() {
 
   const viewModel = useLoanDetailViewModel(id as Id<'obligation'>)
   const insightsViewModel = useInsightsViewModel(id as Id<'obligation'>)
+  const murabahaViewModel = useMurabahaDetailViewModel(id as Id<'obligation'>)
   const repositories = useRepositories()
   const isDemo = typeof repositories.reset === 'function'
+  useCardInsightEvaluation(
+    viewModel.obligation?.kind === 'creditCard' ? viewModel.obligation : undefined,
+  )
+  useUserThresholdInsightEvaluation(
+    viewModel.obligation?.kind === 'conventionalLoan' ? viewModel.obligation : undefined,
+    viewModel.hero?.estimatedResidual,
+  )
+  const queryClient = useQueryClient()
+  const obligationService = useMemo(() => new ObligationService(), [])
+  const [archiving, setArchiving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   if (viewModel.status === 'error') {
     return (
@@ -83,6 +103,52 @@ function ObligationDetailInner() {
     today: DEMO_DATE,
   })
 
+  async function performArchive() {
+    setArchiving(true)
+    const result = await obligationService.archiveObligation(obligation.id, repositories)
+    setArchiving(false)
+    if (result.ok) {
+      await queryClient.invalidateQueries()
+      router.back()
+    }
+  }
+
+  function handleArchive() {
+    Alert.alert(
+      t('obligationDetail.archiveConfirmTitle'),
+      t('obligationDetail.archiveConfirmBody'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('obligationDetail.archiveConfirmAction'),
+          style: 'destructive',
+          onPress: () => void performArchive(),
+        },
+      ],
+    )
+  }
+
+  async function performDelete() {
+    setDeleting(true)
+    const result = await obligationService.deleteObligation(obligation.id, repositories)
+    setDeleting(false)
+    if (result.ok) {
+      await queryClient.invalidateQueries()
+      router.replace('/(tabs)/obligations')
+    }
+  }
+
+  function handleDelete() {
+    Alert.alert(t('obligationDetail.deleteConfirmTitle'), t('obligationDetail.deleteConfirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('obligationDetail.deleteConfirmAction'),
+        style: 'destructive',
+        onPress: () => void performDelete(),
+      },
+    ])
+  }
+
   return (
     <SafeAreaView
       edges={['bottom', 'left', 'right']}
@@ -117,6 +183,31 @@ function ObligationDetailInner() {
           </View>
         </View>
 
+        <View style={styles.manageRow}>
+          <Button
+            label={t('obligationDetail.edit')}
+            variant="secondary"
+            onPress={() => router.push(`/obligation/${id}/edit`)}
+          />
+          <Button
+            label={t('obligationDetail.logPayment')}
+            variant="secondary"
+            onPress={() => router.push(`/obligation/${id}/log-payment`)}
+          />
+          <Button
+            label={t('obligationDetail.archive')}
+            variant="secondary"
+            onPress={handleArchive}
+            loading={archiving}
+          />
+          <Button
+            label={t('obligationDetail.delete')}
+            variant="destructive"
+            onPress={handleDelete}
+            loading={deleting}
+          />
+        </View>
+
         {viewModel.hero && <LoanDetailHero obligationId={obligation.id} hero={viewModel.hero} />}
 
         {obligation.kind === 'conventionalLoan' ? (
@@ -146,7 +237,20 @@ function ObligationDetailInner() {
               variant="secondary"
               onPress={() => router.push(`/obligation/${id}/bank-questions`)}
             />
+            <Button
+              label={t('obligationDetail.logRateChange')}
+              variant="secondary"
+              onPress={() => router.push(`/obligation/${id}/log-rate`)}
+            />
           </View>
+        ) : obligation.kind === 'murabaha' ? (
+          <MurabahaDetailSection
+            obligationId={obligation.id}
+            obligation={obligation}
+            progress={murabahaViewModel.progress}
+          />
+        ) : obligation.kind === 'creditCard' ? (
+          <CardDetailSection obligation={obligation} />
         ) : (
           <Text variant="bodySmall" color="secondary">
             {t('obligationDetail.phaseNote')}
@@ -214,6 +318,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: space[2],
     marginTop: space[2],
+  },
+  manageRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space[2],
+    justifyContent: 'center',
   },
   navigationGrid: {
     gap: space[3],

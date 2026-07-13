@@ -29,6 +29,11 @@ export function profileRowToDomain(row: ProfileRow): UserProfile {
     dataMode: toDataMode(row.data_mode),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    reminderDayOfMonth: row.reminder_day_of_month ?? undefined,
+    userThresholdAmount:
+      row.user_threshold_amount === null || row.user_threshold_amount === undefined
+        ? undefined
+        : String(row.user_threshold_amount),
   }
 }
 
@@ -39,5 +44,8 @@ export function profileDomainToRow(profile: UserProfile): ProfileInsert {
     data_mode: profile.dataMode,
     created_at: profile.createdAt,
     updated_at: profile.updatedAt,
+    reminder_day_of_month: profile.reminderDayOfMonth ?? null,
+    user_threshold_amount:
+      profile.userThresholdAmount === undefined ? null : Number(profile.userThresholdAmount),
   }
 }

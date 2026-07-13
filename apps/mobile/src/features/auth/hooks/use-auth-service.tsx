@@ -84,6 +84,19 @@ export function useAuthService(): Result<AuthService, AppError> {
   return result.ok ? ok(result.value.authService) : result
 }
 
+/**
+ * Null-safe variant for screens (e.g. Settings) that can render outside
+ * `AuthServiceProvider` in isolated tests — mirrors
+ * `useRepositoriesIfAvailable()`. Returns `null` when the provider isn't
+ * mounted instead of throwing.
+ */
+export function useAuthServiceIfAvailable(): Result<AuthService, AppError> | null {
+  const getServices = useContext(AuthServiceContext)
+  if (getServices === null) return null
+  const result = getServices()
+  return result.ok ? ok(result.value.authService) : result
+}
+
 export function useConsentRepository(): Result<ConsentRepository, AppError> {
   const result = useServicesGetter()()
   return result.ok ? ok(result.value.consentRepository) : result

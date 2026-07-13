@@ -2,7 +2,10 @@
 
 ## Status
 
-Planned
+Core scope complete (2026-07-13) — see [PHASE-8-COMPLETION.md](../completions/PHASE-8-COMPLETION.md).
+All 8 non-cuttable items below are built and tested. The 4 cuttable items (card simulator,
+notifications, duplicate detection, mock-connect) were deliberately not built this phase, per
+owner decision — deferred, not blocking Phase 9.
 
 ## Objective
 
