@@ -30,6 +30,17 @@ export default function TabLayout() {
           name="obligations"
           options={{
             title: t('tabs.obligations'),
+            headerRight: () => (
+              <Link href="/obligation/add" asChild>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('obligationForm.addTitle')}
+                  style={{ marginRight: 16 }}
+                >
+                  <Text style={{ fontSize: 24 }}>➕</Text>
+                </Pressable>
+              </Link>
+            ),
           }}
         />
         <Tabs.Screen

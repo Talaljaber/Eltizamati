@@ -10,6 +10,7 @@ import {
   ok,
   err,
   makeError,
+  localDateFromDate,
   type ObligationRepository,
   type Obligation,
   type Id,
@@ -39,10 +40,11 @@ export class DemoObligationRepository implements ObligationRepository {
   }
 
   async archive(id: Id<'obligation'>): Promise<Result<void, AppError>> {
-    if (!this.#store.has(id)) {
+    const obligation = this.#store.get(id)
+    if (!obligation) {
       return err(makeError('notFound', { safeMetadata: { id } }))
     }
-    // Demo mode is read-only; archive is a no-op (closedDate already set by seed or unchanged)
+    this.#store.set(id, { ...obligation, closedDate: localDateFromDate(new Date()) })
     return ok(undefined)
   }
 

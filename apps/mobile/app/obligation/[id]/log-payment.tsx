@@ -1,0 +1,129 @@
+import { useState } from 'react'
+import { View, StyleSheet, ScrollView } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Text, Button, TextField, space } from '@/core/design-system'
+import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
+import { useRepositories } from '@/features/repositories/hooks/use-repositories'
+import { useActiveUser } from '@/features/auth/hooks/use-active-user'
+import { toLocalDate, type Id } from '@eltizamati/domain'
+import { ObligationService } from '@/services/obligation-service'
+import { isValidDecimal, isValidLocalDate } from '@/features/obligation-form/validation'
+
+const service = new ObligationService()
+
+export default function LogPaymentScreen() {
+  return (
+    <RequireRepositories>
+      <LogPaymentInner />
+    </RequireRepositories>
+  )
+}
+
+function LogPaymentInner() {
+  const { t } = useTranslation()
+  const router = useRouter()
+  const repos = useRepositories()
+  const activeUser = useActiveUser()
+  const queryClient = useQueryClient()
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const obligationId = id as Id<'obligation'>
+
+  const { data: obligation, isLoading } = useQuery({
+    queryKey: ['obligation', obligationId],
+    queryFn: async () => {
+      const res = await repos.obligationRepository.get(obligationId)
+      if (!res.ok) throw res.error
+      return res.value
+    },
+  })
+
+  const [date, setDate] = useState('')
+  const [amount, setAmount] = useState('')
+  const [error, setError] = useState<string | undefined>(undefined)
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    if (!obligation || !activeUser) return
+    if (!isValidLocalDate(date)) return setError(t('obligationForm.errors.date'))
+    if (!isValidDecimal(amount)) return setError(t('obligationForm.errors.amount'))
+    setError(undefined)
+    setSaving(true)
+    const result = await service.logPayment(
+      activeUser,
+      obligation,
+      toLocalDate(date),
+      amount,
+      repos,
+    )
+    setSaving(false)
+    if (!result.ok) return setError(t('obligationForm.errors.saveFailed'))
+    await queryClient.invalidateQueries()
+    router.back()
+  }
+
+  if (isLoading || !obligation) {
+    return (
+      <View style={styles.loading}>
+        <Text variant="body">{t('common.loading')}</Text>
+      </View>
+    )
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.scroll}>
+      <Stack.Screen options={{ title: t('obligationForm.logPaymentTitle') }} />
+      <TextField
+        label={t('obligationForm.paymentDate')}
+        value={date}
+        onChangeText={setDate}
+        placeholder="YYYY-MM-DD"
+      />
+      <TextField
+        label={t('obligationForm.paymentAmount')}
+        value={amount}
+        onChangeText={setAmount}
+        keyboardType="decimal-pad"
+      />
+
+      {error !== undefined && (
+        <Text variant="bodySmall" color="critical">
+          {error}
+        </Text>
+      )}
+
+      <View style={styles.actions}>
+        <Button
+          label={t('common.cancel')}
+          variant="ghost"
+          onPress={() => router.back()}
+          disabled={saving}
+        />
+        <Button
+          label={t('obligationForm.save')}
+          onPress={() => void handleSave()}
+          loading={saving}
+        />
+      </View>
+    </ScrollView>
+  )
+}
+
+const styles = StyleSheet.create({
+  scroll: {
+    padding: space[4],
+    gap: space[4],
+    paddingBottom: space[8],
+  },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: space[3],
+  },
+})
