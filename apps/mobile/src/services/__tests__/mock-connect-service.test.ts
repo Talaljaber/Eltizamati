@@ -6,7 +6,10 @@ describe('MockConnectService', () => {
   it('imports a permanently mock-labeled synthetic card for the active user', async () => {
     const repos = createDemoRepositories()
     const userId = brandId<'user'>('mock-test-user')
-    const result = await new MockConnectService().retrieveAndImport(userId, repos)
+    const service = new MockConnectService()
+    const retrieveSpy = jest.spyOn(service, 'retrieve')
+    const classifySpy = jest.spyOn(service, 'classify')
+    const result = await service.retrieveAndImport(userId, repos)
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
@@ -16,7 +19,12 @@ describe('MockConnectService', () => {
       expect(stored.value.userId).toBe(userId)
       expect(stored.value.kind).toBe('creditCard')
       expect(stored.value.provenance.providerId).toBe('mock-open-banking')
-      expect(stored.value.provenance.sourceReference).toBe('mock-provider-v1')
+      expect(stored.value.provenance.sourceReference).toBe('mock-provider-v1-card')
     }
+    expect(retrieveSpy).toHaveBeenCalledTimes(1)
+    expect(classifySpy).toHaveBeenCalledWith(
+      expect.objectContaining({ productType: 'credit-card' }),
+      userId,
+    )
   })
 })
