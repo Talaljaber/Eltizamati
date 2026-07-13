@@ -20,12 +20,12 @@ One real bug was found and fixed during the gate run itself: a Settings `useQuer
 
 The four items initially cut for schedule were subsequently restored and implemented:
 
-1. **Mock connect:** versioned consent gate, deterministic mock-provider retrieval, persistence through `ImportService`, permanent mock provenance/badging, and retry/error states.
+1. **Mock connect:** versioned consent gate, deterministic synthetic provider retrieval, an explicit fixture-record → domain classification boundary, persistence through `ImportService`, permanent mock provenance/badging, and retry/error states. This is deliberately an offline fixture adapter, not a live aggregation integration.
 2. **Card payoff simulator:** `cardPayoff.v1` is consumed through `CalculationService`; minimum-only and fixed/custom results show months, charges, total paid, refusal, invalid-input, and never-pays-off states.
 3. **Local notifications:** recurring monthly 09:00 local reminders, permission-denial UX, bilingual content-minimized copy, cancellation/rescheduling, and an allow-listed `/insights` notification route.
 4. **Duplicate payments:** natural-key detection on obligation/date/amount warns before saving and supports an explicit override.
 
-Verification after restoration: mobile TypeScript and ESLint passed; formatting passed; all 37 mobile suites passed (199 tests). Physical-device notification delivery and the bilingual offline walkthrough remain manual Phase 9 evidence, not claims made by this report.
+Verification after restoration and corrective review: mobile TypeScript, ESLint, formatting, and dependency-cruiser passed (467 modules / 1,459 dependencies, zero violations); all 40 mobile suites passed (203 tests). RNTL coverage exercises mock consent/import UI (including a missing-`crypto.randomUUID` Hermes case) and card-simulator input/refusal UI in addition to service/formula tests. Physical-device notification delivery and the bilingual offline walkthrough remain manual Phase 9 evidence, not claims made by this report.
 
 ## Not part of this phase (pre-existing, unrelated)
 

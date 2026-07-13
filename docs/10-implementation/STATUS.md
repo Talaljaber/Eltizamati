@@ -12,7 +12,7 @@ Learn/glossary, and the user-defined threshold insight + reminder-day setting.
 
 The owner subsequently restored all four initially cuttable items. Mock connect, card payoff
 simulation, recurring local reminders, and duplicate-payment warnings are now implemented and
-covered by tests. The mobile gate passes with 37 suites / 199 tests, plus TypeScript, ESLint, and
+covered by tests. The mobile gate passes with 40 suites / 203 tests, plus TypeScript, ESLint, and
 formatting. Physical-device notification and bilingual offline walkthrough evidence moves to Phase 9.
 
 The prior whole-repository gate remains recorded below. This restoration pass independently verified
@@ -194,7 +194,8 @@ AR/EN airplane-mode walkthrough recording) are **deferred to Phase 10** per the 
 
 **Phase 8: implementation complete — see [PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md).**
 All formerly cuttable items are now implemented. The restoration pass verified mobile formatting,
-lint, typecheck, and 199 tests across 37 suites; Phase 9 owns physical-device evidence.
+lint, typecheck, dependency-cruiser (467 modules / 1,459 dependencies, zero violations), and 203
+tests across 40 suites; Phase 9 owns physical-device evidence.
 
 **Phase 7: implementation done and verified; formally stays open on 2 deferred items (see the
 2026-07-13 "owner decision" addendum below), both pushed to Phase 10.** Unaffected by Phase 8's
