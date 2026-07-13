@@ -136,6 +136,17 @@ export default function SettingsScreen() {
 
       <View style={styles.section}>
         <Text variant="bodySmall" color="secondary">
+          {t('legalDoc.title')}
+        </Text>
+        <Button
+          label={t('legalDoc.title')}
+          onPress={() => router.push('/legal-doc')}
+          variant="secondary"
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text variant="bodySmall" color="secondary">
           {t('settings.acknowledgmentsLabel')}
         </Text>
         <Button

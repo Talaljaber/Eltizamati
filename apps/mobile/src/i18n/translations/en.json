@@ -360,7 +360,206 @@
   },
   "learn": {
     "title": "Learn",
-    "subtitle": "Understand loans, financing, and credit — in plain language."
+    "subtitle": "Understand loans, financing, and credit — in plain language.",
+    "categoryConventional": "Conventional Loans",
+    "categoryIslamic": "Islamic Financing",
+    "categoryCards": "Credit Cards",
+    "relatedTerms": "Related terms",
+    "backToLearn": "Back to Learn"
+  },
+  "learnTopics": {
+    "howLoansWork": {
+      "title": "How a conventional loan works",
+      "body": "A conventional loan gives you a principal amount up front, which you repay over time through regular installments. Each installment covers part interest (the bank's charge for lending) and part principal. The amortization schedule shows exactly how that split changes over the life of the loan."
+    },
+    "fixedVsVariable": {
+      "title": "Fixed vs. variable rate",
+      "body": "A fixed rate stays the same for the agreed period, so your installment is predictable. A variable rate can change during the loan — usually through repricing tied to a reference rate — which means your installment or loan term can shift over time."
+    },
+    "residualBalance": {
+      "title": "Why a residual balance can appear",
+      "body": "If your rate increases but your installment doesn't, more of each payment covers interest instead of principal. Over time this can leave a residual balance still owed at maturity, sometimes called a balloon payment. It isn't always a sign of a problem — but it's worth understanding before it surprises you."
+    },
+    "earlyRepaymentConventional": {
+      "title": "Paying off a conventional loan early",
+      "body": "Early repayment means paying part or all of your outstanding balance before the scheduled end date. Banks may apply their own terms or fees to early repayment — always confirm the current terms with your bank before deciding."
+    },
+    "howMurabahaWorks": {
+      "title": "How Murabaha financing works",
+      "body": "In Murabaha, the bank buys the asset you want and sells it to you at a disclosed markup (profit rate). The total sale price is fixed at signing and split into installments. Because the total is fixed upfront, your outstanding financing amount only ever goes down as you pay, never up."
+    },
+    "whyNoInterestInIslamicFinancing": {
+      "title": "Why Murabaha never uses \"interest\"",
+      "body": "Murabaha is structured as a sale, not a loan — the bank's return is a disclosed profit built into the fixed sale price, not interest charged on a balance. That's why this app never uses the word \"interest\" anywhere for Murabaha, Ijara, or Diminishing Musharakah."
+    },
+    "earlySettlementAndIbra": {
+      "title": "Early settlement and ibra'",
+      "body": "Settling Islamic financing before the end of its term is called early settlement. A bank may voluntarily grant ibra' — a discount on the remaining amount — but this is entirely at the bank's discretion. This app never simulates or promises an ibra' amount; ask your bank for their current terms."
+    },
+    "ijaraAndMusharakah": {
+      "title": "Ijara and Diminishing Musharakah, briefly",
+      "body": "Ijara is a lease: you pay rent to use an asset the bank owns, often ending in ownership transfer. Diminishing Musharakah is co-ownership: you and the bank both own the asset, and you gradually buy the bank's share while paying rent on the portion it still owns. Both are shown read-only in this app for now."
+    },
+    "minimumPaymentVsPayingInFull": {
+      "title": "Minimum payment vs. paying in full",
+      "body": "The minimum payment keeps your card account current — it is not the amount that pays off your balance. Paying only the minimum means finance charges keep accruing on the rest. If you pay your full statement balance within the grace period, you typically avoid finance charges altogether."
+    },
+    "creditUtilization": {
+      "title": "Credit utilization and why it matters",
+      "body": "Utilization is your card balance as a share of your credit limit. Keeping utilization low is generally considered healthier for your finances and your credit profile. This app flags when a card's utilization crosses a high threshold so it doesn't creep up unnoticed."
+    }
+  },
+  "glossary": {
+    "obligation": {
+      "term": "Obligation",
+      "definition": "Any financial commitment you must repay: a loan, financing, or credit card."
+    },
+    "principal": {
+      "term": "Principal",
+      "definition": "The amount you borrowed, excluding interest/profit."
+    },
+    "interest": {
+      "term": "Interest",
+      "definition": "The cost the bank charges for lending, usually a yearly percentage."
+    },
+    "interestRate": {
+      "term": "Interest rate",
+      "definition": "The yearly percentage that determines interest."
+    },
+    "installment": {
+      "term": "Installment",
+      "definition": "The regular payment you make, usually monthly."
+    },
+    "outstandingBalance": {
+      "term": "Outstanding balance",
+      "definition": "What you still owe right now."
+    },
+    "maturityDate": {
+      "term": "Maturity date",
+      "definition": "The date the obligation is scheduled to be fully repaid."
+    },
+    "variableRate": {
+      "term": "Variable rate",
+      "definition": "A rate the bank can change during the loan, usually following a reference rate."
+    },
+    "fixedRate": {
+      "term": "Fixed rate",
+      "definition": "A rate that stays the same for the agreed period."
+    },
+    "amortization": {
+      "term": "Amortization",
+      "definition": "How each payment splits between principal and interest over time."
+    },
+    "residualBalance": {
+      "term": "Residual balance",
+      "definition": "Money still owed at maturity when payments didn't fully repay the loan."
+    },
+    "balloonPayment": {
+      "term": "Balloon payment",
+      "definition": "A large final payment, either by contract design or caused by under-repayment."
+    },
+    "earlyRepayment": {
+      "term": "Early repayment",
+      "definition": "Paying part or all of the obligation before schedule."
+    },
+    "gracePeriod": {
+      "term": "Grace period",
+      "definition": "Days you can pay a card statement in full without finance charges."
+    },
+    "minimumPayment": {
+      "term": "Minimum payment",
+      "definition": "The smallest card payment that keeps the account current — not the amount that pays it off."
+    },
+    "utilization": {
+      "term": "Utilization",
+      "definition": "Card balance as a share of the credit limit."
+    },
+    "statementBalance": {
+      "term": "Statement balance",
+      "definition": "What you owed on the statement date."
+    },
+    "financeCharges": {
+      "term": "Finance charges",
+      "definition": "Interest and fees a card adds when you don't pay in full."
+    },
+    "murabaha": {
+      "term": "Murabaha",
+      "definition": "The bank buys the item and sells it to you at a disclosed markup, paid in installments. Total price is fixed at contract."
+    },
+    "financingAmount": {
+      "term": "Outstanding financing",
+      "definition": "What remains of the total sale price you owe in Murabaha (or financing generally)."
+    },
+    "profitRate": {
+      "term": "Profit rate",
+      "definition": "The disclosed markup rate used in Islamic financing."
+    },
+    "ijara": {
+      "term": "Ijara",
+      "definition": "Lease-based financing: you pay rent for use of an asset the bank owns, often ending in ownership transfer."
+    },
+    "diminishingMusharakah": {
+      "term": "Diminishing Musharakah",
+      "definition": "You and the bank co-own the asset; you buy the bank's share over time and pay rent on what it still owns."
+    },
+    "earlySettlement": {
+      "term": "Early settlement",
+      "definition": "Settling Islamic financing before term; any rebate (ibra') is at the bank's discretion."
+    },
+    "ibra": {
+      "term": "Ibra' (rebate)",
+      "definition": "A discount an Islamic bank may voluntarily grant on early settlement."
+    },
+    "provenance": {
+      "term": "Data source",
+      "definition": "Where a number came from: your bank, the credit bureau, your entry, or our estimate."
+    },
+    "estimate": {
+      "term": "Estimate",
+      "definition": "A value we calculated from available data — not an official bank figure."
+    },
+    "officialValue": {
+      "term": "Official figure",
+      "definition": "A value that came directly from your bank or lender."
+    },
+    "repricing": {
+      "term": "Rate repricing",
+      "definition": "The bank updating a variable rate, usually when a reference rate moves."
+    },
+    "delinquency": {
+      "term": "Missed payment status",
+      "definition": "The state of being behind on a scheduled payment."
+    },
+    "dayCount": {
+      "term": "Day-count convention",
+      "definition": "The rule for counting days when computing interest (e.g. 30/360, actual/365)."
+    },
+    "apr": {
+      "term": "Effective annual rate",
+      "definition": "The true yearly cost including compounding (and fees, where stated)."
+    }
+  },
+  "legalDoc": {
+    "title": "Privacy Policy",
+    "version": "Version {{version}}",
+    "sections": {
+      "dataWeStore": {
+        "heading": "What data we store",
+        "body": "In demo mode, all data is fictional and lives only on your device for the duration of your session — nothing is sent to any server. In personal mode, your obligations, payments, and rate history are stored in our Supabase database, protected by row-level security so only you can access your own records."
+      },
+      "dataSources": {
+        "heading": "Where your numbers come from",
+        "body": "Every figure in this app is labeled by its source: your own manual entry, an official value from your bank, or an estimate we calculated. We never present an estimate as an official figure. Bank and open-banking connections are planned but not yet available — see Data Status in Settings for the current, honest state of every connection."
+      },
+      "yourRights": {
+        "heading": "Your rights",
+        "body": "You can review everything you've acknowledged in Settings → Acknowledgments. You can sign out at any time. You can permanently erase your account and all associated data from Settings → Account → Delete Account."
+      },
+      "accountDeletion": {
+        "heading": "Account deletion",
+        "body": "Deleting your account permanently erases your profile, obligations, payments, rate history, and consent records. This action cannot be undone."
+      }
+    }
   },
   "settings": {
     "title": "Settings",
