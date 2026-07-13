@@ -130,7 +130,9 @@
     "title": "سجل الفائدة",
     "effectiveFrom": "ساري من",
     "error": "تعذّر تحميل سجل الفائدة.",
-    "empty": "لا توجد فترات فائدة مسجّلة."
+    "empty": "لا توجد فترات فائدة مسجّلة.",
+    "increaseBadge": "+{{percent}}%",
+    "decreaseBadge": "-{{percent}}%"
   },
   "rateImpact": {
     "title": "أثر تغيّر الفائدة",
@@ -160,7 +162,9 @@
     "endingBalance": "الرصيد الختامي",
     "error": "تعذّر تحميل جدول السداد.",
     "unsupported": "جدول السداد غير متاح لهذا النوع من الالتزامات بعد.",
-    "empty": "لا توجد فترات سداد متاحة."
+    "empty": "لا توجد فترات سداد متاحة.",
+    "costIncreaseBadge": "+{{percent}}% مقارنة بالفترة السابقة",
+    "costDecreaseBadge": "-{{percent}}% مقارنة بالفترة السابقة"
   },
   "scenario": {
     "oneTimeLabel": "دفعة إضافية لمرة واحدة (دينار)",

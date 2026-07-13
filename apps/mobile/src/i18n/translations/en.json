@@ -130,7 +130,9 @@
     "title": "Rate History",
     "effectiveFrom": "Effective from",
     "error": "Error loading rate history.",
-    "empty": "No rate periods on file."
+    "empty": "No rate periods on file.",
+    "increaseBadge": "+{{percent}}%",
+    "decreaseBadge": "-{{percent}}%"
   },
   "rateImpact": {
     "title": "Rate Impact",
@@ -160,7 +162,9 @@
     "endingBalance": "Ending Balance",
     "error": "Error loading schedule.",
     "unsupported": "Schedule isn't available for this obligation type yet.",
-    "empty": "No schedule entries available."
+    "empty": "No schedule entries available.",
+    "costIncreaseBadge": "+{{percent}}% vs last period",
+    "costDecreaseBadge": "-{{percent}}% vs last period"
   },
   "scenario": {
     "oneTimeLabel": "One-time extra payment (JOD)",

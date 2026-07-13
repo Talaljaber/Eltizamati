@@ -101,3 +101,28 @@ None planned — this is currently the last phase in the sequence. Any further w
 ## Completion Report Requirement
 
 `docs/10-implementation/completions/PHASE-10-COMPLETION.md` — iOS device evidence index, push-delivery evidence (both platforms), saved-scenario verification, final risk re-score.
+
+## Carried over from Phase 7 (owner decision, 2026-07-13)
+
+Phase 7's implementation (screens, formulas, provenance wiring) is done and verified; these were its
+only unmet exit criteria, and the owner deferred them here rather than block Phase 8/9 on them.
+Independent of this phase's own iOS/push/saved-scenarios scope above — pick up whichever answers have
+arrived by the time this phase starts:
+
+1. **TV-104 / TV-601 finance sign-off** — exact reference numbers requested from the finance contact:
+   - TV-104 (amortization): 20,000 JOD principal, 7.5% annual rate, 84-month term, starting 2026-01-01
+     — need the exact `computedInstallment` and `totalCost`.
+   - TV-601 (card payoff): 2,350 JOD balance, 24% APR, minimum payment 3% (10 JOD floor) vs. fixed 100
+     JOD/month — need exact `months`/`totalCharges` for both paths.
+   - Once received: fill in `packages/finance-engine/vectors/tv-1xx-amortization.json` (TV-104) and
+     `tv-6xx-card-payoff.json` (TV-601) with the signed values and `reviewedBy`, and confirm the engine's
+     existing output matches within the vector's stated tolerance.
+2. ~~Rate-history cumulative extra-interest annotation~~ — **done, 2026-07-13.** Owner decided against a
+   JOD-total baseline comparison; instead `SCR-RATE-HIST` now shows the %-change in the rate itself vs.
+   the previous period (increase/decrease), and `SCR-OBL-SCHEDULE` shows the %-change in the interest
+   portion of each installment vs. the previous period. Both are UI-layer percentage displays over
+   already-official/already-computed figures — no new finance-engine formula or vector needed.
+3. **AR/EN airplane-mode walkthrough recording** — a formal recorded 5-minute demo-spine walkthrough
+   (dashboard → loan → rate history → rate impact → explain sheet → scenario → bank questions), once
+   airplane-mode/personal-mode Android device access is available for this phase's own device pass —
+   can be captured in the same device session as Phase 10's iOS/Android manual validation.

@@ -29,19 +29,35 @@ export default function RateHistoryScreen() {
 
         {viewModel.status === 'success' && viewModel.periods.length > 0 && (
           <Card>
-            {viewModel.periods.map((period, idx) => (
+            {viewModel.periods.map((row, idx) => (
               <TimelineItem
-                key={period.effectiveFrom}
+                key={row.period.effectiveFrom}
                 isLast={idx === viewModel.periods.length - 1}
               >
                 <View style={styles.periodContent}>
-                  <Text variant="heading">
-                    {t('rateHistory.annualRate', {
-                      rate: period.annualRate.toStorageString(),
-                    })}
-                  </Text>
+                  <View style={styles.rateRow}>
+                    <Text variant="heading">
+                      {t('rateHistory.annualRate', {
+                        rate: row.period.annualRate.toStorageString(),
+                      })}
+                    </Text>
+                    {row.percentChangeFromPrevious !== undefined && (
+                      <Text
+                        variant="bodySmall"
+                        color={row.percentChangeFromPrevious > 0 ? 'critical' : 'positive'}
+                      >
+                        {row.percentChangeFromPrevious > 0
+                          ? t('rateHistory.increaseBadge', {
+                              percent: row.percentChangeFromPrevious.toFixed(1),
+                            })
+                          : t('rateHistory.decreaseBadge', {
+                              percent: Math.abs(row.percentChangeFromPrevious).toFixed(1),
+                            })}
+                      </Text>
+                    )}
+                  </View>
                   <Text variant="bodySmall" color="secondary">
-                    {t('rateHistory.effectiveFrom')}: {period.effectiveFrom}
+                    {t('rateHistory.effectiveFrom')}: {row.period.effectiveFrom}
                   </Text>
                 </View>
               </TimelineItem>
@@ -60,5 +76,10 @@ const styles = StyleSheet.create({
   periodContent: {
     paddingStart: space[3],
     paddingBottom: space[2],
+  },
+  rateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[2],
   },
 })

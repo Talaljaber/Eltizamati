@@ -77,17 +77,48 @@ export default function AmortizationScheduleScreen() {
                     {t('schedule.period')} {entry.period}
                   </Text>
                 </View>
-                {viewModel.run &&
-                  (
-                    [
-                      [t('schedule.installment'), entry.payment],
-                      [t('schedule.principalPortion'), entry.principal],
-                      [t('schedule.interestPortion'), entry.cost],
-                      [t('schedule.endingBalance'), entry.closingBalance],
-                    ] as const
-                  ).map(([label, amount]) => (
-                    <FieldRow key={label} label={label} value={renderEstimatedAmount(amount)} />
-                  ))}
+                {viewModel.run && (
+                  <>
+                    <FieldRow
+                      label={t('schedule.installment')}
+                      value={renderEstimatedAmount(entry.payment)}
+                    />
+                    <FieldRow
+                      label={t('schedule.principalPortion')}
+                      value={renderEstimatedAmount(entry.principal)}
+                    />
+                    <FieldRow
+                      label={t('schedule.interestPortion')}
+                      value={
+                        <View style={styles.interestValue}>
+                          {renderEstimatedAmount(entry.cost)}
+                          {entry.costPercentChangeFromPrevious !== undefined && (
+                            <Text
+                              variant="bodySmall"
+                              color={
+                                entry.costPercentChangeFromPrevious > 0 ? 'critical' : 'positive'
+                              }
+                            >
+                              {entry.costPercentChangeFromPrevious > 0
+                                ? t('schedule.costIncreaseBadge', {
+                                    percent: entry.costPercentChangeFromPrevious.toFixed(1),
+                                  })
+                                : t('schedule.costDecreaseBadge', {
+                                    percent: Math.abs(entry.costPercentChangeFromPrevious).toFixed(
+                                      1,
+                                    ),
+                                  })}
+                            </Text>
+                          )}
+                        </View>
+                      }
+                    />
+                    <FieldRow
+                      label={t('schedule.endingBalance')}
+                      value={renderEstimatedAmount(entry.closingBalance)}
+                    />
+                  </>
+                )}
               </View>
             ))}
           </Card>
@@ -113,5 +144,9 @@ const styles = StyleSheet.create({
   },
   entryTitle: {
     marginBottom: space[2],
+  },
+  interestValue: {
+    alignItems: 'flex-end',
+    gap: space[1],
   },
 })

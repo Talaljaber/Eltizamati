@@ -20,6 +20,8 @@ export interface AmortizationScheduleRow {
   principal: string
   cost: string
   closingBalance: string
+  /** % change in the interest/cost portion vs. the previous period; undefined for period 1 or when either amount is unknown. */
+  costPercentChangeFromPrevious: number | undefined
 }
 
 export interface AmortizationScheduleViewModel {
@@ -114,15 +116,24 @@ export function useAmortizationScheduleViewModel(
   }
 
   const snapshot = snapshotRecord(run.outcome.resultSnapshot)
+  let previousCost: number | undefined
   const schedule = snapshotArray(snapshot.schedule).map((entryValue, index) => {
     const entry = snapshotRecord(entryValue)
+    const cost = snapshotMoneyAmount(entry.cost) ?? '?'
+    const currentCost = cost === '?' ? undefined : Number(cost)
+    const costPercentChangeFromPrevious =
+      currentCost === undefined || previousCost === undefined || previousCost === 0
+        ? undefined
+        : ((currentCost - previousCost) / previousCost) * 100
+    previousCost = currentCost
     return {
       period: typeof entry.period === 'number' ? entry.period : index + 1,
       date: typeof entry.date === 'string' ? entry.date : '',
       payment: snapshotMoneyAmount(entry.payment) ?? '?',
       principal: snapshotMoneyAmount(entry.principal) ?? '?',
-      cost: snapshotMoneyAmount(entry.cost) ?? '?',
+      cost,
       closingBalance: snapshotMoneyAmount(entry.closingBalance) ?? '?',
+      costPercentChangeFromPrevious,
     }
   })
 
