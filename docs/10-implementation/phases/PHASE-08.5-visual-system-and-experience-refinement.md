@@ -133,13 +133,13 @@ Expansion beyond the representative set is **explicitly deferred** until the exi
 
 ### Implementation status (2026-07-13)
 
-| Workstream                 | State                                                                                       |
-| -------------------------- | ------------------------------------------------------------------------------------------- |
-| 1 — Audit                  | Implemented and merged                                                                      |
-| 2 — Define                 | Implemented and merged                                                                      |
-| 3 — Foundations            | Implemented and merged; Tajawal/Inter asset bundling remains blocked pending licensed files |
-| 4 — Representative screens | Implemented and merged in PR #13; awaiting independent validation                           |
-| 5 — Review and gate        | **Not started**; the validation matrix and recorded exit review remain outstanding          |
+| Workstream                 | State                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 1 — Audit                  | Implemented and merged                                                                                        |
+| 2 — Define                 | Implemented and merged                                                                                        |
+| 3 — Foundations            | Implemented and merged; Tajawal/Inter asset bundling remains blocked pending licensed files                   |
+| 4 — Representative screens | Implemented in PR #13; provenance correction `b81ab80` merged through PR #14; awaiting independent validation |
+| 5 — Review and gate        | **Not started**; the validation matrix and recorded exit review remain outstanding                            |
 
 The Arabic-reading reviewer remains TBD. Phase 9 remains blocked until Workstream 5 is performed and
 the full Phase 8.5 exit gate passes. This status does not mark Phase 8.5 complete.
@@ -150,7 +150,11 @@ the full Phase 8.5 exit gate passes. This status does not mark Phase 8.5 complet
 
 - No remote changes without owner approval.
 - Implementation is delivered through small, reviewable commits.
-- Merge happens only after the exit review passes.
+- Individual implementation workstreams may merge after their scoped checks and review. Such merges
+  do **not** close Phase 8.5 or authorize expansion. Phase completion, the go/no-go decision, and any
+  expansion into Phase 9 remain blocked until Workstream 5's recorded exit review passes. PRs #13 and
+  #14 merged under this incremental-delivery model before the exit review; they are implementation
+  evidence, not phase-completion evidence.
 
 ---
 

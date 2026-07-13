@@ -5,7 +5,7 @@ This document explicitly tracks the parts of **Phase 7 — Core Variable-Rate Lo
 ## 1. Pending TV-30x Finance Sign-off (External Blocker)
 
 - **Requirement**: Every material figure displayed to a judge must trace back to a signed vector (`reviewedBy` filled).
-- **Current State**: The UI is wired and the calculation engine works perfectly. However, the exact reference numbers for TV-301 through TV-305 (and related analytical vectors TV-104, TV-203, TV-601) are marked as `reviewedBy: null` and `source: 'finance-team'`. 
+- **Current State**: The UI is wired and the calculation engine works perfectly. However, the exact reference numbers for TV-301 through TV-305 (and related analytical vectors TV-104, TV-203, TV-601) are marked as `reviewedBy: null` and `source: 'finance-team'`.
 - **Action Required**: We must not invent these numbers. When the finance team provides the signed expected values, we will update the test vectors and confirm the engine matches them.
 
 ## 2. Rate History Cumulative Annotation (Omitted)
