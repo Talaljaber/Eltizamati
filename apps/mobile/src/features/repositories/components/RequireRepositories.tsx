@@ -13,7 +13,7 @@ import { useRepositoriesIfAvailable } from '../hooks/use-repositories'
 export function RequireRepositories({ children }: { children: ReactNode }) {
   const repos = useRepositoriesIfAvailable()
   if (repos === null) {
-    return <Redirect href="/onboarding/language" />
+    return <Redirect href="/onboarding/welcome" />
   }
   return <>{children}</>
 }

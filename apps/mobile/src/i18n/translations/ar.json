@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "التزاماتي",
     "toggleLanguage": "English",
     "loading": "جارٍ التحميل…",
     "back": "رجوع",
@@ -261,6 +262,10 @@
     "notFound": "لم يُعثر على سجل الحساب."
   },
   "onboarding": {
+    "welcomeTagline": "كل التزام، بشفافية تامة.",
+    "welcomeGetStarted": "ابدأ الآن",
+    "welcomeHaveAccount": "لديك حساب بالفعل؟",
+    "welcomeSignIn": "تسجيل الدخول",
     "languageTitle": "اختر لغتك",
     "languageSubtitle": "يمكنك تغيير ذلك لاحقاً من الإعدادات.",
     "english": "English",
@@ -593,6 +598,8 @@
     "accountLabel": "الحساب",
     "signedInAs": "مسجّل الدخول باسم {{email}}",
     "signOutButton": "تسجيل الخروج",
+    "demoAccountPrompt": "أنت تستكشف التطبيق ببيانات تجريبية. سجّل الدخول أو أنشئ حساباً لحفظ بياناتك الخاصة.",
+    "demoSignInAction": "تسجيل الدخول / إنشاء حساب",
     "deleteAccountButton": "حذف الحساب",
     "deleteAccountConfirmTitle": "حذف حسابك؟",
     "deleteAccountConfirmBody": "سيؤدي هذا إلى حذف حسابك وجميع بياناته نهائيًا. لا يمكن التراجع عن هذا الإجراء.",

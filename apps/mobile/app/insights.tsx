@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, StyleSheet, ScrollView } from 'react-native'
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native'
 import { Stack, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
@@ -109,22 +109,29 @@ export default function InsightsScreen() {
                   unread={insight.readAt === undefined}
                   action={
                     <View style={styles.actions}>
-                      {insight.obligationId !== undefined && (
-                        <Button
-                          label={t('insights.viewObligation', 'View obligation')}
-                          variant="secondary"
-                          onPress={() => {
-                            void handleView(insight)
-                          }}
-                          testID={`insight-view-${insight.id}`}
-                        />
-                      )}
-                      <Button
-                        label={t('insights.whyLabel', 'Why did I get this?')}
-                        variant="secondary"
-                        onPress={() => void handleWhy(insight)}
-                        testID={`insight-why-${insight.id}`}
-                      />
+                      <View style={styles.actionsRow}>
+                        {insight.obligationId !== undefined && (
+                          <Button
+                            label={t('insights.viewObligation', 'View obligation')}
+                            variant="ghost"
+                            onPress={() => {
+                              void handleView(insight)
+                            }}
+                            testID={`insight-view-${insight.id}`}
+                          />
+                        )}
+                        <Pressable
+                          onPress={() => void handleWhy(insight)}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('insights.whyLabel', 'Why did I get this?')}
+                          testID={`insight-why-${insight.id}`}
+                          hitSlop={8}
+                        >
+                          <Text variant="bodySmall" color="understanding">
+                            {t('insights.whyLabel', 'Why did I get this?')}
+                          </Text>
+                        </Pressable>
+                      </View>
                       {expandedId === insight.id && (
                         <Text variant="bodySmall" color="secondary">
                           {t(insight.bodyKey, insight.params)}
@@ -154,5 +161,10 @@ const styles = StyleSheet.create({
   actions: {
     gap: space[2],
     alignItems: 'flex-start',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[4],
   },
 })

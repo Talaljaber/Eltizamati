@@ -80,7 +80,7 @@ export default function ObligationsTab() {
 
   if (isLoading || isPaymentsLoading || isInsightsLoading || !activeUser) {
     return (
-      <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: theme.bg }]}>
+      <SafeAreaView edges={[]} style={[styles.root, { backgroundColor: theme.bg }]}>
         <DemoBanner />
         <View style={styles.loadingGroup}>
           <SkeletonCard />
@@ -92,7 +92,7 @@ export default function ObligationsTab() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: theme.bg }]}>
+    <SafeAreaView edges={[]} style={[styles.root, { backgroundColor: theme.bg }]}>
       <DemoBanner />
 
       <FlatList
@@ -180,7 +180,7 @@ export function ObligationRow({
 
   return (
     <ListRow leading={leading} trailing={trailing} onPress={onPress}>
-      <Text variant="heading" numberOfLines={1}>
+      <Text variant="heading" numberOfLines={2}>
         {obligation.institution.name}
       </Text>
       <Text variant="bodySmall" color="secondary">

@@ -11,11 +11,23 @@ export default function TabLayout() {
 
   return (
     <RequireRepositories>
-      <Tabs screenOptions={{ headerShown: true }}>
+      <Tabs
+        screenOptions={{
+          headerShown: true,
+          headerStyle: { backgroundColor: theme.brand },
+          headerTitleStyle: { color: theme.textOnBrand, fontWeight: '600' },
+          headerTintColor: theme.textOnBrand,
+          tabBarActiveTintColor: theme.brand,
+          tabBarInactiveTintColor: theme.textTertiary,
+        }}
+      >
         <Tabs.Screen
           name="index"
           options={{
             title: t('tabs.home'),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="home-outline" size={size} color={color} />
+            ),
             headerRight: () => (
               <Link href="/settings/" asChild>
                 <Pressable
@@ -24,7 +36,7 @@ export default function TabLayout() {
                   hitSlop={8}
                   style={{ marginHorizontal: 16 }}
                 >
-                  <Ionicons name="settings-outline" size={24} color={theme.textPrimary} />
+                  <Ionicons name="settings-outline" size={24} color={theme.textOnBrand} />
                 </Pressable>
               </Link>
             ),
@@ -34,6 +46,9 @@ export default function TabLayout() {
           name="obligations"
           options={{
             title: t('tabs.obligations'),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="list-outline" size={size} color={color} />
+            ),
             headerRight: () => (
               <Link href="/obligation/add" asChild>
                 <Pressable
@@ -42,7 +57,7 @@ export default function TabLayout() {
                   hitSlop={8}
                   style={{ marginHorizontal: 16 }}
                 >
-                  <Ionicons name="add" size={28} color={theme.textPrimary} />
+                  <Ionicons name="add" size={28} color={theme.textOnBrand} />
                 </Pressable>
               </Link>
             ),
@@ -52,6 +67,9 @@ export default function TabLayout() {
           name="learn/index"
           options={{
             title: t('tabs.learn'),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="book-outline" size={size} color={color} />
+            ),
           }}
         />
       </Tabs>

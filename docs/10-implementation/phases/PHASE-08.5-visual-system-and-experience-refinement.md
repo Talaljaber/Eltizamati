@@ -133,16 +133,16 @@ Expansion beyond the representative set is **explicitly deferred** until the exi
 
 ### Implementation status (2026-07-13)
 
-| Workstream                 | State                                                                                                         |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 1 — Audit                  | Implemented and merged                                                                                        |
-| 2 — Define                 | Implemented and merged                                                                                        |
-| 3 — Foundations            | Implemented and merged; Tajawal/Inter asset bundling remains blocked pending licensed files                   |
-| 4 — Representative screens | Implemented in PR #13; provenance correction `b81ab80` merged through PR #14; awaiting independent validation |
-| 5 — Review and gate        | **Not started**; the validation matrix and recorded exit review remain outstanding                            |
+| Workstream                 | State                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 — Audit                  | Implemented and merged                                                                                                                                                                                                                                                                                                                                                      |
+| 2 — Define                 | Implemented and merged                                                                                                                                                                                                                                                                                                                                                      |
+| 3 — Foundations            | Implemented and merged; Tajawal/Inter asset bundling remains blocked pending licensed files                                                                                                                                                                                                                                                                                 |
+| 4 — Representative screens | Implemented in PR #13; provenance correction `b81ab80` merged through PR #14; two live-review interaction-hierarchy fixes made during Workstream 5 (header action, insights action tiering)                                                                                                                                                                                 |
+| 5 — Review and gate        | **Validation matrix executed and recorded** — see [PHASE-8.5-WORKSTREAM-5-VALIDATION-MATRIX.md](../audits/PHASE-8.5-WORKSTREAM-5-VALIDATION-MATRIX.md). Conditional go: no blocking defects found; two findings logged for owner decision (§3.1, §3.2). Arabic-reading reviewer sign-off and owner exit-review sign-off remain outstanding — Phase 8.5 is not yet complete. |
 
-The Arabic-reading reviewer remains TBD. Phase 9 remains blocked until Workstream 5 is performed and
-the full Phase 8.5 exit gate passes. This status does not mark Phase 8.5 complete.
+The Arabic-reading reviewer remains TBD. Phase 9 remains blocked until Workstream 5's two outstanding
+sign-offs land and the full Phase 8.5 exit gate passes. This status does not mark Phase 8.5 complete.
 
 ---
 

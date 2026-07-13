@@ -5,6 +5,7 @@ import { AppProviders } from '../src/providers'
 import { OnboardingGuard } from '../src/features/demo/components/OnboardingGuard'
 import '../src/i18n' // Initialize i18n
 import { useNotificationResponse } from '../src/features/notifications/hooks/use-notification-response'
+import { useTheme } from '../src/core/design-system'
 
 function NotificationResponseHandler() {
   useNotificationResponse()
@@ -13,11 +14,18 @@ function NotificationResponseHandler() {
 
 export default function RootLayout() {
   const { t } = useTranslation()
+  const theme = useTheme()
   return (
     <AppProviders>
       <NotificationResponseHandler />
       <OnboardingGuard>
-        <Stack>
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: theme.brand },
+            headerTitleStyle: { color: theme.textOnBrand, fontWeight: '600' },
+            headerTintColor: theme.textOnBrand,
+          }}
+        >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="auth" options={{ headerShown: false }} />
