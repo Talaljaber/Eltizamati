@@ -181,6 +181,11 @@ function ObligationDetailInner() {
             <StatusChip status={status} />
             <ProvenanceBadge source={obligation.provenance.source} />
           </View>
+          {obligation.provenance.providerId === 'mock-open-banking' && (
+            <Text variant="bodySmall" color="critical">
+              {t('mockConnect.mockBadge')}
+            </Text>
+          )}
         </View>
 
         <View style={styles.manageRow}>
@@ -250,7 +255,13 @@ function ObligationDetailInner() {
             progress={murabahaViewModel.progress}
           />
         ) : obligation.kind === 'creditCard' ? (
-          <CardDetailSection obligation={obligation} />
+          <View style={styles.detailSection}>
+            <CardDetailSection obligation={obligation} />
+            <Button
+              label={t('cardSimulator.open')}
+              onPress={() => router.push(`/obligation/${obligation.id}/card-simulator`)}
+            />
+          </View>
         ) : (
           <Text variant="bodySmall" color="secondary">
             {t('obligationDetail.phaseNote')}
@@ -332,4 +343,5 @@ const styles = StyleSheet.create({
   paymentHistory: {
     marginTop: space[4],
   },
+  detailSection: { gap: space[4] },
 })
