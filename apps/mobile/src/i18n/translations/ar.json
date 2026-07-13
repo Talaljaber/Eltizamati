@@ -379,6 +379,8 @@
     "acknowledgmentDoc": {
       "privacy-policy": "سياسة الخصوصية"
     },
+    "dataStatusLabel": "مصادر البيانات",
+    "dataStatusButton": "عرض حالة البيانات",
     "accountLabel": "الحساب",
     "signedInAs": "مسجّل الدخول باسم {{email}}",
     "signOutButton": "تسجيل الخروج",
@@ -388,6 +390,23 @@
     "deleteAccountConfirmAction": "حذف الحساب",
     "aboutLabel": "حول التطبيق",
     "aboutVersion": "التزاماتي إصدار {{version}}"
+  },
+  "dataStatus": {
+    "title": "حالة البيانات",
+    "providerDemoSeed": "بيانات تجريبية",
+    "providerManual": "إدخال يدوي",
+    "providerCrif": "CRIF",
+    "providerOpenBanking": "الخدمات المصرفية المفتوحة",
+    "statusActive": "نشط",
+    "statusNotConnected": "غير متصل — مخطط له",
+    "plannedNote": "هذا الاتصال مخطط له في إصدار مستقبلي. غير متاح حاليًا.",
+    "obligationCount": "التزام واحد مسجّل",
+    "obligationCount_plural": "{{count}} التزامات مسجّلة",
+    "paymentCount": "دفعة واحدة مسجّلة",
+    "paymentCount_plural": "{{count}} دفعات مسجّلة",
+    "lastUpdated": "آخر تحديث {{date}}",
+    "lastUpdatedNone": "لا توجد سجلات بعد",
+    "honestyNote": "تعرض هذه الشاشة دائمًا الحالة الحقيقية الحالية لمصادر بياناتك — لا يُعرض أي مصدر كمتصل إلا إذا كان متصلاً فعليًا."
   },
   "notFound": {
     "title": "هذه الشاشة غير موجودة.",

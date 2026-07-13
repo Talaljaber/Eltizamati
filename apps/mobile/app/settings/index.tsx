@@ -145,6 +145,17 @@ export default function SettingsScreen() {
         />
       </View>
 
+      <View style={styles.section}>
+        <Text variant="bodySmall" color="secondary">
+          {t('settings.dataStatusLabel')}
+        </Text>
+        <Button
+          label={t('settings.dataStatusButton')}
+          onPress={() => router.push('/settings/data-status')}
+          variant="secondary"
+        />
+      </View>
+
       {isPersonalMode ? (
         <View style={styles.section}>
           <Text variant="bodySmall" color="secondary">

@@ -379,6 +379,8 @@
     "acknowledgmentDoc": {
       "privacy-policy": "Privacy Policy"
     },
+    "dataStatusLabel": "Data Sources",
+    "dataStatusButton": "View Data Status",
     "accountLabel": "Account",
     "signedInAs": "Signed in as {{email}}",
     "signOutButton": "Sign Out",
@@ -388,6 +390,23 @@
     "deleteAccountConfirmAction": "Delete Account",
     "aboutLabel": "About",
     "aboutVersion": "Eltizamati v{{version}}"
+  },
+  "dataStatus": {
+    "title": "Data Status",
+    "providerDemoSeed": "Demo Seed",
+    "providerManual": "Manual Entry",
+    "providerCrif": "CRIF",
+    "providerOpenBanking": "Open Banking",
+    "statusActive": "Active",
+    "statusNotConnected": "Not connected — planned",
+    "plannedNote": "This connection is planned for a future release. It is not available yet.",
+    "obligationCount": "{{count}} obligation on file",
+    "obligationCount_plural": "{{count}} obligations on file",
+    "paymentCount": "{{count}} payment on file",
+    "paymentCount_plural": "{{count}} payments on file",
+    "lastUpdated": "Last updated {{date}}",
+    "lastUpdatedNone": "No records yet",
+    "honestyNote": "This screen always shows the real, current state of your data sources — no source is ever shown as connected unless it actually is."
   },
   "notFound": {
     "title": "This screen doesn't exist.",
