@@ -12,6 +12,8 @@
 
 import {
   ok,
+  err,
+  makeError,
   isErr,
   brandId,
   userEntered,
@@ -333,7 +335,23 @@ export class ObligationService {
     date: LocalDate,
     amount: string,
     repos: Repositories,
+    allowDuplicate = false,
   ): Promise<Result<Payment, AppError>> {
+    if (!allowDuplicate) {
+      const existingResult = await repos.paymentRepository.listFor(obligation.id)
+      if (isErr(existingResult)) return existingResult
+      const amountValue = Money.of(amount, obligation.currency)
+      const duplicate = existingResult.value.some(
+        (payment) => payment.date === date && payment.amount.equals(amountValue),
+      )
+      if (duplicate) {
+        return err(
+          makeError('validation', {
+            safeMetadata: { reason: 'duplicatePayment', obligationId: obligation.id, date },
+          }),
+        )
+      }
+    }
     const now = new Date().toISOString()
     const payment: Payment = {
       id: brandId<'payment'>(generateId()),

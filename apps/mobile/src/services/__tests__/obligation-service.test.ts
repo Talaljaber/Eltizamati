@@ -175,6 +175,47 @@ describe('ObligationService — loans', () => {
     if (isOk(listed)) expect(listed.value).toHaveLength(1)
   })
 
+  it('FR-PAY-004 warns on a natural-key duplicate and permits explicit override', async () => {
+    const service = makeService()
+    const repos = createDemoRepositories()
+    const created = await service.createLoan(
+      userId,
+      {
+        nickname: 'My Loan',
+        institutionName: 'Test Bank',
+        openedDate: '2024-01-01' as never,
+        originalPrincipal: '10000',
+        installment: '300',
+        rateType: 'fixed',
+        termMonths: 36,
+        startDate: '2024-01-01' as never,
+        maturityDate: '2027-01-01' as never,
+      },
+      '5.5',
+      repos,
+    )
+    expect(isOk(created)).toBe(true)
+    if (!isOk(created)) return
+
+    expect(
+      isOk(await service.logPayment(userId, created.value, '2024-02-01' as never, '300', repos)),
+    ).toBe(true)
+    const duplicate = await service.logPayment(
+      userId,
+      created.value,
+      '2024-02-01' as never,
+      '300.000',
+      repos,
+    )
+    expect(isErr(duplicate)).toBe(true)
+    if (isErr(duplicate)) expect(duplicate.error.safeMetadata?.['reason']).toBe('duplicatePayment')
+    expect(
+      isOk(
+        await service.logPayment(userId, created.value, '2024-02-01' as never, '300', repos, true),
+      ),
+    ).toBe(true)
+  })
+
   it('archiveObligation sets closedDate; deleteObligation removes the obligation', async () => {
     const service = makeService()
     const repos = createDemoRepositories()

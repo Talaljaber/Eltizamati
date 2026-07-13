@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, StyleSheet, ScrollView } from 'react-native'
+import { Alert, View, StyleSheet, ScrollView } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -44,23 +44,47 @@ function LogPaymentInner() {
   const [error, setError] = useState<string | undefined>(undefined)
   const [saving, setSaving] = useState(false)
 
-  async function handleSave() {
+  async function persistPayment(allowDuplicate: boolean) {
     if (!obligation || !activeUser) return
-    if (!isValidLocalDate(date)) return setError(t('obligationForm.errors.date'))
-    if (!isValidDecimal(amount)) return setError(t('obligationForm.errors.amount'))
-    setError(undefined)
-    setSaving(true)
     const result = await service.logPayment(
       activeUser,
       obligation,
       toLocalDate(date),
       amount,
       repos,
+      allowDuplicate,
     )
+    if (!result.ok && result.error.safeMetadata?.['reason'] === 'duplicatePayment') {
+      setSaving(false)
+      Alert.alert(
+        t('obligationForm.duplicatePaymentTitle'),
+        t('obligationForm.duplicatePaymentBody'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('obligationForm.saveAnyway'),
+            onPress: () => {
+              setSaving(true)
+              void persistPayment(true)
+            },
+          },
+        ],
+      )
+      return
+    }
     setSaving(false)
     if (!result.ok) return setError(t('obligationForm.errors.saveFailed'))
     await queryClient.invalidateQueries()
     router.back()
+  }
+
+  async function handleSave() {
+    if (!obligation || !activeUser) return
+    if (!isValidLocalDate(date)) return setError(t('obligationForm.errors.date'))
+    if (!isValidDecimal(amount)) return setError(t('obligationForm.errors.amount'))
+    setError(undefined)
+    setSaving(true)
+    await persistPayment(false)
   }
 
   if (isLoading || !obligation) {
