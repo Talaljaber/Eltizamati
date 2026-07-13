@@ -9,14 +9,8 @@ import { useObligations } from '@/features/home/api/use-obligations'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { insightKeys } from '@/features/home/api/keys'
-import type { Id, Insight, InsightSeverity } from '@eltizamati/domain'
-
-/** InsightSeverity (domain) has no direct 'calm' bucket — info/positive both read as calm in the banner. */
-function toBannerSeverity(severity: InsightSeverity): 'urgent' | 'attention' | 'calm' {
-  if (severity === 'urgent') return 'urgent'
-  if (severity === 'attention') return 'attention'
-  return 'calm'
-}
+import type { Id, Insight } from '@eltizamati/domain'
+import { toBannerSeverity } from '@/features/insights/severity'
 
 export default function InsightsScreen() {
   const { t } = useTranslation()

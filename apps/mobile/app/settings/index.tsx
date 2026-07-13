@@ -14,7 +14,7 @@ import {
   type Result,
   type UserProfile,
 } from '@eltizamati/domain'
-import { Screen, Text, Button, TextField, space } from '@/core/design-system'
+import { Screen, Text, Button, TextField, SectionHeader, space } from '@/core/design-system'
 import { changeLanguage } from '@/i18n'
 import { useRepositoriesIfAvailable } from '@/features/repositories/hooks/use-repositories'
 import type { DemoRepositories } from '@/services/repositories/demo'
@@ -222,21 +222,6 @@ export default function SettingsScreen() {
         />
       </View>
 
-      {canResetDemo ? (
-        <View style={styles.section}>
-          <Text variant="bodySmall" color="secondary">
-            {t('settings.resetDemoLabel')}
-          </Text>
-          <Button
-            label={t('settings.resetDemoButton')}
-            onPress={handleResetDemo}
-            variant="destructive"
-            loading={isResetting}
-            testID="settings-reset-demo"
-          />
-        </View>
-      ) : null}
-
       <View style={styles.section}>
         <Text variant="bodySmall" color="secondary">
           {t('legalDoc.title')}
@@ -318,13 +303,6 @@ export default function SettingsScreen() {
             loading={signOutMutation.isPending}
             testID="settings-sign-out"
           />
-          <Button
-            label={t('settings.deleteAccountButton')}
-            onPress={handleDeleteAccount}
-            variant="destructive"
-            loading={deleteAccountMutation.isPending}
-            testID="settings-delete-account"
-          />
         </View>
       ) : null}
 
@@ -336,6 +314,30 @@ export default function SettingsScreen() {
           {t('settings.aboutVersion', { version: Constants.expoConfig?.version ?? '—' })}
         </Text>
       </View>
+
+      {(canResetDemo || isPersonalMode) && (
+        <View style={styles.dangerZone}>
+          <SectionHeader title={t('obligationDetail.manage', 'Manage')} />
+          {canResetDemo && (
+            <Button
+              label={t('settings.resetDemoButton')}
+              onPress={handleResetDemo}
+              variant="destructive"
+              loading={isResetting}
+              testID="settings-reset-demo"
+            />
+          )}
+          {isPersonalMode && (
+            <Button
+              label={t('settings.deleteAccountButton')}
+              onPress={handleDeleteAccount}
+              variant="destructive"
+              loading={deleteAccountMutation.isPending}
+              testID="settings-delete-account"
+            />
+          )}
+        </View>
+      )}
     </Screen>
   )
 }
@@ -344,5 +346,9 @@ const styles = StyleSheet.create({
   section: {
     gap: space[3],
     marginTop: space[5],
+  },
+  dangerZone: {
+    gap: space[3],
+    marginTop: space[7],
   },
 })
