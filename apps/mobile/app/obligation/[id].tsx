@@ -31,6 +31,7 @@ import { useMurabahaDetailViewModel } from '@/features/murabaha-detail/hooks/use
 import { MurabahaDetailSection } from '@/features/murabaha-detail/components/MurabahaDetailSection'
 import { CardDetailSection } from '@/features/card-detail/components/CardDetailSection'
 import { useCardInsightEvaluation } from '@/features/card-detail/hooks/use-card-insight-evaluation'
+import { useUserThresholdInsightEvaluation } from '@/features/loan-detail/hooks/use-user-threshold-insight-evaluation'
 import { ObligationService } from '@/services/obligation-service'
 
 export default function ObligationDetailScreen() {
@@ -54,6 +55,10 @@ function ObligationDetailInner() {
   const isDemo = typeof repositories.reset === 'function'
   useCardInsightEvaluation(
     viewModel.obligation?.kind === 'creditCard' ? viewModel.obligation : undefined,
+  )
+  useUserThresholdInsightEvaluation(
+    viewModel.obligation?.kind === 'conventionalLoan' ? viewModel.obligation : undefined,
+    viewModel.hero?.estimatedResidual,
   )
   const queryClient = useQueryClient()
   const obligationService = useMemo(() => new ObligationService(), [])

@@ -145,3 +145,67 @@ describe('InsightEvaluationService.evaluateForCard', () => {
     }
   })
 })
+
+describe('InsightEvaluationService.evaluateUserThreshold', () => {
+  it('fires USER_THRESHOLD_REACHED when the gap exceeds the configured threshold', async () => {
+    const service = makeService()
+    const loan = buildDemoLoan(DEMO_DATE)
+
+    const result = await service.evaluateUserThreshold(
+      DEMO_IDS.userId,
+      loan.id,
+      Money.of('500', 'JOD'),
+      Money.of('300', 'JOD'),
+      DEMO_DATE,
+    )
+    expect(isOk(result)).toBe(true)
+    if (isOk(result)) {
+      const insight = result.value.find((i) => i.ruleId === 'USER_THRESHOLD_REACHED')
+      expect(insight).toBeDefined()
+      expect(insight?.params?.['gap']).toBe('500')
+      expect(insight?.params?.['threshold']).toBe('300')
+    }
+  })
+
+  it('does not fire when the gap is at or below the threshold', async () => {
+    const service = makeService()
+    const loan = buildDemoLoan(DEMO_DATE)
+
+    const result = await service.evaluateUserThreshold(
+      DEMO_IDS.userId,
+      loan.id,
+      Money.of('300', 'JOD'),
+      Money.of('300', 'JOD'),
+      DEMO_DATE,
+    )
+    expect(isOk(result)).toBe(true)
+    if (isOk(result)) {
+      expect(result.value.some((i) => i.ruleId === 'USER_THRESHOLD_REACHED')).toBe(false)
+    }
+  })
+
+  it('dedups across two evaluations with the same gap/threshold', async () => {
+    const service = makeService()
+    const loan = buildDemoLoan(DEMO_DATE)
+
+    await service.evaluateUserThreshold(
+      DEMO_IDS.userId,
+      loan.id,
+      Money.of('500', 'JOD'),
+      Money.of('300', 'JOD'),
+      DEMO_DATE,
+    )
+    const second = await service.evaluateUserThreshold(
+      DEMO_IDS.userId,
+      loan.id,
+      Money.of('500', 'JOD'),
+      Money.of('300', 'JOD'),
+      DEMO_DATE,
+    )
+    expect(isOk(second)).toBe(true)
+    if (isOk(second)) {
+      const thresholdInsights = second.value.filter((i) => i.ruleId === 'USER_THRESHOLD_REACHED')
+      expect(thresholdInsights).toHaveLength(1)
+    }
+  })
+})

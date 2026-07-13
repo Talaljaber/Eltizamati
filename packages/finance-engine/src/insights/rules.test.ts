@@ -6,6 +6,7 @@ import {
   evaluateRateIncreased,
   evaluateResidualRisk,
   evaluateHighCardUtilization,
+  evaluateUserThresholdReached,
 } from './rules.js'
 import { computeResidualDetection } from '../formulas/residual-detection.js'
 import { Money } from '@eltizamati/domain'
@@ -192,6 +193,44 @@ describe('evaluateHighCardUtilization', () => {
   it('produces a different triggerHash for a materially different utilization', () => {
     const a = evaluateHighCardUtilization(loan.id, 75)
     const b = evaluateHighCardUtilization(loan.id, 95)
+    expect(a[0]?.triggerHash).not.toBe(b[0]?.triggerHash)
+  })
+})
+
+describe('evaluateUserThresholdReached', () => {
+  it('fires when the gap exceeds the user threshold', () => {
+    const candidates = evaluateUserThresholdReached(
+      loan.id,
+      Money.of('500', 'JOD'),
+      Money.of('300', 'JOD'),
+    )
+    expect(candidates).toHaveLength(1)
+    expect(candidates[0]?.ruleId).toBe('USER_THRESHOLD_REACHED')
+    expect(candidates[0]?.params?.gap).toBe('500')
+    expect(candidates[0]?.params?.threshold).toBe('300')
+  })
+
+  it('does not fire when the gap equals the threshold', () => {
+    expect(
+      evaluateUserThresholdReached(loan.id, Money.of('300', 'JOD'), Money.of('300', 'JOD')),
+    ).toHaveLength(0)
+  })
+
+  it('does not fire when the gap is below the threshold', () => {
+    expect(
+      evaluateUserThresholdReached(loan.id, Money.of('100', 'JOD'), Money.of('300', 'JOD')),
+    ).toHaveLength(0)
+  })
+
+  it('is deterministic — same gap/threshold produce the same triggerHash', () => {
+    const a = evaluateUserThresholdReached(loan.id, Money.of('500', 'JOD'), Money.of('300', 'JOD'))
+    const b = evaluateUserThresholdReached(loan.id, Money.of('500', 'JOD'), Money.of('300', 'JOD'))
+    expect(a[0]?.triggerHash).toBe(b[0]?.triggerHash)
+  })
+
+  it('produces a different triggerHash for a materially different gap', () => {
+    const a = evaluateUserThresholdReached(loan.id, Money.of('500', 'JOD'), Money.of('300', 'JOD'))
+    const b = evaluateUserThresholdReached(loan.id, Money.of('900', 'JOD'), Money.of('300', 'JOD'))
     expect(a[0]?.triggerHash).not.toBe(b[0]?.triggerHash)
   })
 })

@@ -5,6 +5,7 @@ import type {
   CreditCard,
   Insight,
   InsightRepository,
+  Money,
   Result,
   AppError,
 } from '@eltizamati/domain'
@@ -16,6 +17,7 @@ import {
   evaluateInstallmentUnchangedAfterIncrease,
   evaluateResidualRisk,
   evaluateHighCardUtilization,
+  evaluateUserThresholdReached,
   type InsightCandidate,
 } from '@eltizamati/finance-engine'
 import type { CalculationService } from './calculation-service.js'
@@ -172,6 +174,23 @@ export class InsightEvaluationService {
       : balance.toDecimal().dividedBy(limit.toDecimal()).times(100).toNumber()
 
     const candidates = evaluateHighCardUtilization(obligation.id, utilizationPercent)
+    return this.raiseNewInsights(userId, candidates, asOf)
+  }
+
+  /**
+   * FR-INS-001 "user-defined threshold reached" / FR-SET-006. `gapAmount` is
+   * whatever projected-gap figure the caller already computed (e.g. the same
+   * residual amount shown on Rate Impact) — this method only compares it
+   * against the user's own configured threshold; it never derives the gap.
+   */
+  async evaluateUserThreshold(
+    userId: Id<'user'>,
+    obligationId: Id<'obligation'>,
+    gapAmount: Money,
+    thresholdAmount: Money,
+    asOf: LocalDate,
+  ): Promise<Result<readonly Insight[], AppError>> {
+    const candidates = evaluateUserThresholdReached(obligationId, gapAmount, thresholdAmount)
     return this.raiseNewInsights(userId, candidates, asOf)
   }
 

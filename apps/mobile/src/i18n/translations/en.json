@@ -588,7 +588,16 @@
     "deleteAccountConfirmBody": "This permanently erases your account and all associated data. This cannot be undone.",
     "deleteAccountConfirmAction": "Delete Account",
     "aboutLabel": "About",
-    "aboutVersion": "Eltizamati v{{version}}"
+    "aboutVersion": "Eltizamati v{{version}}",
+    "reminders": {
+      "label": "Reminders & Threshold",
+      "dayLabel": "Reminder day of month (1-28)",
+      "thresholdLabel": "Alert me when the gap exceeds (JOD)",
+      "save": "Save",
+      "errorDay": "Enter a day between 1 and 28.",
+      "errorAmount": "Enter a valid JOD amount.",
+      "saveFailed": "We couldn't save your preferences. Please try again."
+    }
   },
   "dataStatus": {
     "title": "Data Status",
@@ -644,6 +653,10 @@
     "highUtilization": {
       "title": "High card utilization",
       "body": "Your balance is at {{percent}}% of your credit limit."
+    },
+    "userThreshold": {
+      "title": "Your gap threshold was reached",
+      "body": "The projected gap on this obligation ({{gap}} JOD) has crossed the threshold you set ({{threshold}} JOD)."
     }
   }
 }
