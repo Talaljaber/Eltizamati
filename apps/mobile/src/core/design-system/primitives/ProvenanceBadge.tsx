@@ -1,5 +1,6 @@
 import { View, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { Ionicons } from '@expo/vector-icons'
 import type { SourceClass } from '@eltizamati/domain'
 import { Text } from './Text'
 import { useTheme } from '../use-theme'
@@ -11,8 +12,8 @@ export interface ProvenanceBadgeProps {
 }
 
 /**
- * ProvenanceBadge — compact badge showing data source class (data-provenance.md §2).
- * Used alongside Amount/material figures to satisfy BR-PROV-001 honesty requirements.
+ * ProvenanceBadge — compact badge showing data source class (BR-PROV-001 honesty).
+ * Distinction never relies on color alone: every class carries an icon AND a label.
  * Only renders for non-demo sources in personal mode; always renders in demo mode
  * (C-07: mock/demo data always labeled).
  */
@@ -21,78 +22,88 @@ export function ProvenanceBadge({ source, testID }: ProvenanceBadgeProps) {
   const theme = useTheme()
 
   const config = PROVENANCE_CONFIG[source]
+  const label = t(config.labelKey)
+  const inkColor = config.ink(theme)
 
   return (
     <View
-      style={[
-        styles.badge,
-        { backgroundColor: config.bgColor(theme), borderColor: config.borderColor(theme) },
-      ]}
+      style={[styles.badge, { backgroundColor: config.surface(theme), borderColor: inkColor }]}
       testID={testID}
       accessible
-      accessibilityLabel={t(config.labelKey)}
+      accessibilityLabel={label}
       accessibilityRole="text"
     >
+      <Ionicons name={config.icon} size={12} color={inkColor} accessibilityElementsHidden />
       <Text variant="caption" color={config.textColor}>
-        {config.icon} {t(config.labelKey)}
+        {label}
       </Text>
     </View>
   )
 }
 
 type TextColor =
-  'primary' | 'secondary' | 'tertiary' | 'brand' | 'critical' | 'positive' | 'caution'
+  | 'primary'
+  | 'secondary'
+  | 'tertiary'
+  | 'brand'
+  | 'critical'
+  | 'positive'
+  | 'caution'
+  | 'understanding'
 type ColorScheme = ReturnType<typeof useTheme>
 
 const PROVENANCE_CONFIG: Record<
   SourceClass,
   {
     labelKey: string
-    icon: string
+    icon: keyof typeof Ionicons.glyphMap
     textColor: TextColor
-    bgColor: (t: ColorScheme) => string
-    borderColor: (t: ColorScheme) => string
+    ink: (t: ColorScheme) => string
+    surface: (t: ColorScheme) => string
   }
 > = {
   official: {
     labelKey: 'provenance.official',
-    icon: '✓',
-    textColor: 'positive',
-    bgColor: (t) => t.positiveSoft,
-    borderColor: (t) => t.positive,
+    icon: 'shield-checkmark-outline',
+    textColor: 'brand',
+    ink: (t) => t.official,
+    surface: (t) => t.officialSurface,
   },
   bureau: {
     labelKey: 'provenance.bureau',
-    icon: '📊',
+    icon: 'business-outline',
     textColor: 'brand',
-    bgColor: (t) => t.brandSoft,
-    borderColor: (t) => t.brand,
+    ink: (t) => t.brand,
+    surface: (t) => t.brandSoft,
   },
   userEntered: {
     labelKey: 'provenance.userEntered',
-    icon: '✏',
+    icon: 'create-outline',
     textColor: 'secondary',
-    bgColor: (t) => t.bgSubtle,
-    borderColor: (t) => t.border,
+    ink: (t) => t.userEntered,
+    surface: (t) => t.userEnteredSurface,
   },
   estimate: {
     labelKey: 'provenance.estimate',
-    icon: '~',
+    icon: 'calculator-outline',
     textColor: 'secondary',
-    bgColor: (t) => t.bgSubtle,
-    borderColor: (t) => t.border,
+    ink: (t) => t.estimate,
+    surface: (t) => t.estimateSurface,
   },
   demo: {
     labelKey: 'provenance.demo',
-    icon: '🎯',
+    icon: 'flask-outline',
     textColor: 'caution',
-    bgColor: (t) => t.cautionSoft,
-    borderColor: (t) => t.caution,
+    ink: (t) => t.caution,
+    surface: (t) => t.cautionSoft,
   },
 }
 
 const styles = StyleSheet.create({
   badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[1],
     alignSelf: 'flex-start',
     borderRadius: radius.sm,
     borderWidth: 1,

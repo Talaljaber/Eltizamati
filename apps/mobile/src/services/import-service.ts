@@ -25,6 +25,8 @@ import { ok, err, makeError, isErr, type Result, type AppError } from '@eltizama
 
 import type { DemoSeed } from '@eltizamati/demo-data'
 import type { DemoRepositories } from './repositories/demo/index'
+import type { Repositories } from '@/features/repositories/hooks/use-repositories'
+import type { Obligation } from '@eltizamati/domain'
 
 export interface ImportSummary {
   readonly obligationCount: number
@@ -35,6 +37,14 @@ export interface ImportSummary {
 export type ImportResult = Result<ImportSummary, AppError>
 
 export class ImportService {
+  /** Persists one provider-normalized obligation through the shared import boundary. */
+  async importProviderObligation(
+    obligation: Obligation,
+    repos: Repositories,
+  ): Promise<Result<Obligation, AppError>> {
+    return repos.obligationRepository.save(obligation)
+  }
+
   /**
    * Imports a DemoSeed into the provided repositories.
    *

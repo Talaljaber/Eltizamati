@@ -1,6 +1,6 @@
 # Phase 8: Remaining MVP Flows
 
-**Status:** Core scope complete. 4 cuttable items deferred (owner decision, 2026-07-13).
+**Status:** Implementation complete; device walkthrough remains a Phase 9 validation activity.
 **Date:** 2026-07-13
 
 ## Objectives Achieved (all 8 core, non-cuttable items)
@@ -16,16 +16,16 @@
 
 One real bug was found and fixed during the gate run itself: a Settings `useQuery` resolved to `undefined` (TanStack Query warns/errors on this) instead of `null` — fixed.
 
-## Cut / Deferred (owner decision, 2026-07-13 — not built this phase)
+## Restored cuttable scope (owner follow-up, 2026-07-13)
 
-Per the phase doc's own cut list and order, all 4 are deferred rather than built:
+The four items initially cut for schedule were subsequently restored and implemented:
 
-1. **Cut #1 — Mock-connect flow** (`SCR-CONSENT-PROVIDER` + `SCR-CONNECT-MOCK`, US-017, FR-AUTH-005/FR-ONB-004): not built.
-2. **Cut #2 — Card payoff simulator** (`SCR-SIM-CARD`, `cardPayoff.v1` already exists in the finance-engine and is tested, but no UI consumes it yet): not built.
-3. **Cut #3 — Local notifications** (FR-NTF-001): not built. The reminder-day preference from item 6 above is stored but nothing schedules from it yet — this is the item that would make it do something.
-4. **Cut #4 — Duplicate-payment detection** (FR-PAY-004): not built. The log-payment flow built in item 2 above has no duplicate-warning check.
+1. **Mock connect:** versioned consent gate, deterministic synthetic provider retrieval, an explicit fixture-record → domain classification boundary, persistence through `ImportService`, permanent mock provenance/badging, and retry/error states. This is deliberately an offline fixture adapter, not a live aggregation integration.
+2. **Card payoff simulator:** `cardPayoff.v1` is consumed through `CalculationService`; minimum-only and fixed/custom results show months, charges, total paid, refusal, invalid-input, and never-pays-off states.
+3. **Local notifications:** recurring monthly 09:00 local reminders, permission-denial UX, bilingual content-minimized copy, cancellation/rescheduling, and an allow-listed `/insights` notification route.
+4. **Duplicate payments:** natural-key detection on obligation/date/amount warns before saving and supports an explicit override.
 
-None of these are half-implemented — each is a clean, complete absence, consistent with the phase doc's "ship-with-tests or formally cut, no half-states" rule.
+Verification after restoration and corrective review: mobile TypeScript, ESLint, formatting, and dependency-cruiser passed (467 modules / 1,459 dependencies, zero violations); all 40 mobile suites passed (203 tests). RNTL coverage exercises mock consent/import UI (including a missing-`crypto.randomUUID` Hermes case) and card-simulator input/refusal UI in addition to service/formula tests. Physical-device notification delivery and the bilingual offline walkthrough remain manual Phase 9 evidence, not claims made by this report.
 
 ## Not part of this phase (pre-existing, unrelated)
 
@@ -34,5 +34,4 @@ None of these are half-implemented — each is a clean, complete absence, consis
 
 ## Next Steps
 
-- Decide, with the owner, whether/when to build the 4 cut items — no engineering blocker, purely a scope/time decision.
-- Proceed to Phase 9 (E2E, device/AR/a11y/perf/security validation) once ready.
+- Proceed to Phase 9 for E2E, physical-device notification delivery, Arabic/RTL, accessibility, performance, and security validation.

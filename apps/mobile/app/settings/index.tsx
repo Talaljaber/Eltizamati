@@ -28,6 +28,7 @@ import {
 import type { AuthService } from '@/services/auth/auth-service'
 import { authKeys } from '@/features/auth/api/keys'
 import { isValidDecimal, isValidPositiveInt } from '@/features/obligation-form/validation'
+import { cancelLocalReminder, scheduleLocalReminder } from '@/services/local-notification-service'
 
 const MAX_REMINDER_DAY = 28
 
@@ -142,6 +143,17 @@ export default function SettingsScreen() {
     const result = await repos.userProfileRepository.save(updated)
     setRemindersSaving(false)
     if (result.ok) {
+      if (updated.reminderDayOfMonth === undefined) {
+        await cancelLocalReminder()
+      } else {
+        const scheduleResult = await scheduleLocalReminder(updated.reminderDayOfMonth, {
+          title: t('settings.reminders.notificationTitle'),
+          body: t('settings.reminders.notificationBody'),
+        })
+        if (scheduleResult === 'permissionDenied') {
+          setRemindersError(t('settings.reminders.permissionDenied'))
+        }
+      }
       await queryClient.invalidateQueries({ queryKey: authKeys.profile(activeUserId) })
     } else {
       setRemindersError(t('settings.reminders.saveFailed'))
@@ -197,6 +209,17 @@ export default function SettingsScreen() {
           {t('settings.languageLabel')}
         </Text>
         <Button label={t('common.toggleLanguage')} onPress={toggleLanguage} variant="secondary" />
+      </View>
+
+      <View style={styles.section}>
+        <Text variant="bodySmall" color="secondary">
+          {t('mockConnect.settingsLabel')}
+        </Text>
+        <Button
+          label={t('mockConnect.settingsAction')}
+          onPress={() => router.push('/connect-mock/consent')}
+          variant="secondary"
+        />
       </View>
 
       {canResetDemo ? (

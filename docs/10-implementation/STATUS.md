@@ -1,8 +1,8 @@
 # STATUS — Live Implementation Source of Truth
 
-> Read this first, then the active phase file. Update this file at every session end and every phase state change. Pre-plan history: [status-m0-session-log.md](status-m0-session-log.md) (the mid-M0 session log) and [CURRENT_STATE.md](CURRENT_STATE.md) (independent audit, 2026-07-11). Master plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
+> Read this first, then the active phase file. Update this file at every session end and every phase state change. Pre-plan history: [status-m0-session-log.md](status-m0-session-log.md) (the mid-M0 session log) and (independent audit, 2026-07-11). Master plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
 
-## 2026-07-13 addendum — Phase 8 core scope complete, 4 cuttable items deferred
+## 2026-07-13 addendum — Phase 8 implementation complete
 
 All 8 core (non-cuttable) Phase 8 items are built, tested, and committed — see
 [PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md) for the full breakdown: Murabaha/card
@@ -10,14 +10,13 @@ detail + card-utilization insight, manual entry (add/edit/archive/delete obligat
 payment/rate), Settings completion (acknowledgments, account, about), Data Status, Legal doc +
 Learn/glossary, and the user-defined threshold insight + reminder-day setting.
 
-Per the phase doc's own cut list, the owner decided **not to build the 4 cuttable items** this
-phase: mock-connect flow (cut #1), card payoff simulator (cut #2), local notifications (cut #3),
-duplicate-payment detection (cut #4). None are half-implemented — each is a clean, complete
-absence, not a partial build.
+The owner subsequently restored all four initially cuttable items. Mock connect, card payoff
+simulation, recurring local reminders, and duplicate-payment warnings are now implemented and
+covered by tests. The mobile gate passes with 40 suites / 203 tests, plus TypeScript, ESLint, and
+formatting. Physical-device notification and bilingual offline walkthrough evidence moves to Phase 9.
 
-`pnpm run check` is fully green (format/lint/typecheck/depcruise/test — 501 tests passing across
-domain/finance-engine/demo-data/mobile). **Phase 8 is closed on its core scope; the 4 cut items
-remain open decisions for a later phase, not blockers.**
+The prior whole-repository gate remains recorded below. This restoration pass independently verified
+the affected mobile scope. **Phase 8 implementation is complete; Phase 9 owns device-level validation.**
 
 ## 2026-07-13 addendum — owner decision: defer Phase 7's remaining blockers to Phase 10
 
@@ -106,16 +105,22 @@ command: `docs/10-implementation/audits/VERIFICATION-TASKS.md`.
 ## Active phase
 
 **Phase 8 — Remaining MVP Flows** → [PHASE-08-remaining-mvp-flows.md](phases/PHASE-08-remaining-mvp-flows.md)
-**Phase status:** Core scope (8 of 8 non-cuttable items) built, tested, and committed — see
-[PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md). The 4 cuttable items (mock-connect,
-card payoff simulator, local notifications, duplicate-payment detection) were **not built**, per
-an explicit owner decision this session — a clean scope cut, not a partial build. Phase 7 remains
+**Phase status:** All 8 core items and all 4 restored cuttable items are built and tested — see
+[PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md). Phase 7 remains
 formally open on its own 2 deferred items (TV-104/TV-601 finance sign-off, AR/EN walkthrough
 recording), both pushed to Phase 10 per the prior 2026-07-13 owner decision below; unaffected by
 Phase 8's closure. See [PHASE-04-auth-repositories-and-integration.md](phases/PHASE-04-auth-repositories-and-integration.md) /
 [PHASE-4-COMPLETION.md](completions/PHASE-4-COMPLETION.md) for the (closed) Phase 4 record.
 
-**Phase 9 may begin** once the owner decides whether to build any of the 4 cut items first.
+**Next phase: Phase 8.5 — Eltizamati Visual System & Experience Refinement** →
+[PHASE-08.5-visual-system-and-experience-refinement.md](phases/PHASE-08.5-visual-system-and-experience-refinement.md).
+Approved as the next phase, sitting between Phase 8 and Phase 9. It covers design definition, shared
+visual-system refinement, and controlled implementation on five representative experiences only — not
+a full-app redesign. **Phase 9 (hardening and broad visual refinement) is blocked until the Phase 8.5
+representative-experience exit gate passes.** The four formerly cuttable Phase 8 items are implemented
+(restored per the addendum above) and are not part of Phase 8.5's scope; Phase 7's deferred
+finance-sign-off and walkthrough items retain their Phase 10 ownership and are likewise not part of
+Phase 8.5.
 
 ## Repository position
 
@@ -133,9 +138,11 @@ Phase 8's closure. See [PHASE-04-auth-repositories-and-integration.md](phases/PH
 - **Phase 5 (Demo Data & Foundation UX):** Complete (2026-07-12) — [PHASE-5-COMPLETION.md](completions/PHASE-5-COMPLETION.md).
 - **Phase 6 (Core Financial Engine & Mobile Integration):** Merged 2026-07-12, but an independent post-merge audit the same day found the merge did not actually typecheck (`pnpm run check` was never green), had a P0 defect (Money/Rate/Percentage amounts silently lost during `CalculationRun` hashing/serialization — distinct financial inputs hashed identically), and had zero tests for the Supabase `CalculationRunRepository`. All three were fixed and re-verified for real the same day (typecheck clean, 350/350 tests across domain/finance-engine/mobile, finance-engine coverage 99.89/95.43/100/99.89 against a 95/90/95/95 gate, live Supabase round-trip for both successful and refused outcomes) — see [PHASE-6-COMPLETION.md](completions/PHASE-6-COMPLETION.md) §6. This landed out of the sequence this document otherwise describes ("Phase 6: Not ready" until Phase 4 closes); Phase 4 has since closed (above), so the sequencing gap is now moot, but the out-of-order landing itself was never corrected — noted for the record.
 - **Phase 4 (Authentication, Repositories, and Application Integration):** Complete (2026-07-12) — [PHASE-4-COMPLETION.md](completions/PHASE-4-COMPLETION.md). Closed the remaining gaps from the earlier backend-only pass: auth screens, onboarding wiring, offline/error UI, and per-repository contract coverage for all 6 non-user-profile repositories.
-- **Phase 8 (Remaining MVP Flows):** Core scope complete (2026-07-13) — [PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md). All 8 non-cuttable items built and tested; the 4 cuttable items (mock-connect, card payoff simulator, local notifications, duplicate-payment detection) were deliberately not built this phase, per owner decision.
+- **Phase 8 (Remaining MVP Flows):** Implementation complete (2026-07-13) — [PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md). All core and formerly cuttable items are built and mobile-tested.
 
-Phase 7: In progress, not closeable (2 items deferred to Phase 10, not blocking). Phase 9: Planned.
+Phase 7: In progress, not closeable (2 items deferred to Phase 10, not blocking).
+Phase 8.5 ([PHASE-08.5-visual-system-and-experience-refinement.md](phases/PHASE-08.5-visual-system-and-experience-refinement.md)): Planned — approved next phase, between Phase 8 and Phase 9.
+Phase 9: Planned — **gated on the Phase 8.5 exit review**, no longer eligible to begin immediately.
 
 **Phase 10 (iOS Device Parity, Remote Push Notifications, and Saved Scenarios):** Planned, added after this session — [PHASE-10-ios-parity-push-and-saved-scenarios.md](phases/PHASE-10-ios-parity-push-and-saved-scenarios.md). Not part of the original 9-phase MVP scope; gated on Phase 9 closing first and on an Apple Developer Program membership existing (paid, user-side prerequisite for iOS device builds outside Expo Go).
 
@@ -171,12 +178,12 @@ Phase 7: In progress, not closeable (2 items deferred to Phase 10, not blocking)
 
 ## Current task
 
-Phase 8's core scope is done and verified (see the top addendum and [PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md)).
-The 4 cuttable items were deliberately not built this phase — owner decision, no further
-engineering blocker. Phase 7's own 2 remaining exit-criteria items (TV-104/TV-601 finance sign-off,
+Phase 8's implementation is done and mobile-verified (see the top addendum and [PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md)).
+Phase 7's own 2 remaining exit-criteria items (TV-104/TV-601 finance sign-off,
 AR/EN airplane-mode walkthrough recording) are **deferred to Phase 10** per the owner's prior
-2026-07-13 decision — Phase 7 stays formally open, unaffected by Phase 8's closure. Phase 9 may
-proceed once the owner decides on the 4 cut items.
+2026-07-13 decision — Phase 7 stays formally open, unaffected by Phase 8's closure. The approved next
+phase is [Phase 8.5](phases/PHASE-08.5-visual-system-and-experience-refinement.md); Phase 9 proceeds
+only after Phase 8.5's exit gate passes.
 
 ## Blockers
 
@@ -197,11 +204,15 @@ proceed once the owner decides on the 4 cut items.
 
 ## Next phase readiness
 
-**Phase 8: core scope built, tested, and committed — see [PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md).**
-The 4 cuttable items (mock-connect, card payoff simulator, local notifications, duplicate-payment
-detection) were deliberately not built, per an explicit owner decision this session — a clean scope
-cut, not a partial build. `pnpm run check` is fully green: format/lint/typecheck/depcruise/test, 501
-tests passing across domain/finance-engine/demo-data/mobile.
+**Phase 8: implementation complete — see [PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md).**
+All formerly cuttable items are now implemented. The restoration pass verified mobile formatting,
+lint, typecheck, dependency-cruiser (467 modules / 1,459 dependencies, zero violations), and 203
+tests across 40 suites; Phase 9 owns physical-device evidence.
+
+**Phase 8.5 ([PHASE-08.5-visual-system-and-experience-refinement.md](phases/PHASE-08.5-visual-system-and-experience-refinement.md)): the approved next phase.** Owner decisions D1 (exact brand colors/assets)
+and D2 (typography selection/licensing) must be resolved before its token and typography
+implementation begins; its audit and design-definition workstreams may start meanwhile. Phase 9 is
+gated on Phase 8.5's exit review.
 
 **Phase 7: implementation done and verified; formally stays open on 2 deferred items (see the
 2026-07-13 "owner decision" addendum below), both pushed to Phase 10.** Unaffected by Phase 8's

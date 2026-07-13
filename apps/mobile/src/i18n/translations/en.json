@@ -224,6 +224,24 @@
       "other": "Other Fee"
     }
   },
+  "cardSimulator": {
+    "title": "Card payoff simulator",
+    "open": "Open payoff simulator",
+    "inputTitle": "Compare payment strategies",
+    "fixedPayment": "Fixed monthly payment (JOD)",
+    "calculate": "Calculate",
+    "assumption": "Estimate uses monthly accrual. Your bank may calculate charges daily.",
+    "minimumOnly": "Minimum payment only",
+    "fixedStrategy": "Fixed payment",
+    "months": "Months to payoff",
+    "totalCharges": "Total finance charges",
+    "totalPaid": "Total paid",
+    "neverPaysOff": "This payment does not cover the monthly charge, so the balance will not pay off.",
+    "missingData": "Add the card APR, balance, and minimum-payment rule before calculating.",
+    "loadError": "Unable to load this card.",
+    "error": "Unable to calculate this scenario.",
+    "invalidPayment": "Enter a payment amount greater than zero, or leave it blank for minimum-only."
+  },
   "explain": {
     "title": "Calculation Details",
     "provenance": "Provenance",
@@ -316,6 +334,9 @@
     "genericFacility": "Generic Facility"
   },
   "obligationForm": {
+    "duplicatePaymentTitle": "Possible duplicate payment",
+    "duplicatePaymentBody": "A payment with the same date and amount already exists. Save it anyway?",
+    "saveAnyway": "Save anyway",
     "addTitle": "Add Obligation",
     "editTitle": "Edit Obligation",
     "logPaymentTitle": "Log Payment",
@@ -596,7 +617,10 @@
       "save": "Save",
       "errorDay": "Enter a day between 1 and 28.",
       "errorAmount": "Enter a valid JOD amount.",
-      "saveFailed": "We couldn't save your preferences. Please try again."
+      "saveFailed": "We couldn't save your preferences. Please try again.",
+      "permissionDenied": "Notification permission was denied. Your preference was saved, but no reminder was scheduled.",
+      "notificationTitle": "Eltizamati reminder",
+      "notificationBody": "You have an upcoming obligation to review."
     }
   },
   "dataStatus": {
@@ -615,6 +639,22 @@
     "lastUpdated": "Last updated {{date}}",
     "lastUpdatedNone": "No records yet",
     "honestyNote": "This screen always shows the real, current state of your data sources — no source is ever shown as connected unless it actually is."
+  },
+  "mockConnect": {
+    "title": "Connect a mock source",
+    "providerName": "Mock Open Banking provider",
+    "mockBadge": "Mock / demonstration only",
+    "mockDisclosure": "This does not connect to a real bank or credit bureau.",
+    "consentTitle": "Consent for mock retrieval",
+    "consentBody": "Allow this labeled demonstration provider to import one synthetic card into your active data mode.",
+    "consentAction": "I consent",
+    "consentError": "Consent could not be recorded. Nothing was imported.",
+    "connect": "Retrieve mock data",
+    "error": "Mock retrieval failed. You can retry safely.",
+    "success": "1 mock record imported with permanent mock provenance.",
+    "viewImported": "View imported card",
+    "settingsLabel": "Demonstration provider",
+    "settingsAction": "Connect mock source"
   },
   "notFound": {
     "title": "This screen doesn't exist.",

@@ -4,11 +4,18 @@ import { useTranslation } from 'react-i18next'
 import { AppProviders } from '../src/providers'
 import { OnboardingGuard } from '../src/features/demo/components/OnboardingGuard'
 import '../src/i18n' // Initialize i18n
+import { useNotificationResponse } from '../src/features/notifications/hooks/use-notification-response'
+
+function NotificationResponseHandler() {
+  useNotificationResponse()
+  return null
+}
 
 export default function RootLayout() {
   const { t } = useTranslation()
   return (
     <AppProviders>
+      <NotificationResponseHandler />
       <OnboardingGuard>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
