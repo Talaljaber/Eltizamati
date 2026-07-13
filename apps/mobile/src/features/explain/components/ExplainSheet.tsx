@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { View, StyleSheet, ScrollView } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { Sheet, Text, FieldRow, space, useTheme } from '@/core/design-system'
+import { Sheet, Text, FieldRow, ProvenanceBadge, space, useTheme } from '@/core/design-system'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import type { Id } from '@eltizamati/domain'
 
@@ -17,7 +17,11 @@ export function ExplainSheet({ visible, onClose, obligationId, formulaId }: Expl
   const repos = useRepositories()
   const theme = useTheme()
 
-  const { data: run, isLoading } = useQuery({
+  const {
+    data: run,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['calculationRun', obligationId, formulaId],
     queryFn: async () => {
       if (formulaId === undefined) return null
@@ -31,6 +35,11 @@ export function ExplainSheet({ visible, onClose, obligationId, formulaId }: Expl
   return (
     <Sheet visible={visible} onClose={onClose} title={t('explain.title', 'Calculation Details')}>
       {isLoading && <Text variant="body">{t('common.loading', 'Loading...')}</Text>}
+      {isError && (
+        <Text variant="body" color="critical">
+          {t('explain.error', 'Unable to load calculation details.')}
+        </Text>
+      )}
       {!isLoading && run && (
         <ScrollView style={styles.scroll}>
           <View style={styles.sectionTitle}>
@@ -38,6 +47,20 @@ export function ExplainSheet({ visible, onClose, obligationId, formulaId }: Expl
           </View>
           <FieldRow label={t('explain.formula', 'Formula')} value={run.formulaId} />
           <FieldRow label={t('explain.version', 'Version')} value={`v${run.formulaVersion}`} />
+          <FieldRow label={t('explain.asOf', 'As of')} value={run.asOf} />
+          <FieldRow label={t('explain.calculatedAt', 'Calculated at')} value={run.calculatedAt} />
+          <FieldRow
+            label={t('explain.source', 'Source')}
+            value={
+              <ProvenanceBadge
+                source={
+                  run.outcome.kind === 'result' && run.outcome.confidence === 'official'
+                    ? 'official'
+                    : 'estimate'
+                }
+              />
+            }
+          />
           {run.outcome.kind === 'result' && (
             <FieldRow
               label={t('explain.confidence', 'Confidence')}
@@ -77,7 +100,7 @@ export function ExplainSheet({ visible, onClose, obligationId, formulaId }: Expl
           </View>
         </ScrollView>
       )}
-      {!isLoading && !run && obligationId !== undefined && formulaId !== undefined && (
+      {!isLoading && !isError && !run && obligationId !== undefined && formulaId !== undefined && (
         <Text variant="body" color="critical">
           {t('explain.notFound', 'Calculation record not found.')}
         </Text>

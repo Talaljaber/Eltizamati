@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, radius, useTheme, Card, FieldRow } from '@/core/design-system'
+import { Text, space, radius, useTheme, Card, FieldRow, Amount } from '@/core/design-system'
 import { useScenarioSimulator } from '@/features/scenario/hooks/use-scenario-simulator'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import {
@@ -10,7 +10,7 @@ import {
   snapshotNumber,
   snapshotMoneyAmount,
 } from '@/services/calculation-snapshot'
-import type { Id } from '@eltizamati/domain'
+import { Money, engineEstimate, type Id } from '@eltizamati/domain'
 
 const SCENARIO_FORMULA_ID = 'extraPaymentScenario'
 
@@ -47,6 +47,22 @@ export default function ScenarioScreen() {
               { borderColor: theme.border, color: theme.textPrimary, backgroundColor: theme.bg },
             ]}
             testID="scenario-extra-monthly-input"
+          />
+          <Text variant="bodySmall" color="secondary">
+            {t('scenario.oneTimeLabel', 'One-time extra payment')}
+          </Text>
+          <TextInput
+            value={String(viewModel.oneTimeAmount)}
+            onChangeText={(text) => {
+              const parsed = Number(text.replace(/[^0-9.]/g, ''))
+              viewModel.setOneTimeAmount(Number.isFinite(parsed) ? parsed : 0)
+            }}
+            keyboardType="numeric"
+            style={[
+              styles.input,
+              { borderColor: theme.border, color: theme.textPrimary, backgroundColor: theme.bg },
+            ]}
+            testID="scenario-one-time-input"
           />
 
           {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
@@ -96,7 +112,24 @@ export default function ScenarioScreen() {
                           />
                           <FieldRow
                             label={t('scenario.residualAtMaturity')}
-                            value={baseResidual ?? t('common.unknown')}
+                            value={
+                              baseResidual !== undefined ? (
+                                <Amount
+                                  money={Money.of(baseResidual, 'JOD')}
+                                  provenance={
+                                    engineEstimate(
+                                      Money.of(baseResidual, 'JOD'),
+                                      viewModel.run.id,
+                                      viewModel.run.calculatedAt,
+                                    ).provenance
+                                  }
+                                  precision="estimate"
+                                  onPress={() => setExplainVisible(true)}
+                                />
+                              ) : (
+                                t('common.unknown')
+                              )
+                            }
                           />
                         </View>
                         <View style={styles.comparisonColumn}>
@@ -113,7 +146,24 @@ export default function ScenarioScreen() {
                           />
                           <FieldRow
                             label={t('scenario.residualAtMaturity')}
-                            value={scenarioResidual ?? t('common.unknown')}
+                            value={
+                              scenarioResidual !== undefined ? (
+                                <Amount
+                                  money={Money.of(scenarioResidual, 'JOD')}
+                                  provenance={
+                                    engineEstimate(
+                                      Money.of(scenarioResidual, 'JOD'),
+                                      viewModel.run.id,
+                                      viewModel.run.calculatedAt,
+                                    ).provenance
+                                  }
+                                  precision="estimate"
+                                  onPress={() => setExplainVisible(true)}
+                                />
+                              ) : (
+                                t('common.unknown')
+                              )
+                            }
                           />
                         </View>
                       </View>
@@ -126,7 +176,24 @@ export default function ScenarioScreen() {
                       />
                       <FieldRow
                         label={t('scenario.costSaved')}
-                        value={costSaved ?? t('common.unknown')}
+                        value={
+                          costSaved !== undefined ? (
+                            <Amount
+                              money={Money.of(costSaved, 'JOD')}
+                              provenance={
+                                engineEstimate(
+                                  Money.of(costSaved, 'JOD'),
+                                  viewModel.run.id,
+                                  viewModel.run.calculatedAt,
+                                ).provenance
+                              }
+                              precision="estimate"
+                              onPress={() => setExplainVisible(true)}
+                            />
+                          ) : (
+                            t('common.unknown')
+                          )
+                        }
                       />
 
                       {viewModel.perfMs !== undefined && (

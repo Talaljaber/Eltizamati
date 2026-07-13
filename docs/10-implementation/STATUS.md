@@ -2,6 +2,30 @@
 
 > Read this first, then the active phase file. Update this file at every session end and every phase state change. Pre-plan history: [status-m0-session-log.md](status-m0-session-log.md) (the mid-M0 session log) and [CURRENT_STATE.md](CURRENT_STATE.md) (independent audit, 2026-07-11). Master plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
 
+## 2026-07-13 addendum — owner decision: defer Phase 7's remaining blockers to Phase 10
+
+The product owner decided to **postpone Phase 7's remaining exit-criteria items to
+[PHASE-10-ios-parity-push-and-saved-scenarios.md](phases/PHASE-10-ios-parity-push-and-saved-scenarios.md)**
+(see its "Carried over from Phase 7" section) rather than block Phase 8 on them indefinitely:
+
+1. **TV-104 / TV-601 finance sign-off** — exact reference numbers requested from the finance contact
+   (amortization installment/total-cost for the 20,000 JOD/7.5%/84mo vector; card-payoff months/total-charges
+   for the 2,350 JOD/24% APR vector). Question set sent; awaiting reply. **Still deferred.**
+2. ~~Rate-history cumulative extra-interest annotation~~ — **done, 2026-07-13**, same day it was
+   deferred. Owner clarified the actual ask: not a JOD-total comparison against a baseline rate (which
+   would have needed a new finance-engine formula), but a %-change indicator. Implemented as a pure
+   UI-layer percentage: `SCR-RATE-HIST` shows %-change in the rate itself vs. the previous period;
+   `SCR-OBL-SCHEDULE` shows %-change in the interest portion of each installment vs. the previous
+   period. No new formula, no finance sign-off needed — both derive from figures already shown
+   elsewhere. Removed from the Phase 10 carry-over list.
+3. **AR/EN airplane-mode walkthrough recording** — owner performs informal manual walkthroughs
+   regularly; a formal recorded walkthrough (for judge-facing evidence) is deferred, not required to
+   trust the app's own correctness. **Still deferred.**
+
+Phase 7's code (screens, formulas, provenance wiring) is otherwise implemented and verified working —
+the 2 remaining items above need input from the owner or an external finance contact, not further
+engineering effort in isolation. **Phase 8 may proceed now.**
+
 ## 2026-07-13 addendum — independent verification pass + Phase 7 continuation
 
 An independent audit (`docs/10-implementation/audits/COMPLETION-REPORT-VERIFICATION-AUDIT.md`) found
@@ -72,7 +96,9 @@ criteria — TV-30x signed off, AR/EN airplane-mode walkthrough recorded, comple
 unmet. See [PHASE-04-auth-repositories-and-integration.md](phases/PHASE-04-auth-repositories-and-integration.md) /
 [PHASE-4-COMPLETION.md](completions/PHASE-4-COMPLETION.md) for the (closed) prior phase's own record.
 
-**Phase 8 may not begin.** Phase 7 must close first — see "Next phase readiness" above.
+**Phase 8 may begin.** Phase 7's own exit criteria remain formally unmet, but per the owner's
+2026-07-13 decision (see addendum above) the 3 remaining items are deferred to Phase 10 and no longer
+block Phase 8.
 
 ## Repository position
 
@@ -127,15 +153,16 @@ Phases 7–9: Planned.
 
 ## Current task
 
-Continue Phase 7 (loan journey) implementation. Not closeable yet:
-TV-30x finance sign-off and the mandatory AR/EN airplane-mode walkthrough recording are still
-outstanding per the phase file's exit criteria.
-
-**Note:** The `rate-history` cumulative-extra-interest annotation (originally planned for SCR-RATE-HIST) is deliberately not implemented in this phase.
+Phase 7's implementation work is done and verified. Its 3 remaining exit-criteria items (TV-30x
+finance sign-off, the rate-history cumulative-extra-interest annotation, and the AR/EN airplane-mode
+walkthrough recording) are **deferred to Phase 10** per the owner's 2026-07-13 decision above —
+Phase 7 stays formally open, but no further engineering work on it is expected until those answers
+arrive. Phase 8 may proceed.
 
 ## Blockers
 
-- **TV-30x / TV-104 / TV-203 / TV-601 expected values** — finance-team sign-off; gates Phase 7's final closure.
+- **TV-104 / TV-601 expected values** — finance-team sign-off requested (question set sent 2026-07-13);
+  deferred to Phase 10, not gating Phase 8.
 
 - **GitHub Actions still executes zero steps on every run** (last confirmed at `eada339`, not re-checked this session — no network/gh access here) — needs the repository owner to check GitHub's Settings → Actions and Billing for this repo/account. Not blocking phase closure: local verification (Docker-based) is comprehensive.
 - Node LTS install on the dev machine — needed for expo-doctor/EAS reliability (unrelated to Phase 3/4).
@@ -144,17 +171,19 @@ outstanding per the phase file's exit criteria.
 
 - **GitHub Actions infrastructure** (see above) — owner: user, needs a GitHub account/repo settings check outside this session's reach.
 - RES-003 (PDPL/data-residency) — gates real personal data in personal mode (synthetic/test accounts until cleared).
-- TV-30x / TV-104 / TV-203 / TV-601 expected values — finance-team sign-off; gates Phase 6's analytical-family exit criteria.
+- TV-104 / TV-601 expected values — finance-team sign-off requested; deferred to Phase 10 (owner
+  decision 2026-07-13), no longer gating Phase 8/9.
 - DOC-ISSUE items recorded in [PHASE-2-COMPLETION.md](completions/PHASE-2-COMPLETION.md) (Percentage upper bound, delinquency due-date/payment-matching heuristic, calculationIncomplete signaling mechanism) — none block Phase 3 or 4.
 - The finance-engine test-runner exit-code flake (§ Checks above) — should be diagnosed before it's relied on in CI; not a Phase 4 item.
 
 ## Next phase readiness
 
-**Phase 7: in progress, not closeable yet.** See the 2026-07-13 addendum above for what was
-re-verified for real this session (repo-wide `pnpm check`, live Supabase gates, a real demo-mode
-network-independence bug fixed, the missing demo-reset control added, insight wiring fixed, and
-further rate-impact/scenario implementation work). Phase 8 should not start until Phase 7's own exit
-criteria are met: TV-30x signed off, the AR/EN airplane-mode walkthrough recorded, and a filed
-`PHASE-7-COMPLETION.md`. Phase 1–3/4/6's own completion-report claims (CI, device/RTL evidence, etc.)
-were not re-verified in full depth this session beyond what's noted above — see the independent audit
-for the itemized gap list.
+**Phase 7: implementation done and verified; formally stays open on 3 deferred items (see the
+2026-07-13 "owner decision" addendum above), all pushed to Phase 10.** Per the owner's explicit
+decision, this no longer blocks Phase 8 — Phase 8 may proceed now. See the other 2026-07-13 addendum
+below for what was re-verified for real this session (repo-wide `pnpm check`, live Supabase gates, a
+real demo-mode network-independence bug fixed, the missing demo-reset control added, insight wiring
+fixed, further rate-impact/scenario implementation work, and a follow-up review pass that fixed 5
+provenance-honesty bugs — see git history). Phase 1–3/4/6's own completion-report claims (CI,
+device/RTL evidence, etc.) were not re-verified in full depth this session beyond what's noted above —
+see the independent audit for the itemized gap list.

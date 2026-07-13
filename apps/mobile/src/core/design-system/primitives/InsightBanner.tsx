@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     marginBottom: space[2],
   },
   iconContainer: {
-    marginRight: space[3],
+    marginEnd: space[3],
   },
   content: {
     flex: 1,

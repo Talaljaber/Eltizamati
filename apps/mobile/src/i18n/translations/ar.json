@@ -111,6 +111,7 @@
     "allocationUnknown": "التقسيم غير متاح"
   },
   "loanDetail": {
+    "currentBalance": "الرصيد الحالي",
     "heroTitle": "نظرة عامة على القرض",
     "officialBalance": "الرصيد الرسمي",
     "projectedResidual": "الرصيد المتبقي المقدّر عند الاستحقاق",
@@ -125,10 +126,13 @@
     "navBankQuestions": "أسئلة للبنك"
   },
   "rateHistory": {
+    "annualRate": "{{rate}} سنوياً",
     "title": "سجل الفائدة",
     "effectiveFrom": "ساري من",
     "error": "تعذّر تحميل سجل الفائدة.",
-    "empty": "لا توجد فترات فائدة مسجّلة."
+    "empty": "لا توجد فترات فائدة مسجّلة.",
+    "increaseBadge": "+{{percent}}%",
+    "decreaseBadge": "-{{percent}}%"
   },
   "rateImpact": {
     "title": "أثر تغيّر الفائدة",
@@ -158,9 +162,12 @@
     "endingBalance": "الرصيد الختامي",
     "error": "تعذّر تحميل جدول السداد.",
     "unsupported": "جدول السداد غير متاح لهذا النوع من الالتزامات بعد.",
-    "empty": "لا توجد فترات سداد متاحة."
+    "empty": "لا توجد فترات سداد متاحة.",
+    "costIncreaseBadge": "+{{percent}}% مقارنة بالفترة السابقة",
+    "costDecreaseBadge": "-{{percent}}% مقارنة بالفترة السابقة"
   },
   "scenario": {
+    "oneTimeLabel": "دفعة إضافية لمرة واحدة (دينار)",
     "title": "محاكي السيناريوهات",
     "whatIf": "ماذا لو دفعت {{amount}}+ دينار إضافية؟",
     "monthsSaved": "الأشهر الموفّرة",
@@ -188,6 +195,10 @@
     "provenance": "مصدر البيانات",
     "formula": "الصيغة",
     "version": "الإصدار",
+    "asOf": "كما في",
+    "calculatedAt": "تم الحساب في",
+    "source": "المصدر",
+    "error": "تعذّر تحميل تفاصيل الحساب.",
     "confidence": "مستوى الثقة",
     "confidenceHigh": "مرتفع (دقيق)",
     "confidenceEstimate": "تقدير",

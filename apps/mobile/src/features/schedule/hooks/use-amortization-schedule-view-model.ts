@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { DomainInvariantError, type Id, type CalculationRun } from '@eltizamati/domain'
-import { DEMO_DATE } from '@eltizamati/demo-data'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotArray, snapshotMoneyAmount } from '@/services/calculation-snapshot'
+import { calculationAsOf } from '@/services/calculation-as-of'
 
 /**
  * Display row for one amortization period. `CalculationRun.resultSnapshot` is
@@ -20,6 +20,8 @@ export interface AmortizationScheduleRow {
   principal: string
   cost: string
   closingBalance: string
+  /** % change in the interest/cost portion vs. the previous period; undefined for period 1 or when either amount is unknown. */
+  costPercentChangeFromPrevious: number | undefined
 }
 
 export interface AmortizationScheduleViewModel {
@@ -69,6 +71,7 @@ export function useAmortizationScheduleViewModel(
           'projection query ran while enabled gate was false',
         )
       }
+      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,
@@ -81,9 +84,9 @@ export function useAmortizationScheduleViewModel(
           startDate: obligation.loanDetails.startDate,
           installment: obligation.loanDetails.installment.value,
           installmentPolicy: { kind: 'unchanged' }, // MVP assumption
-          asOf: DEMO_DATE,
+          asOf,
         },
-        DEMO_DATE,
+        asOf,
       )
 
       if (!result.ok) throw result.error
@@ -113,15 +116,24 @@ export function useAmortizationScheduleViewModel(
   }
 
   const snapshot = snapshotRecord(run.outcome.resultSnapshot)
+  let previousCost: number | undefined
   const schedule = snapshotArray(snapshot.schedule).map((entryValue, index) => {
     const entry = snapshotRecord(entryValue)
+    const cost = snapshotMoneyAmount(entry.cost) ?? '?'
+    const currentCost = cost === '?' ? undefined : Number(cost)
+    const costPercentChangeFromPrevious =
+      currentCost === undefined || previousCost === undefined || previousCost === 0
+        ? undefined
+        : ((currentCost - previousCost) / previousCost) * 100
+    previousCost = currentCost
     return {
       period: typeof entry.period === 'number' ? entry.period : index + 1,
       date: typeof entry.date === 'string' ? entry.date : '',
       payment: snapshotMoneyAmount(entry.payment) ?? '?',
       principal: snapshotMoneyAmount(entry.principal) ?? '?',
-      cost: snapshotMoneyAmount(entry.cost) ?? '?',
+      cost,
       closingBalance: snapshotMoneyAmount(entry.closingBalance) ?? '?',
+      costPercentChangeFromPrevious,
     }
   })
 

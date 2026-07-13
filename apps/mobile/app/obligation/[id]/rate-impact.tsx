@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, Card, FieldRow } from '@/core/design-system'
+import { Text, space, Card, FieldRow, Amount } from '@/core/design-system'
 import { useRateImpactViewModel } from '@/features/rate-impact/hooks/use-rate-impact-view-model'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
-import type { Id } from '@eltizamati/domain'
+import { Money, engineEstimate, type Id } from '@eltizamati/domain'
 
 const RESIDUAL_DETECTION_FORMULA_ID = 'residualDetection'
 
@@ -50,7 +50,28 @@ export default function RateImpactScreen() {
 
             {viewModel.hasResidual && viewModel.residualAmount !== undefined && (
               <>
-                <FieldRow label={t('rateImpact.residualAmount')} value={viewModel.residualAmount} />
+                <FieldRow
+                  label={t('rateImpact.residualAmount')}
+                  value={
+                    viewModel.residualCalculationRunId !== undefined &&
+                    viewModel.residualCalculatedAt !== undefined ? (
+                      <Amount
+                        money={Money.of(viewModel.residualAmount, 'JOD')}
+                        provenance={
+                          engineEstimate(
+                            Money.of(viewModel.residualAmount, 'JOD'),
+                            viewModel.residualCalculationRunId,
+                            viewModel.residualCalculatedAt,
+                          ).provenance
+                        }
+                        precision="estimate"
+                        onPress={() => setExplainVisible(true)}
+                      />
+                    ) : (
+                      viewModel.residualAmount
+                    )
+                  }
+                />
 
                 <View style={styles.meta}>
                   <Text variant="bodySmall" color="secondary">
