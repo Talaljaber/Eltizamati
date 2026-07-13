@@ -1,6 +1,8 @@
 node_modules
 .expo
 .claude
+.agents
+skills-lock.json
 dist
 build
 .turbo

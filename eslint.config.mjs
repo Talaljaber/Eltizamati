@@ -11,6 +11,8 @@ export default defineConfig([
     // Global ignore patterns
     ignores: [
       '**/node_modules/**',
+      '**/.claude/**',
+      '**/.agents/**',
       '**/.expo/**',
       '**/dist/**',
       '**/build/**',

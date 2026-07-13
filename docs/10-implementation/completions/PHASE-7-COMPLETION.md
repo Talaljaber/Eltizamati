@@ -16,6 +16,7 @@
 ## Partially Implemented / Pending Exceptions
 
 As documented in `PHASE-7-PARTIAL-IMPLEMENTATION.md`:
+
 1. **TV-30x Finance Sign-off**: The test vectors (TV-30x, TV-104, TV-203, TV-601) are still pending expected values from the finance team. The repository does not contain final signed values.
 2. **Rate History Cumulative Annotation**: The cumulative extra-interest annotation in `SCR-RATE-HIST` is deliberately not implemented in this phase.
 3. **Manual Airplane-Mode Walkthrough**: The physical recording of the AR+EN airplane-mode walkthrough has not been captured yet, as we are waiting on the final vector values to do the formal demo recording.

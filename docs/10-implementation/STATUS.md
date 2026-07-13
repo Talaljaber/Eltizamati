@@ -5,11 +5,21 @@
 ## 2026-07-13 addendum — Phase 8.5 Workstream 4 post-merge correction
 
 Workstreams 1–4 have been implemented and merged. Workstream 4 remains **awaiting independent
-validation** after a post-merge Home provenance-display defect was identified and corrected locally:
-an engine-calculated aggregate had estimate provenance but selected official precision when all inputs
-were non-estimated. Workstream 5 has **not started**, Phase 8.5 is not complete, and Phase 9 remains
-blocked until the Phase 8.5 exit gate passes. The Arabic-reading reviewer remains TBD. Tajawal/Inter
-font assets remain blocked pending licensed files; the safe system-font fallback remains active.
+validation** after a post-merge Home provenance-display defect was identified: an engine-calculated
+aggregate had estimate provenance but selected official precision when all inputs were non-estimated.
+The correction landed as `b81ab80` and was merged through PR #14; remote `main` is now `7477aa8`.
+Workstream 5 has **not started**, Phase 8.5 is not complete, and Phase 9 remains blocked until the Phase
+8.5 exit gate passes. The Arabic-reading reviewer remains TBD. Tajawal/Inter font assets remain blocked
+pending licensed files; the safe system-font fallback remains active.
+
+Developer-local agent installations (`.claude/`, `.agents/`, and `skills-lock.json`) are not product
+source and are removed from version control after their accidental addition in `7b42945`; local
+installations remain supported through explicit ignore rules.
+
+Repository hygiene is restored in this correction: `pnpm run check` passes sequentially (format,
+lint, typecheck, dependency-cruiser with 481 modules / 1,516 dependencies and zero violations, package
+tests, and 263 mobile tests across 49 suites). This is pre–Workstream 5 gate restoration, not execution
+of the Phase 8.5 validation matrix.
 
 ## 2026-07-13 addendum — Phase 8 implementation complete
 
@@ -134,7 +144,7 @@ Phase 8.5.
 
 ## Repository position
 
-- **Branch:** `phase6-finance-engine` @ `6ad618d` plus in-flight Phase-7 formatting/implementation edits (this session's own fixes are uncommitted — see the final summary for the full file list; nothing was pushed or merged).
+- **Merged head:** remote `main` @ `7477aa8` (PR #14), containing the Workstream 4 provenance correction `b81ab80`. Current working branch is `phase6-finance-engine`, which carries the repository-hygiene correction for review.
 - **Docker/local Supabase running** for this session (`supabase status` healthy) — the live-Supabase integration suite (`pnpm run test:integration`) was run for real, not skipped.
 - **⚠ GitHub Actions infrastructure issue — not re-checked this session** (no network/gh access in this environment). Last confirmed present at `eada339` (Phase 3 close) via the GitHub Actions REST API: both CI jobs completed in ~1 second with **zero steps executed** and an immediate `failure` conclusion — a pre-existing, account-level condition (also present on `fdf25a0` and `964c8ea`, predating Phase 2/3 entirely), not a code defect. Requires the repository owner to check GitHub Settings → Actions and Billing for this repo/account. Not treated as blocking phase closure, consistent with Phase 3's precedent.
 
