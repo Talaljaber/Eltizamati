@@ -50,9 +50,9 @@ export default function SettingsScreen() {
   const { data: session } = useQuery({
     queryKey: ['settingsCurrentSession'],
     queryFn: async () => {
-      if (!authServiceResult.ok) return undefined
+      if (!authServiceResult.ok) return null
       const result = await authServiceResult.value.currentSession()
-      return result.ok ? result.value : undefined
+      return result.ok ? (result.value ?? null) : null
     },
     enabled: isPersonalMode,
   })
