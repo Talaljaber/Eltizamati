@@ -1,5 +1,5 @@
 /**
- * Home Tab — Phase 5 Dashboard.
+ * Home Tab — financial overview (Phase 8.5 Workstream 4 representative screen).
  *
  * Shows Total Commitments, Next Payment, and Insights Preview.
  *
@@ -10,14 +10,23 @@
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Text, space, useTheme, radius, DemoBanner, SkeletonCard } from '@/core/design-system'
+import {
+  Text,
+  space,
+  useTheme,
+  DemoBanner,
+  SkeletonCard,
+  Card,
+  Amount,
+  InsightBanner,
+} from '@/core/design-system'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { useInsights } from '@/features/home/api/use-insights'
 import { useHomeAggregates } from '@/features/home/hooks/use-home-aggregates'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
-import { formatMoneyOfficial, formatMoneyEstimate } from '@/core/formatting/format-money'
-import type { Insight, Id } from '@eltizamati/domain'
+import { toBannerSeverity } from '@/features/insights/severity'
+import { engineEstimate, type Insight, type Id } from '@eltizamati/domain'
 
 export default function HomeTab() {
   const { t } = useTranslation()
@@ -62,13 +71,10 @@ export default function HomeTab() {
         }
       >
         <View style={styles.header}>
-          <Text variant="display">{'👋'}</Text>
-          <View>
-            <Text variant="title">{t('home.greeting')}</Text>
-            <Text variant="body" color="secondary">
-              {t('home.subtitle')}
-            </Text>
-          </View>
+          <Text variant="title">{t('home.greeting')}</Text>
+          <Text variant="body" color="secondary">
+            {t('home.subtitle')}
+          </Text>
         </View>
 
         {isLoading ? (
@@ -78,8 +84,8 @@ export default function HomeTab() {
           </View>
         ) : (
           <View style={styles.dashboard}>
-            <SummaryCard aggregates={aggregates} theme={theme} />
-            <InsightsPreview insights={insights ?? []} theme={theme} />
+            <SummaryCard aggregates={aggregates} />
+            <InsightsPreview insights={insights ?? []} />
           </View>
         )}
       </ScrollView>
@@ -87,62 +93,81 @@ export default function HomeTab() {
   )
 }
 
-function SummaryCard({
-  aggregates,
-  theme,
-}: {
-  aggregates: ReturnType<typeof useHomeAggregates>
-  theme: ReturnType<typeof useTheme>
-}) {
+function amountPrecision(isEstimate: boolean): 'official' | 'estimate' {
+  return isEstimate ? 'estimate' : 'official'
+}
+
+function SummaryCard({ aggregates }: { aggregates: ReturnType<typeof useHomeAggregates> }) {
   const { t } = useTranslation()
 
-  const totalText =
-    aggregates.status === 'success' && aggregates.totalMonthlyCommitment
-      ? aggregates.includesEstimates === true
-        ? formatMoneyEstimate(
+  const total =
+    aggregates.status === 'success' &&
+    aggregates.totalMonthlyCommitment !== undefined &&
+    aggregates.calculationRunId !== undefined &&
+    aggregates.calculatedAt !== undefined
+      ? {
+          money: aggregates.totalMonthlyCommitment,
+          provenance: engineEstimate(
             aggregates.totalMonthlyCommitment,
-            aggregates.totalMonthlyCommitment.currency,
-          )
-        : formatMoneyOfficial(
-            aggregates.totalMonthlyCommitment,
-            aggregates.totalMonthlyCommitment.currency,
-          )
-      : t('home.totalPending')
+            aggregates.calculationRunId,
+            aggregates.calculatedAt,
+          ).provenance,
+          precision: amountPrecision(aggregates.includesEstimates === true),
+        }
+      : undefined
 
-  const nextPaymentText =
-    aggregates.status === 'success' && aggregates.nextDueAmount
-      ? formatMoneyEstimate(aggregates.nextDueAmount, aggregates.nextDueAmount.currency)
-      : t('home.totalPending')
+  const nextDue =
+    aggregates.status === 'success' &&
+    aggregates.nextDueAmount !== undefined &&
+    aggregates.nextDueAmountProvenance !== undefined
+      ? {
+          money: aggregates.nextDueAmount,
+          provenance: aggregates.nextDueAmountProvenance,
+          precision: amountPrecision(aggregates.nextDueAmountProvenance.source === 'estimate'),
+        }
+      : undefined
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.bgElevated, borderColor: theme.border }]}>
+    <Card>
       <View style={styles.metric}>
         <Text variant="bodySmall" color="secondary">
           {t('home.totalLabel')}
         </Text>
-        <Text variant="amountLg" color="primary">
-          {totalText}
-        </Text>
+        {total ? (
+          <Amount
+            variant="amountHero"
+            money={total.money}
+            provenance={total.provenance}
+            precision={total.precision}
+          />
+        ) : (
+          <Text variant="amountHero" color="secondary">
+            {t('home.totalPending')}
+          </Text>
+        )}
       </View>
-      <View style={styles.metric}>
+      <View style={[styles.metric, styles.metricSpaced]}>
         <Text variant="bodySmall" color="secondary">
           {t('home.nextPaymentLabel')}
         </Text>
-        <Text variant="amountMd" color="secondary">
-          {nextPaymentText}
-        </Text>
+        {nextDue ? (
+          <Amount
+            variant="amountMd"
+            money={nextDue.money}
+            provenance={nextDue.provenance}
+            precision={nextDue.precision}
+          />
+        ) : (
+          <Text variant="amountMd" color="secondary">
+            {t('home.totalPending')}
+          </Text>
+        )}
       </View>
-    </View>
+    </Card>
   )
 }
 
-function InsightsPreview({
-  insights,
-  theme,
-}: {
-  insights: readonly Insight[]
-  theme: ReturnType<typeof useTheme>
-}) {
+function InsightsPreview({ insights }: { insights: readonly Insight[] }) {
   const { t } = useTranslation()
 
   if (insights.length === 0) {
@@ -151,11 +176,11 @@ function InsightsPreview({
         <View style={styles.insightsHeader}>
           <Text variant="heading">{t('home.insightsTitle')}</Text>
         </View>
-        <View style={[styles.emptyInsight, { backgroundColor: theme.bgSubtle }]}>
-          <Text variant="body" color="secondary">
+        <Card surface="flat">
+          <Text variant="body" color="secondary" align="center">
             {t('home.noInsights')}
           </Text>
-        </View>
+        </Card>
       </View>
     )
   }
@@ -172,12 +197,13 @@ function InsightsPreview({
       </View>
       <View style={styles.insightsList}>
         {insights.slice(0, 3).map((insight) => (
-          <View key={insight.id} style={[styles.insightCard, { backgroundColor: theme.infoSoft }]}>
-            <Text variant="bodySmall" color="primary">
-              {/* Note: insight body template resolution is simplified here */}
-              {t(`insights.${insight.ruleId}.title`, { defaultValue: insight.ruleId })}
-            </Text>
-          </View>
+          <InsightBanner
+            key={insight.id}
+            severity={toBannerSeverity(insight.severity)}
+            title={t(`insights.${insight.ruleId}.title`, { defaultValue: insight.ruleId })}
+            body={t(insight.bodyKey, insight.params)}
+            unread={insight.readAt === undefined}
+          />
         ))}
       </View>
     </View>
@@ -196,9 +222,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: space[4],
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
+    gap: space[1],
   },
   loadingGroup: {
     padding: space[4],
@@ -208,14 +232,11 @@ const styles = StyleSheet.create({
     padding: space[4],
     gap: space[6],
   },
-  card: {
-    padding: space[5],
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    gap: space[4],
-  },
   metric: {
     gap: space[1],
+  },
+  metricSpaced: {
+    marginTop: space[4],
   },
   insightsGroup: {
     gap: space[3],
@@ -225,16 +246,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  emptyInsight: {
-    padding: space[4],
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
   insightsList: {
     gap: space[2],
-  },
-  insightCard: {
-    padding: space[3],
-    borderRadius: radius.md,
   },
 })

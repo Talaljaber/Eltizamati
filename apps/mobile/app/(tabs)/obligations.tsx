@@ -13,24 +13,36 @@ import { View, StyleSheet, FlatList, RefreshControl } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
 import {
   Text,
   space,
+  radius,
   useTheme,
   DemoBanner,
   SkeletonCard,
   ListRow,
   StatusChip,
   EmptyState,
+  Amount,
 } from '@/core/design-system'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { usePaymentsByObligation } from '@/features/home/api/use-payments-by-obligation'
 import { useInsightsByObligation } from '@/features/home/api/use-insights-by-obligation'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
-import { deriveObligationStatus } from '@eltizamati/domain'
-import type { Obligation, Payment, Insight, Id } from '@eltizamati/domain'
+import { deriveObligationStatus, extractOfficialBalance } from '@eltizamati/domain'
+import type { Obligation, Payment, Insight, Id, ObligationKind } from '@eltizamati/domain'
 import { DEMO_DATE } from '@eltizamati/demo-data'
+
+const KIND_ICON: Record<ObligationKind, keyof typeof Ionicons.glyphMap> = {
+  creditCard: 'card-outline',
+  conventionalLoan: 'business-outline',
+  murabaha: 'storefront-outline',
+  genericFacility: 'briefcase-outline',
+  ijara: 'key-outline',
+  diminishingMusharakah: 'people-outline',
+}
 
 export default function ObligationsTab() {
   const { t } = useTranslation()
@@ -136,27 +148,31 @@ function ObligationRow({
   onPress: () => void
 }) {
   const { t } = useTranslation()
+  const theme = useTheme()
   const status = deriveObligationStatus({
     obligation,
     payments,
     insights,
     today: DEMO_DATE,
   })
+  const balance = extractOfficialBalance(obligation)
 
   const leading = (
-    <View style={styles.iconBox}>
-      <Text variant="heading">
-        {obligation.kind === 'creditCard'
-          ? '💳'
-          : obligation.kind === 'conventionalLoan'
-            ? '🏦'
-            : '🤝'}
-      </Text>
+    <View style={[styles.iconBox, { backgroundColor: theme.bgSubtle }]}>
+      <Ionicons name={KIND_ICON[obligation.kind]} size={20} color={theme.textSecondary} />
     </View>
   )
 
   const trailing = (
     <View style={styles.trailingCol}>
+      {balance !== undefined && (
+        <Amount
+          variant="amountSm"
+          money={balance.value}
+          provenance={balance.provenance}
+          precision={balance.provenance.source === 'estimate' ? 'estimate' : 'official'}
+        />
+      )}
       <StatusChip status={status} />
     </View>
   )
@@ -194,10 +210,12 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 40,
     height: 40,
+    borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   trailingCol: {
     alignItems: 'flex-end',
+    gap: space[1],
   },
 })

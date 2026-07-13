@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
-import { View, StyleSheet, ScrollView, Alert } from 'react-native'
+import { View, StyleSheet, ScrollView, Alert, I18nManager } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
 import {
   Text,
   space,
+  radius,
   useTheme,
   DemoBanner,
   SkeletonCard,
@@ -33,6 +35,20 @@ import { CardDetailSection } from '@/features/card-detail/components/CardDetailS
 import { useCardInsightEvaluation } from '@/features/card-detail/hooks/use-card-insight-evaluation'
 import { useUserThresholdInsightEvaluation } from '@/features/loan-detail/hooks/use-user-threshold-insight-evaluation'
 import { ObligationService } from '@/services/obligation-service'
+
+const KIND_ICON: Record<ObligationKind, keyof typeof Ionicons.glyphMap> = {
+  creditCard: 'card-outline',
+  conventionalLoan: 'business-outline',
+  murabaha: 'storefront-outline',
+  genericFacility: 'briefcase-outline',
+  ijara: 'key-outline',
+  diminishingMusharakah: 'people-outline',
+}
+
+/** Direction-aware chevron for row navigation (icons with inherent direction flip in RTL). */
+const CHEVRON_ICON: keyof typeof Ionicons.glyphMap = I18nManager.isRTL
+  ? 'chevron-back-outline'
+  : 'chevron-forward-outline'
 
 export default function ObligationDetailScreen() {
   return (
@@ -169,13 +185,13 @@ function ObligationDetailInner() {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
-          <Text variant="display">
-            {(obligation.kind as ObligationKind) === 'creditCard'
-              ? '💳'
-              : (obligation.kind as ObligationKind) === 'conventionalLoan'
-                ? '🏦'
-                : '🤝'}
-          </Text>
+          <View style={[styles.kindIcon, { backgroundColor: theme.bgSubtle }]}>
+            <Ionicons
+              name={KIND_ICON[obligation.kind as ObligationKind]}
+              size={24}
+              color={theme.textSecondary}
+            />
+          </View>
           <Text variant="title">{obligation.institution.name}</Text>
           <View style={styles.badges}>
             <StatusChip status={status} />
@@ -188,63 +204,59 @@ function ObligationDetailInner() {
           )}
         </View>
 
-        <View style={styles.manageRow}>
-          <Button
-            label={t('obligationDetail.edit')}
-            variant="secondary"
-            onPress={() => router.push(`/obligation/${id}/edit`)}
-          />
-          <Button
-            label={t('obligationDetail.logPayment')}
-            variant="secondary"
-            onPress={() => router.push(`/obligation/${id}/log-payment`)}
-          />
-          <Button
-            label={t('obligationDetail.archive')}
-            variant="secondary"
-            onPress={handleArchive}
-            loading={archiving}
-          />
-          <Button
-            label={t('obligationDetail.delete')}
-            variant="destructive"
-            onPress={handleDelete}
-            loading={deleting}
-          />
-        </View>
-
         {viewModel.hero && <LoanDetailHero obligationId={obligation.id} hero={viewModel.hero} />}
 
-        {obligation.kind === 'conventionalLoan' ? (
-          <View style={styles.navigationGrid}>
+        <View style={styles.primaryActions}>
+          <View style={styles.primaryActionItem}>
             <Button
-              label={t('loanDetail.navRateHistory', 'Rate History')}
+              label={t('obligationDetail.logPayment')}
+              onPress={() => router.push(`/obligation/${id}/log-payment`)}
+            />
+          </View>
+          <View style={styles.primaryActionItem}>
+            <Button
+              label={t('obligationDetail.edit')}
               variant="secondary"
+              onPress={() => router.push(`/obligation/${id}/edit`)}
+            />
+          </View>
+        </View>
+
+        {obligation.kind === 'conventionalLoan' ? (
+          <View
+            style={[
+              styles.navGroup,
+              { backgroundColor: theme.bgElevated, borderColor: theme.border },
+            ]}
+          >
+            <NavRow
+              icon="time-outline"
+              label={t('loanDetail.navRateHistory', 'Rate History')}
               onPress={() => router.push(`/obligation/${id}/rate-history`)}
             />
-            <Button
+            <NavRow
+              icon="trending-up-outline"
               label={t('loanDetail.navRateImpact', 'Rate Impact')}
-              variant="secondary"
               onPress={() => router.push(`/obligation/${id}/rate-impact`)}
             />
-            <Button
+            <NavRow
+              icon="calendar-outline"
               label={t('loanDetail.navSchedule', 'Schedule')}
-              variant="secondary"
               onPress={() => router.push(`/obligation/${id}/schedule`)}
             />
-            <Button
+            <NavRow
+              icon="calculator-outline"
               label={t('loanDetail.navScenario', 'Simulator')}
-              variant="secondary"
               onPress={() => router.push(`/obligation/${id}/scenario`)}
             />
-            <Button
+            <NavRow
+              icon="help-circle-outline"
               label={t('loanDetail.navBankQuestions', 'Bank Questions')}
-              variant="secondary"
               onPress={() => router.push(`/obligation/${id}/bank-questions`)}
             />
-            <Button
+            <NavRow
+              icon="create-outline"
               label={t('obligationDetail.logRateChange')}
-              variant="secondary"
               onPress={() => router.push(`/obligation/${id}/log-rate`)}
             />
           </View>
@@ -259,6 +271,7 @@ function ObligationDetailInner() {
             <CardDetailSection obligation={obligation} />
             <Button
               label={t('cardSimulator.open')}
+              variant="secondary"
               onPress={() => router.push(`/obligation/${obligation.id}/card-simulator`)}
             />
           </View>
@@ -304,8 +317,46 @@ function ObligationDetailInner() {
             </Card>
           )}
         </View>
+
+        <View style={styles.dangerZone}>
+          <SectionHeader title={t('obligationDetail.manage', 'Manage')} />
+          <Button
+            label={t('obligationDetail.archive')}
+            variant="secondary"
+            onPress={handleArchive}
+            loading={archiving}
+          />
+          <Button
+            label={t('obligationDetail.delete')}
+            variant="destructive"
+            onPress={handleDelete}
+            loading={deleting}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
+  )
+}
+
+function NavRow({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap
+  label: string
+  onPress: () => void
+}) {
+  const theme = useTheme()
+  return (
+    <ListRow
+      onPress={onPress}
+      accessibilityLabel={label}
+      leading={<Ionicons name={icon} size={20} color={theme.textSecondary} />}
+      trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
+    >
+      <Text variant="body">{label}</Text>
+    </ListRow>
   )
 }
 
@@ -325,23 +376,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space[2],
   },
+  kindIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   badges: {
     flexDirection: 'row',
     gap: space[2],
     marginTop: space[2],
   },
-  manageRow: {
+  primaryActions: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: space[2],
-    justifyContent: 'center',
-  },
-  navigationGrid: {
     gap: space[3],
-    marginTop: space[4],
+  },
+  primaryActionItem: {
+    flex: 1,
+  },
+  navGroup: {
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
   },
   paymentHistory: {
     marginTop: space[4],
+  },
+  dangerZone: {
+    marginTop: space[6],
+    gap: space[3],
   },
   detailSection: { gap: space[4] },
 })

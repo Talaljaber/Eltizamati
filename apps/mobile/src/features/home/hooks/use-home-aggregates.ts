@@ -12,7 +12,7 @@
  */
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import type { Obligation, LocalDate } from '@eltizamati/domain'
+import type { Obligation, LocalDate, Provenance } from '@eltizamati/domain'
 import {
   extractOfficialBalance,
   resolveMonthlyCommitment,
@@ -32,6 +32,11 @@ export interface HomeAggregatesViewModel {
   includesEstimates?: boolean
   nextDueDate?: LocalDate
   nextDueAmount?: Money
+  /** From `getNextDueInfo`'s `Sourced<Money>` — Amount requires real provenance, not just a bare value. */
+  nextDueAmountProvenance?: Provenance
+  /** CalculationRun id/timestamp — lets the UI attach real provenance to the total (Amount requires it). */
+  calculationRunId?: string
+  calculatedAt?: string
 }
 
 export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggregatesViewModel {
@@ -80,16 +85,18 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
 
       let nextDueDate: LocalDate | undefined
       let nextDueAmount: Money | undefined
+      let nextDueAmountProvenance: Provenance | undefined
       for (const obligation of obligations) {
         const info = getNextDueInfo(obligation, DEMO_DATE)
         if (!info) continue
         if (!nextDueDate || compareLocalDate(info.dueDate, nextDueDate) < 0) {
           nextDueDate = info.dueDate
           nextDueAmount = info.amount.value
+          nextDueAmountProvenance = info.amount.provenance
         }
       }
 
-      return { run: result.value, nextDueDate, nextDueAmount }
+      return { run: result.value, nextDueDate, nextDueAmount, nextDueAmountProvenance }
     },
     enabled: !!activeUser,
   })
@@ -98,7 +105,12 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
   if (!data) return { status: 'loading' }
 
   if (data.run.outcome.kind !== 'result') {
-    return { status: 'success', nextDueDate: data.nextDueDate, nextDueAmount: data.nextDueAmount }
+    return {
+      status: 'success',
+      nextDueDate: data.nextDueDate,
+      nextDueAmount: data.nextDueAmount,
+      nextDueAmountProvenance: data.nextDueAmountProvenance,
+    }
   }
 
   const snapshot = snapshotRecord(data.run.outcome.resultSnapshot)
@@ -113,5 +125,8 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
     includesEstimates: snapshot.includesEstimates === true,
     nextDueDate: data.nextDueDate,
     nextDueAmount: data.nextDueAmount,
+    nextDueAmountProvenance: data.nextDueAmountProvenance,
+    calculationRunId: data.run.id,
+    calculatedAt: data.run.calculatedAt,
   }
 }

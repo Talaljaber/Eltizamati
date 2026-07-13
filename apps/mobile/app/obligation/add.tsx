@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { View, StyleSheet, ScrollView } from 'react-native'
+import { View, StyleSheet, ScrollView, I18nManager } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter, Stack } from 'expo-router'
-import { Text, Button, Card, space } from '@/core/design-system'
+import { Ionicons } from '@expo/vector-icons'
+import { Text, Button, ListRow, space, radius, useTheme } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
@@ -28,6 +29,11 @@ import {
 
 const service = new ObligationService()
 
+/** Direction-aware chevron for row navigation (icons with inherent direction flip in RTL). */
+const CHEVRON_ICON: keyof typeof Ionicons.glyphMap = I18nManager.isRTL
+  ? 'chevron-back-outline'
+  : 'chevron-forward-outline'
+
 type AddableKind = Extract<ObligationKind, 'conventionalLoan' | 'murabaha' | 'creditCard'>
 
 export default function AddObligationScreen() {
@@ -40,6 +46,7 @@ export default function AddObligationScreen() {
 
 function AddObligationInner() {
   const { t } = useTranslation()
+  const theme = useTheme()
   const router = useRouter()
   const repos = useRepositories()
   const activeUser = useActiveUser()
@@ -151,27 +158,34 @@ function AddObligationInner() {
           <Text variant="bodySmall" color="secondary">
             {t('obligationForm.pickKind')}
           </Text>
-          <Card>
-            <Button
-              label={t('obligationKind.conventionalLoan')}
-              variant="secondary"
+          <View
+            style={[
+              styles.pickerList,
+              { backgroundColor: theme.bgElevated, borderColor: theme.border },
+            ]}
+          >
+            <ListRow
               onPress={() => setKind('conventionalLoan')}
-            />
-          </Card>
-          <Card>
-            <Button
-              label={t('obligationKind.murabaha')}
-              variant="secondary"
+              leading={<Ionicons name="business-outline" size={20} color={theme.textSecondary} />}
+              trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
+            >
+              <Text variant="body">{t('obligationKind.conventionalLoan')}</Text>
+            </ListRow>
+            <ListRow
               onPress={() => setKind('murabaha')}
-            />
-          </Card>
-          <Card>
-            <Button
-              label={t('obligationKind.creditCard')}
-              variant="secondary"
+              leading={<Ionicons name="storefront-outline" size={20} color={theme.textSecondary} />}
+              trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
+            >
+              <Text variant="body">{t('obligationKind.murabaha')}</Text>
+            </ListRow>
+            <ListRow
               onPress={() => setKind('creditCard')}
-            />
-          </Card>
+              leading={<Ionicons name="card-outline" size={20} color={theme.textSecondary} />}
+              trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
+            >
+              <Text variant="body">{t('obligationKind.creditCard')}</Text>
+            </ListRow>
+          </View>
         </View>
       ) : (
         <View style={styles.formGroup}>
@@ -228,6 +242,11 @@ const styles = StyleSheet.create({
   },
   pickerGroup: {
     gap: space[3],
+  },
+  pickerList: {
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
   },
   formGroup: {
     gap: space[4],
