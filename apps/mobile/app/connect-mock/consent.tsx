@@ -7,6 +7,12 @@ import { Button, Screen, Text, space } from '@/core/design-system'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 
+function generateConsentId(): string {
+  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `consent-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
 export default function MockConsentScreen() {
   const { t, i18n } = useTranslation()
   const router = useRouter()
@@ -19,7 +25,7 @@ export default function MockConsentScreen() {
     if (!userId) return
     setSaving(true)
     const result = await repos.consentRepository.acknowledge({
-      id: brandId<'consentRecord'>(crypto.randomUUID()),
+      id: brandId<'consentRecord'>(generateConsentId()),
       userId,
       docType: 'provider:mock-open-banking',
       version: 'v1',

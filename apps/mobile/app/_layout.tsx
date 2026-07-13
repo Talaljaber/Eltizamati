@@ -1,27 +1,13 @@
-import { useEffect } from 'react'
-import { Stack, useRouter } from 'expo-router'
-import * as Notifications from 'expo-notifications'
+import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useTranslation } from 'react-i18next'
 import { AppProviders } from '../src/providers'
 import { OnboardingGuard } from '../src/features/demo/components/OnboardingGuard'
 import '../src/i18n' // Initialize i18n
-import { getNotificationRoute } from '../src/services/local-notification-service'
+import { useNotificationResponse } from '../src/features/notifications/hooks/use-notification-response'
 
 function NotificationResponseHandler() {
-  const router = useRouter()
-
-  useEffect(() => {
-    const openResponse = (response: Notifications.NotificationResponse | null) => {
-      if (response === null) return
-      const route = getNotificationRoute(response.notification.request.content.data)
-      if (route !== undefined) router.push(route)
-    }
-    void Notifications.getLastNotificationResponseAsync().then(openResponse)
-    const subscription = Notifications.addNotificationResponseReceivedListener(openResponse)
-    return () => subscription.remove()
-  }, [router])
-
+  useNotificationResponse()
   return null
 }
 
