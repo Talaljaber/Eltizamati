@@ -304,6 +304,21 @@ export default function SettingsScreen() {
             testID="settings-sign-out"
           />
         </View>
+      ) : repos !== null ? (
+        <View style={styles.section}>
+          <Text variant="bodySmall" color="secondary">
+            {t('settings.accountLabel')}
+          </Text>
+          <Text variant="body" color="secondary">
+            {t('settings.demoAccountPrompt')}
+          </Text>
+          <Button
+            label={t('settings.demoSignInAction')}
+            onPress={() => router.push('/auth/sign-in')}
+            variant="secondary"
+            testID="settings-demo-sign-in"
+          />
+        </View>
       ) : null}
 
       <View style={styles.section}>

@@ -29,7 +29,11 @@ export function Screen({
   const content = loading ? (skeleton ?? children) : children
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]} testID={testID}>
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      style={[styles.safeArea, { backgroundColor: theme.bg }]}
+      testID={testID}
+    >
       {scroll ? (
         <ScrollView contentContainerStyle={styles.gutter} showsVerticalScrollIndicator={false}>
           {content}

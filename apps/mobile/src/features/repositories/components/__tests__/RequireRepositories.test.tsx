@@ -47,6 +47,6 @@ describe('RequireRepositories', () => {
     )
 
     expect(queryByText('protected content')).toBeNull()
-    expect(mockRedirect).toHaveBeenCalledWith({ href: '/onboarding/language' })
+    expect(mockRedirect).toHaveBeenCalledWith({ href: '/onboarding/welcome' })
   })
 })

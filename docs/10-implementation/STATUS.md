@@ -2,6 +2,23 @@
 
 > Read this first, then the active phase file. Update this file at every session end and every phase state change. Pre-plan history: [status-m0-session-log.md](status-m0-session-log.md) (the mid-M0 session log) and (independent audit, 2026-07-11). Master plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
 
+## 2026-07-13 addendum — Phase 8.5 Workstream 5 executed (validation matrix + exit-review draft)
+
+Workstream 5 (review and gate) has been run: the full validation matrix across all five representative
+screens, a repository-wide check pass, and an accessibility/provenance audit — recorded in
+[PHASE-8.5-WORKSTREAM-5-VALIDATION-MATRIX.md](audits/PHASE-8.5-WORKSTREAM-5-VALIDATION-MATRIX.md).
+Result: **conditional go** — nothing found blocks Phase 9 architecturally, but two findings are logged
+for an explicit owner decision (Murabaha/Card detail fields bypass `Amount` and drop per-field
+provenance; the add-obligation form has no dedicated screen test), and two live-review interaction-
+hierarchy defects (an oversized header button, an equal-weight action-button pile on the Insights
+Center) were found and fixed directly during this pass.
+
+**Phase 8.5 is still not complete.** Two gates remain and cannot be closed by this pass: the
+Arabic-reading reviewer's sign-off (still TBD) and the owner's recorded exit-review approval, which
+should explicitly accept or schedule the two logged findings. Phase 9 stays blocked until both land.
+`pnpm run check` remains fully green (49 suites / 263 tests, zero lint/depcruise/format issues) after
+this pass's fixes.
+
 ## 2026-07-13 addendum — Phase 8.5 Workstream 4 post-merge correction
 
 Workstreams 1–4 have been implemented and merged. Workstream 4 remains **awaiting independent

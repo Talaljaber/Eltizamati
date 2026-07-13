@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "Eltizamati",
     "toggleLanguage": "عربي",
     "loading": "Loading…",
     "back": "Back",
@@ -261,6 +262,10 @@
     "notFound": "Calculation record not found."
   },
   "onboarding": {
+    "welcomeTagline": "Every obligation, honestly tracked.",
+    "welcomeGetStarted": "Get started",
+    "welcomeHaveAccount": "Already have an account?",
+    "welcomeSignIn": "Sign in",
     "languageTitle": "Choose your language",
     "languageSubtitle": "You can change this later in Settings.",
     "english": "English",
@@ -605,6 +610,8 @@
     "accountLabel": "Account",
     "signedInAs": "Signed in as {{email}}",
     "signOutButton": "Sign Out",
+    "demoAccountPrompt": "You're exploring with demo data. Sign in or create an account to save your own.",
+    "demoSignInAction": "Sign in / Create account",
     "deleteAccountButton": "Delete Account",
     "deleteAccountConfirmTitle": "Delete your account?",
     "deleteAccountConfirmBody": "This permanently erases your account and all associated data. This cannot be undone.",

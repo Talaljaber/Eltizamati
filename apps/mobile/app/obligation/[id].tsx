@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { View, StyleSheet, ScrollView, Alert, I18nManager } from 'react-native'
+import { View, StyleSheet, ScrollView, Alert, I18nManager, Pressable } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -168,11 +168,15 @@ function ObligationDetailInner() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <Button
-              label={t('insights.title', 'Insights Center')}
-              variant="secondary"
+            <Pressable
               onPress={() => router.push('/insights')}
-            />
+              accessibilityRole="button"
+              accessibilityLabel={t('insights.title', 'Insights Center')}
+              hitSlop={8}
+              style={styles.headerAction}
+            >
+              <Ionicons name="bulb-outline" size={24} color={theme.understanding} />
+            </Pressable>
           ),
         }}
       />
@@ -383,6 +387,10 @@ export function ObligationManageActions({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  headerAction: {
+    marginEnd: space[2],
+    padding: space[1],
   },
   loadingGroup: {
     padding: space[4],

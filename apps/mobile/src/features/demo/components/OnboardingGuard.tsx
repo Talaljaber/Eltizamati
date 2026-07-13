@@ -34,7 +34,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
         // commit before the redirect lands — crashing on useRepositories.
         // The effect re-runs when `segments` changes; the post-navigation run
         // finds a consistent state and sets ready.
-        router.replace('/onboarding/language')
+        router.replace('/onboarding/welcome')
         return
       }
       if (effectivelyComplete && inOnboardingGroup) {
