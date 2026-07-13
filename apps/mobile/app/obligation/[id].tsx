@@ -45,11 +45,6 @@ const KIND_ICON: Record<ObligationKind, keyof typeof Ionicons.glyphMap> = {
   diminishingMusharakah: 'people-outline',
 }
 
-/** Direction-aware chevron for row navigation (icons with inherent direction flip in RTL). */
-const CHEVRON_ICON: keyof typeof Ionicons.glyphMap = I18nManager.isRTL
-  ? 'chevron-back-outline'
-  : 'chevron-forward-outline'
-
 export default function ObligationDetailScreen() {
   return (
     <RequireRepositories>
@@ -318,27 +313,18 @@ function ObligationDetailInner() {
           )}
         </View>
 
-        <View style={styles.dangerZone}>
-          <SectionHeader title={t('obligationDetail.manage', 'Manage')} />
-          <Button
-            label={t('obligationDetail.archive')}
-            variant="secondary"
-            onPress={handleArchive}
-            loading={archiving}
-          />
-          <Button
-            label={t('obligationDetail.delete')}
-            variant="destructive"
-            onPress={handleDelete}
-            loading={deleting}
-          />
-        </View>
+        <ObligationManageActions
+          archiving={archiving}
+          deleting={deleting}
+          onArchive={handleArchive}
+          onDelete={handleDelete}
+        />
       </ScrollView>
     </SafeAreaView>
   )
 }
 
-function NavRow({
+export function NavRow({
   icon,
   label,
   onPress,
@@ -348,15 +334,49 @@ function NavRow({
   onPress: () => void
 }) {
   const theme = useTheme()
+  const chevronIcon: keyof typeof Ionicons.glyphMap = I18nManager.isRTL
+    ? 'chevron-back-outline'
+    : 'chevron-forward-outline'
   return (
     <ListRow
       onPress={onPress}
       accessibilityLabel={label}
       leading={<Ionicons name={icon} size={20} color={theme.textSecondary} />}
-      trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
+      trailing={<Ionicons name={chevronIcon} size={18} color={theme.textTertiary} />}
     >
       <Text variant="body">{label}</Text>
     </ListRow>
+  )
+}
+
+export function ObligationManageActions({
+  archiving,
+  deleting,
+  onArchive,
+  onDelete,
+}: {
+  archiving: boolean
+  deleting: boolean
+  onArchive: () => void
+  onDelete: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <View style={styles.dangerZone} testID="obligation-manage-actions">
+      <SectionHeader title={t('obligationDetail.manage', 'Manage')} />
+      <Button
+        label={t('obligationDetail.archive')}
+        variant="secondary"
+        onPress={onArchive}
+        loading={archiving}
+      />
+      <Button
+        label={t('obligationDetail.delete')}
+        variant="destructive"
+        onPress={onDelete}
+        loading={deleting}
+      />
+    </View>
   )
 }
 

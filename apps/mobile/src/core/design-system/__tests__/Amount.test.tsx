@@ -80,6 +80,16 @@ describe('Amount', () => {
     expect(getByText(/1,000/)).toBeTruthy()
   })
 
+  it('never renders estimate provenance with official precision', () => {
+    const money = Money.of('1234.567', 'JOD')
+    const { getByText, getByLabelText } = render(
+      <Amount money={money} provenance={estimateProvenance} precision="official" />,
+    )
+    expect(getByText(/≈/)).toBeTruthy()
+    expect(getByText(/provenance\.estimate/)).toBeTruthy()
+    expect(getByLabelText(/provenance\.estimate/)).toBeTruthy()
+  })
+
   // ── Provenance in accessibilityLabel (DS-4 / a11y requirement) ────────────
 
   it('accessibilityLabel includes provenance key — required for screen readers', () => {

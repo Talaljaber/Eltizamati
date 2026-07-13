@@ -136,7 +136,7 @@ export default function ObligationsTab() {
   )
 }
 
-function ObligationRow({
+export function ObligationRow({
   obligation,
   payments,
   insights,
@@ -167,6 +167,7 @@ function ObligationRow({
     <View style={styles.trailingCol}>
       {balance !== undefined && (
         <Amount
+          testID="obligation-list-balance"
           variant="amountSm"
           money={balance.value}
           provenance={balance.provenance}

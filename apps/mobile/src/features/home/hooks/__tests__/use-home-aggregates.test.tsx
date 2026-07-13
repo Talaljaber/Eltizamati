@@ -59,5 +59,8 @@ describe('useHomeAggregates', () => {
     if (result.current.status !== 'success') return
 
     expect(result.current.totalMonthlyCommitment).toBeDefined()
+    // This describes aggregate input quality only; the calculated output still
+    // has estimate provenance regardless of this value.
+    expect(result.current.hasEstimatedInputs).toBe(true)
   })
 })

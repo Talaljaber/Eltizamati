@@ -97,7 +97,7 @@ function amountPrecision(isEstimate: boolean): 'official' | 'estimate' {
   return isEstimate ? 'estimate' : 'official'
 }
 
-function SummaryCard({ aggregates }: { aggregates: ReturnType<typeof useHomeAggregates> }) {
+export function SummaryCard({ aggregates }: { aggregates: ReturnType<typeof useHomeAggregates> }) {
   const { t } = useTranslation()
 
   const total =
@@ -112,7 +112,9 @@ function SummaryCard({ aggregates }: { aggregates: ReturnType<typeof useHomeAggr
             aggregates.calculationRunId,
             aggregates.calculatedAt,
           ).provenance,
-          precision: amountPrecision(aggregates.includesEstimates === true),
+          // This is an engine-calculated output regardless of the quality class
+          // of its inputs. `hasEstimatedInputs` must not alter output provenance.
+          precision: 'estimate' as const,
         }
       : undefined
 
@@ -135,6 +137,7 @@ function SummaryCard({ aggregates }: { aggregates: ReturnType<typeof useHomeAggr
         </Text>
         {total ? (
           <Amount
+            testID="home-total-amount"
             variant="amountHero"
             money={total.money}
             provenance={total.provenance}
@@ -152,6 +155,7 @@ function SummaryCard({ aggregates }: { aggregates: ReturnType<typeof useHomeAggr
         </Text>
         {nextDue ? (
           <Amount
+            testID="home-next-payment-amount"
             variant="amountMd"
             money={nextDue.money}
             provenance={nextDue.provenance}
