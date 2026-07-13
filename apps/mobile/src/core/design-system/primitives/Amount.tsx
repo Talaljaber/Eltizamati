@@ -36,11 +36,14 @@ export function Amount({
   testID,
 }: AmountProps) {
   const { t } = useTranslation()
+  // Provenance is authoritative: an engine estimate must never be made to look
+  // official by an inconsistent caller-selected display precision.
+  const effectivePrecision = provenance.source === 'estimate' ? 'estimate' : precision
   const currencyLabel = t(`currency.${money.currency.toLowerCase()}`, {
     defaultValue: money.currency,
   })
   const formatted =
-    precision === 'estimate'
+    effectivePrecision === 'estimate'
       ? formatMoneyEstimate(money, currencyLabel)
       : formatMoneyOfficial(money, currencyLabel)
   const provenanceLabel = t(provenanceLabelKey[provenance.source])
@@ -49,12 +52,12 @@ export function Amount({
   const body = (
     <Text
       variant={variant}
-      color={precision === 'estimate' ? 'secondary' : 'primary'}
+      color={effectivePrecision === 'estimate' ? 'secondary' : 'primary'}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
     >
       {formatted}
-      {precision === 'estimate' ? (
+      {effectivePrecision === 'estimate' ? (
         <Text variant="caption" color="secondary">
           {' '}
           {provenanceLabel}

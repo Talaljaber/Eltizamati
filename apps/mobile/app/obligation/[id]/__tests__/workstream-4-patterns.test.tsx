@@ -1,0 +1,42 @@
+import React from 'react'
+import { I18nManager } from 'react-native'
+import { render, within } from '@testing-library/react-native'
+import { NavRow, ObligationManageActions } from '../../[id]'
+
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: ({ name }: { name: string }) => {
+    const { Text } = jest.requireActual('react-native')
+    return <Text testID={`icon-${name}`}>{name}</Text>
+  },
+}))
+
+describe('Workstream 4 obligation-detail patterns', () => {
+  it('renders a back-pointing navigation chevron in RTL', () => {
+    const original = I18nManager.isRTL
+    Object.defineProperty(I18nManager, 'isRTL', { value: true, configurable: true })
+    try {
+      const { getByTestId } = render(
+        <NavRow icon="time-outline" label="سجل المعدل" onPress={jest.fn()} />,
+      )
+      expect(getByTestId('icon-chevron-back-outline')).toBeTruthy()
+    } finally {
+      Object.defineProperty(I18nManager, 'isRTL', { value: original, configurable: true })
+    }
+  })
+
+  it('keeps destructive management actions in a separate group from ordinary actions', () => {
+    const { getByTestId } = render(
+      <ObligationManageActions
+        archiving={false}
+        deleting={false}
+        onArchive={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    )
+    const manage = within(getByTestId('obligation-manage-actions'))
+    expect(manage.getByText('obligationDetail.archive')).toBeTruthy()
+    expect(manage.getByText('obligationDetail.delete')).toBeTruthy()
+    expect(manage.queryByText('obligationDetail.edit')).toBeNull()
+    expect(manage.queryByText('obligationDetail.logPayment')).toBeNull()
+  })
+})

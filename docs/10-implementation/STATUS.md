@@ -2,6 +2,15 @@
 
 > Read this first, then the active phase file. Update this file at every session end and every phase state change. Pre-plan history: [status-m0-session-log.md](status-m0-session-log.md) (the mid-M0 session log) and (independent audit, 2026-07-11). Master plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
 
+## 2026-07-13 addendum — Phase 8.5 Workstream 4 post-merge correction
+
+Workstreams 1–4 have been implemented and merged. Workstream 4 remains **awaiting independent
+validation** after a post-merge Home provenance-display defect was identified and corrected locally:
+an engine-calculated aggregate had estimate provenance but selected official precision when all inputs
+were non-estimated. Workstream 5 has **not started**, Phase 8.5 is not complete, and Phase 9 remains
+blocked until the Phase 8.5 exit gate passes. The Arabic-reading reviewer remains TBD. Tajawal/Inter
+font assets remain blocked pending licensed files; the safe system-font fallback remains active.
+
 ## 2026-07-13 addendum — Phase 8 implementation complete
 
 All 8 core (non-cuttable) Phase 8 items are built, tested, and committed — see
@@ -112,12 +121,13 @@ recording), both pushed to Phase 10 per the prior 2026-07-13 owner decision belo
 Phase 8's closure. See [PHASE-04-auth-repositories-and-integration.md](phases/PHASE-04-auth-repositories-and-integration.md) /
 [PHASE-4-COMPLETION.md](completions/PHASE-4-COMPLETION.md) for the (closed) Phase 4 record.
 
-**Next phase: Phase 8.5 — Eltizamati Visual System & Experience Refinement** →
+**Active phase: Phase 8.5 — Eltizamati Visual System & Experience Refinement** →
 [PHASE-08.5-visual-system-and-experience-refinement.md](phases/PHASE-08.5-visual-system-and-experience-refinement.md).
-Approved as the next phase, sitting between Phase 8 and Phase 9. It covers design definition, shared
-visual-system refinement, and controlled implementation on five representative experiences only — not
-a full-app redesign. **Phase 9 (hardening and broad visual refinement) is blocked until the Phase 8.5
-representative-experience exit gate passes.** The four formerly cuttable Phase 8 items are implemented
+Workstreams 1–4 are implemented and merged; Workstream 4 awaits independent validation and Workstream
+5 has not started. It covers design definition, shared visual-system refinement, and controlled
+implementation on five representative experiences only — not a full-app redesign. **Phase 9
+(hardening and broad visual refinement) is blocked until the Phase 8.5 representative-experience exit
+gate passes.** The Arabic reviewer is TBD and font assets remain blocked. The four formerly cuttable Phase 8 items are implemented
 (restored per the addendum above) and are not part of Phase 8.5's scope; Phase 7's deferred
 finance-sign-off and walkthrough items retain their Phase 10 ownership and are likewise not part of
 Phase 8.5.
@@ -141,7 +151,7 @@ Phase 8.5.
 - **Phase 8 (Remaining MVP Flows):** Implementation complete (2026-07-13) — [PHASE-8-COMPLETION.md](completions/PHASE-8-COMPLETION.md). All core and formerly cuttable items are built and mobile-tested.
 
 Phase 7: In progress, not closeable (2 items deferred to Phase 10, not blocking).
-Phase 8.5 ([PHASE-08.5-visual-system-and-experience-refinement.md](phases/PHASE-08.5-visual-system-and-experience-refinement.md)): Planned — approved next phase, between Phase 8 and Phase 9.
+Phase 8.5 ([PHASE-08.5-visual-system-and-experience-refinement.md](phases/PHASE-08.5-visual-system-and-experience-refinement.md)): In progress — Workstreams 1–4 implemented and merged; Workstream 4 awaiting independent validation; Workstream 5 not started.
 Phase 9: Planned — **gated on the Phase 8.5 exit review**, no longer eligible to begin immediately.
 
 **Phase 10 (iOS Device Parity, Remote Push Notifications, and Saved Scenarios):** Planned, added after this session — [PHASE-10-ios-parity-push-and-saved-scenarios.md](phases/PHASE-10-ios-parity-push-and-saved-scenarios.md). Not part of the original 9-phase MVP scope; gated on Phase 9 closing first and on an Apple Developer Program membership existing (paid, user-side prerequisite for iOS device builds outside Expo Go).
@@ -209,10 +219,7 @@ All formerly cuttable items are now implemented. The restoration pass verified m
 lint, typecheck, dependency-cruiser (467 modules / 1,459 dependencies, zero violations), and 203
 tests across 40 suites; Phase 9 owns physical-device evidence.
 
-**Phase 8.5 ([PHASE-08.5-visual-system-and-experience-refinement.md](phases/PHASE-08.5-visual-system-and-experience-refinement.md)): the approved next phase.** Owner decisions D1 (exact brand colors/assets)
-and D2 (typography selection/licensing) must be resolved before its token and typography
-implementation begins; its audit and design-definition workstreams may start meanwhile. Phase 9 is
-gated on Phase 8.5's exit review.
+**Phase 8.5 ([PHASE-08.5-visual-system-and-experience-refinement.md](phases/PHASE-08.5-visual-system-and-experience-refinement.md)): in progress, not complete.** Workstreams 1–4 are implemented and merged; Workstream 4 awaits independent validation and Workstream 5 has not started. The Arabic reviewer remains TBD and licensed font assets remain blocked. Phase 9 is gated on Phase 8.5's exit review.
 
 **Phase 7: implementation done and verified; formally stays open on 2 deferred items (see the
 2026-07-13 "owner decision" addendum below), both pushed to Phase 10.** Unaffected by Phase 8's

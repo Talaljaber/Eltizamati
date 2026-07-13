@@ -1,6 +1,6 @@
 # Phase 8.5 — Eltizamati Visual System & Experience Refinement
 
-**Status:** Planned — requires owner approval
+**Status:** In progress — Workstreams 1–4 implemented and merged; Workstream 4 awaiting independent validation; Workstream 5 not started
 **Depends on:** Phase 8 core scope complete
 **Blocks:** Phase 9 hardening and broad visual refinement
 
@@ -131,6 +131,19 @@ Sequenced; each feeds the next. Effort estimates and assignment are the implemen
 
 Expansion beyond the representative set is **explicitly deferred** until the exit gate passes.
 
+### Implementation status (2026-07-13)
+
+| Workstream                 | State                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
+| 1 — Audit                  | Implemented and merged                                                                      |
+| 2 — Define                 | Implemented and merged                                                                      |
+| 3 — Foundations            | Implemented and merged; Tajawal/Inter asset bundling remains blocked pending licensed files |
+| 4 — Representative screens | Implemented and merged in PR #13; awaiting independent validation                           |
+| 5 — Review and gate        | **Not started**; the validation matrix and recorded exit review remain outstanding          |
+
+The Arabic-reading reviewer remains TBD. Phase 9 remains blocked until Workstream 5 is performed and
+the full Phase 8.5 exit gate passes. This status does not mark Phase 8.5 complete.
+
 ---
 
 ## Delivery and change control
@@ -173,15 +186,10 @@ No changes to financial formulas or expected values; no invented financial behav
 
 ## Owner decisions
 
-### Open
-
-1. **D1 — Brand values:** Confirm the exact palette hexes and whether original brand assets (logo files, exact swatches) exist to import, or freeze the board's values (`#0F2343 / #1FB5A9 / #7ED6C6 / #D9B45A / #F2F4F7`) as canonical.
-2. **D2 — Typography:** Tajawal or Cairo for Arabic, the Latin companion face, and confirmation of licensing/bundling for the app.
-
-**D1 and D2 must be resolved before token and typography implementation begins** (Workstream 3). Workstreams 1–2 (audit, design definition) may proceed against the provisional values.
-
 ### Resolved
 
+1. **D1 — Brand values:** **Resolved for MVP implementation.** The identity-board palette is wired through brand-display tokens and accessible semantic derivatives. Original brand assets may later refine exact values.
+2. **D2 — Typography:** **Resolved as Tajawal (Arabic) + Inter (Latin).** Licensed font files are not bundled; asset loading remains blocked and the system-font fallback stays active. Do not download or invent font files.
 3. **D3 — Dark theme scope:** **Resolved.** Phase 8.5 defines dark-compatible semantic tokens only. Full dark-mode application is outside this phase unless separately approved as product scope.
 4. **D4 — Accessible brand variants:** **Resolved.** Accessible derived variants of teal and gold are approved where contrast requirements prevent use of the exact brand hexes.
 5. **D5 — Exit authority:** **Resolved in part.** Talal is the product-owner sign-off authority. The Arabic-reading reviewer remains `TBD — required before the exit review`.

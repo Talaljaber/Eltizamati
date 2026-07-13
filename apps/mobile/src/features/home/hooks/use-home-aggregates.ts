@@ -29,7 +29,8 @@ import { snapshotRecord, snapshotMoneyAmount } from '@/services/calculation-snap
 export interface HomeAggregatesViewModel {
   status: 'loading' | 'error' | 'success'
   totalMonthlyCommitment?: Money
-  includesEstimates?: boolean
+  /** Input-quality flag only: true when any aggregate input was estimated. */
+  hasEstimatedInputs?: boolean
   nextDueDate?: LocalDate
   nextDueAmount?: Money
   /** From `getNextDueInfo`'s `Sourced<Money>` — Amount requires real provenance, not just a bare value. */
@@ -122,7 +123,7 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
       totalMonthlyCommitmentAmount !== undefined
         ? Money.of(totalMonthlyCommitmentAmount, 'JOD')
         : undefined,
-    includesEstimates: snapshot.includesEstimates === true,
+    hasEstimatedInputs: snapshot.includesEstimates === true,
     nextDueDate: data.nextDueDate,
     nextDueAmount: data.nextDueAmount,
     nextDueAmountProvenance: data.nextDueAmountProvenance,
