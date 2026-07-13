@@ -81,4 +81,10 @@ export class SupabaseAuthService implements AuthService {
       subscription.unsubscribe()
     }
   }
+
+  async deleteAccount(): Promise<Result<void, AppError>> {
+    const { error } = await this.client.functions.invoke('delete-account')
+    if (error !== null) return err(makeError('unexpected', { cause: error }))
+    return ok(undefined)
+  }
 }

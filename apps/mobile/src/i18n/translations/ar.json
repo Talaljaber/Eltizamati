@@ -369,7 +369,25 @@
     "resetDemoButton": "إعادة تعيين البيانات التجريبية",
     "resetDemoConfirmTitle": "إعادة تعيين البيانات التجريبية؟",
     "resetDemoConfirmBody": "سيؤدي هذا إلى مسح كل ما قمت به في وضع العرض التجريبي واستعادة القرض والمرابحة والبطاقة الأصلية كما كانت. لا يمكن التراجع عن هذا الإجراء.",
-    "resetDemoConfirmAction": "إعادة تعيين"
+    "resetDemoConfirmAction": "إعادة تعيين",
+    "acknowledgmentsLabel": "الإقرارات القانونية",
+    "acknowledgmentsButton": "عرض الإقرارات",
+    "acknowledgmentsTitle": "الإقرارات",
+    "acknowledgmentsEmptyTitle": "لا توجد إقرارات بعد",
+    "acknowledgmentsEmptySubtitle": "ستظهر هنا الإقرارات القانونية التي توافق عليها.",
+    "acknowledgedVersion": "الإصدار {{version}}",
+    "acknowledgmentDoc": {
+      "privacy-policy": "سياسة الخصوصية"
+    },
+    "accountLabel": "الحساب",
+    "signedInAs": "مسجّل الدخول باسم {{email}}",
+    "signOutButton": "تسجيل الخروج",
+    "deleteAccountButton": "حذف الحساب",
+    "deleteAccountConfirmTitle": "حذف حسابك؟",
+    "deleteAccountConfirmBody": "سيؤدي هذا إلى حذف حسابك وجميع بياناته نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
+    "deleteAccountConfirmAction": "حذف الحساب",
+    "aboutLabel": "حول التطبيق",
+    "aboutVersion": "التزاماتي إصدار {{version}}"
   },
   "notFound": {
     "title": "هذه الشاشة غير موجودة.",

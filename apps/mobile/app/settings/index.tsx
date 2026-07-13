@@ -1,19 +1,72 @@
 import { useState } from 'react'
 import { Alert, View, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'expo-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import Constants from 'expo-constants'
+import { err, makeError, type AppError, type Result } from '@eltizamati/domain'
 import { Screen, Text, Button, space } from '@/core/design-system'
 import { changeLanguage } from '@/i18n'
 import { useRepositoriesIfAvailable } from '@/features/repositories/hooks/use-repositories'
 import type { DemoRepositories } from '@/services/repositories/demo'
 import { ImportService } from '@/services/import-service'
 import { DemoSeedProvider } from '@/services/demo-seed-provider'
+import { useAuthServiceIfAvailable } from '@/features/auth/hooks/use-auth-service'
+import {
+  useSignOutMutation,
+  useDeleteAccountMutation,
+} from '@/features/auth/api/use-account-mutations'
+import type { AuthService } from '@/services/auth/auth-service'
+
+const NO_AUTH_PROVIDER_ERROR: AppError = makeError('unexpected', {
+  safeMetadata: { reason: 'AuthServiceProvider not mounted' },
+})
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation()
+  const router = useRouter()
   const repos = useRepositoriesIfAvailable()
   const queryClient = useQueryClient()
   const [isResetting, setIsResetting] = useState(false)
+
+  const authServiceIfAvailable = useAuthServiceIfAvailable()
+  const authServiceResult: Result<AuthService, AppError> =
+    authServiceIfAvailable ?? err(NO_AUTH_PROVIDER_ERROR)
+  const isPersonalMode = repos !== null && typeof repos.reset !== 'function'
+
+  const { data: session } = useQuery({
+    queryKey: ['settingsCurrentSession'],
+    queryFn: async () => {
+      if (!authServiceResult.ok) return undefined
+      const result = await authServiceResult.value.currentSession()
+      return result.ok ? result.value : undefined
+    },
+    enabled: isPersonalMode,
+  })
+
+  const signOutMutation = useSignOutMutation(authServiceResult)
+  const deleteAccountMutation = useDeleteAccountMutation(authServiceResult)
+
+  function handleSignOut() {
+    signOutMutation.mutate(undefined, {
+      onSuccess: () => router.replace('/auth/sign-in'),
+    })
+  }
+
+  function handleDeleteAccount() {
+    Alert.alert(t('settings.deleteAccountConfirmTitle'), t('settings.deleteAccountConfirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('settings.deleteAccountConfirmAction'),
+        style: 'destructive',
+        onPress: () => {
+          deleteAccountMutation.mutate(undefined, {
+            onSuccess: () => router.replace('/auth/sign-in'),
+          })
+        },
+      },
+    ])
+  }
 
   const toggleLanguage = () => {
     const nextLang = i18n.language === 'en' ? 'ar' : 'en'
@@ -80,6 +133,51 @@ export default function SettingsScreen() {
           />
         </View>
       ) : null}
+
+      <View style={styles.section}>
+        <Text variant="bodySmall" color="secondary">
+          {t('settings.acknowledgmentsLabel')}
+        </Text>
+        <Button
+          label={t('settings.acknowledgmentsButton')}
+          onPress={() => router.push('/settings/acknowledgments')}
+          variant="secondary"
+        />
+      </View>
+
+      {isPersonalMode ? (
+        <View style={styles.section}>
+          <Text variant="bodySmall" color="secondary">
+            {t('settings.accountLabel')}
+          </Text>
+          {session?.user.email !== undefined && (
+            <Text variant="body">{t('settings.signedInAs', { email: session.user.email })}</Text>
+          )}
+          <Button
+            label={t('settings.signOutButton')}
+            onPress={handleSignOut}
+            variant="secondary"
+            loading={signOutMutation.isPending}
+            testID="settings-sign-out"
+          />
+          <Button
+            label={t('settings.deleteAccountButton')}
+            onPress={handleDeleteAccount}
+            variant="destructive"
+            loading={deleteAccountMutation.isPending}
+            testID="settings-delete-account"
+          />
+        </View>
+      ) : null}
+
+      <View style={styles.section}>
+        <Text variant="bodySmall" color="secondary">
+          {t('settings.aboutLabel')}
+        </Text>
+        <Text variant="body">
+          {t('settings.aboutVersion', { version: Constants.expoConfig?.version ?? '—' })}
+        </Text>
+      </View>
     </Screen>
   )
 }

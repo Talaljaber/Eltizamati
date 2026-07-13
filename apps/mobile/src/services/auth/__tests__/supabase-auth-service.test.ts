@@ -10,7 +10,10 @@ const fakeSession = {
   user: { id: 'user-1', email: 'user@example.com' },
 }
 
-function makeFakeClient(overrides: Partial<Record<string, jest.Mock>> = {}) {
+function makeFakeClient(
+  overrides: Partial<Record<string, jest.Mock>> = {},
+  functionsOverrides: Partial<Record<string, jest.Mock>> = {},
+) {
   return {
     auth: {
       signUp: jest.fn().mockResolvedValue({ data: { session: fakeSession }, error: null }),
@@ -23,6 +26,10 @@ function makeFakeClient(overrides: Partial<Record<string, jest.Mock>> = {}) {
         .fn()
         .mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } }),
       ...overrides,
+    },
+    functions: {
+      invoke: jest.fn().mockResolvedValue({ data: { deleted: true }, error: null }),
+      ...functionsOverrides,
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test double, not production code
   } as any
@@ -156,5 +163,27 @@ describe('SupabaseAuthService', () => {
 
     expect(client.auth.onAuthStateChange).toHaveBeenCalledTimes(1)
     expect(typeof unsubscribe).toBe('function')
+  })
+
+  it('deleteAccount invokes the delete-account Edge Function and returns ok(undefined) on success', async () => {
+    const client = makeFakeClient()
+    const service = new SupabaseAuthService(client)
+
+    const result = await service.deleteAccount()
+
+    expect(isOk(result)).toBe(true)
+    expect(client.functions.invoke).toHaveBeenCalledWith('delete-account')
+  })
+
+  it('deleteAccount maps an Edge Function failure to an AppError', async () => {
+    const client = makeFakeClient(
+      {},
+      { invoke: jest.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }) },
+    )
+    const service = new SupabaseAuthService(client)
+
+    const result = await service.deleteAccount()
+
+    expect(isErr(result)).toBe(true)
   })
 })

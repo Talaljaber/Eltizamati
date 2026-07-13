@@ -369,7 +369,25 @@
     "resetDemoButton": "Reset demo data",
     "resetDemoConfirmTitle": "Reset demo data?",
     "resetDemoConfirmBody": "This clears everything you have done in demo mode and restores the original seeded loan, Murabaha, and card. This cannot be undone.",
-    "resetDemoConfirmAction": "Reset"
+    "resetDemoConfirmAction": "Reset",
+    "acknowledgmentsLabel": "Legal Acknowledgments",
+    "acknowledgmentsButton": "View Acknowledgments",
+    "acknowledgmentsTitle": "Acknowledgments",
+    "acknowledgmentsEmptyTitle": "Nothing acknowledged yet",
+    "acknowledgmentsEmptySubtitle": "Legal acknowledgments you accept will be listed here.",
+    "acknowledgedVersion": "Version {{version}}",
+    "acknowledgmentDoc": {
+      "privacy-policy": "Privacy Policy"
+    },
+    "accountLabel": "Account",
+    "signedInAs": "Signed in as {{email}}",
+    "signOutButton": "Sign Out",
+    "deleteAccountButton": "Delete Account",
+    "deleteAccountConfirmTitle": "Delete your account?",
+    "deleteAccountConfirmBody": "This permanently erases your account and all associated data. This cannot be undone.",
+    "deleteAccountConfirmAction": "Delete Account",
+    "aboutLabel": "About",
+    "aboutVersion": "Eltizamati v{{version}}"
   },
   "notFound": {
     "title": "This screen doesn't exist.",
