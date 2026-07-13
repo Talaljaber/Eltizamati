@@ -24,3 +24,16 @@ jest.mock('react-i18next', () => ({
     i18n: { language: 'en', dir: () => 'ltr' },
   }),
 }))
+
+// Mock @expo/vector-icons so icons render synchronously in tests.
+// The real Icon async-loads its font glyph and setState()s after render,
+// which triggers act(...) warnings and leaks a timer past teardown. Icons are
+// decorative here (labels live on their parent), so a no-op stub is faithful.
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react')
+  const { Text } = require('react-native')
+  const Icon = ({ accessibilityLabel, testID }) =>
+    React.createElement(Text, { accessibilityLabel, testID }, null)
+  Icon.glyphMap = {}
+  return { Ionicons: Icon }
+})

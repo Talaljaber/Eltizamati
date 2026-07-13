@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { radius, space } from '../tokens'
+import { resolveElevation } from '../use-elevation'
 import { useTheme } from '../use-theme'
 
 export interface CardProps {
@@ -8,15 +9,28 @@ export interface CardProps {
   /** When provided, the card becomes an accessible pressable element. */
   readonly onPress?: () => void
   readonly accessibilityLabel?: string
+  /**
+   * Surface treatment. `elevated` (default) is the standard content card with a
+   * restrained shadow; `flat` is a bordered grouping surface with no elevation.
+   * This is the shared card contract — feature code must not hand-roll card styles.
+   */
+  readonly surface?: 'elevated' | 'flat'
   readonly testID?: string
 }
 
-/** Card primitive — surface + padding + optional press (DS-3). */
-export function Card({ children, onPress, accessibilityLabel, testID }: CardProps) {
+/** Card primitive — the single shared content surface (DS-3). */
+export function Card({
+  children,
+  onPress,
+  accessibilityLabel,
+  surface = 'elevated',
+  testID,
+}: CardProps) {
   const theme = useTheme()
   const surfaceStyle = [
     styles.surface,
     { backgroundColor: theme.bgElevated, borderColor: theme.border },
+    surface === 'elevated' ? resolveElevation('card') : undefined,
   ]
 
   if (onPress) {

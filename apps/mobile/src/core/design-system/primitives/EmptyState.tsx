@@ -1,7 +1,9 @@
 import { View, StyleSheet } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { Text } from './Text'
 import { Button } from './Button'
 import { space } from '../tokens'
+import { useTheme } from '../use-theme'
 
 export interface EmptyStateProps {
   readonly title: string
@@ -16,12 +18,15 @@ export interface EmptyStateProps {
  * Used for all list/screen empty states (Home, Obligations, etc.).
  */
 export function EmptyState({ title, subtitle, ctaLabel, onCta, testID }: EmptyStateProps) {
+  const theme = useTheme()
   return (
     <View style={styles.container} testID={testID} accessible accessibilityRole="none">
-      {/* Illustration placeholder — replaced in Phase 9 polish */}
-      <Text variant="display" align="center">
-        {'📋'}
-      </Text>
+      <Ionicons
+        name="document-text-outline"
+        size={40}
+        color={theme.textTertiary}
+        accessibilityElementsHidden
+      />
       <View style={styles.textGroup}>
         <Text variant="heading" align="center">
           {title !== undefined && title !== '' ? title : ''}

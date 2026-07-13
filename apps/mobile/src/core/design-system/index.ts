@@ -1,5 +1,19 @@
-export { colors, space, radius, typography, motion, minTouchTarget } from './tokens'
-export type { ColorScheme, TypographyVariant } from './tokens'
+export {
+  colors,
+  brandPalette,
+  space,
+  radius,
+  elevation,
+  typography,
+  motion,
+  motionDuration,
+  minTouchTarget,
+} from './tokens'
+export type { ColorScheme, TypographyVariant, ElevationLevel } from './tokens'
+export { resolveElevation } from './use-elevation'
+export { useReducedMotion } from './use-reduced-motion'
+export { resolveFontFamily, fontFamilyConfig, fontRoleForWeight, FONTS_AVAILABLE } from './fonts'
+export type { FontScript, FontRole } from './fonts'
 export { useTheme } from './use-theme'
 export { Screen } from './primitives/Screen'
 export type { ScreenProps } from './primitives/Screen'

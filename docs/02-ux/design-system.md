@@ -2,7 +2,8 @@
 
 **Personality:** steady financial companion with a calculator — not a lender, collector, or trading app (SRC-1 §24.1).
 **Implementation home:** `apps/mobile/src/core/design-system/` (tokens + primitives). Components are the only way UI renders money, status, or provenance — this is how PRIN-2/4/6 become unskippable.
-**Brand caveat:** palette/typography are professional placeholders pending brand identity (RES-005 / GAP-03); tokens are structured for a one-file swap.
+**Visual direction:** see [visual-direction.md](visual-direction.md) — the canonical intent for personality, color architecture, hierarchy, provenance, iconography, motion, RTL, and accessibility. This file is the token/primitive spec that implements it.
+**Brand status:** the Eltizamati identity palette is approved for the MVP (D1) and wired as brand-display tokens plus accessible derivatives; original brand assets may later refine exact values. Typography is Tajawal (Arabic) + Inter (Latin) (D2), with font assets a documented blocked step until licensed files are bundled.
 
 ## 1. Design tokens (`tokens.ts`)
 
@@ -24,7 +25,7 @@ Rules: `critical` never paints full screens/backgrounds (PRIN-3/4 — "soft caut
 
 ### Typography
 
-- Latin: Inter (or system); Arabic: **IBM Plex Sans Arabic** (placeholder; excellent Arabic legibility + tabular-feeling numerals). One `Text` primitive with variants: `display, title, heading, body, bodySmall, caption, amountLg, amountMd, amountSm`.
+- Latin: **Inter**; Arabic: **Tajawal** (D2). Font files are a documented blocked step — until licensed assets are bundled, `fonts.ts` resolves to the system font safely. One `Text` primitive with variants: `display, title, heading, body, bodySmall, caption, amountHero, amountLg, amountMd, amountSm` (`amountHero` is the dominant per-screen figure).
 - Amount variants use tabular numerals (`fontVariant: ['tabular-nums']`) so columns align.
 - Dynamic type: variants scale with OS font scale up to 1.5× (NFR-L10N-005).
 

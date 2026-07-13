@@ -1,10 +1,13 @@
 import { Tabs, Link } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Pressable, Text } from 'react-native'
+import { Pressable } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { useTheme } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 
 export default function TabLayout() {
   const { t } = useTranslation()
+  const theme = useTheme()
 
   return (
     <RequireRepositories>
@@ -18,9 +21,10 @@ export default function TabLayout() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={t('navigation.settings')}
-                  style={{ marginRight: 16 }}
+                  hitSlop={8}
+                  style={{ marginHorizontal: 16 }}
                 >
-                  <Text style={{ fontSize: 24 }}>⚙️</Text>
+                  <Ionicons name="settings-outline" size={24} color={theme.textPrimary} />
                 </Pressable>
               </Link>
             ),
@@ -35,9 +39,10 @@ export default function TabLayout() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={t('obligationForm.addTitle')}
-                  style={{ marginRight: 16 }}
+                  hitSlop={8}
+                  style={{ marginHorizontal: 16 }}
                 >
-                  <Text style={{ fontSize: 24 }}>➕</Text>
+                  <Ionicons name="add" size={28} color={theme.textPrimary} />
                 </Pressable>
               </Link>
             ),

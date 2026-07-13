@@ -1,5 +1,6 @@
 import { View, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { Ionicons } from '@expo/vector-icons'
 import { Text } from './Text'
 import { useTheme } from '../use-theme'
 import { space } from '../tokens'
@@ -40,10 +41,17 @@ export function DemoBanner({ visible = true, testID }: DemoBannerProps) {
       accessibilityLabel={t('demo.banner.message')}
       accessibilityLiveRegion="polite"
     >
-      <Text variant="caption" color="caution" align="center">
-        {'⚠️ '}
-        {t('demo.banner.message')}
-      </Text>
+      <View style={styles.row}>
+        <Ionicons
+          name="information-circle-outline"
+          size={14}
+          color={theme.caution}
+          accessibilityElementsHidden
+        />
+        <Text variant="caption" color="caution" align="center">
+          {t('demo.banner.message')}
+        </Text>
+      </View>
     </View>
   )
 }
@@ -53,5 +61,11 @@ const styles = StyleSheet.create({
     paddingVertical: space[2],
     paddingHorizontal: space[4],
     borderBottomWidth: 1,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space[1],
   },
 })

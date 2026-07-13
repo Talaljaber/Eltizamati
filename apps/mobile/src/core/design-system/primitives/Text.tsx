@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { I18nManager, Text as RNText, type TextProps as RNTextProps } from 'react-native'
 import { typography } from '../tokens'
+import { resolveFontFamily } from '../fonts'
 import { useTheme } from '../use-theme'
 
 /** Resolves a logical alignment ('start'/'end') to the physical value RN's TextStyle expects. */
@@ -14,7 +15,15 @@ function resolveTextAlign(
 
 export type TextVariant = keyof typeof typography
 export type TextColor =
-  'primary' | 'secondary' | 'tertiary' | 'brand' | 'critical' | 'positive' | 'caution'
+  | 'primary'
+  | 'secondary'
+  | 'tertiary'
+  | 'brand'
+  | 'critical'
+  | 'positive'
+  | 'caution'
+  | 'understanding'
+  | 'onBrand'
 
 export interface TextPropsDS extends Omit<RNTextProps, 'style'> {
   readonly variant?: TextVariant
@@ -45,7 +54,16 @@ export function Text({
     critical: theme.critical,
     positive: theme.positive,
     caution: theme.caution,
+    understanding: theme.understanding,
+    onBrand: theme.textOnBrand,
   }
+
+  // Script follows the active layout direction (whole-app language switch).
+  // Resolves to `undefined` (system font) until licensed fonts are bundled — see fonts.ts.
+  const fontFamily = resolveFontFamily(
+    I18nManager.isRTL ? 'arabic' : 'latin',
+    variantStyle.fontWeight,
+  )
 
   return (
     <RNText
@@ -55,6 +73,7 @@ export function Text({
           fontSize: variantStyle.fontSize,
           lineHeight: variantStyle.lineHeight,
           fontWeight: variantStyle.fontWeight,
+          fontFamily,
           color: colorValue[color],
           textAlign: resolveTextAlign(align),
         },

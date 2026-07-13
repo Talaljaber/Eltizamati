@@ -34,11 +34,11 @@ export function Button({
     ghost: 'transparent',
     destructive: theme.critical,
   }
-  const textColorByVariant: Record<ButtonVariant, 'primary' | 'brand' | 'critical'> = {
-    primary: 'primary',
+  const textColorByVariant: Record<ButtonVariant, 'onBrand' | 'brand'> = {
+    primary: 'onBrand',
     secondary: 'brand',
     ghost: 'brand',
-    destructive: 'primary',
+    destructive: 'onBrand',
   }
 
   return (
@@ -62,7 +62,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           color={
-            variant === 'primary' || variant === 'destructive' ? theme.bgElevated : theme.brand
+            variant === 'primary' || variant === 'destructive' ? theme.textOnBrand : theme.brand
           }
           accessibilityLabel={t('common.loading')}
         />
