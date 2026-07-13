@@ -2,6 +2,7 @@ import type {
   Id,
   LocalDate,
   ConventionalLoan,
+  CreditCard,
   Insight,
   InsightRepository,
   Result,
@@ -14,6 +15,7 @@ import {
   evaluateRateIncreased,
   evaluateInstallmentUnchangedAfterIncrease,
   evaluateResidualRisk,
+  evaluateHighCardUtilization,
   type InsightCandidate,
 } from '@eltizamati/finance-engine'
 import type { CalculationService } from './calculation-service.js'
@@ -149,6 +151,35 @@ export class InsightEvaluationService {
       ...evaluateResidualRisk(obligation.id, detection),
     ]
 
+    return this.raiseNewInsights(userId, candidates, asOf)
+  }
+
+  /**
+   * Utilization is a plain ratio over already-known `Sourced<Money>` fields
+   * (no engine formula call needed — pure display-layer arithmetic, same as
+   * `CardDetailSection`'s own utilization calc).
+   */
+  async evaluateForCard(
+    userId: Id<'user'>,
+    obligation: CreditCard,
+    asOf: LocalDate,
+  ): Promise<Result<readonly Insight[], AppError>> {
+    const { creditLimit, currentBalance } = obligation.cardDetails
+    const limit = creditLimit.value
+    const balance = currentBalance.value
+    const utilizationPercent = limit.isZero()
+      ? 0
+      : balance.toDecimal().dividedBy(limit.toDecimal()).times(100).toNumber()
+
+    const candidates = evaluateHighCardUtilization(obligation.id, utilizationPercent)
+    return this.raiseNewInsights(userId, candidates, asOf)
+  }
+
+  private async raiseNewInsights(
+    userId: Id<'user'>,
+    candidates: readonly InsightCandidate[],
+    asOf: LocalDate,
+  ): Promise<Result<readonly Insight[], AppError>> {
     const existingResult = await this.insightRepo.list(userId)
     if (isErr(existingResult)) return err(existingResult.error)
 

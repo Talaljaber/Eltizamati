@@ -190,6 +190,29 @@
     "q4": "Are there any penalties for making extra monthly payments towards the principal?",
     "q5": "Can I extend the loan term to eliminate the residual risk without increasing my monthly installment?"
   },
+  "murabahaDetail": {
+    "outstandingFinancing": "Outstanding Financing",
+    "progressLabel": "{{percent}}% paid",
+    "earlySettlementTitle": "Early Settlement",
+    "earlySettlementBody": "Settling this financing before term is possible. Any discount (ibra') on the remaining amount is at the bank's discretion — this app does not simulate or promise one. Ask your bank for their current early-settlement terms."
+  },
+  "cardDetail": {
+    "availableCredit": "Available Credit",
+    "statementSection": "Statement",
+    "statementBalance": "Statement Balance",
+    "minimumPaymentCaveat": "The minimum payment keeps your account current — it is not the amount that pays off your balance.",
+    "minimumPercentRule": "{{percent}}% (min {{floor}})",
+    "ratesFeesSection": "Rates & Fees",
+    "purchaseApr": "Purchase APR",
+    "cashAdvanceApr": "Cash Advance APR",
+    "noFeesOnFile": "No fees on file",
+    "feeType": {
+      "annual": "Annual Fee",
+      "late": "Late Fee",
+      "cashAdvance": "Cash Advance Fee",
+      "other": "Other Fee"
+    }
+  },
   "explain": {
     "title": "Calculation Details",
     "provenance": "Provenance",
@@ -327,6 +350,10 @@
     "residualRisk": {
       "title": "Residual balance risk",
       "body": "Based on your payment history and the rate change, your balance projection may exceed the original schedule. A calculation is pending."
+    },
+    "highUtilization": {
+      "title": "High card utilization",
+      "body": "Your balance is at {{percent}}% of your credit limit."
     }
   }
 }

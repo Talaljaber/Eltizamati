@@ -25,6 +25,10 @@ import { useLoanDetailViewModel } from '@/features/loan-detail/hooks/use-loan-de
 import { LoanDetailHero } from '@/features/loan-detail/components/LoanDetailHero'
 import { useInsightsViewModel } from '@/features/insights/hooks/use-insights-view-model'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
+import { useMurabahaDetailViewModel } from '@/features/murabaha-detail/hooks/use-murabaha-detail-view-model'
+import { MurabahaDetailSection } from '@/features/murabaha-detail/components/MurabahaDetailSection'
+import { CardDetailSection } from '@/features/card-detail/components/CardDetailSection'
+import { useCardInsightEvaluation } from '@/features/card-detail/hooks/use-card-insight-evaluation'
 
 export default function ObligationDetailScreen() {
   return (
@@ -42,8 +46,12 @@ function ObligationDetailInner() {
 
   const viewModel = useLoanDetailViewModel(id as Id<'obligation'>)
   const insightsViewModel = useInsightsViewModel(id as Id<'obligation'>)
+  const murabahaViewModel = useMurabahaDetailViewModel(id as Id<'obligation'>)
   const repositories = useRepositories()
   const isDemo = typeof repositories.reset === 'function'
+  useCardInsightEvaluation(
+    viewModel.obligation?.kind === 'creditCard' ? viewModel.obligation : undefined,
+  )
 
   if (viewModel.status === 'error') {
     return (
@@ -147,6 +155,14 @@ function ObligationDetailInner() {
               onPress={() => router.push(`/obligation/${id}/bank-questions`)}
             />
           </View>
+        ) : obligation.kind === 'murabaha' ? (
+          <MurabahaDetailSection
+            obligationId={obligation.id}
+            obligation={obligation}
+            progress={murabahaViewModel.progress}
+          />
+        ) : obligation.kind === 'creditCard' ? (
+          <CardDetailSection obligation={obligation} />
         ) : (
           <Text variant="bodySmall" color="secondary">
             {t('obligationDetail.phaseNote')}

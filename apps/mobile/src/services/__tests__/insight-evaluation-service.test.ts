@@ -1,5 +1,11 @@
-import { buildDemoLoan, buildDemoInsights, DEMO_DATE, DEMO_IDS } from '@eltizamati/demo-data'
-import { isOk } from '@eltizamati/domain'
+import {
+  buildDemoLoan,
+  buildDemoCard,
+  buildDemoInsights,
+  DEMO_DATE,
+  DEMO_IDS,
+} from '@eltizamati/demo-data'
+import { isOk, Money, type CreditCard } from '@eltizamati/domain'
 import { InsightEvaluationService } from '../insight-evaluation-service'
 import { CalculationService } from '../calculation-service'
 import { DemoInsightRepository } from '../repositories/demo/demo-insight-repository'
@@ -80,6 +86,62 @@ describe('InsightEvaluationService', () => {
     if (isOk(result)) {
       const ruleIds = result.value.map((i) => i.ruleId).sort()
       expect(ruleIds).toEqual([...EXPECTED_RULE_IDS].sort())
+    }
+  })
+})
+
+describe('InsightEvaluationService.evaluateForCard', () => {
+  it('does not fire for the demo card (58.75% utilization, under the 70% threshold)', async () => {
+    const service = makeService()
+    const card = buildDemoCard(DEMO_DATE)
+
+    const result = await service.evaluateForCard(DEMO_IDS.userId, card, DEMO_DATE)
+    expect(isOk(result)).toBe(true)
+    if (isOk(result)) {
+      expect(result.value.some((i) => i.ruleId === 'HIGH_CARD_UTILIZATION')).toBe(false)
+    }
+  })
+
+  it('fires HIGH_CARD_UTILIZATION when balance exceeds 70% of the limit', async () => {
+    const service = makeService()
+    const card = buildDemoCard(DEMO_DATE)
+    const highUtilizationCard: CreditCard = {
+      ...card,
+      cardDetails: {
+        ...card.cardDetails,
+        currentBalance: {
+          ...card.cardDetails.currentBalance,
+          value: Money.of('3200', 'JOD'), // 80% of the 4000 JOD limit
+        },
+      },
+    }
+
+    const result = await service.evaluateForCard(DEMO_IDS.userId, highUtilizationCard, DEMO_DATE)
+    expect(isOk(result)).toBe(true)
+    if (isOk(result)) {
+      const insight = result.value.find((i) => i.ruleId === 'HIGH_CARD_UTILIZATION')
+      expect(insight).toBeDefined()
+      expect(insight?.params?.['percent']).toBe(80)
+    }
+  })
+
+  it('dedups across two evaluations of the same high-utilization card', async () => {
+    const service = makeService()
+    const card = buildDemoCard(DEMO_DATE)
+    const highUtilizationCard: CreditCard = {
+      ...card,
+      cardDetails: {
+        ...card.cardDetails,
+        currentBalance: { ...card.cardDetails.currentBalance, value: Money.of('3200', 'JOD') },
+      },
+    }
+
+    await service.evaluateForCard(DEMO_IDS.userId, highUtilizationCard, DEMO_DATE)
+    const second = await service.evaluateForCard(DEMO_IDS.userId, highUtilizationCard, DEMO_DATE)
+    expect(isOk(second)).toBe(true)
+    if (isOk(second)) {
+      const utilizationInsights = second.value.filter((i) => i.ruleId === 'HIGH_CARD_UTILIZATION')
+      expect(utilizationInsights).toHaveLength(1)
     }
   })
 })

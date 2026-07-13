@@ -5,6 +5,7 @@ import {
   evaluateInstallmentUnchangedAfterIncrease,
   evaluateRateIncreased,
   evaluateResidualRisk,
+  evaluateHighCardUtilization,
 } from './rules.js'
 import { computeResidualDetection } from '../formulas/residual-detection.js'
 import { Money } from '@eltizamati/domain'
@@ -163,5 +164,34 @@ describe('evaluateResidualRisk', () => {
     )
     const noRisk = evaluateResidualRisk(loan.id, detection)
     expect(noRisk).toHaveLength(0)
+  })
+})
+
+describe('evaluateHighCardUtilization', () => {
+  it('fires when utilization exceeds 70%', () => {
+    const candidates = evaluateHighCardUtilization(loan.id, 75)
+    expect(candidates).toHaveLength(1)
+    expect(candidates[0]?.ruleId).toBe('HIGH_CARD_UTILIZATION')
+    expect(candidates[0]?.params?.percent).toBe(75)
+  })
+
+  it('does not fire at exactly 70%', () => {
+    expect(evaluateHighCardUtilization(loan.id, 70)).toHaveLength(0)
+  })
+
+  it('does not fire below the threshold', () => {
+    expect(evaluateHighCardUtilization(loan.id, 30)).toHaveLength(0)
+  })
+
+  it('is deterministic — same utilization produces the same triggerHash', () => {
+    const a = evaluateHighCardUtilization(loan.id, 82)
+    const b = evaluateHighCardUtilization(loan.id, 82)
+    expect(a[0]?.triggerHash).toBe(b[0]?.triggerHash)
+  })
+
+  it('produces a different triggerHash for a materially different utilization', () => {
+    const a = evaluateHighCardUtilization(loan.id, 75)
+    const b = evaluateHighCardUtilization(loan.id, 95)
+    expect(a[0]?.triggerHash).not.toBe(b[0]?.triggerHash)
   })
 })

@@ -101,6 +101,32 @@ export function evaluateInstallmentUnchangedAfterIncrease(
   ]
 }
 
+const HIGH_UTILIZATION_THRESHOLD_PERCENT = 70
+
+/** HIGH_CARD_UTILIZATION — fires when a card's balance/limit ratio exceeds 70% (FR-INS-001). */
+export function evaluateHighCardUtilization(
+  obligationId: string,
+  utilizationPercent: number,
+): readonly InsightCandidate[] {
+  if (utilizationPercent <= HIGH_UTILIZATION_THRESHOLD_PERCENT) return []
+  const roundedPercent = Math.round(utilizationPercent)
+  return [
+    {
+      ruleId: 'HIGH_CARD_UTILIZATION',
+      obligationId,
+      severity: 'attention',
+      titleKey: 'insights.highUtilization.title',
+      bodyKey: 'insights.highUtilization.body',
+      params: { percent: roundedPercent },
+      triggerHash: hashCanonicalJson({
+        rule: 'HIGH_CARD_UTILIZATION',
+        obligationId,
+        percent: roundedPercent,
+      }),
+    },
+  ]
+}
+
 /** RESIDUAL_RISK — fires whenever residualDetection.v1 flags risk for this obligation. */
 export function evaluateResidualRisk(
   obligationId: string,
