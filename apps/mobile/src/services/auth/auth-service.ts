@@ -25,6 +25,12 @@ export interface AuthService {
   currentSession(): Promise<Result<AppAuthSession | undefined, AppError>>
   /** Returns an unsubscribe function. */
   onAuthStateChange(callback: (session: AppAuthSession | undefined) => void): () => void
+  /**
+   * SCR-AUTH-CALLBACK: completes the sign-up/reset email link's deep-link
+   * handoff, establishing a session from whatever the provider attached to
+   * the URL. `url` is the full incoming deep link.
+   */
+  exchangeCallbackUrl(url: string): Promise<Result<void, AppError>>
   /** FR-SET-003 (personal mode): server-side erasure via the `delete-account` Edge Function. */
   deleteAccount(): Promise<Result<void, AppError>>
 }

@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { brandId } from '@eltizamati/domain'
 import { Text, Button, EmptyState, ErrorState, space, useTheme } from '@/core/design-system'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
+import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
 import { useAuthService, useConsentRepository } from '@/features/auth/hooks/use-auth-service'
 import { useSignUpMutation } from '@/features/auth/api/use-auth-mutations'
 import { useRecordConsentMutation } from '@/features/auth/api/use-record-consent'
@@ -27,6 +28,10 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [verificationPending, setVerificationPending] = useState(false)
+  // Covers the whole submit chain (both mutations + the boot sequence), not
+  // just signUp's own pending state — see sign-in.tsx for why.
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | undefined>(undefined)
 
   const authServiceResult = useAuthService()
   const consentRepositoryResult = useConsentRepository()
@@ -34,32 +39,39 @@ export default function SignUpScreen() {
   const recordConsent = useRecordConsentMutation(consentRepositoryResult)
 
   async function handleSubmit() {
-    let session
+    setSubmitError(undefined)
+    setIsSubmitting(true)
     try {
-      session = await signUp.mutateAsync({ email, password })
-    } catch {
-      // Already captured in signUp.error — rendered below.
-      return
+      let session
+      try {
+        session = await signUp.mutateAsync({ email, password })
+      } catch {
+        // Already captured in signUp.error — rendered below.
+        return
+      }
+      if (session === undefined) {
+        // Email verification required — no session yet (BR: never invent one).
+        setVerificationPending(true)
+        return
+      }
+      try {
+        await recordConsent.mutateAsync({
+          userId: brandId(session.user.id),
+          locale: i18n.language === 'ar' ? 'ar' : 'en',
+        })
+      } catch {
+        // Signed up successfully, but couldn't record consent — must be
+        // visible, not a silent dead end.
+        setSubmitError(t('auth.signInConsentFailed'))
+        return
+      }
+      await setDataMode('personal')
+      await bootPersonalMode()
+      await setOnboardingComplete()
+      router.replace('/(tabs)/')
+    } finally {
+      setIsSubmitting(false)
     }
-    if (session === undefined) {
-      // Email verification required — no session yet (BR: never invent one).
-      setVerificationPending(true)
-      return
-    }
-    try {
-      await recordConsent.mutateAsync({
-        userId: brandId(session.user.id),
-        locale: i18n.language === 'ar' ? 'ar' : 'en',
-      })
-    } catch {
-      // Already captured in recordConsent.error — same convention as
-      // signUp above: don't navigate on failure.
-      return
-    }
-    await setDataMode('personal')
-    await bootPersonalMode()
-    await setOnboardingComplete()
-    router.replace('/(tabs)/')
   }
 
   const error = signUp.error ?? undefined
@@ -90,7 +102,7 @@ export default function SignUpScreen() {
           testID="sign-up-offline"
         />
       ) : (
-        <View style={styles.content}>
+        <DismissKeyboardView style={styles.content}>
           <Text variant="title" align="center">
             {t('auth.signUpTitle')}
           </Text>
@@ -103,7 +115,7 @@ export default function SignUpScreen() {
               placeholder={t('auth.emailPlaceholder')}
               autoCapitalize="none"
               keyboardType="email-address"
-              editable={!signUp.isPending}
+              editable={!isSubmitting}
               testID="sign-up-email"
             />
             <AuthTextField
@@ -113,7 +125,7 @@ export default function SignUpScreen() {
               placeholder={t('auth.passwordPlaceholder')}
               secureTextEntry
               autoCapitalize="none"
-              editable={!signUp.isPending}
+              editable={!isSubmitting}
               testID="sign-up-password"
             />
 
@@ -122,11 +134,16 @@ export default function SignUpScreen() {
                 {t(error.userMessageKey)}
               </Text>
             ) : null}
+            {submitError !== undefined ? (
+              <Text variant="bodySmall" color="critical" testID="sign-up-submit-error">
+                {submitError}
+              </Text>
+            ) : null}
 
             <Button
               variant="primary"
               label={t('auth.signUpButton')}
-              loading={signUp.isPending}
+              loading={isSubmitting}
               disabled={email === '' || password === ''}
               onPress={() => {
                 void handleSubmit()
@@ -148,7 +165,7 @@ export default function SignUpScreen() {
               {t('auth.signUpSignIn')}
             </Text>
           </View>
-        </View>
+        </DismissKeyboardView>
       )}
     </SafeAreaView>
   )

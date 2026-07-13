@@ -16,29 +16,13 @@ export interface InsightBannerProps {
 
 type Severity = InsightBannerProps['severity']
 
-const SEVERITY_CONFIG: Record<
-  Severity,
-  {
-    icon: keyof typeof Ionicons.glyphMap
-    ink: (t: ReturnType<typeof useTheme>) => string
-    surface: (t: ReturnType<typeof useTheme>) => string
-  }
-> = {
-  urgent: {
-    icon: 'alert-circle-outline',
-    ink: (t) => t.critical,
-    surface: (t) => t.criticalSoft,
-  },
-  attention: {
-    icon: 'information-circle-outline',
-    ink: (t) => t.attention,
-    surface: (t) => t.attentionSoft,
-  },
-  calm: {
-    icon: 'checkmark-circle-outline',
-    ink: (t) => t.positive,
-    surface: (t) => t.positiveSoft,
-  },
+// Severity is conveyed by the icon glyph only (design-system.md §: never color
+// alone). The card itself stays neutral — no tinted surfaces — for a calm,
+// professional read; the icon carries the meaning without shouting.
+const SEVERITY_ICON: Record<Severity, keyof typeof Ionicons.glyphMap> = {
+  urgent: 'alert-circle-outline',
+  attention: 'information-circle-outline',
+  calm: 'checkmark-circle-outline',
 }
 
 export function InsightBanner({
@@ -50,28 +34,26 @@ export function InsightBanner({
   testID,
 }: InsightBannerProps) {
   const theme = useTheme()
-  const config = SEVERITY_CONFIG[severity]
 
   return (
     <View
       testID={testID}
-      style={[
-        styles.container,
-        { backgroundColor: config.surface(theme), borderColor: theme.border },
-        unread === true && { borderLeftColor: theme.brand, borderLeftWidth: 3 },
-      ]}
+      style={[styles.container, { backgroundColor: theme.bgElevated, borderColor: theme.border }]}
     >
       <View style={styles.iconContainer}>
         <Ionicons
-          name={config.icon}
+          name={SEVERITY_ICON[severity]}
           size={20}
-          color={config.ink(theme)}
+          color={theme.textSecondary}
           accessibilityElementsHidden
         />
       </View>
       <View style={styles.content}>
-        <View style={styles.titleContainer}>
-          <Text variant="heading">{title}</Text>
+        <View style={styles.titleRow}>
+          <View style={styles.titleText}>
+            <Text variant="heading">{title}</Text>
+          </View>
+          {unread === true && <View style={[styles.unreadDot, { backgroundColor: theme.brand }]} />}
         </View>
         <Text variant="bodySmall" color="secondary">
           {body}
@@ -85,9 +67,9 @@ export function InsightBanner({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    padding: space[3],
+    padding: space[4],
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     marginBottom: space[2],
   },
   iconContainer: {
@@ -97,8 +79,20 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  titleContainer: {
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[2],
     marginBottom: space[1],
+  },
+  titleText: {
+    flex: 1,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: radius.full,
+    flexShrink: 0,
   },
   action: {
     marginTop: space[2],

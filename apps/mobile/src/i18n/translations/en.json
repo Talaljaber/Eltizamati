@@ -262,10 +262,6 @@
     "notFound": "Calculation record not found."
   },
   "onboarding": {
-    "welcomeTagline": "Every obligation, honestly tracked.",
-    "welcomeGetStarted": "Get started",
-    "welcomeHaveAccount": "Already have an account?",
-    "welcomeSignIn": "Sign in",
     "languageTitle": "Choose your language",
     "languageSubtitle": "You can change this later in Settings.",
     "english": "English",
@@ -294,9 +290,11 @@
     "passwordLabel": "Password",
     "passwordPlaceholder": "Your password",
     "continueInDemoMode": "Continue in demo mode",
+    "takeTour": "New here? Take the tour",
     "signInTitle": "Sign in",
     "signInButton": "Sign in",
     "signInNoAccount": "Don't have an account?",
+    "signInConsentFailed": "Signed in, but couldn't save your consent record. Check your connection and try again.",
     "signInCreateAccount": "Create one",
     "forgotPassword": "Forgot password?",
     "signUpTitle": "Create account",
@@ -311,7 +309,11 @@
     "resetButton": "Send reset link",
     "resetSentTitle": "Check your email",
     "resetSentBody": "If an account exists for {{email}}, we've sent a link to reset your password.",
-    "resetBackToSignIn": "Back to sign in"
+    "resetBackToSignIn": "Back to sign in",
+    "callbackPending": "Finishing sign-in…",
+    "callbackErrorTitle": "That link didn't work",
+    "callbackErrorBody": "The sign-in link may have expired or already been used. Try signing in again.",
+    "callbackBackToSignIn": "Back to sign in"
   },
   "demo": {
     "banner": {

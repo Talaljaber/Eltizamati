@@ -1,14 +1,18 @@
 import { Stack } from 'expo-router'
-import { useTranslation } from 'react-i18next'
 
-/** SCR-AUTH-* stack — reachable from onboarding's account step and, later, Settings. */
+/**
+ * SCR-AUTH-* stack — reachable from onboarding's account step and, later,
+ * Settings. No native header: each screen owns its own title and provides
+ * its own "back to sign in" text link, matching a chromeless auth-screen
+ * pattern (no redundant title bar stacked on top of the in-screen one).
+ */
 export default function AuthLayout() {
-  const { t } = useTranslation()
   return (
-    <Stack>
-      <Stack.Screen name="sign-in" options={{ title: t('auth.signInTitle') }} />
-      <Stack.Screen name="sign-up" options={{ title: t('auth.signUpTitle') }} />
-      <Stack.Screen name="reset" options={{ title: t('auth.resetTitle') }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="sign-in" />
+      <Stack.Screen name="sign-up" />
+      <Stack.Screen name="reset" />
+      <Stack.Screen name="callback" />
     </Stack>
   )
 }

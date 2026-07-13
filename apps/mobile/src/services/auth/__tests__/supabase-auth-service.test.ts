@@ -112,7 +112,9 @@ describe('SupabaseAuthService', () => {
     const result = await service.resetPassword('user@example.com')
 
     expect(isOk(result)).toBe(true)
-    expect(client.auth.resetPasswordForEmail).toHaveBeenCalledWith('user@example.com')
+    expect(client.auth.resetPasswordForEmail).toHaveBeenCalledWith('user@example.com', {
+      redirectTo: expect.any(String),
+    })
   })
 
   it('resetPassword maps a server-rejected error to AppError code "auth"', async () => {

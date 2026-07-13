@@ -17,6 +17,15 @@ jest.mock('expo-router', () => ({
   Link: 'Link',
 }))
 
+// expo-linking's createURL reads the app manifest (expo-constants) to resolve
+// a scheme, which isn't available in the Jest environment — real deep-link
+// behavior is exercised on-device, not in unit tests.
+jest.mock('expo-linking', () => ({
+  createURL: jest.fn((path) => `eltizamati://${path}`),
+  useURL: jest.fn(() => null),
+  parse: jest.fn(() => ({ queryParams: {} })),
+}))
+
 // Mock i18n
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({

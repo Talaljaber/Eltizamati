@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text, Button, EmptyState, ErrorState, space, useTheme } from '@/core/design-system'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
+import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
 import { useAuthService } from '@/features/auth/hooks/use-auth-service'
 import { useResetPasswordMutation } from '@/features/auth/api/use-auth-mutations'
 
@@ -48,7 +49,7 @@ export default function ResetScreen() {
           testID="reset-offline"
         />
       ) : (
-        <View style={styles.content}>
+        <DismissKeyboardView style={styles.content}>
           <Text variant="title" align="center">
             {t('auth.resetTitle')}
           </Text>
@@ -93,7 +94,7 @@ export default function ResetScreen() {
           >
             {t('auth.resetBackToSignIn')}
           </Text>
-        </View>
+        </DismissKeyboardView>
       )}
     </SafeAreaView>
   )

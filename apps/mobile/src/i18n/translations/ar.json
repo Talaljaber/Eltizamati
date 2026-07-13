@@ -262,10 +262,6 @@
     "notFound": "لم يُعثر على سجل الحساب."
   },
   "onboarding": {
-    "welcomeTagline": "كل التزام، بشفافية تامة.",
-    "welcomeGetStarted": "ابدأ الآن",
-    "welcomeHaveAccount": "لديك حساب بالفعل؟",
-    "welcomeSignIn": "تسجيل الدخول",
     "languageTitle": "اختر لغتك",
     "languageSubtitle": "يمكنك تغيير ذلك لاحقاً من الإعدادات.",
     "english": "English",
@@ -294,9 +290,11 @@
     "passwordLabel": "كلمة المرور",
     "passwordPlaceholder": "كلمة المرور الخاصة بك",
     "continueInDemoMode": "المتابعة بالوضع التجريبي",
+    "takeTour": "جديد هنا؟ خذ جولة تعريفية",
     "signInTitle": "تسجيل الدخول",
     "signInButton": "تسجيل الدخول",
     "signInNoAccount": "ليس لديك حساب؟",
+    "signInConsentFailed": "تم تسجيل الدخول، لكن تعذّر حفظ سجل الموافقة. تحقق من اتصالك وحاول مرة أخرى.",
     "signInCreateAccount": "أنشئ حساباً",
     "forgotPassword": "نسيت كلمة المرور؟",
     "signUpTitle": "إنشاء حساب",
@@ -311,7 +309,11 @@
     "resetButton": "إرسال رابط إعادة التعيين",
     "resetSentTitle": "تحقق من بريدك الإلكتروني",
     "resetSentBody": "إذا كان هناك حساب مرتبط بـ {{email}}، فقد أرسلنا رابطاً لإعادة تعيين كلمة المرور.",
-    "resetBackToSignIn": "العودة لتسجيل الدخول"
+    "resetBackToSignIn": "العودة لتسجيل الدخول",
+    "callbackPending": "جارٍ إتمام تسجيل الدخول…",
+    "callbackErrorTitle": "لم يعمل هذا الرابط",
+    "callbackErrorBody": "ربما انتهت صلاحية رابط تسجيل الدخول أو تم استخدامه من قبل. حاول تسجيل الدخول مرة أخرى.",
+    "callbackBackToSignIn": "العودة لتسجيل الدخول"
   },
   "demo": {
     "banner": {
