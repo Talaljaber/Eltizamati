@@ -7,6 +7,7 @@
  * Uses TanStack Query hooks for data fetching.
  */
 
+import { useEffect } from 'react'
 import { View, StyleSheet, ScrollView, RefreshControl, Pressable, Image } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
@@ -23,15 +24,29 @@ import {
   Card,
   Amount,
   InsightBanner,
+  Button,
+  ErrorState,
 } from '@/core/design-system'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { useInsights } from '@/features/home/api/use-insights'
 import { useHomeAggregates } from '@/features/home/hooks/use-home-aggregates'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
-import { useActiveUser } from '@/features/auth/hooks/use-active-user'
+import { useActiveUserState } from '@/features/auth/hooks/use-active-user'
 import { toBannerSeverity } from '@/features/insights/severity'
-import { engineEstimate, type Insight, type Id } from '@eltizamati/domain'
+import {
+  engineEstimate,
+  makeError,
+  type AppError,
+  type Insight,
+  type Id,
+  type Obligation,
+} from '@eltizamati/domain'
 import appIcon from '../../assets/icon.png'
+import { calculationAsOfForObligations } from '@/services/calculation-as-of'
+import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
+import { toErrorUiState } from '@/core/errors/error-ui-state'
+
+const EMPTY_OBLIGATIONS: readonly Obligation[] = []
 
 interface QuickAction {
   readonly key: string
@@ -45,26 +60,92 @@ export default function HomeTab() {
   const theme = useTheme()
   const router = useRouter()
   const repos = useRepositories()
-  const activeUser = useActiveUser()
+  const activeUserState = useActiveUserState()
+  const isDemoMode = activeUserState.status === 'demo'
+  const activeUser = activeUserState.userId
+  const personalAsOf = usePersonalCalculationAsOf()
 
   const {
     data: obligations,
     isLoading: isObligationsLoading,
+    isFetching: isObligationsFetching,
+    error: obligationsErrorValue,
     refetch: refetchObligations,
-  } = useObligations(repos.obligationRepository, activeUser ?? ('' as Id<'user'>))
+  } = useObligations(repos.obligationRepository, activeUser ?? ('' as Id<'user'>), isDemoMode)
 
   const {
     data: insights,
     isLoading: isInsightsLoading,
+    isFetching: isInsightsFetching,
+    error: insightsErrorValue,
     refetch: refetchInsights,
-  } = useInsights(repos.insightRepository, activeUser ?? ('' as Id<'user'>))
+  } = useInsights(repos.insightRepository, activeUser ?? ('' as Id<'user'>), isDemoMode)
 
-  const aggregates = useHomeAggregates(obligations ?? [])
+  const obligationsError = (obligationsErrorValue as AppError | null) ?? undefined
+  const insightsError = (insightsErrorValue as AppError | null) ?? undefined
+  const obligationsForCalculation = obligations ?? EMPTY_OBLIGATIONS
+  const asOf = calculationAsOfForObligations(isDemoMode ? 'demo' : 'personal', personalAsOf)
+  const aggregates = useHomeAggregates(
+    obligationsForCalculation,
+    asOf,
+    obligations !== undefined && obligationsError === undefined,
+  )
 
-  const isLoading = isObligationsLoading || isInsightsLoading || !activeUser
+  const activeUserError = activeUserState.status === 'error' ? activeUserState.error : undefined
+  const queryError = activeUserError ?? obligationsError ?? insightsError
+  const hasRetainedQueryData =
+    obligations !== undefined &&
+    insights !== undefined &&
+    queryError?.retryable === true &&
+    queryError.code !== 'auth'
+  const sessionRevoked =
+    activeUserState.status === 'signedOut' ||
+    queryError?.code === 'auth' ||
+    aggregates.error?.code === 'auth'
+  const isLoading =
+    activeUserState.status === 'loading' || isObligationsLoading || isInsightsLoading
 
   const handleRefresh = async () => {
     await Promise.all([refetchObligations(), refetchInsights()])
+  }
+
+  useEffect(() => {
+    if (sessionRevoked) router.replace('/auth/sign-in')
+  }, [router, sessionRevoked])
+
+  if (sessionRevoked) {
+    return (
+      <HomeTerminalState
+        isDemoMode={isDemoMode}
+        error={makeError('auth')}
+        testID="home-session-revoked"
+      />
+    )
+  }
+
+  if (queryError !== undefined && !hasRetainedQueryData) {
+    return (
+      <HomeTerminalState
+        isDemoMode={isDemoMode}
+        error={queryError}
+        onRetry={() => {
+          void handleRefresh()
+        }}
+        testID="home-query-error"
+      />
+    )
+  }
+
+  if (isLoading || obligations === undefined || insights === undefined) {
+    return (
+      <SafeAreaView edges={[]} style={[styles.root, { backgroundColor: theme.bg }]}>
+        <DemoBanner visible={isDemoMode} testID="home-demo-banner" />
+        <View style={styles.loadingGroup} testID="home-loading">
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      </SafeAreaView>
+    )
   }
 
   const quickActions: QuickAction[] = [
@@ -96,13 +177,13 @@ export default function HomeTab() {
 
   return (
     <SafeAreaView edges={[]} style={[styles.root, { backgroundColor: theme.bg }]}>
-      <DemoBanner visible={true} />
+      <DemoBanner visible={isDemoMode} testID="home-demo-banner" />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
-            refreshing={false}
+            refreshing={isObligationsFetching || isInsightsFetching}
             onRefresh={() => {
               void handleRefresh()
             }}
@@ -151,19 +232,87 @@ export default function HomeTab() {
           ))}
         </View>
 
-        {isLoading ? (
-          <View style={styles.loadingGroup}>
-            <SkeletonCard />
-            <SkeletonCard />
-          </View>
-        ) : (
-          <View style={styles.dashboard}>
-            <SummaryCard aggregates={aggregates} />
-            <InsightsPreview insights={insights ?? []} />
-          </View>
-        )}
+        <View style={styles.dashboard}>
+          {queryError !== undefined ? (
+            <StaleDataNotice
+              error={queryError}
+              onRetry={() => {
+                void handleRefresh()
+              }}
+              testID="home-stale-query-data"
+            />
+          ) : null}
+          {aggregates.status === 'error' && aggregates.error !== undefined ? (
+            <ErrorState
+              state={toErrorUiState(aggregates.error)}
+              onRetry={aggregates.retry}
+              testID="home-aggregate-error"
+            />
+          ) : (
+            <>
+              {aggregates.isStale === true && aggregates.error !== undefined ? (
+                <StaleDataNotice
+                  error={aggregates.error}
+                  onRetry={aggregates.retry}
+                  testID="home-stale-aggregate-data"
+                />
+              ) : null}
+              <SummaryCard aggregates={aggregates} />
+            </>
+          )}
+          <InsightsPreview insights={insights} />
+        </View>
       </ScrollView>
     </SafeAreaView>
+  )
+}
+
+function HomeTerminalState({
+  isDemoMode,
+  error,
+  onRetry,
+  testID,
+}: {
+  isDemoMode: boolean
+  error: AppError
+  onRetry?: () => void
+  testID: string
+}) {
+  const theme = useTheme()
+  return (
+    <SafeAreaView edges={[]} style={[styles.root, { backgroundColor: theme.bg }]}>
+      <DemoBanner visible={isDemoMode} testID="home-demo-banner" />
+      <ErrorState state={toErrorUiState(error)} onRetry={onRetry} testID={testID} />
+    </SafeAreaView>
+  )
+}
+
+function StaleDataNotice({
+  error,
+  onRetry,
+  testID,
+}: {
+  error: AppError
+  onRetry: () => void
+  testID: string
+}) {
+  const { t } = useTranslation()
+  const theme = useTheme()
+  return (
+    <View
+      style={[styles.staleNotice, { backgroundColor: theme.cautionSoft }]}
+      testID={testID}
+      accessible
+      accessibilityRole="alert"
+    >
+      <Text variant="bodySmall" color="caution">
+        {t('error.staleDataTitle')}
+      </Text>
+      <Text variant="caption" color="secondary">
+        {t(error.userMessageKey)}
+      </Text>
+      <Button variant="ghost" label={t('common.retry')} onPress={onRetry} />
+    </View>
   )
 }
 
@@ -351,6 +500,11 @@ const styles = StyleSheet.create({
   dashboard: {
     padding: space[4],
     gap: space[6],
+  },
+  staleNotice: {
+    gap: space[2],
+    padding: space[3],
+    borderRadius: radius.md,
   },
   metric: {
     gap: space[1],

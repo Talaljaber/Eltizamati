@@ -1,7 +1,9 @@
 import React from 'react'
 import { I18nManager } from 'react-native'
 import { render, within } from '@testing-library/react-native'
-import { NavRow, ObligationManageActions } from '../../[id]'
+import { NavRow, ObligationManageActions, deriveDetailObligationStatus } from '../../[id]'
+import { aCard } from '@eltizamati/demo-data'
+import { toLocalDate } from '@eltizamati/domain'
 
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: ({ name }: { name: string }) => {
@@ -38,5 +40,24 @@ describe('Workstream 4 obligation-detail patterns', () => {
     expect(manage.getByText('obligationDetail.delete')).toBeTruthy()
     expect(manage.queryByText('obligationDetail.edit')).toBeNull()
     expect(manage.queryByText('obligationDetail.logPayment')).toBeNull()
+  })
+
+  it('derives personal detail status from the shared explicit as-of date', () => {
+    const demoCard = aCard()
+    const personalCard = {
+      ...demoCard,
+      provenance: {
+        source: 'userEntered' as const,
+        observedAt: '2026-07-01T00:00:00.000Z',
+        recordedAt: '2026-07-01T00:00:00.000Z',
+      },
+    }
+
+    expect(deriveDetailObligationStatus(personalCard, [], [], toLocalDate('2026-07-16'))).toBe(
+      'onTrack',
+    )
+    expect(deriveDetailObligationStatus(personalCard, [], [], toLocalDate('2026-07-17'))).toBe(
+      'overdue',
+    )
   })
 })

@@ -23,8 +23,14 @@ import {
 } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { deriveObligationStatus } from '@eltizamati/domain'
-import type { Id, ObligationKind } from '@eltizamati/domain'
-import { DEMO_DATE } from '@eltizamati/demo-data'
+import type {
+  Id,
+  ObligationKind,
+  Obligation,
+  Payment,
+  Insight,
+  LocalDate,
+} from '@eltizamati/domain'
 import { useLoanDetailViewModel } from '@/features/loan-detail/hooks/use-loan-detail-view-model'
 import { LoanDetailHero } from '@/features/loan-detail/components/LoanDetailHero'
 import { useInsightsViewModel } from '@/features/insights/hooks/use-insights-view-model'
@@ -35,6 +41,8 @@ import { CardDetailSection } from '@/features/card-detail/components/CardDetailS
 import { useCardInsightEvaluation } from '@/features/card-detail/hooks/use-card-insight-evaluation'
 import { useUserThresholdInsightEvaluation } from '@/features/loan-detail/hooks/use-user-threshold-insight-evaluation'
 import { ObligationService } from '@/services/obligation-service'
+import { calculationAsOf } from '@/services/calculation-as-of'
+import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
 
 const KIND_ICON: Record<ObligationKind, keyof typeof Ionicons.glyphMap> = {
   creditCard: 'card-outline',
@@ -43,6 +51,15 @@ const KIND_ICON: Record<ObligationKind, keyof typeof Ionicons.glyphMap> = {
   genericFacility: 'briefcase-outline',
   ijara: 'key-outline',
   diminishingMusharakah: 'people-outline',
+}
+
+export function deriveDetailObligationStatus(
+  obligation: Obligation,
+  payments: readonly Payment[],
+  insights: readonly Insight[],
+  asOf: LocalDate,
+) {
+  return deriveObligationStatus({ obligation, payments, insights, today: asOf })
 }
 
 export default function ObligationDetailScreen() {
@@ -63,6 +80,7 @@ function ObligationDetailInner() {
   const insightsViewModel = useInsightsViewModel(id as Id<'obligation'>)
   const murabahaViewModel = useMurabahaDetailViewModel(id as Id<'obligation'>)
   const repositories = useRepositories()
+  const personalAsOf = usePersonalCalculationAsOf()
   const isDemo = typeof repositories.reset === 'function'
   useCardInsightEvaluation(
     viewModel.obligation?.kind === 'creditCard' ? viewModel.obligation : undefined,
@@ -106,13 +124,14 @@ function ObligationDetailInner() {
   }
 
   const obligation = viewModel.obligation
+  const asOf = calculationAsOf(isDemo ? 'demo' : 'personal', personalAsOf)
 
-  const status = deriveObligationStatus({
+  const status = deriveDetailObligationStatus(
     obligation,
-    payments: viewModel.payments ?? [],
-    insights: insightsViewModel.status === 'success' ? insightsViewModel.insights : [],
-    today: DEMO_DATE,
-  })
+    viewModel.payments ?? [],
+    insightsViewModel.status === 'success' ? insightsViewModel.insights : [],
+    asOf,
+  )
 
   async function performArchive() {
     setArchiving(true)

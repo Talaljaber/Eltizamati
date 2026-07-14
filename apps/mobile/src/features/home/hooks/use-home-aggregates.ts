@@ -12,7 +12,7 @@
  */
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import type { Obligation, LocalDate, Provenance } from '@eltizamati/domain'
+import type { AppError, Obligation, LocalDate, Provenance } from '@eltizamati/domain'
 import {
   extractOfficialBalance,
   resolveMonthlyCommitment,
@@ -20,7 +20,6 @@ import {
   compareLocalDate,
   Money,
 } from '@eltizamati/domain'
-import { DEMO_DATE } from '@eltizamati/demo-data'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
@@ -38,9 +37,16 @@ export interface HomeAggregatesViewModel {
   /** CalculationRun id/timestamp — lets the UI attach real provenance to the total (Amount requires it). */
   calculationRunId?: string
   calculatedAt?: string
+  error?: AppError
+  isStale?: boolean
+  retry: () => void
 }
 
-export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggregatesViewModel {
+export function useHomeAggregates(
+  obligations: readonly Obligation[],
+  asOf: LocalDate,
+  enabled = true,
+): HomeAggregatesViewModel {
   const repos = useRepositories()
   const activeUser = useActiveUser()
 
@@ -49,8 +55,8 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
     [repos.calculationRunRepository],
   )
 
-  const { data, isError } = useQuery({
-    queryKey: ['homeAggregates', activeUser, obligations.map((o) => o.id).join(',')],
+  const { data, error, refetch } = useQuery({
+    queryKey: ['homeAggregates', activeUser, obligations.map((o) => o.id).join(','), asOf],
     queryFn: async () => {
       if (!activeUser) return null
 
@@ -65,7 +71,7 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
       })
 
       const commitments = obligations.map((o) => {
-        const commitment = resolveMonthlyCommitment(o, DEMO_DATE)
+        const commitment = resolveMonthlyCommitment(o, asOf)
         return {
           obligationId: o.id,
           nickname: o.nickname,
@@ -79,8 +85,8 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
         undefined,
         'aggregates',
         1,
-        { balances, commitments, currency: 'JOD', asOf: DEMO_DATE },
-        DEMO_DATE,
+        { balances, commitments, currency: 'JOD', asOf },
+        asOf,
       )
       if (!result.ok) throw result.error
 
@@ -88,7 +94,7 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
       let nextDueAmount: Money | undefined
       let nextDueAmountProvenance: Provenance | undefined
       for (const obligation of obligations) {
-        const info = getNextDueInfo(obligation, DEMO_DATE)
+        const info = getNextDueInfo(obligation, asOf)
         if (!info) continue
         if (!nextDueDate || compareLocalDate(info.dueDate, nextDueDate) < 0) {
           nextDueDate = info.dueDate
@@ -99,11 +105,18 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
 
       return { run: result.value, nextDueDate, nextDueAmount, nextDueAmountProvenance }
     },
-    enabled: !!activeUser,
+    enabled: !!activeUser && enabled,
   })
 
-  if (isError) return { status: 'error' }
-  if (!data) return { status: 'loading' }
+  const appError = (error as AppError | null) ?? undefined
+  const retry = () => {
+    void refetch()
+  }
+  const canRetainData = appError?.retryable === true && appError.code !== 'auth'
+  if (appError !== undefined && (!data || !canRetainData)) {
+    return { status: 'error', error: appError, retry }
+  }
+  if (!data) return { status: 'loading', retry }
 
   if (data.run.outcome.kind !== 'result') {
     return {
@@ -111,6 +124,9 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
       nextDueDate: data.nextDueDate,
       nextDueAmount: data.nextDueAmount,
       nextDueAmountProvenance: data.nextDueAmountProvenance,
+      error: appError,
+      isStale: appError !== undefined,
+      retry,
     }
   }
 
@@ -129,5 +145,8 @@ export function useHomeAggregates(obligations: readonly Obligation[]): HomeAggre
     nextDueAmountProvenance: data.nextDueAmountProvenance,
     calculationRunId: data.run.id,
     calculatedAt: data.run.calculatedAt,
+    error: appError,
+    isStale: appError !== undefined,
+    retry,
   }
 }
