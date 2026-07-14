@@ -3,6 +3,7 @@ import { Text } from 'react-native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import { makeError, ok } from '@eltizamati/domain'
 import { StartupCoordinator } from '../StartupCoordinator'
+import { __resetSplashReleaseForTest } from '../../services/splash-release'
 
 let mockI18nInitialization: Promise<void> = Promise.resolve()
 jest.mock('@/i18n', () => ({
@@ -76,6 +77,7 @@ jest.mock('@/providers', () => ({
 describe('StartupCoordinator', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    __resetSplashReleaseForTest()
     mockSegments = ['(tabs)']
     mockReadLocalConsent.mockResolvedValue(ok(localConsent))
     mockReadStartupTrustState.mockResolvedValue(ok({ dataMode: 'demo', onboardingComplete: true }))
@@ -92,16 +94,20 @@ describe('StartupCoordinator', () => {
     mockUseTranslation.mockReturnValue(defaultTranslation)
   })
 
-  it('routes a fresh install through language before any data mode', async () => {
+  it('routes a fresh install through language, rendering the Stack and releasing the splash', async () => {
     mockReadStartupTrustState.mockResolvedValue(ok({ dataMode: null, onboardingComplete: false }))
     mockReadLocalConsent.mockResolvedValue(ok(undefined))
-    render(
+    const { getByText } = render(
       <StartupCoordinator>
         <Text>product</Text>
       </StartupCoordinator>,
     )
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/onboarding/language'))
+    // The redirect must settle: the router Stack (children) actually renders
+    // — not a spinner stuck forever — and the native splash is released.
+    await waitFor(() => expect(getByText('product')).toBeTruthy())
+    expect(mockReplace).toHaveBeenCalledWith('/onboarding/language')
+    expect(mockHideAsync).toHaveBeenCalledTimes(1)
     expect(mockBootDemo).not.toHaveBeenCalled()
     expect(mockGetAuthService).not.toHaveBeenCalled()
   })
@@ -118,19 +124,36 @@ describe('StartupCoordinator', () => {
     expect(mockGetAuthService).not.toHaveBeenCalled()
   })
 
-  it('redirects an expired personal session before constructing repositories', async () => {
+  it('redirects an expired personal session to sign-in, rendering the Stack and releasing the splash', async () => {
     mockReadStartupTrustState.mockResolvedValue(
       ok({ dataMode: 'personal', onboardingComplete: true }),
     )
     mockCurrentSession.mockResolvedValue(ok(undefined))
-    render(
+    const { getByText } = render(
       <StartupCoordinator>
         <Text>product</Text>
       </StartupCoordinator>,
     )
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/auth/sign-in'))
+    await waitFor(() => expect(getByText('product')).toBeTruthy())
+    expect(mockReplace).toHaveBeenCalledWith('/auth/sign-in')
+    expect(mockHideAsync).toHaveBeenCalledTimes(1)
     expect(mockBootPersonal).not.toHaveBeenCalled()
+  })
+
+  it('redirects to consent when onboarding mode is reached without current consent', async () => {
+    mockSegments = ['onboarding', 'mode']
+    mockReadStartupTrustState.mockResolvedValue(ok({ dataMode: null, onboardingComplete: false }))
+    mockReadLocalConsent.mockResolvedValue(ok(undefined))
+    const { getByText } = render(
+      <StartupCoordinator>
+        <Text>product</Text>
+      </StartupCoordinator>,
+    )
+
+    await waitFor(() => expect(getByText('product')).toBeTruthy())
+    expect(mockReplace).toHaveBeenCalledWith('/onboarding/consent')
+    expect(mockHideAsync).toHaveBeenCalledTimes(1)
   })
 
   it('checks server consent before booting returning personal mode', async () => {

@@ -2,11 +2,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useRouter, useSegments, type Href } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import * as SplashScreen from 'expo-splash-screen'
 import { brandId, makeError, type AppError } from '@eltizamati/domain'
 import { ErrorState, useTheme } from '@/core/design-system'
 import { toErrorUiState } from '@/core/errors/error-ui-state'
-import { isExpoGo } from '@/core/config/runtime-environment'
+import { releaseNativeSplash } from '@/features/startup/services/splash-release'
 import { readStartupTrustState } from '@/features/demo/stores/demo-mode-store'
 import {
   ensurePersonalConsent,
@@ -40,8 +39,8 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
   const bootPersonalMode = usePersonalBoot()
   const [phase, setPhase] = useState<StartupPhase>('starting')
   const [startupError, setStartupError] = useState<AppError | undefined>()
+  const [redirectTarget, setRedirectTarget] = useState<Href | undefined>(undefined)
   const [attempt, setAttempt] = useState(0)
-  const splashReleased = useRef(false)
   const i18nRef = useRef(i18n)
   i18nRef.current = i18n
   const routerRef = useRef(router)
@@ -52,14 +51,12 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
     let splashHideFailed = false
 
     async function releaseSplash() {
-      if (splashReleased.current || isExpoGo) return
       try {
-        await SplashScreen.hideAsync()
+        await releaseNativeSplash()
       } catch (cause) {
         splashHideFailed = true
         throw cause
       }
-      splashReleased.current = true
     }
 
     async function waitForI18n() {
@@ -68,13 +65,22 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
       await i18nInitialization
     }
 
-    function redirect(path: Href) {
-      if (active) routerRef.current.replace(path)
+    // Both the settle-here and redirect-elsewhere outcomes must render the
+    // router Stack (phase 'ready') and release the native splash. A redirect
+    // that left phase 'starting' kept the spinner mounted forever, so the
+    // replaced route could never render and the splash never lifted. The
+    // actual router.replace runs from an effect once the Stack is mounted.
+    async function settle(target?: Href) {
+      if (!active) return
+      if (target !== undefined) setRedirectTarget(target)
+      setPhase('ready')
+      await releaseSplash()
     }
 
     async function start() {
       setPhase('starting')
       setStartupError(undefined)
+      setRedirectTarget(undefined)
       try {
         await waitForI18n()
         if (!active) return
@@ -84,8 +90,7 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
         // Callback and auth screens own their own recoverable states. They
         // must be mountable on a cold start before a data mode exists.
         if (group === 'auth') {
-          setPhase('ready')
-          await releaseSplash()
+          await settle()
           return
         }
 
@@ -102,24 +107,22 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
 
         if (group === 'onboarding') {
           if (segmentPath[1] === 'mode' && !hasCurrentConsent) {
-            redirect('/onboarding/consent')
+            await settle('/onboarding/consent')
             return
           }
-          setPhase('ready')
-          await releaseSplash()
+          await settle()
           return
         }
 
         if (!trust.onboardingComplete || trust.dataMode === null || !hasCurrentConsent) {
-          redirect('/onboarding/language')
+          await settle('/onboarding/language')
           return
         }
 
         if (trust.dataMode === 'demo') {
           await bootDemoMode()
           if (!active) return
-          setPhase('ready')
-          await releaseSplash()
+          await settle()
           return
         }
 
@@ -129,7 +132,7 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
         if (!active) return
         if (!sessionResult.ok) throw sessionResult.error
         if (sessionResult.value === undefined) {
-          redirect('/auth/sign-in')
+          await settle('/auth/sign-in')
           return
         }
 
@@ -142,8 +145,7 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
         if (!consentResult.ok) throw consentResult.error
         await bootPersonalMode()
         if (!active) return
-        setPhase('ready')
-        await releaseSplash()
+        await settle()
       } catch (error) {
         if (!active) return
         setStartupError(asAppError(error))
@@ -166,6 +168,19 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
       active = false
     }
   }, [attempt, bootDemoMode, bootPersonalMode, getAuthService, getConsentRepository, segments])
+
+  // Issue the redirect only after the Stack is mounted (phase 'ready'),
+  // never while the spinner is up — replacing before the navigator mounts is
+  // dropped by expo-router. A throw here is a recoverable startup error.
+  useEffect(() => {
+    if (phase !== 'ready' || redirectTarget === undefined) return
+    try {
+      routerRef.current.replace(redirectTarget)
+    } catch (error) {
+      setStartupError(asAppError(error))
+      setPhase('error')
+    }
+  }, [phase, redirectTarget])
 
   if (phase === 'error' && startupError !== undefined) {
     return (
