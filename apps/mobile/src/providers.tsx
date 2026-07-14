@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { DomainInvariantError } from '@eltizamati/domain'
 import { createDemoRepositories } from './services/repositories/demo'
@@ -78,6 +86,25 @@ function AppRuntimeProviders({ children }: { children: ReactNode }) {
   const personalBootPromiseRef = useRef<Promise<void> | undefined>(undefined)
   const getPersonalRepositories = usePersonalRepositoriesLazy()
 
+  // Boot must not resolve until React has committed RepositoriesProvider with
+  // the new repos, otherwise entry-completion navigates and RequireRepositories
+  // still observes `repos === null`, bouncing the user back to sign-in. Boot
+  // registers a resolver here, then this effect fires it once `repos` is
+  // rendered and available to descendants — a minimal commit acknowledgement,
+  // not a general coordinator.
+  const commitWaitersRef = useRef<(() => void)[]>([])
+  useEffect(() => {
+    if (repos === null) return
+    const waiters = commitWaitersRef.current
+    commitWaitersRef.current = []
+    for (const resolve of waiters) resolve()
+  }, [repos])
+
+  const awaitReposCommitted = useCallback(
+    () => new Promise<void>((resolve) => commitWaitersRef.current.push(resolve)),
+    [],
+  )
+
   const resetAppRuntime = useCallback(() => {
     setRepos(null)
     bootedDemoRef.current = false
@@ -93,14 +120,16 @@ function AppRuntimeProviders({ children }: { children: ReactNode }) {
         const seed = new DemoSeedProvider().provide()
         const result = await new ImportService().importDemoSeed(seed, demoRepos)
         if (!result.ok) throw result.error
+        const committed = awaitReposCommitted()
         setRepos(demoRepos)
+        await committed
         bootedDemoRef.current = true
       } finally {
         demoBootPromiseRef.current = undefined
       }
     })()
     return demoBootPromiseRef.current
-  }, [])
+  }, [awaitReposCommitted])
 
   const bootPersonalMode = useCallback(async () => {
     if (bootedPersonalRef.current) return
@@ -109,21 +138,27 @@ function AppRuntimeProviders({ children }: { children: ReactNode }) {
       try {
         const result = getPersonalRepositories()
         if (!result.ok) throw result.error
+        const committed = awaitReposCommitted()
         setRepos(result.value as RepositoryRegistry)
+        await committed
         bootedPersonalRef.current = true
       } finally {
         personalBootPromiseRef.current = undefined
       }
     })()
     return personalBootPromiseRef.current
-  }, [getPersonalRepositories])
+  }, [awaitReposCommitted, getPersonalRepositories])
 
   return (
     <DemoBootContext.Provider value={bootDemoMode}>
       <PersonalBootContext.Provider value={bootPersonalMode}>
         <AppRuntimeResetContext.Provider value={resetAppRuntime}>
           <AuthBoundaryCoordinator />
-          {repos ? <RepositoriesProvider repositories={repos}>{children}</RepositoriesProvider> : children}
+          {repos ? (
+            <RepositoriesProvider repositories={repos}>{children}</RepositoriesProvider>
+          ) : (
+            children
+          )}
         </AppRuntimeResetContext.Provider>
       </PersonalBootContext.Provider>
     </DemoBootContext.Provider>
