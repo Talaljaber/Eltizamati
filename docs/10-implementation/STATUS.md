@@ -2,6 +2,40 @@
 
 > Read this first, then the active phase file. Update this file at every session end and every phase state change. Pre-plan history: [status-m0-session-log.md](status-m0-session-log.md) (the mid-M0 session log) and (independent audit, 2026-07-11). Master plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
 
+## 2026-07-15 addendum — STOP-SHIP remediation Waves 1–3: five confirmed repository defects fixed and verified
+
+The five confirmed repository defects surfaced by the `docs/ship-situation.md` review were fixed
+surgically on `phase6-finance-engine` (5 production files touched, ~210 new production lines, no new
+architecture, no financial-formula or expected-value change):
+
+1. **Startup redirects now settle.** `StartupCoordinator` redirected while `phase` stayed `starting`,
+   so the router Stack never rendered and the native splash never lifted. A redirect now transitions to
+   `ready`, renders the Stack, and releases the splash; the actual `router.replace` runs from an effect
+   once the Stack is mounted, and a redirect failure becomes a recoverable error surface.
+2. **Repository boot waits for the provider commit.** `bootDemoMode`/`bootPersonalMode` resolved after
+   `setRepos(...)` but before React committed `RepositoriesProvider`, so entry completion could navigate
+   into a `RequireRepositories`-gated screen that still saw `repos === null` and bounced to sign-in. Boot
+   now resolves only after a commit acknowledgement fired from a `[repos]` effect.
+3. **Entry completion is globally exclusive.** Demo, personal, and resume-personal entry now share one
+   in-flight slot (previously two independent refs allowed a demo/personal race). Resume's session
+   retrieval moved inside the catch boundary, so a thrown `currentSession()` becomes a typed `Result`.
+4. **Concurrent splash hides are deduplicated.** A single-owner `releaseNativeSplash()` retains an
+   in-flight promise: concurrent callers await one `hideAsync()`; success latches; failure clears the
+   slot for retry.
+5. **Session/cache scoping completed + proven.** The settings session query moved off the unscoped
+   `['settingsCurrentSession']` key onto the namespaced `authKeys.session()`; a re-audit confirmed every
+   other user-owned key already carries `userId`. A production-mounted test (real `AppProviders`,
+   `QueryClient`, `AuthBoundaryCoordinator`, `runLocalUserBoundaryCleanup`, runtime repository
+   replacement, and query keys — only Supabase transport, router, and the OS notification layer are
+   doubles) proves user-A → `SIGNED_OUT` → cleanup → user-B sign-in leaves no user-A financial data
+   cached and disables stale notification navigation.
+
+**Local gate is green** for the mobile package: `typecheck` clean, `jest` 64 suites / 350 tests,
+repo `lint` (`eslint . --max-warnings=0`) clean, `depcruise` 0 violations (528 modules / 1699 deps),
+Prettier clean, `git diff --check` clean. **Wave 4 was not started. Nothing was merged, pushed, or
+tagged.** Remaining gaps this environment cannot execute: physical-device splash/keychain/notification
+behavior and a live local-Supabase RLS round-trip — both still owned by Phase 9.
+
 ## 2026-07-13 addendum — Phase 8.5 Workstream 5 executed (validation matrix + exit-review draft)
 
 Workstream 5 (review and gate) has been run: the full validation matrix across all five representative
@@ -16,8 +50,8 @@ Center) were found and fixed directly during this pass.
 **Phase 8.5 is still not complete.** Two gates remain and cannot be closed by this pass: the
 Arabic-reading reviewer's sign-off (still TBD) and the owner's recorded exit-review approval, which
 should explicitly accept or schedule the two logged findings. Phase 9 stays blocked until both land.
-`pnpm run check` remains fully green (49 suites / 263 tests, zero lint/depcruise/format issues) after
-this pass's fixes.
+At the time of this pass the mobile gate was green at 49 suites / 263 tests; the current live count is
+recorded in the 2026-07-15 addendum at the top of this file (64 suites / 350 tests), which supersedes it.
 
 ## 2026-07-13 addendum — Phase 8.5 Workstream 4 post-merge correction
 
