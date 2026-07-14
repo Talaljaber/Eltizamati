@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Text, Button, space } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
+import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import {
   toLocalDate,
   type Id,
@@ -89,12 +90,13 @@ function EditObligationInner() {
   const { t } = useTranslation()
   const router = useRouter()
   const repos = useRepositories()
+  const activeUser = useActiveUser()
   const queryClient = useQueryClient()
   const { id } = useLocalSearchParams<{ id: string }>()
   const obligationId = id as Id<'obligation'>
 
   const { data: obligation, isLoading } = useQuery({
-    queryKey: ['obligation', obligationId],
+    queryKey: ['obligation', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.obligationRepository.get(obligationId)
       if (!res.ok) throw res.error

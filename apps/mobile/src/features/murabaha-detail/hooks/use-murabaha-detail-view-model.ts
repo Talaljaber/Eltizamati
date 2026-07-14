@@ -5,6 +5,7 @@ import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { calculationAsOf } from '@/services/calculation-as-of'
+import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
 import {
   snapshotRecord,
   snapshotMoneyAmount,
@@ -32,6 +33,7 @@ export function useMurabahaDetailViewModel(
 ): MurabahaDetailViewModel {
   const repos = useRepositories()
   const activeUser = useActiveUser()
+  const personalAsOf = usePersonalCalculationAsOf()
 
   const calcService = useMemo(
     () => new CalculationService(repos.calculationRunRepository),
@@ -39,7 +41,7 @@ export function useMurabahaDetailViewModel(
   )
 
   const { data: obligation, isError: isObligationError } = useQuery({
-    queryKey: ['obligation', obligationId],
+    queryKey: ['obligation', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.obligationRepository.get(obligationId)
       if (!res.ok) throw res.error
@@ -48,7 +50,7 @@ export function useMurabahaDetailViewModel(
   })
 
   const { data: payments } = useQuery({
-    queryKey: ['payments', obligationId],
+    queryKey: ['payments', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.paymentRepository.listFor(obligationId)
       if (!res.ok) throw res.error
@@ -56,9 +58,10 @@ export function useMurabahaDetailViewModel(
     },
     enabled: !!obligation,
   })
+  const asOf = calculationAsOf(typeof repos.reset === 'function' ? 'demo' : 'personal', personalAsOf)
 
   const { data: progressRun } = useQuery({
-    queryKey: ['murabahaProgress', obligationId, activeUser, payments?.length],
+    queryKey: ['murabahaProgress', obligationId, activeUser, payments?.length, asOf],
     queryFn: async () => {
       if (!activeUser || !obligation || obligation.kind !== 'murabaha' || !payments) return null
       const currency = obligation.murabahaDetails.totalSalePrice.value.currency
@@ -66,7 +69,6 @@ export function useMurabahaDetailViewModel(
         (sum, payment) => sum.add(payment.amount),
         Money.zero(currency),
       )
-      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,

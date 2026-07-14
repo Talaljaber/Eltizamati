@@ -29,6 +29,7 @@ import type { AuthService } from '@/services/auth/auth-service'
 import { authKeys } from '@/features/auth/api/keys'
 import { isValidDecimal, isValidPositiveInt } from '@/features/obligation-form/validation'
 import { cancelLocalReminder, scheduleLocalReminder } from '@/services/local-notification-service'
+import { useAuthExitCoordinator } from '@/features/auth/hooks/use-auth-exit-coordinator'
 
 const MAX_REMINDER_DAY = 28
 
@@ -58,13 +59,12 @@ export default function SettingsScreen() {
     enabled: isPersonalMode,
   })
 
-  const signOutMutation = useSignOutMutation(authServiceResult)
-  const deleteAccountMutation = useDeleteAccountMutation(authServiceResult)
+  const authExitCoordinator = useAuthExitCoordinator(authServiceResult)
+  const signOutMutation = useSignOutMutation(authServiceResult, authExitCoordinator)
+  const deleteAccountMutation = useDeleteAccountMutation(authServiceResult, authExitCoordinator)
 
   function handleSignOut() {
-    signOutMutation.mutate(undefined, {
-      onSuccess: () => router.replace('/auth/sign-in'),
-    })
+    signOutMutation.mutate(undefined)
   }
 
   function handleDeleteAccount() {
@@ -74,9 +74,7 @@ export default function SettingsScreen() {
         text: t('settings.deleteAccountConfirmAction'),
         style: 'destructive',
         onPress: () => {
-          deleteAccountMutation.mutate(undefined, {
-            onSuccess: () => router.replace('/auth/sign-in'),
-          })
+          deleteAccountMutation.mutate(undefined)
         },
       },
     ])

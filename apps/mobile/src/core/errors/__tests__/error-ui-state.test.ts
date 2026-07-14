@@ -10,8 +10,11 @@ describe('toErrorUiState', () => {
     expect(toErrorUiState(makeError('auth'))).toEqual({ kind: 'authRequired' })
   })
 
-  it('maps "authorization" to authRequired', () => {
-    expect(toErrorUiState(makeError('authorization'))).toEqual({ kind: 'authRequired' })
+  it('keeps authorization distinct from an expired authentication session', () => {
+    expect(toErrorUiState(makeError('authorization'))).toEqual({
+      kind: 'fatal',
+      userMessageKey: 'error.authorization',
+    })
   })
 
   it('maps a retryable, non-auth/connectivity error to retryable with its message key', () => {

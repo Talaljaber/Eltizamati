@@ -13,7 +13,11 @@ import { useQuery } from '@tanstack/react-query'
 import { isOk, type ObligationRepository, type Id } from '@eltizamati/domain'
 import { obligationKeys } from './keys'
 
-export function useObligations(repository: ObligationRepository, userId: Id<'user'>) {
+export function useObligations(
+  repository: ObligationRepository,
+  userId: Id<'user'>,
+  isDemoMode = false,
+) {
   return useQuery({
     queryKey: obligationKeys.list(userId),
     queryFn: async () => {
@@ -21,6 +25,7 @@ export function useObligations(repository: ObligationRepository, userId: Id<'use
       if (!isOk(result)) throw result.error
       return result.value
     },
-    staleTime: Infinity, // demo data never goes stale
+    enabled: userId !== '',
+    staleTime: isDemoMode ? Infinity : 30_000,
   })
 }

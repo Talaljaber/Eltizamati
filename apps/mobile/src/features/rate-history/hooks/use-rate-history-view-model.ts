@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Id, RatePeriod } from '@eltizamati/domain'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
+import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 
 export interface RateHistoryRow {
   period: RatePeriod
@@ -15,9 +16,10 @@ export interface RateHistoryViewModel {
 
 export function useRateHistoryViewModel(obligationId: Id<'obligation'>): RateHistoryViewModel {
   const repos = useRepositories()
+  const activeUser = useActiveUser()
 
   const { data: periods, isError } = useQuery({
-    queryKey: ['ratePeriods', obligationId],
+    queryKey: ['ratePeriods', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.ratePeriodRepository.historyFor(obligationId)
       if (!res.ok) throw res.error
