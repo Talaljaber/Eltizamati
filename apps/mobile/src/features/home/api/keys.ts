@@ -6,11 +6,11 @@
 export const obligationKeys = {
   all: ['obligations'] as const,
   list: (userId: string) => ['obligations', 'list', userId] as const,
-  detail: (id: string) => ['obligations', 'detail', id] as const,
+  detail: (userId: string, id: string) => ['obligations', 'detail', userId, id] as const,
 } as const
 
 export const paymentKeys = {
-  listFor: (obligationId: string) => ['payments', 'listFor', obligationId] as const,
+  listFor: (userId: string, obligationId: string) => ['payments', 'listFor', userId, obligationId] as const,
 } as const
 
 export const insightKeys = {
@@ -19,5 +19,6 @@ export const insightKeys = {
 } as const
 
 export const ratePeriodKeys = {
-  historyFor: (obligationId: string) => ['ratePeriods', 'historyFor', obligationId] as const,
+  historyFor: (userId: string, obligationId: string) =>
+    ['ratePeriods', 'historyFor', userId, obligationId] as const,
 } as const

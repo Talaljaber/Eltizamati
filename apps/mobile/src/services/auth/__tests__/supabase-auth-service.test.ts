@@ -21,6 +21,12 @@ function makeFakeClient(
         .fn()
         .mockResolvedValue({ data: { session: fakeSession }, error: null }),
       signOut: jest.fn().mockResolvedValue({ error: null }),
+      resetPasswordForEmail: jest.fn().mockResolvedValue({ data: {}, error: null }),
+      exchangeCodeForSession: jest
+        .fn()
+        .mockResolvedValue({ data: { session: fakeSession }, error: null }),
+      setSession: jest.fn().mockResolvedValue({ data: { session: fakeSession }, error: null }),
+      updateUser: jest.fn().mockResolvedValue({ data: {}, error: null }),
       getSession: jest.fn().mockResolvedValue({ data: { session: fakeSession }, error: null }),
       onAuthStateChange: jest
         .fn()
@@ -113,7 +119,7 @@ describe('SupabaseAuthService', () => {
 
     expect(isOk(result)).toBe(true)
     expect(client.auth.resetPasswordForEmail).toHaveBeenCalledWith('user@example.com', {
-      redirectTo: expect.any(String),
+      redirectTo: 'eltizamati://auth/callback?flow=passwordRecovery',
     })
   })
 
@@ -141,6 +147,20 @@ describe('SupabaseAuthService', () => {
     const result = await service.signOut()
 
     expect(isOk(result)).toBe(true)
+  })
+
+  it('signOut clears the local session when global revocation is offline', async () => {
+    const signOut = jest
+      .fn()
+      .mockResolvedValueOnce({ error: { code: undefined, message: 'offline' } })
+      .mockResolvedValueOnce({ error: null })
+    const client = makeFakeClient({ signOut })
+    const service = new SupabaseAuthService(client)
+
+    const result = await service.signOut()
+
+    expect(isOk(result)).toBe(true)
+    expect(signOut).toHaveBeenNthCalledWith(2, { scope: 'local' })
   })
 
   it('currentSession returns the mapped session when one exists', async () => {
@@ -187,5 +207,41 @@ describe('SupabaseAuthService', () => {
     const result = await service.deleteAccount()
 
     expect(isErr(result)).toBe(true)
+  })
+
+  it('classifies a valid recovery callback separately from ordinary authentication', async () => {
+    const client = makeFakeClient()
+    const service = new SupabaseAuthService(client)
+
+    const recovery = await service.exchangeCallbackUrl(
+      'eltizamati://auth/callback?flow=passwordRecovery&code=recovery-code',
+    )
+    const authentication = await service.exchangeCallbackUrl(
+      'eltizamati://auth/callback?flow=authentication&code=signup-code',
+    )
+
+    expect(isOk(recovery)).toBe(true)
+    if (isOk(recovery)) expect(recovery.value.kind).toBe('passwordRecovery')
+    expect(isOk(authentication)).toBe(true)
+    if (isOk(authentication)) expect(authentication.value.kind).toBe('authentication')
+  })
+
+  it('rejects a malformed callback without a code or token pair', async () => {
+    const service = new SupabaseAuthService(makeFakeClient())
+
+    const result = await service.exchangeCallbackUrl('eltizamati://auth/callback')
+
+    expect(isErr(result)).toBe(true)
+    if (isErr(result)) expect(result.error.code).toBe('auth')
+  })
+
+  it('updates the password only through the authenticated recovery session', async () => {
+    const client = makeFakeClient()
+    const service = new SupabaseAuthService(client)
+
+    const result = await service.updatePassword('new-password')
+
+    expect(isOk(result)).toBe(true)
+    expect(client.auth.updateUser).toHaveBeenCalledWith({ password: 'new-password' })
   })
 })

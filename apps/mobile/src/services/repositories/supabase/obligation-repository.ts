@@ -28,12 +28,9 @@ import {
   murabahaDetailsFromRow,
   murabahaDetailsToRow,
 } from './mappers/obligation-mapper'
+import { toSupabaseAppError } from '../../../core/supabase/supabase-error'
 
 type ObligationRow = Database['public']['Tables']['obligations']['Row']
-
-function toStorageAppError(error: { code: string; message: string }): AppError {
-  return makeError('storage', { safeMetadata: { postgresErrorCode: error.code }, cause: error })
-}
 
 const SCHEMA_BACKED_KINDS = new Set(['conventionalLoan', 'murabaha', 'creditCard'])
 
@@ -50,8 +47,8 @@ export class SupabaseObligationRepository implements ObligationRepository {
           this.client.from('loan_details').select('*').eq('obligation_id', row.id).maybeSingle(),
           this.client.from('rate_periods').select('*').eq('obligation_id', row.id),
         ])
-        if (detailsResult.error) return err(toStorageAppError(detailsResult.error))
-        if (ratePeriodsResult.error) return err(toStorageAppError(ratePeriodsResult.error))
+        if (detailsResult.error) return err(toSupabaseAppError(detailsResult.error))
+        if (ratePeriodsResult.error) return err(toSupabaseAppError(ratePeriodsResult.error))
         if (detailsResult.data === null) return err(makeError('dataIncomplete'))
         return ok({
           ...base,
@@ -65,7 +62,7 @@ export class SupabaseObligationRepository implements ObligationRepository {
           .select('*')
           .eq('obligation_id', row.id)
           .maybeSingle()
-        if (error) return err(toStorageAppError(error))
+        if (error) return err(toSupabaseAppError(error))
         if (data === null) return err(makeError('dataIncomplete'))
         return ok({
           ...base,
@@ -79,7 +76,7 @@ export class SupabaseObligationRepository implements ObligationRepository {
           .select('*')
           .eq('obligation_id', row.id)
           .maybeSingle()
-        if (error) return err(toStorageAppError(error))
+        if (error) return err(toSupabaseAppError(error))
         if (data === null) return err(makeError('dataIncomplete'))
         return ok({ ...base, kind: 'creditCard', cardDetails: cardDetailsFromRow(data, currency) })
       }
@@ -102,14 +99,14 @@ export class SupabaseObligationRepository implements ObligationRepository {
       .select('*')
       .eq('id', id)
       .maybeSingle()
-    if (error) return err(toStorageAppError(error))
+    if (error) return err(toSupabaseAppError(error))
     if (data === null) return err(makeError('notFound'))
     return this.assemble(data)
   }
 
   async list(userId: Id<'user'>): Promise<Result<readonly Obligation[], AppError>> {
     const { data, error } = await this.client.from('obligations').select('*').eq('user_id', userId)
-    if (error) return err(toStorageAppError(error))
+    if (error) return err(toSupabaseAppError(error))
 
     const assembled: Obligation[] = []
     for (const row of data) {
@@ -122,23 +119,23 @@ export class SupabaseObligationRepository implements ObligationRepository {
 
   async save(obligation: Obligation): Promise<Result<Obligation, AppError>> {
     const { error: baseError } = await this.client.from('obligations').upsert(baseToRow(obligation))
-    if (baseError) return err(toStorageAppError(baseError))
+    if (baseError) return err(toSupabaseAppError(baseError))
 
     if (obligation.kind === 'conventionalLoan') {
       const { error } = await this.client
         .from('loan_details')
         .upsert(loanDetailsToRow(obligation.id, obligation.userId, obligation.loanDetails))
-      if (error) return err(toStorageAppError(error))
+      if (error) return err(toSupabaseAppError(error))
     } else if (obligation.kind === 'murabaha') {
       const { error } = await this.client
         .from('murabaha_details')
         .upsert(murabahaDetailsToRow(obligation.id, obligation.userId, obligation.murabahaDetails))
-      if (error) return err(toStorageAppError(error))
+      if (error) return err(toSupabaseAppError(error))
     } else if (obligation.kind === 'creditCard') {
       const { error } = await this.client
         .from('card_details')
         .upsert(cardDetailsToRow(obligation.id, obligation.userId, obligation.cardDetails))
-      if (error) return err(toStorageAppError(error))
+      if (error) return err(toSupabaseAppError(error))
     } else if (!SCHEMA_BACKED_KINDS.has(obligation.kind)) {
       // genericFacility/ijara/diminishingMusharakah: no detail table exists yet
       // (P1-scoped, see obligation-mapper.ts) — base row alone is the full
@@ -154,14 +151,14 @@ export class SupabaseObligationRepository implements ObligationRepository {
       .from('obligations')
       .update({ closed_date: localDateFromDate(new Date()) })
       .eq('id', id)
-    if (error) return err(toStorageAppError(error))
+    if (error) return err(toSupabaseAppError(error))
     return ok(undefined)
   }
 
   /** Detail-table rows cascade via ON DELETE CASCADE (verified by Phase 3 pgTAP). */
   async delete(id: Id<'obligation'>): Promise<Result<void, AppError>> {
     const { error } = await this.client.from('obligations').delete().eq('id', id)
-    if (error) return err(toStorageAppError(error))
+    if (error) return err(toSupabaseAppError(error))
     return ok(undefined)
   }
 }

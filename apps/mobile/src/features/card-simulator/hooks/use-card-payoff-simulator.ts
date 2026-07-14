@@ -5,11 +5,13 @@ import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { calculationAsOf } from '@/services/calculation-as-of'
+import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
 import { isValidDecimal } from '@/features/obligation-form/validation'
 
 export function useCardPayoffSimulator(obligationId: Id<'obligation'>) {
   const repos = useRepositories()
   const activeUser = useActiveUser()
+  const personalAsOf = usePersonalCalculationAsOf()
   const service = useMemo(
     () => new CalculationService(repos.calculationRunRepository),
     [repos.calculationRunRepository],
@@ -21,7 +23,7 @@ export function useCardPayoffSimulator(obligationId: Id<'obligation'>) {
   >('idle')
 
   const obligationQuery = useQuery({
-    queryKey: ['obligation', obligationId],
+    queryKey: ['obligation', activeUser ?? '', obligationId],
     queryFn: async () => {
       const result = await repos.obligationRepository.get(obligationId)
       if (!result.ok) throw result.error
@@ -42,6 +44,7 @@ export function useCardPayoffSimulator(obligationId: Id<'obligation'>) {
       return
     }
     const { currentBalance, purchaseApr, minimumPaymentRule } = obligation.cardDetails
+    const asOf = calculationAsOf(typeof repos.reset === 'function' ? 'demo' : 'personal', personalAsOf)
     setStatus('calculating')
     const result = await service.runCalculation(
       activeUser,
@@ -55,9 +58,9 @@ export function useCardPayoffSimulator(obligationId: Id<'obligation'>) {
         ...(trimmedPayment === ''
           ? {}
           : { fixedPaymentAmount: Money.of(trimmedPayment, obligation.currency) }),
-        asOf: calculationAsOf(obligation),
+        asOf,
       },
-      calculationAsOf(obligation),
+      asOf,
     )
     if (!result.ok) {
       setStatus('error')

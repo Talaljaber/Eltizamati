@@ -1,7 +1,6 @@
-import type { SupabaseClient, Session } from '@supabase/supabase-js'
-import * as Linking from 'expo-linking'
+import type { AuthChangeEvent, SupabaseClient, Session } from '@supabase/supabase-js'
 import { err, ok, makeError, type Result, type AppError } from '@eltizamati/domain'
-import type { AppAuthSession, AuthService } from './auth-service'
+import type { AppAuthEvent, AppAuthSession, AuthCallbackResult, AuthService } from './auth-service'
 
 /**
  * The URL Supabase's confirmation/reset emails link back to. Without this,
@@ -17,8 +16,11 @@ import type { AppAuthSession, AuthService } from './auth-service'
  * project's Authentication → URL Configuration → Redirect URLs allowlist;
  * Supabase silently ignores redirect URLs that aren't allow-listed.
  */
-function authCallbackUrl(): string {
-  return Linking.createURL('/auth/callback')
+export const AUTH_CALLBACK_PATH = '/auth/callback'
+export const AUTH_CALLBACK_BASE_URL = 'eltizamati://auth/callback'
+
+export function authCallbackUrl(flow: AuthCallbackResult['kind']): string {
+  return `${AUTH_CALLBACK_BASE_URL}?flow=${flow}`
 }
 
 /**
@@ -36,6 +38,44 @@ function tokensFromFragment(
   const refreshToken = fragment.get('refresh_token')
   if (accessToken === null || refreshToken === null) return undefined
   return { accessToken, refreshToken }
+}
+
+function callbackFlow(url: string): AuthCallbackResult['kind'] | undefined {
+  const flow = queryParameter(url, 'flow')
+  if (flow === 'passwordRecovery') return 'passwordRecovery'
+  if (flow === 'authentication') return 'authentication'
+
+  const hashIndex = url.indexOf('#')
+  if (hashIndex === -1) return undefined
+  const fragment = new URLSearchParams(url.slice(hashIndex + 1))
+  return fragment.get('type') === 'recovery' ? 'passwordRecovery' : undefined
+}
+
+function queryParameter(url: string, name: string): string | undefined {
+  try {
+    return new URL(url).searchParams.get(name) ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
+function toAppAuthEvent(event: AuthChangeEvent): AppAuthEvent {
+  switch (event) {
+    case 'INITIAL_SESSION':
+      return 'initialSession'
+    case 'SIGNED_IN':
+      return 'signedIn'
+    case 'SIGNED_OUT':
+      return 'signedOut'
+    case 'PASSWORD_RECOVERY':
+      return 'passwordRecovery'
+    case 'TOKEN_REFRESHED':
+      return 'tokenRefreshed'
+    case 'USER_UPDATED':
+      return 'userUpdated'
+    default:
+      return 'other'
+  }
 }
 
 function toAppSession(session: Session): AppAuthSession {
@@ -81,7 +121,7 @@ export class SupabaseAuthService implements AuthService {
     const { data, error } = await this.client.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: authCallbackUrl() },
+      options: { emailRedirectTo: authCallbackUrl('authentication') },
     })
     if (error) return err(toAuthAppError(error))
     return ok(data.session ? toAppSession(data.session) : undefined)
@@ -95,13 +135,24 @@ export class SupabaseAuthService implements AuthService {
 
   async signOut(): Promise<Result<void, AppError>> {
     const { error } = await this.client.auth.signOut()
+    if (error) {
+      // A global sign-out needs the network. Still remove this device's
+      // persisted tokens when offline so the user can safely leave the app.
+      const localResult = await this.clearLocalSession()
+      if (!localResult.ok) return err(toAuthAppError(error))
+    }
+    return ok(undefined)
+  }
+
+  async clearLocalSession(): Promise<Result<void, AppError>> {
+    const { error } = await this.client.auth.signOut({ scope: 'local' })
     if (error) return err(toAuthAppError(error))
     return ok(undefined)
   }
 
   async resetPassword(email: string): Promise<Result<void, AppError>> {
     const { error } = await this.client.auth.resetPasswordForEmail(email, {
-      redirectTo: authCallbackUrl(),
+      redirectTo: authCallbackUrl('passwordRecovery'),
     })
     if (error) return err(toAuthAppError(error))
     return ok(undefined)
@@ -113,11 +164,13 @@ export class SupabaseAuthService implements AuthService {
     return ok(data.session ? toAppSession(data.session) : undefined)
   }
 
-  onAuthStateChange(callback: (session: AppAuthSession | undefined) => void): () => void {
+  onAuthStateChange(
+    callback: (event: AppAuthEvent, session: AppAuthSession | undefined) => void,
+  ): () => void {
     const {
       data: { subscription },
-    } = this.client.auth.onAuthStateChange((_event, session) => {
-      callback(session ? toAppSession(session) : undefined)
+    } = this.client.auth.onAuthStateChange((event, session) => {
+      callback(toAppAuthEvent(event), session ? toAppSession(session) : undefined)
     })
     return () => {
       subscription.unsubscribe()
@@ -130,24 +183,52 @@ export class SupabaseAuthService implements AuthService {
     return ok(undefined)
   }
 
-  async exchangeCallbackUrl(url: string): Promise<Result<void, AppError>> {
-    const { queryParams } = Linking.parse(url)
-    const code = typeof queryParams?.code === 'string' ? queryParams.code : undefined
-
-    if (code !== undefined) {
-      const { error } = await this.client.auth.exchangeCodeForSession(code)
-      if (error) return err(toAuthAppError(error))
-      return ok(undefined)
-    }
-
-    const tokens = tokensFromFragment(url)
-    if (tokens === undefined) {
-      return err(makeError('unexpected', { safeMetadata: { reason: 'no code or tokens in url' } }))
-    }
-    const { error } = await this.client.auth.setSession({
-      access_token: tokens.accessToken,
-      refresh_token: tokens.refreshToken,
+  async exchangeCallbackUrl(url: string): Promise<Result<AuthCallbackResult, AppError>> {
+    const code = queryParameter(url, 'code')
+    let providerReportedRecovery = false
+    const stopListening = this.onAuthStateChange((event) => {
+      if (event === 'passwordRecovery') providerReportedRecovery = true
     })
+
+    try {
+      let session: Session | null = null
+      if (code !== undefined) {
+        const { data, error } = await this.client.auth.exchangeCodeForSession(code)
+        if (error) return err(toAuthAppError(error))
+        session = data.session
+      } else {
+        const tokens = tokensFromFragment(url)
+        if (tokens === undefined) {
+          return err(
+            makeError('auth', { safeMetadata: { reason: 'missing_callback_credentials' } }),
+          )
+        }
+        const { data, error } = await this.client.auth.setSession({
+          access_token: tokens.accessToken,
+          refresh_token: tokens.refreshToken,
+        })
+        if (error) return err(toAuthAppError(error))
+        session = data.session
+      }
+
+      if (session === null) {
+        return err(makeError('auth', { safeMetadata: { reason: 'missing_callback_session' } }))
+      }
+      const hintedFlow = callbackFlow(url)
+      return ok({
+        kind:
+          providerReportedRecovery || hintedFlow === 'passwordRecovery'
+            ? 'passwordRecovery'
+            : 'authentication',
+        session: toAppSession(session),
+      })
+    } finally {
+      stopListening()
+    }
+  }
+
+  async updatePassword(password: string): Promise<Result<void, AppError>> {
+    const { error } = await this.client.auth.updateUser({ password })
     if (error) return err(toAuthAppError(error))
     return ok(undefined)
   }

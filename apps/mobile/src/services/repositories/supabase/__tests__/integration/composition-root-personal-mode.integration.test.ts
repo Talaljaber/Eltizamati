@@ -38,7 +38,9 @@ import {
   type Obligation,
   type ConsentRecord,
 } from '@eltizamati/domain'
-import type { createCompositionRoot as CreateCompositionRoot } from '../../../../composition-root'
+import type { createPersonalRepositoryRegistry as CreatePersonalRepositoryRegistry } from '../../../../composition-root'
+import type { getSupabaseClient as GetSupabaseClient } from '../../../../../core/supabase/client'
+import type { SupabaseAuthService as SupabaseAuthServiceType } from '../../../../auth/supabase-auth-service'
 
 // Supabase's well-known fixed local-dev anon key (supabase/config.toml default) —
 // not a secret, identical for every `supabase start` on this machine.
@@ -64,7 +66,9 @@ jest.mock('../../../../../core/supabase/secure-store-adapter', () => {
 })
 
 describe('createCompositionRoot(personal) — real wiring path (live local Supabase)', () => {
-  let createCompositionRoot: typeof CreateCompositionRoot
+  let createPersonalRepositoryRegistry: typeof CreatePersonalRepositoryRegistry
+  let getSupabaseClient: typeof GetSupabaseClient
+  let SupabaseAuthService: typeof SupabaseAuthServiceType
   const email = `phase6-wiring-${Date.now()}-${Math.random().toString(36).slice(2)}@eltizamati.test`
   const password = 'correct-horse-battery-staple'
   let userId: string
@@ -74,12 +78,28 @@ describe('createCompositionRoot(personal) — real wiring path (live local Supab
     process.env.EXPO_PUBLIC_SUPABASE_URL = LOCAL_URL
     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = LOCAL_ANON_KEY
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- must be required after process.env is set (see file-header comment); a static import would be hoisted above the assignment above.
-    ;({ createCompositionRoot } = require('../../../../composition-root'))
+    ;({ createPersonalRepositoryRegistry } = require('../../../../composition-root'))
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- must be required after process.env is set.
+    ;({ getSupabaseClient } = require('../../../../../core/supabase/client'))
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- must be required after process.env is set.
+    ;({ SupabaseAuthService } = require('../../../../auth/supabase-auth-service'))
   })
+
+  function createProductionPersonalServices() {
+    const clientResult = getSupabaseClient()
+    if (!clientResult.ok) return clientResult
+    return {
+      ok: true as const,
+      value: {
+        authService: new SupabaseAuthService(clientResult.value),
+        repositories: createPersonalRepositoryRegistry(clientResult.value),
+      },
+    }
+  }
 
   afterAll(async () => {
     if (obligationId === undefined) return
-    const root = createCompositionRoot('personal')
+    const root = createProductionPersonalServices()
     // eslint-disable-next-line no-restricted-syntax -- test-teardown fail-fast, not application error handling.
     if (!root.ok) throw new Error('composition root failed during cleanup')
     // Re-sign-in first since the suite deliberately signs the user out.
@@ -88,7 +108,7 @@ describe('createCompositionRoot(personal) — real wiring path (live local Supab
   }, 15_000)
 
   it('sign-up -> consent -> write -> read -> sign-out -> sign-in -> read (session/data restore)', async () => {
-    const root = createCompositionRoot('personal')
+    const root = createProductionPersonalServices()
     expect(isOk(root)).toBe(true)
     if (!root.ok) return
 

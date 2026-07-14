@@ -25,10 +25,18 @@ jest.mock('@/features/auth/hooks/use-auth-service', () => ({
 
 describe('useScenarioSimulator', () => {
   let queryClient: QueryClient
+  let unmountHook: (() => void) | undefined
 
   beforeEach(() => {
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    unmountHook = undefined
     ;(getDataMode as jest.Mock).mockResolvedValue('demo')
+  })
+
+  afterEach(() => {
+    unmountHook?.()
+    queryClient.clear()
+    jest.restoreAllMocks()
   })
 
   it('structurally resolves a scenario calculation without final TV-304 assertions', async () => {
@@ -48,7 +56,10 @@ describe('useScenarioSimulator', () => {
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )
 
-    const { result } = renderHook(() => useScenarioSimulator(targetObligation.id), { wrapper })
+    const { result, unmount } = renderHook(() => useScenarioSimulator(targetObligation.id), {
+      wrapper,
+    })
+    unmountHook = unmount
 
     expect(result.current.status).toBe('loading')
 
