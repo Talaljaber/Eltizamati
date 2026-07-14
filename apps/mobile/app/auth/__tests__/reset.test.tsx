@@ -31,7 +31,12 @@ jest.mock('@/features/auth/hooks/use-auth-service', () => {
 })
 
 function renderScreen() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { gcTime: Infinity },
+      mutations: { retry: false, gcTime: Infinity },
+    },
+  })
   return render(
     <QueryClientProvider client={client}>
       <ResetScreen />

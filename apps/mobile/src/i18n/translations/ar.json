@@ -20,6 +20,7 @@
     "offlineBody": "الوضع الشخصي يتطلب اتصالاً بالإنترنت. تحقق من شبكتك وحاول مجدداً.",
     "authRequiredTitle": "يلزم تسجيل الدخول",
     "authRequiredBody": "سجّل الدخول للمتابعة، أو استكشف ببيانات تجريبية بدلاً من ذلك.",
+    "staleDataTitle": "يتم عرض بيانات محفوظة — تعذّر التحديث",
     "validation": "بعض المعلومات غير صالحة. يرجى التحقق والمحاولة مجدداً.",
     "notFound": "لم نتمكن من العثور على ذلك.",
     "dataConflict": "تم تغيير هذا في مكان آخر. يرجى التحديث والمحاولة مجدداً.",
@@ -313,7 +314,19 @@
     "callbackPending": "جارٍ إتمام تسجيل الدخول…",
     "callbackErrorTitle": "لم يعمل هذا الرابط",
     "callbackErrorBody": "ربما انتهت صلاحية رابط تسجيل الدخول أو تم استخدامه من قبل. حاول تسجيل الدخول مرة أخرى.",
-    "callbackBackToSignIn": "العودة لتسجيل الدخول"
+    "callbackBackToSignIn": "العودة لتسجيل الدخول",
+    "updatePasswordTitle": "اختر كلمة مرور جديدة",
+    "updatePasswordBody": "استخدم 8 أحرف على الأقل. تُرسل كلمة المرور إلى خدمة المصادقة فقط.",
+    "newPasswordLabel": "كلمة المرور الجديدة",
+    "confirmPasswordLabel": "تأكيد كلمة المرور الجديدة",
+    "updatePasswordButton": "تحديث كلمة المرور",
+    "updatePasswordTooShort": "استخدم 8 أحرف على الأقل.",
+    "updatePasswordMismatch": "كلمتا المرور غير متطابقتين.",
+    "updatePasswordFailed": "تعذّر تحديث كلمة المرور. ربما انتهت صلاحية الرابط أو تم استخدامه سابقاً.",
+    "updatePasswordInvalidTitle": "جلسة الاستعادة غير متاحة",
+    "updatePasswordInvalidBody": "رابط الاستعادة مفقود أو منتهي الصلاحية أو مستخدم سابقاً. اطلب رابطاً جديداً.",
+    "updatePasswordSuccessTitle": "تم تحديث كلمة المرور",
+    "updatePasswordSuccessBody": "كلمة المرور الجديدة جاهزة. تابع بعد التحقق من الإفصاح المطلوب."
   },
   "demo": {
     "banner": {

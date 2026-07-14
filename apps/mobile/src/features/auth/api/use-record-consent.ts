@@ -12,9 +12,15 @@ import {
   type Id,
   type Result,
 } from '@eltizamati/domain'
+import {
+  CURRENT_CONSENT_DOC_TYPE,
+  CURRENT_CONSENT_VERSION,
+} from '@/features/consent/consent-policy'
 
-export const CONSENT_DOC_TYPE = 'privacy-policy'
-export const CONSENT_VERSION = 'v1'
+export {
+  CURRENT_CONSENT_DOC_TYPE as CONSENT_DOC_TYPE,
+  CURRENT_CONSENT_VERSION as CONSENT_VERSION,
+} from '@/features/consent/consent-policy'
 
 export interface RecordConsentInput {
   readonly userId: Id<'user'>
@@ -35,8 +41,8 @@ export function useRecordConsentMutation(repositoryResult: Result<ConsentReposit
       const result = await repositoryResult.value.acknowledge({
         id: brandId<'consentRecord'>(generateId()),
         userId,
-        docType: CONSENT_DOC_TYPE,
-        version: CONSENT_VERSION,
+        docType: CURRENT_CONSENT_DOC_TYPE,
+        version: CURRENT_CONSENT_VERSION,
         locale,
         acknowledgedAt: new Date().toISOString(),
       })

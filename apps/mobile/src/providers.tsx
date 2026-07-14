@@ -1,32 +1,26 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
-import { View, ActivityIndicator } from 'react-native'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { DomainInvariantError } from '@eltizamati/domain'
 import { createDemoRepositories } from './services/repositories/demo'
-import { createCompositionRoot, type RepositoryRegistry } from './services/composition-root'
+import type { RepositoryRegistry } from './services/composition-root'
 import { ImportService } from './services/import-service'
 import { DemoSeedProvider } from './services/demo-seed-provider'
 import {
   RepositoriesProvider,
   type Repositories,
 } from './features/repositories/hooks/use-repositories'
-import { getDataMode } from './features/demo/stores/demo-mode-store'
-import { AuthServiceProvider } from './features/auth/hooks/use-auth-service'
-import { DomainInvariantError, type AppError } from '@eltizamati/domain'
-import { ErrorState } from './core/design-system'
-import { toErrorUiState } from './core/errors/error-ui-state'
+import {
+  AuthServiceProvider,
+  usePersonalRepositoriesLazy,
+} from './features/auth/hooks/use-auth-service'
+import { CalculationAsOfProvider } from './services/calculation-as-of-context'
+import { createQueryClient } from './services/query-client'
+import { AppLifecycleCoordinator } from './features/lifecycle/components/AppLifecycleCoordinator'
+import { AuthBoundaryCoordinator } from './features/auth/components/AuthBoundaryCoordinator'
 
-const queryClient = new QueryClient()
-
-/**
- * `AppProviders` mounts once, above the router — its initial mode check can't
- * see a mode chosen later in the same session (e.g. onboarding's mode
- * screen, or a successful sign-in/sign-up). Onboarding calls `bootDemoMode()`
- * from this context directly, right after persisting the choice, instead of
- * relying on a remount that expo-router navigation never triggers.
- */
 const DemoBootContext = createContext<(() => Promise<void>) | null>(null)
 const PersonalBootContext = createContext<(() => Promise<void>) | null>(null)
+const AppRuntimeResetContext = createContext<(() => void) | null>(null)
 
 export function useDemoBoot(): () => Promise<void> {
   const boot = useContext(DemoBootContext)
@@ -36,12 +30,6 @@ export function useDemoBoot(): () => Promise<void> {
   return boot
 }
 
-/**
- * Mirrors `useDemoBoot`: auth screens call this right after a successful
- * sign-in/sign-up, before navigating to `/(tabs)/`, since `AppProviders`'
- * own mount effect already ran before the user authenticated and won't
- * re-run on navigation.
- */
 export function usePersonalBoot(): () => Promise<void> {
   const boot = useContext(PersonalBootContext)
   if (boot === null) {
@@ -50,94 +38,94 @@ export function usePersonalBoot(): () => Promise<void> {
   return boot
 }
 
+export function useResetAppRuntime(): () => void {
+  const reset = useContext(AppRuntimeResetContext)
+  if (reset === null) {
+    throw new DomainInvariantError(
+      'unexpected',
+      'useResetAppRuntime must be used within AppProviders',
+    )
+  }
+  return reset
+}
+
+export function useResetAppRuntimeIfAvailable(): () => void {
+  const reset = useContext(AppRuntimeResetContext)
+  return reset ?? NOOP_RESET
+}
+
+const NOOP_RESET = () => undefined
+
 export function AppProviders({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => createQueryClient())
+  return (
+    <QueryClientProvider client={queryClient}>
+      <CalculationAsOfProvider>
+        <AppLifecycleCoordinator />
+        <AuthServiceProvider>
+          <AppRuntimeProviders>{children}</AppRuntimeProviders>
+        </AuthServiceProvider>
+      </CalculationAsOfProvider>
+    </QueryClientProvider>
+  )
+}
+
+function AppRuntimeProviders({ children }: { children: ReactNode }) {
   const [repos, setRepos] = useState<Repositories | null>(null)
-  // Distinguishes "nothing to wait for" (no mode chosen yet) from "a mode is
-  // selected, still booting". Set inside the relevant `boot*Mode` function
-  // itself — not by whichever caller happens to invoke it — so the render
-  // gate below is correct regardless of who triggers the boot: this
-  // component's own mount effect (cold start after onboarding/sign-in was
-  // already completed) or onboarding/auth screens calling it directly before
-  // navigating. Both call sites `await boot*Mode()` then immediately trigger
-  // navigation; `setRepos` scheduling a re-render does not guarantee that
-  // re-render (mounting `RepositoriesProvider`) commits before the
-  // destination screen mounts and calls `useRepositories()` — without this
-  // gate, either path can throw DomainInvariantError.
-  const [pendingRepoBoot, setPendingRepoBoot] = useState(false)
-  const [bootError, setBootError] = useState<AppError | null>(null)
   const bootedDemoRef = useRef(false)
   const bootedPersonalRef = useRef(false)
+  const demoBootPromiseRef = useRef<Promise<void> | undefined>(undefined)
+  const personalBootPromiseRef = useRef<Promise<void> | undefined>(undefined)
+  const getPersonalRepositories = usePersonalRepositoriesLazy()
+
+  const resetAppRuntime = useCallback(() => {
+    setRepos(null)
+    bootedDemoRef.current = false
+    bootedPersonalRef.current = false
+  }, [])
 
   const bootDemoMode = useCallback(async () => {
     if (bootedDemoRef.current) return
-    bootedDemoRef.current = true
-    setPendingRepoBoot(true)
-    const demoRepos = createDemoRepositories()
-    const provider = new DemoSeedProvider()
-    const seed = provider.provide()
-    const importer = new ImportService()
-    await importer.importDemoSeed(seed, demoRepos)
-    setRepos(demoRepos)
-    setPendingRepoBoot(false)
+    if (demoBootPromiseRef.current !== undefined) return demoBootPromiseRef.current
+    demoBootPromiseRef.current = (async () => {
+      try {
+        const demoRepos = createDemoRepositories()
+        const seed = new DemoSeedProvider().provide()
+        const result = await new ImportService().importDemoSeed(seed, demoRepos)
+        if (!result.ok) throw result.error
+        setRepos(demoRepos)
+        bootedDemoRef.current = true
+      } finally {
+        demoBootPromiseRef.current = undefined
+      }
+    })()
+    return demoBootPromiseRef.current
   }, [])
 
   const bootPersonalMode = useCallback(async () => {
     if (bootedPersonalRef.current) return
-    bootedPersonalRef.current = true
-    setPendingRepoBoot(true)
-    const result = createCompositionRoot('personal')
-    if (!result.ok) {
-      // Matches AuthServiceProvider's convention: surface a Result err
-      // rather than throwing, so a bad/missing Supabase env renders a fatal
-      // state instead of crashing the app.
-      setBootError(result.error)
-      setPendingRepoBoot(false)
-      return
-    }
-    const repositories = result.value.repositories as RepositoryRegistry
-    setRepos(repositories)
-    setPendingRepoBoot(false)
-  }, [])
-
-  useEffect(() => {
-    async function boot() {
-      const mode = await getDataMode()
-      if (mode === 'demo') {
-        await bootDemoMode()
-      } else if (mode === 'personal') {
-        await bootPersonalMode()
+    if (personalBootPromiseRef.current !== undefined) return personalBootPromiseRef.current
+    personalBootPromiseRef.current = (async () => {
+      try {
+        const result = getPersonalRepositories()
+        if (!result.ok) throw result.error
+        setRepos(result.value as RepositoryRegistry)
+        bootedPersonalRef.current = true
+      } finally {
+        personalBootPromiseRef.current = undefined
       }
-    }
-    void boot()
-  }, [bootDemoMode, bootPersonalMode])
-
-  const stillBootingRepos = pendingRepoBoot && repos === null
+    })()
+    return personalBootPromiseRef.current
+  }, [getPersonalRepositories])
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthServiceProvider>
-        <DemoBootContext.Provider value={bootDemoMode}>
-          <PersonalBootContext.Provider value={bootPersonalMode}>
-            {bootError !== null ? (
-              // Fatal boot failure (e.g. missing/invalid Supabase env in
-              // personal mode) — nothing downstream can recover without
-              // repositories, so render the honest fatal surface instead of
-              // mounting a router that will crash on useRepositories().
-              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                <ErrorState state={toErrorUiState(bootError)} testID="app-boot-error" />
-              </View>
-            ) : stillBootingRepos ? (
-              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                <ActivityIndicator />
-              </View>
-            ) : repos ? (
-              <RepositoriesProvider repositories={repos}>{children}</RepositoriesProvider>
-            ) : (
-              children
-            )}
-          </PersonalBootContext.Provider>
-        </DemoBootContext.Provider>
-      </AuthServiceProvider>
-    </QueryClientProvider>
+    <DemoBootContext.Provider value={bootDemoMode}>
+      <PersonalBootContext.Provider value={bootPersonalMode}>
+        <AppRuntimeResetContext.Provider value={resetAppRuntime}>
+          <AuthBoundaryCoordinator />
+          {repos ? <RepositoriesProvider repositories={repos}>{children}</RepositoriesProvider> : children}
+        </AppRuntimeResetContext.Provider>
+      </PersonalBootContext.Provider>
+    </DemoBootContext.Provider>
   )
 }

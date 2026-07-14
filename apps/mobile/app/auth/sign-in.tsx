@@ -10,23 +10,19 @@ import { View, StyleSheet, Image } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { brandId } from '@eltizamati/domain'
 import { Text, Button, ErrorState, space, useTheme } from '@/core/design-system'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
-import { useAuthService, useConsentRepository } from '@/features/auth/hooks/use-auth-service'
+import { useAuthService } from '@/features/auth/hooks/use-auth-service'
 import { useSignInMutation } from '@/features/auth/api/use-auth-mutations'
-import { useRecordConsentMutation } from '@/features/auth/api/use-record-consent'
-import { setOnboardingComplete, setDataMode } from '@/features/demo/stores/demo-mode-store'
-import { useDemoBoot, usePersonalBoot } from '@/providers'
+import { useEntryCompletion } from '@/features/consent/hooks/use-entry-completion'
 import logo from '../../assets/logo-cropped.png'
 
 export default function SignInScreen() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
-  const bootDemoMode = useDemoBoot()
-  const bootPersonalMode = usePersonalBoot()
+  const { completeDemoEntry, completePersonalEntry } = useEntryCompletion()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -39,9 +35,7 @@ export default function SignInScreen() {
   const [submitError, setSubmitError] = useState<string | undefined>(undefined)
 
   const authServiceResult = useAuthService()
-  const consentRepositoryResult = useConsentRepository()
   const signIn = useSignInMutation(authServiceResult)
-  const recordConsent = useRecordConsentMutation(consentRepositoryResult)
 
   async function handleSubmit() {
     setSubmitError(undefined)
@@ -55,32 +49,22 @@ export default function SignInScreen() {
         // rethrows by design; the UI reacts to mutation state, not this catch.
         return
       }
-      try {
-        await recordConsent.mutateAsync({
-          userId: brandId(session.user.id),
-          locale: i18n.language === 'ar' ? 'ar' : 'en',
-        })
-      } catch {
+      const completion = await completePersonalEntry(session)
+      if (!completion.ok) {
         // Signed in successfully, but couldn't record consent — must be
         // visible (previously failed silently here, leaving the screen
         // looking stuck with no explanation).
         setSubmitError(t('auth.signInConsentFailed'))
         return
       }
-      await setDataMode('personal')
-      await bootPersonalMode()
-      await setOnboardingComplete()
-      router.replace('/(tabs)/')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   async function handleContinueInDemoMode() {
-    await setDataMode('demo')
-    await setOnboardingComplete()
-    await bootDemoMode()
-    router.replace('/(tabs)/')
+    const result = await completeDemoEntry()
+    if (!result.ok) setSubmitError(t(result.error.userMessageKey))
   }
 
   const error = signIn.error ?? undefined

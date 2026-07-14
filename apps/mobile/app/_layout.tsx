@@ -3,13 +3,13 @@ import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { useTranslation } from 'react-i18next'
 import { AppProviders } from '../src/providers'
-import { OnboardingGuard } from '../src/features/demo/components/OnboardingGuard'
+import { StartupCoordinator } from '../src/features/startup/components/StartupCoordinator'
 import '../src/i18n' // Initialize i18n
 import { useNotificationResponse } from '../src/features/notifications/hooks/use-notification-response'
 import { useTheme } from '../src/core/design-system'
 import { isExpoGo } from '../src/core/config/runtime-environment'
 
-// Keep the native splash up past its default auto-hide point — OnboardingGuard
+// Keep the native splash up past its default auto-hide point — StartupCoordinator
 // decides (asynchronously, via AsyncStorage) whether to show onboarding or the
 // tabs, and hides the splash itself once that decision has landed. Without
 // this, the native splash can auto-hide before that check resolves, exposing
@@ -33,8 +33,8 @@ export default function RootLayout() {
   const theme = useTheme()
   return (
     <AppProviders>
-      <NotificationResponseHandler />
-      <OnboardingGuard>
+      <StartupCoordinator>
+        <NotificationResponseHandler />
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: theme.brand },
@@ -53,7 +53,7 @@ export default function RootLayout() {
           <Stack.Screen name="+not-found" options={{ title: t('navigation.notFound') }} />
         </Stack>
         <StatusBar style="auto" />
-      </OnboardingGuard>
+      </StartupCoordinator>
     </AppProviders>
   )
 }

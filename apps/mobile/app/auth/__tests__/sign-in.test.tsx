@@ -21,6 +21,15 @@ jest.mock('@/providers', () => ({
   usePersonalBoot: () => mockBootPersonalMode,
 }))
 
+const mockCompleteDemoEntry = jest.fn()
+const mockCompletePersonalEntry = jest.fn()
+jest.mock('@/features/consent/hooks/use-entry-completion', () => ({
+  useEntryCompletion: () => ({
+    completeDemoEntry: mockCompleteDemoEntry,
+    completePersonalEntry: mockCompletePersonalEntry,
+  }),
+}))
+
 jest.mock('@/features/demo/stores/demo-mode-store', () => ({
   setOnboardingComplete: jest.fn().mockResolvedValue(undefined),
   setDataMode: jest.fn().mockResolvedValue(undefined),
@@ -48,7 +57,12 @@ jest.mock('@/features/auth/hooks/use-auth-service', () => {
 const fakeSession = { user: { id: 'user-1', email: 'a@b.com' }, expiresAt: undefined }
 
 function renderScreen() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { gcTime: Infinity },
+      mutations: { retry: false, gcTime: Infinity },
+    },
+  })
   return render(
     <QueryClientProvider client={client}>
       <SignInScreen />
@@ -60,7 +74,8 @@ describe('SignInScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockAuthService.signIn.mockResolvedValue(ok(fakeSession))
-    mockConsentRepo.acknowledge.mockResolvedValue(ok({}))
+    mockCompleteDemoEntry.mockResolvedValue(ok(true))
+    mockCompletePersonalEntry.mockResolvedValue(ok(true))
   })
 
   it('renders the form fields and submit button', () => {
@@ -82,32 +97,24 @@ describe('SignInScreen', () => {
     expect(submit.props.accessibilityState.disabled).toBe(false)
   })
 
-  it('on success, records consent, sets personal data mode, boots personal mode, and navigates to the tabs root', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { setDataMode } = require('@/features/demo/stores/demo-mode-store')
+  it('on success, delegates all consent and terminal routing to the entry policy', async () => {
     const { getByTestId } = renderScreen()
     fireEvent.changeText(getByTestId('sign-in-email'), 'a@b.com')
     fireEvent.changeText(getByTestId('sign-in-password'), 'secret')
     fireEvent.press(getByTestId('sign-in-submit'))
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)/'))
-    expect(mockConsentRepo.acknowledge).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: 'user-1', docType: 'privacy-policy', version: 'v1' }),
-    )
-    expect(setDataMode).toHaveBeenCalledWith('personal')
-    expect(mockBootPersonalMode).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(mockCompletePersonalEntry).toHaveBeenCalledWith(fakeSession))
   })
 
   it('on a consent-recording failure, does not navigate', async () => {
-    mockConsentRepo.acknowledge.mockResolvedValue(err(makeError('unexpected', {})))
+    mockCompletePersonalEntry.mockResolvedValue(err(makeError('unexpected', {})))
     const { getByTestId } = renderScreen()
     fireEvent.changeText(getByTestId('sign-in-email'), 'a@b.com')
     fireEvent.changeText(getByTestId('sign-in-password'), 'secret')
     fireEvent.press(getByTestId('sign-in-submit'))
 
-    await waitFor(() => expect(mockConsentRepo.acknowledge).toHaveBeenCalled())
-    expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
-    expect(mockBootPersonalMode).not.toHaveBeenCalled()
+    await waitFor(() => expect(mockCompletePersonalEntry).toHaveBeenCalled())
+    expect(getByTestId('sign-in-submit-error')).toBeTruthy()
   })
 
   it('shows an inline error (form still visible) for a non-connectivity failure', async () => {
@@ -133,18 +140,11 @@ describe('SignInScreen', () => {
     expect(queryByTestId('sign-in-submit')).toBeNull()
   })
 
-  it('"continue in demo mode" sets demo data mode, boots demo mode, and navigates without requiring credentials', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { setDataMode, setOnboardingComplete } = require('@/features/demo/stores/demo-mode-store')
+  it('"continue in demo mode" delegates to the same consent-gated entry policy', async () => {
     const { getByTestId } = renderScreen()
     fireEvent.press(getByTestId('sign-in-continue-demo'))
 
-    await waitFor(() => expect(mockBootDemoMode).toHaveBeenCalledTimes(1))
-    expect(setDataMode).toHaveBeenCalledWith('demo')
-    expect(setDataMode.mock.invocationCallOrder[0]).toBeLessThan(
-      setOnboardingComplete.mock.invocationCallOrder[0],
-    )
-    expect(mockReplace).toHaveBeenCalledWith('/(tabs)/')
+    await waitFor(() => expect(mockCompleteDemoEntry).toHaveBeenCalledTimes(1))
   })
 
   it('navigates to reset/sign-up via the link texts', () => {

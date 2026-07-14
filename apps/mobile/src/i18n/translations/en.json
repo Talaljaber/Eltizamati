@@ -20,6 +20,7 @@
     "offlineBody": "Personal mode needs a connection. Check your network and try again.",
     "authRequiredTitle": "Sign in required",
     "authRequiredBody": "Sign in to continue, or explore with demo data instead.",
+    "staleDataTitle": "Showing saved data — refresh failed",
     "validation": "Some information isn't valid. Please check and try again.",
     "notFound": "We couldn't find that.",
     "dataConflict": "This was changed elsewhere. Please refresh and try again.",
@@ -313,7 +314,19 @@
     "callbackPending": "Finishing sign-in…",
     "callbackErrorTitle": "That link didn't work",
     "callbackErrorBody": "The sign-in link may have expired or already been used. Try signing in again.",
-    "callbackBackToSignIn": "Back to sign in"
+    "callbackBackToSignIn": "Back to sign in",
+    "updatePasswordTitle": "Choose a new password",
+    "updatePasswordBody": "Use at least 8 characters. Your password is sent only to the authentication service.",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm new password",
+    "updatePasswordButton": "Update password",
+    "updatePasswordTooShort": "Use at least 8 characters.",
+    "updatePasswordMismatch": "The passwords do not match.",
+    "updatePasswordFailed": "We couldn't update your password. The link may have expired or already been used.",
+    "updatePasswordInvalidTitle": "Reset session unavailable",
+    "updatePasswordInvalidBody": "This reset link is missing, expired, or has already been used. Request a new link.",
+    "updatePasswordSuccessTitle": "Password updated",
+    "updatePasswordSuccessBody": "Your new password is ready. Continue after the required disclosure check."
   },
   "demo": {
     "banner": {

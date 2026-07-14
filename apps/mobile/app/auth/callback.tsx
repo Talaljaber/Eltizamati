@@ -13,38 +13,49 @@ import * as Linking from 'expo-linking'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text, EmptyState, space, useTheme } from '@/core/design-system'
 import { useAuthService } from '@/features/auth/hooks/use-auth-service'
-import { setOnboardingComplete, setDataMode } from '@/features/demo/stores/demo-mode-store'
-import { usePersonalBoot } from '@/providers'
+import { useEntryCompletion } from '@/features/consent/hooks/use-entry-completion'
 
 export default function AuthCallbackScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
-  const bootPersonalMode = usePersonalBoot()
+  const { completePersonalEntry } = useEntryCompletion()
   const authServiceResult = useAuthService()
   const url = Linking.useURL()
   const [failed, setFailed] = useState(false)
   const handled = useRef(false)
 
   useEffect(() => {
-    if (url === null || handled.current || !authServiceResult.ok) return
+    if (handled.current) return
     handled.current = true
+    let active = true
 
-    async function complete(currentUrl: string) {
-      if (!authServiceResult.ok) return
+    async function complete() {
+      const currentUrl = url ?? (await Linking.getInitialURL())
+      if (!active) return
+      if (currentUrl === null || !authServiceResult.ok) {
+        setFailed(true)
+        return
+      }
       const result = await authServiceResult.value.exchangeCallbackUrl(currentUrl)
+      if (!active) return
       if (!result.ok) {
         setFailed(true)
         return
       }
-      await setDataMode('personal')
-      await bootPersonalMode()
-      await setOnboardingComplete()
-      router.replace('/(tabs)/')
+      if (result.value.kind === 'passwordRecovery') {
+        router.replace('/auth/update-password')
+        return
+      }
+      const completion = await completePersonalEntry(result.value.session)
+      if (!completion.ok) setFailed(true)
     }
 
-    void complete(url)
-  }, [url, authServiceResult, bootPersonalMode, router])
+    void complete()
+    return () => {
+      active = false
+    }
+  }, [url, authServiceResult, completePersonalEntry, router])
 
   if (failed) {
     return (

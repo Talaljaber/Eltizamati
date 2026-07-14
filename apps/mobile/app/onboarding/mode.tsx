@@ -17,25 +17,24 @@ import { useTranslation } from 'react-i18next'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text, Button, space, useTheme, radius, minTouchTarget } from '@/core/design-system'
-import { setDataMode, setOnboardingComplete } from '@/features/demo/stores/demo-mode-store'
-import { useDemoBoot } from '@/providers'
+import { useEntryCompletion } from '@/features/consent/hooks/use-entry-completion'
 
 export default function ModeScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
   const [loading, setLoading] = useState(false)
-  const bootDemoMode = useDemoBoot()
+  const [completionFailed, setCompletionFailed] = useState(false)
+  const { completeDemoEntry } = useEntryCompletion()
 
   async function handleSelectDemo() {
     setLoading(true)
+    setCompletionFailed(false)
     try {
-      await setDataMode('demo')
-      await setOnboardingComplete()
+      const result = await completeDemoEntry()
+      if (!result.ok) setCompletionFailed(true)
       // AppProviders only checks dataMode once, at initial mount, so it never
       // sees a mode chosen during this session — boot demo repos explicitly
       // before navigating, or the home tab crashes on first render.
-      await bootDemoMode()
-      router.replace('/(tabs)/')
     } finally {
       setLoading(false)
     }
@@ -59,7 +58,7 @@ export default function ModeScreen() {
             onPress={() => {
               void handleSelectDemo()
             }}
-            enabled
+            enabled={!loading}
             selected
             testID="mode-demo"
             theme={theme}
@@ -101,6 +100,11 @@ export default function ModeScreen() {
             label={t('onboarding.startDemo')}
           />
         )}
+        {completionFailed ? (
+          <Text variant="bodySmall" color="critical" align="center" testID="mode-completion-error">
+            {t('error.unexpected')}
+          </Text>
+        ) : null}
       </View>
     </SafeAreaView>
   )

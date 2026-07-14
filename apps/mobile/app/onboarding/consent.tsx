@@ -8,14 +8,41 @@
 import { useState } from 'react'
 import { View, StyleSheet, Pressable } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text, Button, space, useTheme, radius, minTouchTarget } from '@/core/design-system'
+import { acknowledgeLocalConsent } from '@/features/consent/consent-policy'
+import { useEntryCompletion } from '@/features/consent/hooks/use-entry-completion'
 
 export default function ConsentScreen() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const theme = useTheme()
   const [acknowledged, setAcknowledged] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveFailed, setSaveFailed] = useState(false)
+  const { next } = useLocalSearchParams<{ next?: string }>()
+  const { completeDemoEntry, resumePersonalEntry } = useEntryCompletion()
+
+  async function handleContinue() {
+    setSaving(true)
+    setSaveFailed(false)
+    const result = await acknowledgeLocalConsent(i18n.language === 'ar' ? 'ar' : 'en')
+    if (!result.ok) {
+      setSaveFailed(true)
+      setSaving(false)
+      return
+    }
+    if (next === 'demo') {
+      const completion = await completeDemoEntry()
+      if (!completion.ok) setSaveFailed(true)
+    } else if (next === 'personal') {
+      const completion = await resumePersonalEntry()
+      if (!completion.ok) setSaveFailed(true)
+    } else {
+      router.replace('/onboarding/mode')
+    }
+    setSaving(false)
+  }
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
@@ -70,11 +97,19 @@ export default function ConsentScreen() {
 
         <Button
           variant="primary"
-          onPress={() => router.push('/onboarding/mode')}
+          onPress={() => {
+            void handleContinue()
+          }}
           disabled={!acknowledged}
+          loading={saving}
           testID="consent-continue"
           label={t('common.continue')}
         />
+        {saveFailed ? (
+          <Text variant="bodySmall" color="critical" testID="consent-save-error">
+            {t('errors.storage')}
+          </Text>
+        ) : null}
       </View>
     </SafeAreaView>
   )

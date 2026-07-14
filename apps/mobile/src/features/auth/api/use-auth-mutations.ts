@@ -63,3 +63,14 @@ export function useResetPasswordMutation(authServiceResult: Result<AuthService, 
     },
   })
 }
+
+export function useUpdatePasswordMutation(authServiceResult: Result<AuthService, AppError>) {
+  return useMutation<undefined, AppError, string>({
+    mutationFn: async (password: string): Promise<undefined> => {
+      if (!authServiceResult.ok) throw authServiceResult.error
+      const result = await authServiceResult.value.updatePassword(password)
+      if (isErr(result)) throw result.error
+      return undefined
+    },
+  })
+}

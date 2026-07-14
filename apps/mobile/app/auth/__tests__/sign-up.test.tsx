@@ -24,6 +24,11 @@ jest.mock('@/providers', () => ({
   usePersonalBoot: () => mockBootPersonalMode,
 }))
 
+const mockCompletePersonalEntry = jest.fn()
+jest.mock('@/features/consent/hooks/use-entry-completion', () => ({
+  useEntryCompletion: () => ({ completePersonalEntry: mockCompletePersonalEntry }),
+}))
+
 const mockAuthService = {
   signUp: jest.fn(),
   signIn: jest.fn(),
@@ -46,7 +51,12 @@ jest.mock('@/features/auth/hooks/use-auth-service', () => {
 const fakeSession = { user: { id: 'user-1', email: 'a@b.com' }, expiresAt: undefined }
 
 function renderScreen() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { gcTime: Infinity },
+      mutations: { retry: false, gcTime: Infinity },
+    },
+  })
   return render(
     <QueryClientProvider client={client}>
       <SignUpScreen />
@@ -57,7 +67,7 @@ function renderScreen() {
 describe('SignUpScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockConsentRepo.acknowledge.mockResolvedValue(ok({}))
+    mockCompletePersonalEntry.mockResolvedValue(ok(true))
   })
 
   it('renders the form fields and submit button', () => {
@@ -78,34 +88,26 @@ describe('SignUpScreen', () => {
     expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
   })
 
-  it('on a returned session, records consent, sets personal data mode, boots personal mode, and navigates to the tabs root', async () => {
+  it('on a returned session, delegates consent and routing to the entry policy', async () => {
     mockAuthService.signUp.mockResolvedValue(ok(fakeSession))
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { setDataMode } = require('@/features/demo/stores/demo-mode-store')
     const { getByTestId } = renderScreen()
     fireEvent.changeText(getByTestId('sign-up-email'), 'new@example.com')
     fireEvent.changeText(getByTestId('sign-up-password'), 'secret123')
     fireEvent.press(getByTestId('sign-up-submit'))
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)/'))
-    expect(mockConsentRepo.acknowledge).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: 'user-1' }),
-    )
-    expect(setDataMode).toHaveBeenCalledWith('personal')
-    expect(mockBootPersonalMode).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(mockCompletePersonalEntry).toHaveBeenCalledWith(fakeSession))
   })
 
   it('on a consent-recording failure, does not navigate', async () => {
     mockAuthService.signUp.mockResolvedValue(ok(fakeSession))
-    mockConsentRepo.acknowledge.mockResolvedValue(err(makeError('unexpected', {})))
+    mockCompletePersonalEntry.mockResolvedValue(err(makeError('unexpected', {})))
     const { getByTestId } = renderScreen()
     fireEvent.changeText(getByTestId('sign-up-email'), 'new@example.com')
     fireEvent.changeText(getByTestId('sign-up-password'), 'secret123')
     fireEvent.press(getByTestId('sign-up-submit'))
 
-    await waitFor(() => expect(mockConsentRepo.acknowledge).toHaveBeenCalled())
-    expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
-    expect(mockBootPersonalMode).not.toHaveBeenCalled()
+    await waitFor(() => expect(mockCompletePersonalEntry).toHaveBeenCalled())
+    expect(getByTestId('sign-up-submit-error')).toBeTruthy()
   })
 
   it('shows an inline error (form still visible) for a non-connectivity failure', async () => {

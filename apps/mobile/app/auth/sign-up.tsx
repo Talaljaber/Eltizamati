@@ -9,21 +9,18 @@ import { View, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { brandId } from '@eltizamati/domain'
 import { Text, Button, EmptyState, ErrorState, space, useTheme } from '@/core/design-system'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
-import { useAuthService, useConsentRepository } from '@/features/auth/hooks/use-auth-service'
+import { useAuthService } from '@/features/auth/hooks/use-auth-service'
 import { useSignUpMutation } from '@/features/auth/api/use-auth-mutations'
-import { useRecordConsentMutation } from '@/features/auth/api/use-record-consent'
-import { setOnboardingComplete, setDataMode } from '@/features/demo/stores/demo-mode-store'
-import { usePersonalBoot } from '@/providers'
+import { useEntryCompletion } from '@/features/consent/hooks/use-entry-completion'
 
 export default function SignUpScreen() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
-  const bootPersonalMode = usePersonalBoot()
+  const { completePersonalEntry } = useEntryCompletion()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -34,9 +31,7 @@ export default function SignUpScreen() {
   const [submitError, setSubmitError] = useState<string | undefined>(undefined)
 
   const authServiceResult = useAuthService()
-  const consentRepositoryResult = useConsentRepository()
   const signUp = useSignUpMutation(authServiceResult)
-  const recordConsent = useRecordConsentMutation(consentRepositoryResult)
 
   async function handleSubmit() {
     setSubmitError(undefined)
@@ -54,21 +49,13 @@ export default function SignUpScreen() {
         setVerificationPending(true)
         return
       }
-      try {
-        await recordConsent.mutateAsync({
-          userId: brandId(session.user.id),
-          locale: i18n.language === 'ar' ? 'ar' : 'en',
-        })
-      } catch {
+      const completion = await completePersonalEntry(session)
+      if (!completion.ok) {
         // Signed up successfully, but couldn't record consent — must be
         // visible, not a silent dead end.
         setSubmitError(t('auth.signInConsentFailed'))
         return
       }
-      await setDataMode('personal')
-      await bootPersonalMode()
-      await setOnboardingComplete()
-      router.replace('/(tabs)/')
     } finally {
       setIsSubmitting(false)
     }
