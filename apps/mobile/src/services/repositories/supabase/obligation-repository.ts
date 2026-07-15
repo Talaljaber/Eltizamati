@@ -117,29 +117,113 @@ export class SupabaseObligationRepository implements ObligationRepository {
     return ok(assembled)
   }
 
+  /**
+   * Base row + subtype detail row commit or roll back together (F-07): each
+   * schema-backed kind has its own `save_*` RPC, and a single PL/pgSQL function
+   * call is one Postgres transaction — a detail-write failure inside it rolls
+   * back the base-row write too, instead of leaving a `dataIncomplete` ghost
+   * obligation the previous two-network-call `.upsert()` sequence could produce.
+   */
   async save(obligation: Obligation): Promise<Result<Obligation, AppError>> {
-    const { error: baseError } = await this.client.from('obligations').upsert(baseToRow(obligation))
-    if (baseError) return err(toSupabaseAppError(baseError))
-
     if (obligation.kind === 'conventionalLoan') {
-      const { error } = await this.client
-        .from('loan_details')
-        .upsert(loanDetailsToRow(obligation.id, obligation.userId, obligation.loanDetails))
+      const details = loanDetailsToRow(obligation.id, obligation.userId, obligation.loanDetails)
+      const { error } = await this.client.rpc('save_conventional_loan', {
+        p_id: obligation.id,
+        p_nickname: obligation.nickname,
+        p_institution_name: obligation.institution.name,
+        p_institution_id: obligation.institution.id ?? null,
+        p_opened_date: obligation.openedDate,
+        p_closed_date: obligation.closedDate ?? null,
+        p_notes: obligation.notes ?? null,
+        p_provenance_json: obligation.provenance as unknown as Database['public']['Tables']['obligations']['Row']['provenance_json'],
+        p_created_at: obligation.createdAt,
+        p_updated_at: obligation.updatedAt,
+        p_original_principal: details.original_principal,
+        p_original_principal_prov: details.original_principal_prov,
+        p_outstanding_balance: details.outstanding_balance ?? null,
+        p_outstanding_balance_prov: details.outstanding_balance_prov ?? null,
+        p_installment: details.installment,
+        p_installment_prov: details.installment_prov,
+        p_rate_type: details.rate_type,
+        p_term_months: details.term_months,
+        p_term_months_prov: details.term_months_prov,
+        p_start_date: details.start_date,
+        p_maturity_date: details.maturity_date,
+        p_first_payment_date: details.first_payment_date ?? null,
+        p_purpose: details.purpose ?? null,
+        p_contractual_balloon: details.contractual_balloon ?? null,
+        p_contractual_balloon_prov: details.contractual_balloon_prov ?? null,
+      })
       if (error) return err(toSupabaseAppError(error))
     } else if (obligation.kind === 'murabaha') {
-      const { error } = await this.client
-        .from('murabaha_details')
-        .upsert(murabahaDetailsToRow(obligation.id, obligation.userId, obligation.murabahaDetails))
+      const details = murabahaDetailsToRow(
+        obligation.id,
+        obligation.userId,
+        obligation.murabahaDetails,
+      )
+      const { error } = await this.client.rpc('save_murabaha', {
+        p_id: obligation.id,
+        p_nickname: obligation.nickname,
+        p_institution_name: obligation.institution.name,
+        p_institution_id: obligation.institution.id ?? null,
+        p_opened_date: obligation.openedDate,
+        p_closed_date: obligation.closedDate ?? null,
+        p_notes: obligation.notes ?? null,
+        p_provenance_json: obligation.provenance as unknown as Database['public']['Tables']['obligations']['Row']['provenance_json'],
+        p_created_at: obligation.createdAt,
+        p_updated_at: obligation.updatedAt,
+        p_asset_cost: details.asset_cost,
+        p_asset_cost_prov: details.asset_cost_prov,
+        p_disclosed_profit: details.disclosed_profit,
+        p_disclosed_profit_prov: details.disclosed_profit_prov,
+        p_total_sale_price: details.total_sale_price,
+        p_total_sale_price_prov: details.total_sale_price_prov,
+        p_installment: details.installment,
+        p_installment_prov: details.installment_prov,
+        p_term_months: details.term_months,
+        p_term_months_prov: details.term_months_prov,
+        p_start_date: details.start_date,
+        p_profit_rate_disclosed: details.profit_rate_disclosed ?? null,
+      })
       if (error) return err(toSupabaseAppError(error))
     } else if (obligation.kind === 'creditCard') {
-      const { error } = await this.client
-        .from('card_details')
-        .upsert(cardDetailsToRow(obligation.id, obligation.userId, obligation.cardDetails))
+      const details = cardDetailsToRow(obligation.id, obligation.userId, obligation.cardDetails)
+      const { error } = await this.client.rpc('save_card', {
+        p_id: obligation.id,
+        p_nickname: obligation.nickname,
+        p_institution_name: obligation.institution.name,
+        p_institution_id: obligation.institution.id ?? null,
+        p_opened_date: obligation.openedDate,
+        p_closed_date: obligation.closedDate ?? null,
+        p_notes: obligation.notes ?? null,
+        p_provenance_json: obligation.provenance as unknown as Database['public']['Tables']['obligations']['Row']['provenance_json'],
+        p_created_at: obligation.createdAt,
+        p_updated_at: obligation.updatedAt,
+        p_credit_limit: details.credit_limit,
+        p_credit_limit_prov: details.credit_limit_prov,
+        p_current_balance: details.current_balance,
+        p_current_balance_prov: details.current_balance_prov,
+        p_statement_balance: details.statement_balance ?? null,
+        p_statement_balance_prov: details.statement_balance_prov ?? null,
+        p_statement_date: details.statement_date ?? null,
+        p_minimum_payment_rule_json: details.minimum_payment_rule_json ?? null,
+        p_purchase_apr: details.purchase_apr ?? null,
+        p_purchase_apr_prov: details.purchase_apr_prov ?? null,
+        p_cash_advance_apr: details.cash_advance_apr ?? null,
+        p_cash_advance_apr_prov: details.cash_advance_apr_prov ?? null,
+        p_due_date: details.due_date ?? null,
+        p_grace_days: details.grace_days ?? null,
+        p_fees_json: details.fees_json ?? null,
+      })
       if (error) return err(toSupabaseAppError(error))
-    } else if (!SCHEMA_BACKED_KINDS.has(obligation.kind)) {
+    } else if (SCHEMA_BACKED_KINDS.has(obligation.kind)) {
+      return err(makeError('unexpected', { safeMetadata: { unexpectedKind: 'true' } }))
+    } else {
       // genericFacility/ijara/diminishingMusharakah: no detail table exists yet
       // (P1-scoped, see obligation-mapper.ts) — base row alone is the full
-      // persisted representation, never a silent data-loss on save.
+      // persisted representation, a single statement is already atomic.
+      const { error: baseError } = await this.client.from('obligations').upsert(baseToRow(obligation))
+      if (baseError) return err(toSupabaseAppError(baseError))
     }
 
     return this.get(obligation.id)

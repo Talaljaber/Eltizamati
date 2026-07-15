@@ -540,7 +540,93 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      save_conventional_loan: {
+        Args: {
+          p_id: string
+          p_nickname: string
+          p_institution_name: string
+          p_institution_id: string | null
+          p_opened_date: string
+          p_closed_date: string | null
+          p_notes: string | null
+          p_provenance_json: Json
+          p_created_at: string | null
+          p_updated_at: string | null
+          p_original_principal: number
+          p_original_principal_prov: Json
+          p_outstanding_balance: number | null
+          p_outstanding_balance_prov: Json | null
+          p_installment: number
+          p_installment_prov: Json
+          p_rate_type: string
+          p_term_months: number
+          p_term_months_prov: Json
+          p_start_date: string
+          p_maturity_date: string
+          p_first_payment_date: string | null
+          p_purpose: string | null
+          p_contractual_balloon: number | null
+          p_contractual_balloon_prov: Json | null
+        }
+        Returns: Database['public']['Tables']['obligations']['Row']
+      }
+      save_murabaha: {
+        Args: {
+          p_id: string
+          p_nickname: string
+          p_institution_name: string
+          p_institution_id: string | null
+          p_opened_date: string
+          p_closed_date: string | null
+          p_notes: string | null
+          p_provenance_json: Json
+          p_created_at: string | null
+          p_updated_at: string | null
+          p_asset_cost: number
+          p_asset_cost_prov: Json
+          p_disclosed_profit: number
+          p_disclosed_profit_prov: Json
+          p_total_sale_price: number
+          p_total_sale_price_prov: Json
+          p_installment: number
+          p_installment_prov: Json
+          p_term_months: number
+          p_term_months_prov: Json
+          p_start_date: string
+          p_profit_rate_disclosed: number | null
+        }
+        Returns: Database['public']['Tables']['obligations']['Row']
+      }
+      save_card: {
+        Args: {
+          p_id: string
+          p_nickname: string
+          p_institution_name: string
+          p_institution_id: string | null
+          p_opened_date: string
+          p_closed_date: string | null
+          p_notes: string | null
+          p_provenance_json: Json
+          p_created_at: string | null
+          p_updated_at: string | null
+          p_credit_limit: number
+          p_credit_limit_prov: Json
+          p_current_balance: number
+          p_current_balance_prov: Json
+          p_statement_balance: number | null
+          p_statement_balance_prov: Json | null
+          p_statement_date: string | null
+          p_minimum_payment_rule_json: Json | null
+          p_purchase_apr: number | null
+          p_purchase_apr_prov: Json | null
+          p_cash_advance_apr: number | null
+          p_cash_advance_apr_prov: Json | null
+          p_due_date: string | null
+          p_grace_days: number | null
+          p_fees_json: Json | null
+        }
+        Returns: Database['public']['Tables']['obligations']['Row']
+      }
     }
     Enums: {
       [_ in never]: never
