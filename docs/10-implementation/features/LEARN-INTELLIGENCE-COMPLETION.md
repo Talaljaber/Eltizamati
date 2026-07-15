@@ -27,6 +27,9 @@ Sources embedded in `catalogue-snapshot.ts`:
 * Central Bank of Jordan, Banking Sector Guide — institution inventory source.
 * Jordan Islamic Bank, Housing finance campaign — housing Murabaha campaign.
 * Jordan Islamic Bank, Murabaha — structure/calculator description.
+* Housing Bank, Automated Personal Loan — salary-transfer and maximum amount.
+* Housing Bank, Interest Rates and Fees Retail and Corporate Loans 2026 —
+  benchmark-linked pricing and quarterly adjustment disclosure.
 
 The snapshot was retrieved and labelled `2026-07-15`. Missing dates, fees,
 salary-transfer terms, effective rates, and eligibility remain unknown. No
@@ -66,7 +69,7 @@ allowed origins, monitoring, and output-validation tests.
 ## Verification
 
 * `pnpm --filter @eltizamati/mobile typecheck` — passed.
-* Focused Jest comparison test — passed (1 suite, 1 test).
+* Focused Jest comparison/privacy tests — passed (2 suites, 2 tests).
 * Focused ESLint for Learn files — passed.
 * `git diff --check` remains blocked by a pre-existing uncommitted blank line
   in `docs/final-review.md`; that file was not changed by this branch.
