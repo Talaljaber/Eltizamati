@@ -65,6 +65,12 @@ describe('password sign in', () => {
     expect(mockPush).toHaveBeenCalledWith('/auth/sign-up')
   })
 
+  it('renders Face ID and Sanad as preview-only sign-in choices', () => {
+    const view = renderScreen()
+    expect(view.getByTestId('sign-in-face-id')).toBeTruthy()
+    expect(view.getByTestId('sign-in-sanad')).toBeTruthy()
+  })
+
   it('normalizes email, signs in with password, and completes personal entry without OTP', async () => {
     const view = renderScreen()
     fireEvent.changeText(view.getByTestId('sign-in-email'), ' User@Example.COM ')

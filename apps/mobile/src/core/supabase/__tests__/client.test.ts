@@ -90,8 +90,8 @@ describe('getSupabaseClient', () => {
       'test-anon-key',
       expect.objectContaining({
         auth: expect.objectContaining({
-          persistSession: true,
-          autoRefreshToken: true,
+          persistSession: false,
+          autoRefreshToken: false,
           detectSessionInUrl: false,
         }),
       }),

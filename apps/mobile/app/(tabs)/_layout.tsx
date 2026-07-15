@@ -29,14 +29,14 @@ export default function TabLayout() {
               <Ionicons name="home-outline" size={size} color={color} />
             ),
             headerRight: () => (
-              <Link href="/settings/" asChild>
+              <Link href="/profile" asChild>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={t('navigation.settings')}
+                  accessibilityLabel={t('profile.title')}
                   hitSlop={8}
                   style={{ marginHorizontal: 16 }}
                 >
-                  <Ionicons name="settings-outline" size={24} color={theme.textOnBrand} />
+                  <Ionicons name="person-circle-outline" size={27} color={theme.textOnBrand} />
                 </Pressable>
               </Link>
             ),

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Text, Button, TextField, space } from '@/core/design-system'
+import { DatePickerField } from '@/features/obligation-form/components/DatePickerField'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
@@ -98,12 +99,7 @@ function LogPaymentInner() {
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
       <Stack.Screen options={{ title: t('obligationForm.logPaymentTitle') }} />
-      <TextField
-        label={t('obligationForm.paymentDate')}
-        value={date}
-        onChangeText={setDate}
-        placeholder="YYYY-MM-DD"
-      />
+      <DatePickerField label={t('obligationForm.paymentDate')} value={date} onChange={setDate} />
       <TextField
         label={t('obligationForm.paymentAmount')}
         value={amount}

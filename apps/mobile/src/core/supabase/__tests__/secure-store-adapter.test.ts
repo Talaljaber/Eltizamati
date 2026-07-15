@@ -112,4 +112,72 @@ describe('secureStoreAdapter', () => {
       }
     })
   })
+
+  describe('F-08/F-10: orphaned chunk cleanup on overwrite', () => {
+    // Regression: setItem previously wrote the new value/manifest without
+    // ever inspecting what was there before, so a chunked value overwritten
+    // by a smaller (or unchunked) one left stale chunk items behind forever.
+    function backedStore() {
+      const store = new Map<string, string>()
+      jest.mocked(SecureStore.setItemAsync).mockImplementation(async (key, value) => {
+        store.set(key, value)
+      })
+      jest
+        .mocked(SecureStore.getItemAsync)
+        .mockImplementation(async (key) => store.get(key) ?? null)
+      jest.mocked(SecureStore.deleteItemAsync).mockImplementation(async (key) => {
+        store.delete(key)
+      })
+      return store
+    }
+
+    it('deletes leftover chunks when a chunked value is overwritten by a small (unchunked) one', async () => {
+      const store = backedStore()
+      const largeValue = 'x'.repeat(4500) // chunks into 3 pieces at CHUNK_SIZE=1800
+      await secureStoreAdapter.setItem('sb-session', largeValue)
+      const priorChunkCount = Math.ceil(largeValue.length / 1800)
+      expect(priorChunkCount).toBe(3)
+      jest.mocked(SecureStore.deleteItemAsync).mockClear()
+
+      await secureStoreAdapter.setItem('sb-session', 'short-token')
+
+      for (let i = 0; i < priorChunkCount; i++) {
+        expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(`sb-session_${i}`)
+      }
+      // The key itself now holds the plain value, not a manifest — nothing
+      // still references the old chunks.
+      expect(store.get('sb-session')).toBe('short-token')
+      expect(store.has('sb-session_0')).toBe(false)
+      expect(store.has('sb-session_1')).toBe(false)
+      expect(store.has('sb-session_2')).toBe(false)
+    })
+
+    it('deletes only the now-unreferenced tail chunks when a chunked value shrinks to fewer chunks', async () => {
+      const store = backedStore()
+      const largeValue = 'x'.repeat(4500) // 3 chunks
+      await secureStoreAdapter.setItem('sb-session', largeValue)
+      jest.mocked(SecureStore.deleteItemAsync).mockClear()
+
+      const smallerChunkedValue = 'y'.repeat(2000) // 2 chunks
+      await secureStoreAdapter.setItem('sb-session', smallerChunkedValue)
+
+      // Chunk 2 is orphaned (only indices 0,1 are referenced by the new manifest).
+      expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('sb-session_2')
+      expect(SecureStore.deleteItemAsync).toHaveBeenCalledTimes(1)
+      expect(store.has('sb-session_2')).toBe(false)
+
+      const result = await secureStoreAdapter.getItem('sb-session')
+      expect(result).toBe(smallerChunkedValue)
+    })
+
+    it('does not attempt cleanup when overwriting a value that was never chunked', async () => {
+      backedStore()
+      await secureStoreAdapter.setItem('sb-session', 'first-short-value')
+      jest.mocked(SecureStore.deleteItemAsync).mockClear()
+
+      await secureStoreAdapter.setItem('sb-session', 'second-short-value')
+
+      expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled()
+    })
+  })
 })

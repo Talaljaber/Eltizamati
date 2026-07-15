@@ -54,8 +54,10 @@ export function getSupabaseClient(): Result<SupabaseClient<Database>, AppError> 
   cachedClient = createClient<Database>(envResult.value.url, envResult.value.anonKey, {
     auth: {
       storage: secureStoreAdapter,
-      autoRefreshToken: true,
-      persistSession: true,
+      // A personal session intentionally lives only for this app process.
+      // Closing and reopening the app must return the user to sign-in.
+      autoRefreshToken: false,
+      persistSession: false,
       detectSessionInUrl: false,
       lock: processLock,
     },

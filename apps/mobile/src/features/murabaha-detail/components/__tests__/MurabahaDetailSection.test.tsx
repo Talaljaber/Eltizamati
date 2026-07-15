@@ -7,6 +7,8 @@
 import React from 'react'
 import { render } from '@testing-library/react-native'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
+import { Money } from '@eltizamati/domain'
+import type { MurabahaFinancing, Provenance } from '@eltizamati/domain'
 import { buildDemoMurabaha, DEMO_DATE } from '@eltizamati/demo-data'
 import { RepositoriesProvider } from '@/features/repositories/hooks/use-repositories'
 import { MurabahaDetailSection } from '../MurabahaDetailSection'
@@ -15,9 +17,16 @@ jest.mock('@/features/auth/hooks/use-active-user', () => ({ useActiveUser: () =>
 
 const mountedSections: { readonly client: QueryClient; readonly unmount: () => void }[] = []
 
-function renderSection() {
+const officialProvenance: Provenance = {
+  source: 'official',
+  providerId: 'openbanking:roya',
+  observedAt: '2026-07-01T00:00:00Z',
+  recordedAt: '2026-07-01T00:00:00Z',
+}
+
+function renderSection(obligationOverride?: MurabahaFinancing) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  const obligation = buildDemoMurabaha(DEMO_DATE)
+  const obligation = obligationOverride ?? buildDemoMurabaha(DEMO_DATE)
   const repos = {
     calculationRunRepository: {
       latestFor: jest.fn().mockResolvedValue({ ok: true, value: undefined }),
@@ -64,5 +73,37 @@ describe('MurabahaDetailSection — BR-TERM-001', () => {
     const { toJSON } = renderSection()
     const text = flattenText(toJSON())
     expect(text).not.toContain('فائدة')
+  })
+})
+
+describe('MurabahaDetailSection — F-08 provenance-aware money rendering', () => {
+  afterEach(() => {
+    for (const { client, unmount } of mountedSections.splice(0)) {
+      unmount()
+      client.clear()
+    }
+  })
+
+  it('renders totalSalePrice/assetCost/disclosedProfit/installment as locale-formatted currency, not raw storage strings', () => {
+    const base = buildDemoMurabaha(DEMO_DATE)
+    const obligation: MurabahaFinancing = {
+      ...base,
+      murabahaDetails: {
+        ...base.murabahaDetails,
+        totalSalePrice: { value: Money.of('18600', 'JOD'), provenance: officialProvenance },
+        assetCost: { value: Money.of('15000', 'JOD'), provenance: officialProvenance },
+        disclosedProfit: { value: Money.of('3600', 'JOD'), provenance: officialProvenance },
+        installment: { value: Money.of('221.429', 'JOD'), provenance: officialProvenance },
+      },
+    }
+    const { getByText, queryByText } = renderSection(obligation)
+
+    expect(getByText(/18,600/)).toBeTruthy()
+    expect(getByText(/15,000/)).toBeTruthy()
+    expect(getByText(/3,600/)).toBeTruthy()
+    // The pre-fix behavior rendered the bare storage string with no grouping/currency.
+    expect(queryByText('18600')).toBeNull()
+    expect(queryByText('15000')).toBeNull()
+    expect(queryByText('3600')).toBeNull()
   })
 })

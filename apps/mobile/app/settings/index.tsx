@@ -315,7 +315,7 @@ export default function SettingsScreen() {
           </Text>
           <Button
             label={t('settings.demoSignInAction')}
-            onPress={() => router.push('/auth/sign-in')}
+            onPress={() => router.replace('/auth/sign-in')}
             variant="secondary"
             testID="settings-demo-sign-in"
           />

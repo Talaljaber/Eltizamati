@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Image, StyleSheet, View } from 'react-native'
+import { Alert, Image, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -46,13 +46,17 @@ export default function SignInScreen() {
     if (!result.ok) setEntryError(t(result.error.userMessageKey))
   }
 
+  function showPreviewOnly(method: 'faceId' | 'sanad'): void {
+    Alert.alert(t(`auth.${method}`), t('auth.previewOnlyMessage'))
+  }
+
   const error = signIn.error ?? undefined
   const offline = error?.code === 'connectivity'
   const errorKey =
     error?.code === 'rateLimited'
       ? 'auth.tooManyAttempts'
       : error?.safeMetadata?.reason === 'email_not_confirmed'
-      ? 'auth.emailNotVerified'
+        ? 'auth.emailNotVerified'
         : error?.safeMetadata?.reason === 'invalid_credentials'
           ? 'auth.invalidCredentials'
           : (error?.userMessageKey ?? 'error.auth')
@@ -124,6 +128,26 @@ export default function SignInScreen() {
                 onPress={() => void submit()}
                 testID="sign-in-submit"
               />
+              <View style={styles.alternativeMethods}>
+                <Text variant="bodySmall" color="secondary" align="center">
+                  {t('auth.otherSignInMethods')}
+                </Text>
+                <Button
+                  variant="secondary"
+                  label={t('auth.faceId')}
+                  onPress={() => showPreviewOnly('faceId')}
+                  testID="sign-in-face-id"
+                />
+                <Button
+                  variant="secondary"
+                  label={t('auth.sanad')}
+                  onPress={() => showPreviewOnly('sanad')}
+                  testID="sign-in-sanad"
+                />
+                <Text variant="bodySmall" color="secondary" align="center">
+                  {t('auth.previewOnlyLabel')}
+                </Text>
+              </View>
               <Button
                 variant="ghost"
                 label={t('auth.createAccount')}
@@ -152,5 +176,6 @@ const styles = StyleSheet.create({
   top: { gap: space[4] },
   logo: { width: 152, height: 64, alignSelf: 'center' },
   form: { gap: space[3] },
+  alternativeMethods: { gap: space[2], paddingTop: space[1] },
   bottom: { gap: space[3] },
 })
