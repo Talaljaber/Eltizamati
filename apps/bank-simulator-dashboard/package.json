@@ -1,0 +1,36 @@
+{
+  "name": "bank-simulator-dashboard",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Demo-only web dashboard simulating a bank/regulator operations portal over Eltizamati's database. Hackathon demonstration — no authentication, all privileged access server-side.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@eltizamati/demo-data": "workspace:*",
+    "@eltizamati/domain": "workspace:*",
+    "@eltizamati/finance-engine": "workspace:*",
+    "@supabase/supabase-js": "^2.45.4",
+    "next": "^15.1.0",
+    "nodemailer": "^6.9.16",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "~19.1.17",
+    "@types/react-dom": "~19.1.6",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vitest": "^3.2.4"
+  }
+}

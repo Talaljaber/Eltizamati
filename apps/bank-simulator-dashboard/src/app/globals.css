@@ -1,0 +1,196 @@
+/* Design tokens (docs/dashboard.md §14): deep-navy navigation, teal primary
+   actions, gold explanation/review accent, light neutral content surfaces,
+   tabular financial figures. Logical properties throughout so Phase 5's
+   Arabic/RTL surfaces don't require a parallel stylesheet. */
+:root {
+  --color-navy-900: #0b1f3a;
+  --color-navy-800: #122a4d;
+  --color-navy-700: #1b3a66;
+  --color-teal-600: #0f7a72;
+  --color-teal-500: #12938a;
+  --color-teal-100: #e2f4f2;
+  --color-gold-500: #b3862c;
+  --color-gold-100: #f7ecd6;
+  --color-surface: #f7f8fa;
+  --color-surface-raised: #ffffff;
+  --color-border: #dfe3e8;
+  --color-text-primary: #14202e;
+  --color-text-secondary: #4a5a6a;
+  --color-danger: #b3261e;
+  --color-warning: #8a5a00;
+  --color-success: #1b7a4b;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono-figures: 'Menlo', 'Consolas', ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: #0d1520;
+    --color-surface-raised: #131f30;
+    --color-border: #253347;
+    --color-text-primary: #e7ecf2;
+    --color-text-secondary: #a9b7c6;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Financial figures always align on a tabular numeral grid (docs/dashboard.md §14). */
+.figure {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono-figures);
+}
+
+a {
+  color: var(--color-teal-600);
+}
+
+.demo-banner {
+  background: var(--color-gold-100);
+  color: var(--color-warning);
+  border-block-end: 1px solid var(--color-gold-500);
+  padding: var(--space-2) var(--space-4);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.app-shell {
+  display: flex;
+  min-block-size: 100dvh;
+}
+
+.app-nav {
+  inline-size: 240px;
+  flex-shrink: 0;
+  background: var(--color-navy-900);
+  color: #fff;
+  padding: var(--space-5) var(--space-3);
+}
+
+.app-nav-title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-block-end: var(--space-1);
+}
+
+.app-nav-subtitle {
+  font-size: 12px;
+  color: #9fb3ca;
+  margin-block-end: var(--space-6);
+}
+
+.app-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.app-nav-link {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: #cfe0f2;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.app-nav-link:hover,
+.app-nav-link[data-active='true'] {
+  background: var(--color-navy-700);
+  color: #fff;
+}
+
+.app-main {
+  flex: 1;
+  padding: var(--space-6);
+  max-inline-size: 1200px;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-block-end: var(--space-1);
+}
+
+.page-subtitle {
+  color: var(--color-text-secondary);
+  margin-block-end: var(--space-5);
+}
+
+.card {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.button-primary {
+  background: var(--color-teal-600);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button-secondary {
+  background: transparent;
+  color: var(--color-teal-600);
+  border: 1px solid var(--color-teal-600);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-pill--ready {
+  background: var(--color-teal-100);
+  color: var(--color-teal-600);
+}
+
+.status-pill--missing {
+  background: #fbe9e7;
+  color: var(--color-danger);
+}
