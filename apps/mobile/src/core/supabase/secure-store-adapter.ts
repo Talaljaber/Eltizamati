@@ -9,7 +9,7 @@
  * session's access token alone (935 bytes; the full session JSON is
  * larger). supabase-js `await`s `storage.setItem(...)` directly with no
  * catch (see auth-js's `setItemAsync` helper), so a rejected write there
- * propagates as a rejected `signInWithPassword`/`signUp` promise — values
+ * propagates as a rejected auth operation — values
  * over the limit are split across `${key}_0`, `${key}_1`, ... with a small
  * manifest under the original key, rather than written as one oversized
  * item. No new dependency: SecureStore already encrypts each item via

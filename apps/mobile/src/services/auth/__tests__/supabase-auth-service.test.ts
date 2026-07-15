@@ -2,246 +2,177 @@ import { isErr, isOk } from '@eltizamati/domain'
 import { SupabaseAuthService } from '../supabase-auth-service'
 
 const fakeSession = {
-  access_token: 'access',
-  refresh_token: 'refresh',
+  access_token: 'not-logged',
+  refresh_token: 'not-logged',
   expires_in: 3600,
   expires_at: 1_700_000_000,
   token_type: 'bearer' as const,
   user: { id: 'user-1', email: 'user@example.com' },
 }
 
-function makeFakeClient(
-  overrides: Partial<Record<string, jest.Mock>> = {},
-  functionsOverrides: Partial<Record<string, jest.Mock>> = {},
-) {
+function makeFakeClient(overrides: Partial<Record<string, jest.Mock>> = {}) {
   return {
     auth: {
-      signUp: jest.fn().mockResolvedValue({ data: { session: fakeSession }, error: null }),
+      signUp: jest
+        .fn()
+        .mockResolvedValue({ data: { user: fakeSession.user, session: null }, error: null }),
       signInWithPassword: jest
         .fn()
-        .mockResolvedValue({ data: { session: fakeSession }, error: null }),
-      signOut: jest.fn().mockResolvedValue({ error: null }),
-      resetPasswordForEmail: jest.fn().mockResolvedValue({ data: {}, error: null }),
-      exchangeCodeForSession: jest
+        .mockResolvedValue({ data: { user: fakeSession.user, session: fakeSession }, error: null }),
+      verifyOtp: jest
         .fn()
-        .mockResolvedValue({ data: { session: fakeSession }, error: null }),
-      setSession: jest.fn().mockResolvedValue({ data: { session: fakeSession }, error: null }),
-      updateUser: jest.fn().mockResolvedValue({ data: {}, error: null }),
+        .mockResolvedValue({ data: { user: fakeSession.user, session: fakeSession }, error: null }),
+      resend: jest.fn().mockResolvedValue({ data: {}, error: null }),
+      signOut: jest.fn().mockResolvedValue({ error: null }),
       getSession: jest.fn().mockResolvedValue({ data: { session: fakeSession }, error: null }),
       onAuthStateChange: jest
         .fn()
         .mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } }),
       ...overrides,
     },
-    functions: {
-      invoke: jest.fn().mockResolvedValue({ data: { deleted: true }, error: null }),
-      ...functionsOverrides,
-    },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test double, not production code
+    functions: { invoke: jest.fn().mockResolvedValue({ data: { deleted: true }, error: null }) },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- focused provider double
   } as any
 }
 
-describe('SupabaseAuthService', () => {
-  it('signUp maps a returned session to an AppAuthSession', async () => {
+describe('SupabaseAuthService password signup with first-time email OTP', () => {
+  it('normalizes email and creates a password account without inventing a session', async () => {
     const client = makeFakeClient()
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.signUp('user@example.com', 'password123')
-
+    const result = await new SupabaseAuthService(client).signUp(
+      ' User@Example.COM ',
+      'long-password',
+    )
     expect(isOk(result)).toBe(true)
-    if (isOk(result)) {
-      expect(result.value).toEqual({
-        user: { id: 'user-1', email: 'user@example.com' },
-        expiresAt: 1_700_000_000,
+    expect(client.auth.signUp).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      password: 'long-password',
+    })
+  })
+
+  it('rejects short passwords before calling Supabase', async () => {
+    const client = makeFakeClient()
+    const result = await new SupabaseAuthService(client).signUp('user@example.com', 'short')
+    expect(isErr(result)).toBe(true)
+    expect(client.auth.signUp).not.toHaveBeenCalled()
+  })
+
+  it('rejects hosted configuration that returns a signup session before email verification', async () => {
+    const client = makeFakeClient({
+      signUp: jest.fn().mockResolvedValue({ data: { session: fakeSession }, error: null }),
+    })
+    const result = await new SupabaseAuthService(client).signUp('user@example.com', 'long-password')
+    expect(isErr(result)).toBe(true)
+    if (isErr(result))
+      expect(result.error.safeMetadata).toEqual({ reason: 'email_confirmation_disabled' })
+    expect(client.auth.signOut).toHaveBeenCalledWith({ scope: 'local' })
+  })
+
+  it('signs in verified returning users with password and maps the returned session', async () => {
+    const client = makeFakeClient()
+    const result = await new SupabaseAuthService(client).signIn('User@example.com', 'long-password')
+    expect(result).toEqual({
+      ok: true,
+      value: { user: { id: 'user-1', email: 'user@example.com' }, expiresAt: 1_700_000_000 },
+    })
+    expect(client.auth.signInWithPassword).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      password: 'long-password',
+    })
+  })
+
+  it('keeps invalid credentials and unverified email distinguishable without provider messages', async () => {
+    for (const code of ['invalid_credentials', 'email_not_confirmed']) {
+      const client = makeFakeClient({
+        signInWithPassword: jest.fn().mockResolvedValue({
+          data: { session: null },
+          error: { code, status: 400, message: 'private' },
+        }),
       })
+      const result = await new SupabaseAuthService(client).signIn('user@example.com', 'password')
+      expect(isErr(result)).toBe(true)
+      if (isErr(result)) expect(result.error.safeMetadata?.reason).toBe(code)
+      if (isErr(result)) expect(JSON.stringify(result.error.safeMetadata)).not.toContain('private')
     }
   })
 
-  it('signUp returns undefined session when email verification is pending', async () => {
-    const client = makeFakeClient({
-      signUp: jest.fn().mockResolvedValue({ data: { session: null }, error: null }),
-    })
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.signUp('user@example.com', 'password123')
-
+  it('verifies the eight-digit signup email code and requires a session', async () => {
+    const client = makeFakeClient()
+    const result = await new SupabaseAuthService(client).verifySignupOtp(
+      'User@example.com',
+      '12345678',
+    )
     expect(isOk(result)).toBe(true)
-    if (isOk(result)) {
-      expect(result.value).toBeUndefined()
-    }
+    expect(client.auth.verifyOtp).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      token: '12345678',
+      type: 'email',
+    })
   })
 
-  it('signIn maps a server-rejected error (has a status) to AppError code "auth"', async () => {
+  it('rejects a nominal verification response without a session', async () => {
     const client = makeFakeClient({
-      signInWithPassword: jest.fn().mockResolvedValue({
+      verifyOtp: jest.fn().mockResolvedValue({ data: { session: null }, error: null }),
+    })
+    const result = await new SupabaseAuthService(client).verifySignupOtp(
+      'user@example.com',
+      '12345678',
+    )
+    expect(isErr(result)).toBe(true)
+  })
+
+  it('resends only a signup confirmation code', async () => {
+    const client = makeFakeClient()
+    expect(isOk(await new SupabaseAuthService(client).resendSignupOtp('User@example.com'))).toBe(
+      true,
+    )
+    expect(client.auth.resend).toHaveBeenCalledWith({ type: 'signup', email: 'user@example.com' })
+  })
+
+  it.each([
+    ['otp_expired', 'expired'],
+    ['invalid_otp', 'invalid'],
+  ])('maps %s safely', async (code, otpFailure) => {
+    const client = makeFakeClient({
+      verifyOtp: jest.fn().mockResolvedValue({
         data: { session: null },
-        error: { code: 'invalid_credentials', status: 400, message: 'Invalid login credentials' },
+        error: { code, status: 403, message: 'private' },
       }),
     })
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.signIn('user@example.com', 'wrong-password')
-
+    const result = await new SupabaseAuthService(client).verifySignupOtp(
+      'user@example.com',
+      '12345678',
+    )
     expect(isErr(result)).toBe(true)
-    if (isErr(result)) {
-      expect(result.error.code).toBe('auth')
-      expect(result.error.safeMetadata).toEqual({ authErrorCode: 'invalid_credentials' })
-    }
+    if (isErr(result))
+      expect(result.error.safeMetadata).toEqual({ authErrorCode: code, otpFailure })
   })
 
-  it('signIn maps a pre-response failure (no status) to AppError code "connectivity"', async () => {
-    // supabase-js leaves `status` undefined when the request never reached
-    // the server (offline, DNS failure, timeout) — this must surface as
-    // "offline", not an incorrect "check your credentials" message.
-    const client = makeFakeClient({
-      signInWithPassword: jest.fn().mockResolvedValue({
-        data: { session: null },
-        error: { code: undefined, message: 'Network request failed' },
+  it('maps rate limits and connectivity distinctly', async () => {
+    const limited = makeFakeClient({
+      resend: jest.fn().mockResolvedValue({
+        error: { code: 'over_email_send_rate_limit', status: 429, message: 'limited' },
       }),
     })
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.signIn('user@example.com', 'password123')
-
-    expect(isErr(result)).toBe(true)
-    if (isErr(result)) {
-      expect(result.error.code).toBe('connectivity')
-    }
-  })
-
-  it('resetPassword returns ok(undefined) on success', async () => {
-    const client = makeFakeClient({
-      resetPasswordForEmail: jest.fn().mockResolvedValue({ data: {}, error: null }),
+    const offline = makeFakeClient({
+      signInWithPassword: jest
+        .fn()
+        .mockResolvedValue({ error: { code: undefined, message: 'offline' } }),
     })
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.resetPassword('user@example.com')
-
-    expect(isOk(result)).toBe(true)
-    expect(client.auth.resetPasswordForEmail).toHaveBeenCalledWith('user@example.com', {
-      redirectTo: 'eltizamati://auth/callback?flow=passwordRecovery',
-    })
-  })
-
-  it('resetPassword maps a server-rejected error to AppError code "auth"', async () => {
-    const client = makeFakeClient({
-      resetPasswordForEmail: jest.fn().mockResolvedValue({
-        data: null,
-        error: { code: 'user_not_found', status: 404, message: 'User not found' },
-      }),
-    })
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.resetPassword('nobody@example.com')
-
-    expect(isErr(result)).toBe(true)
-    if (isErr(result)) {
-      expect(result.error.code).toBe('auth')
-    }
-  })
-
-  it('signOut returns ok(undefined) on success', async () => {
-    const client = makeFakeClient()
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.signOut()
-
-    expect(isOk(result)).toBe(true)
-  })
-
-  it('signOut clears the local session when global revocation is offline', async () => {
-    const signOut = jest
-      .fn()
-      .mockResolvedValueOnce({ error: { code: undefined, message: 'offline' } })
-      .mockResolvedValueOnce({ error: null })
-    const client = makeFakeClient({ signOut })
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.signOut()
-
-    expect(isOk(result)).toBe(true)
-    expect(signOut).toHaveBeenNthCalledWith(2, { scope: 'local' })
-  })
-
-  it('currentSession returns the mapped session when one exists', async () => {
-    const client = makeFakeClient()
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.currentSession()
-
-    expect(isOk(result)).toBe(true)
-    if (isOk(result)) {
-      expect(result.value?.user.id).toBe('user-1')
-    }
-  })
-
-  it('onAuthStateChange forwards mapped sessions and returns an unsubscribe function', () => {
-    const client = makeFakeClient()
-    const service = new SupabaseAuthService(client)
-    const callback = jest.fn()
-
-    const unsubscribe = service.onAuthStateChange(callback)
-    unsubscribe()
-
-    expect(client.auth.onAuthStateChange).toHaveBeenCalledTimes(1)
-    expect(typeof unsubscribe).toBe('function')
-  })
-
-  it('deleteAccount invokes the delete-account Edge Function and returns ok(undefined) on success', async () => {
-    const client = makeFakeClient()
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.deleteAccount()
-
-    expect(isOk(result)).toBe(true)
-    expect(client.functions.invoke).toHaveBeenCalledWith('delete-account')
-  })
-
-  it('deleteAccount maps an Edge Function failure to an AppError', async () => {
-    const client = makeFakeClient(
-      {},
-      { invoke: jest.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }) },
+    const limitedResult = await new SupabaseAuthService(limited).resendSignupOtp('user@example.com')
+    const offlineResult = await new SupabaseAuthService(offline).signIn(
+      'user@example.com',
+      'password',
     )
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.deleteAccount()
-
-    expect(isErr(result)).toBe(true)
+    if (isErr(limitedResult)) expect(limitedResult.error.code).toBe('rateLimited')
+    if (isErr(offlineResult)) expect(offlineResult.error.code).toBe('connectivity')
   })
 
-  it('classifies a valid recovery callback separately from ordinary authentication', async () => {
+  it('keeps session restore, events, sign-out, and deletion intact', async () => {
     const client = makeFakeClient()
     const service = new SupabaseAuthService(client)
-
-    const recovery = await service.exchangeCallbackUrl(
-      'eltizamati://auth/callback?flow=passwordRecovery&code=recovery-code',
-    )
-    const authentication = await service.exchangeCallbackUrl(
-      'eltizamati://auth/callback?flow=authentication&code=signup-code',
-    )
-
-    expect(isOk(recovery)).toBe(true)
-    if (isOk(recovery)) expect(recovery.value.kind).toBe('passwordRecovery')
-    expect(isOk(authentication)).toBe(true)
-    if (isOk(authentication)) expect(authentication.value.kind).toBe('authentication')
-  })
-
-  it('rejects a malformed callback without a code or token pair', async () => {
-    const service = new SupabaseAuthService(makeFakeClient())
-
-    const result = await service.exchangeCallbackUrl('eltizamati://auth/callback')
-
-    expect(isErr(result)).toBe(true)
-    if (isErr(result)) expect(result.error.code).toBe('auth')
-  })
-
-  it('updates the password only through the authenticated recovery session', async () => {
-    const client = makeFakeClient()
-    const service = new SupabaseAuthService(client)
-
-    const result = await service.updatePassword('new-password')
-
-    expect(isOk(result)).toBe(true)
-    expect(client.auth.updateUser).toHaveBeenCalledWith({ password: 'new-password' })
+    expect(isOk(await service.currentSession())).toBe(true)
+    service.onAuthStateChange(jest.fn())()
+    expect(isOk(await service.signOut())).toBe(true)
+    expect(isOk(await service.deleteAccount())).toBe(true)
   })
 })

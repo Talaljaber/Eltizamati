@@ -452,7 +452,10 @@ export type Database = {
         Row: {
           created_at: string
           data_mode: string
+          full_name: string | null
           locale: string
+          phone_number: string | null
+          primary_bank: string | null
           reminder_day_of_month: number | null
           updated_at: string
           user_id: string
@@ -461,7 +464,10 @@ export type Database = {
         Insert: {
           created_at?: string
           data_mode: string
+          full_name?: string | null
           locale: string
+          phone_number?: string | null
+          primary_bank?: string | null
           reminder_day_of_month?: number | null
           updated_at?: string
           user_id: string
@@ -470,7 +476,10 @@ export type Database = {
         Update: {
           created_at?: string
           data_mode?: string
+          full_name?: string | null
           locale?: string
+          phone_number?: string | null
+          primary_bank?: string | null
           reminder_day_of_month?: number | null
           updated_at?: string
           user_id?: string
