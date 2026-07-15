@@ -79,6 +79,21 @@ describe('useHomeAggregates', () => {
     if (latestRun.ok) expect(latestRun.value?.asOf).toBe(DEMO_DATE)
   })
 
+  it('treats a new account with no obligations as successful empty data without a calculation run', async () => {
+    const repos = createDemoRepositories()
+    jest.spyOn(useReposModule, 'useRepositories').mockReturnValue(repos)
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+    const { result } = renderHook(() => useHomeAggregates([], DEMO_DATE), { wrapper })
+
+    await waitFor(() => expect(result.current.status).toBe('success'))
+    expect(result.current.hasEstimatedInputs).toBe(false)
+    const latestRun = await repos.calculationRunRepository.latestFor(undefined, 'aggregates')
+    expect(latestRun).toEqual({ ok: true, value: undefined })
+  })
+
   it('persists and applies the explicit personal as-of date instead of the demo fixture date', async () => {
     const repos = createDemoRepositories()
     jest.spyOn(useReposModule, 'useRepositories').mockReturnValue(repos)

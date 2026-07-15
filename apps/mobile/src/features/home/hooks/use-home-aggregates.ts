@@ -105,12 +105,15 @@ export function useHomeAggregates(
 
       return { run: result.value, nextDueDate, nextDueAmount, nextDueAmountProvenance }
     },
-    enabled: !!activeUser && enabled,
+    enabled: !!activeUser && enabled && obligations.length > 0,
   })
 
   const appError = (error as AppError | null) ?? undefined
   const retry = () => {
     void refetch()
+  }
+  if (enabled && activeUser && obligations.length === 0) {
+    return { status: 'success', hasEstimatedInputs: false, retry }
   }
   const canRetainData = appError?.retryable === true && appError.code !== 'auth'
   if (appError !== undefined && (!data || !canRetainData)) {
