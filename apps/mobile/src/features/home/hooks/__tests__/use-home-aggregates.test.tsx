@@ -5,32 +5,19 @@ import { createDemoRepositories } from '@/services/repositories/demo'
 import { ImportService } from '@/services/import-service'
 import { DemoSeedProvider } from '@/services/demo-seed-provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { getDataMode } from '@/features/demo/stores/demo-mode-store'
 import * as useReposModule from '@/features/repositories/hooks/use-repositories'
 import { aLoan, DEMO_DATE } from '@eltizamati/demo-data'
 import { toLocalDate } from '@eltizamati/domain'
 
-jest.mock('@/features/demo/stores/demo-mode-store', () => ({
-  getDataMode: jest.fn(),
+jest.mock('@/features/auth/hooks/use-active-user', () => ({
+  useActiveUser: () => 'demo-user',
 }))
-
-jest.mock('@/features/auth/hooks/use-auth-service', () => {
-  const getAuthService = jest.fn(() => ({
-    ok: true,
-    value: {
-      currentSession: jest.fn().mockResolvedValue({ ok: true, value: { user: { id: 'user-1' } } }),
-      onAuthStateChange: jest.fn(() => jest.fn()),
-    },
-  }))
-  return { useAuthServiceLazy: jest.fn(() => getAuthService) }
-})
 
 describe('useHomeAggregates', () => {
   let queryClient: QueryClient
 
   beforeEach(() => {
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    ;(getDataMode as jest.Mock).mockResolvedValue('demo')
   })
 
   afterEach(() => {
@@ -97,7 +84,6 @@ describe('useHomeAggregates', () => {
   it('persists and applies the explicit personal as-of date instead of the demo fixture date', async () => {
     const repos = createDemoRepositories()
     jest.spyOn(useReposModule, 'useRepositories').mockReturnValue(repos)
-    ;(getDataMode as jest.Mock).mockResolvedValue('personal')
     const personalAsOf = toLocalDate('2026-07-17')
     const demoLoan = aLoan()
     const personalLoan = {
