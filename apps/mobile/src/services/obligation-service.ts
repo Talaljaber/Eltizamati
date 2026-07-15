@@ -35,12 +35,7 @@ import {
   type Provenance,
 } from '@eltizamati/domain'
 import type { Repositories } from '@/features/repositories/hooks/use-repositories'
-
-function generateId(): string {
-  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `manual-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 9)}`
-}
+import { generateUuid } from '@/core/ids/generate-uuid'
 
 function nowProvenance(recordedAt: string): Provenance {
   return { source: 'userEntered', providerId: 'manual', observedAt: recordedAt, recordedAt }
@@ -93,10 +88,10 @@ export class ObligationService {
     repos: Repositories,
   ): Promise<Result<ConventionalLoan, AppError>> {
     const now = new Date().toISOString()
-    const obligationId = brandId<'obligation'>(generateId())
+    const obligationId = brandId<'obligation'>(generateUuid())
 
     const initialPeriod: RatePeriod = {
-      id: brandId<'ratePeriod'>(generateId()),
+      id: brandId<'ratePeriod'>(generateUuid()),
       obligationId,
       annualRate: Rate.fromPercent(annualRatePercent),
       effectiveFrom: input.startDate,
@@ -180,7 +175,7 @@ export class ObligationService {
   ): Promise<Result<MurabahaFinancing, AppError>> {
     const now = new Date().toISOString()
     const murabaha: MurabahaFinancing = {
-      id: brandId<'obligation'>(generateId()),
+      id: brandId<'obligation'>(generateUuid()),
       userId,
       kind: 'murabaha',
       nickname: input.nickname,
@@ -253,7 +248,7 @@ export class ObligationService {
   ): Promise<Result<CreditCard, AppError>> {
     const now = new Date().toISOString()
     const card: CreditCard = {
-      id: brandId<'obligation'>(generateId()),
+      id: brandId<'obligation'>(generateUuid()),
       userId,
       kind: 'creditCard',
       nickname: input.nickname,
@@ -354,7 +349,7 @@ export class ObligationService {
     }
     const now = new Date().toISOString()
     const payment: Payment = {
-      id: brandId<'payment'>(generateId()),
+      id: brandId<'payment'>(generateUuid()),
       obligationId: obligation.id,
       userId,
       date,
@@ -376,7 +371,7 @@ export class ObligationService {
     if (isErr(historyResult)) return historyResult
 
     const newPeriod: RatePeriod = {
-      id: brandId<'ratePeriod'>(generateId()),
+      id: brandId<'ratePeriod'>(generateUuid()),
       obligationId: obligation.id,
       annualRate: Rate.fromPercent(annualRatePercent),
       effectiveFrom,

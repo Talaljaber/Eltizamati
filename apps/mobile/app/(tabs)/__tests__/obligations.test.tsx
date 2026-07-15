@@ -1,4 +1,5 @@
 import React from 'react'
+import { RefreshControl } from 'react-native'
 import { fireEvent, render, waitFor, within } from '@testing-library/react-native'
 import { DemoSeedProvider } from '@/services/demo-seed-provider'
 import ObligationsTab, { ObligationRow } from '../obligations'
@@ -122,6 +123,18 @@ describe('ObligationsTab personal-data states', () => {
     expect(getByTestId('obligations-query-error')).toBeTruthy()
     expect(getByText('error.offlineTitle')).toBeTruthy()
     expect(queryByTestId('obligations-empty')).toBeNull()
+  })
+
+  it('does not show pull-to-refresh UI for shared background fetching', () => {
+    ;(useObligations as jest.Mock).mockReturnValue({
+      data: [personalCard],
+      isLoading: false,
+      isFetching: true,
+      error: null,
+      refetch: refetchObligations,
+    })
+
+    expect(render(<ObligationsTab />).UNSAFE_getByType(RefreshControl).props.refreshing).toBe(false)
   })
 
   it('does not render a row with fabricated empty payments after a failed query', () => {

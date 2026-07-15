@@ -2,6 +2,7 @@ import { View, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { TextField, space } from '@/core/design-system'
 import type { CardFormState } from '../types'
+import { DatePickerField } from './DatePickerField'
 
 export interface CardFormFieldsProps {
   readonly state: CardFormState
@@ -23,11 +24,10 @@ export function CardFormFields({ state, onChange }: CardFormFieldsProps) {
         value={state.institutionName}
         onChangeText={(institutionName) => onChange({ institutionName })}
       />
-      <TextField
+      <DatePickerField
         label={t('obligationForm.openedDate')}
         value={state.openedDate}
-        onChangeText={(openedDate) => onChange({ openedDate })}
-        placeholder="YYYY-MM-DD"
+        onChange={(openedDate) => onChange({ openedDate })}
       />
       <TextField
         label={t('obligationDetail.creditLimit')}
@@ -53,11 +53,11 @@ export function CardFormFields({ state, onChange }: CardFormFieldsProps) {
         onChangeText={(cashAdvanceAprPercent) => onChange({ cashAdvanceAprPercent })}
         keyboardType="decimal-pad"
       />
-      <TextField
+      <DatePickerField
         label={t('obligationForm.dueDateOptional')}
         value={state.dueDate}
-        onChangeText={(dueDate) => onChange({ dueDate })}
-        placeholder="YYYY-MM-DD"
+        onChange={(dueDate) => onChange({ dueDate })}
+        optional
       />
     </View>
   )

@@ -21,13 +21,7 @@ import {
   type InsightCandidate,
 } from '@eltizamati/finance-engine'
 import type { CalculationService } from './calculation-service.js'
-
-/** Same Hermes/RN-safe fallback used by calculation-service.ts's generateId(). */
-function generateId(): string {
-  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `insight-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 9)}`
-}
+import { generateUuid } from '@/core/ids/generate-uuid'
 
 /**
  * InsightEvaluationService — runs the variableProjection.v1 /
@@ -213,7 +207,7 @@ export class InsightEvaluationService {
       if (existingKeys.has(key)) continue
 
       const insight: Insight = {
-        id: brandId<'insight'>(generateId()),
+        id: brandId<'insight'>(generateUuid()),
         userId,
         ruleId: candidate.ruleId,
         obligationId: brandId<'obligation'>(candidate.obligationId),

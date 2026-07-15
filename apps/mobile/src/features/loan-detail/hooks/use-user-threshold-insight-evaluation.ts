@@ -5,7 +5,7 @@
  * value, run purely for its evaluate-and-invalidate side effect.
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Money, type Id, type Obligation } from '@eltizamati/domain'
+import { Money, type Obligation } from '@eltizamati/domain'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { useProfileQuery } from '@/features/auth/api/use-profile'
@@ -23,12 +23,12 @@ export function useUserThresholdInsightEvaluation(
   const activeUser = useActiveUser()
   const personalAsOf = usePersonalCalculationAsOf()
   const queryClient = useQueryClient()
-  const asOf = calculationAsOf(typeof repos.reset === 'function' ? 'demo' : 'personal', personalAsOf)
-
-  const { data: profile } = useProfileQuery(
-    repos.userProfileRepository,
-    activeUser ?? ('' as Id<'user'>),
+  const asOf = calculationAsOf(
+    typeof repos.reset === 'function' ? 'demo' : 'personal',
+    personalAsOf,
   )
+
+  const { data: profile } = useProfileQuery(repos.userProfileRepository, activeUser)
   const thresholdAmount = profile?.userThresholdAmount
 
   useQuery({
