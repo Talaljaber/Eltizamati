@@ -2,7 +2,7 @@
 
 ## Delivered branch slice
 
-Branch: `feature/learn-intelligence`  
+Branch: `feature/learn-intelligence`
 Starting HEAD: `73f418f61fed1bca6686dee6c5e922f41cbbda35`
 
 The Learn tab now has a financing-guide home, content search, goal journeys,
