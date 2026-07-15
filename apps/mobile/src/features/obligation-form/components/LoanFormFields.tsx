@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Text, Button, TextField, space } from '@/core/design-system'
 import type { RateType } from '@eltizamati/domain'
 import { RATE_TYPES, type LoanFormState } from '../types'
+import { DatePickerField } from './DatePickerField'
 
 export interface LoanFormFieldsProps {
   readonly state: LoanFormState
@@ -25,11 +26,10 @@ export function LoanFormFields({ state, onChange, showInitialRate }: LoanFormFie
         value={state.institutionName}
         onChangeText={(institutionName) => onChange({ institutionName })}
       />
-      <TextField
+      <DatePickerField
         label={t('obligationForm.openedDate')}
         value={state.openedDate}
-        onChangeText={(openedDate) => onChange({ openedDate })}
-        placeholder="YYYY-MM-DD"
+        onChange={(openedDate) => onChange({ openedDate })}
       />
       <TextField
         label={t('obligationForm.originalPrincipal')}
@@ -80,17 +80,15 @@ export function LoanFormFields({ state, onChange, showInitialRate }: LoanFormFie
         onChangeText={(termMonths) => onChange({ termMonths })}
         keyboardType="numeric"
       />
-      <TextField
+      <DatePickerField
         label={t('obligationForm.startDate')}
         value={state.startDate}
-        onChangeText={(startDate) => onChange({ startDate })}
-        placeholder="YYYY-MM-DD"
+        onChange={(startDate) => onChange({ startDate })}
       />
-      <TextField
+      <DatePickerField
         label={t('obligationForm.maturityDate')}
         value={state.maturityDate}
-        onChangeText={(maturityDate) => onChange({ maturityDate })}
-        placeholder="YYYY-MM-DD"
+        onChange={(maturityDate) => onChange({ maturityDate })}
       />
     </View>
   )

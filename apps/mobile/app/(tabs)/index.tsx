@@ -7,7 +7,7 @@
  * Uses TanStack Query hooks for data fetching.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { View, StyleSheet, ScrollView, RefreshControl, Pressable, Image } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
@@ -64,11 +64,11 @@ export default function HomeTab() {
   const isDemoMode = activeUserState.status === 'demo'
   const activeUser = activeUserState.userId
   const personalAsOf = usePersonalCalculationAsOf()
+  const [manualRefreshing, setManualRefreshing] = useState(false)
 
   const {
     data: obligations,
     isLoading: isObligationsLoading,
-    isFetching: isObligationsFetching,
     error: obligationsErrorValue,
     refetch: refetchObligations,
   } = useObligations(repos.obligationRepository, activeUser ?? ('' as Id<'user'>), isDemoMode)
@@ -76,7 +76,6 @@ export default function HomeTab() {
   const {
     data: insights,
     isLoading: isInsightsLoading,
-    isFetching: isInsightsFetching,
     error: insightsErrorValue,
     refetch: refetchInsights,
   } = useInsights(repos.insightRepository, activeUser ?? ('' as Id<'user'>), isDemoMode)
@@ -106,7 +105,12 @@ export default function HomeTab() {
     activeUserState.status === 'loading' || isObligationsLoading || isInsightsLoading
 
   const handleRefresh = async () => {
-    await Promise.all([refetchObligations(), refetchInsights()])
+    setManualRefreshing(true)
+    try {
+      await Promise.all([refetchObligations(), refetchInsights()])
+    } finally {
+      setManualRefreshing(false)
+    }
   }
 
   useEffect(() => {
@@ -183,7 +187,8 @@ export default function HomeTab() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
-            refreshing={isObligationsFetching || isInsightsFetching}
+            refreshing={manualRefreshing}
+            testID="home-refresh-control"
             onRefresh={() => {
               void handleRefresh()
             }}

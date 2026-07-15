@@ -8,7 +8,7 @@
  * but we just render "All" in Phase 5 for simplicity unless there's time.
  */
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
@@ -65,11 +65,11 @@ export default function ObligationsTab() {
   const isDemoMode = activeUserState.status === 'demo'
   const activeUser = activeUserState.userId
   const personalAsOf = usePersonalCalculationAsOf()
+  const [manualRefreshing, setManualRefreshing] = useState(false)
 
   const {
     data,
     isLoading,
-    isFetching,
     error: obligationsErrorValue,
     refetch,
   } = useObligations(repos.obligationRepository, activeUser ?? ('' as Id<'user'>), isDemoMode)
@@ -77,7 +77,6 @@ export default function ObligationsTab() {
   const {
     data: paymentsByObligation,
     isLoading: isPaymentsLoading,
-    isFetching: isPaymentsFetching,
     error: paymentsError,
     refetch: refetchPayments,
   } = usePaymentsByObligation(repos.paymentRepository, data, activeUser, isDemoMode)
@@ -85,7 +84,6 @@ export default function ObligationsTab() {
   const {
     data: insightsByObligation,
     isLoading: isInsightsLoading,
-    isFetching: isInsightsFetching,
     error: insightsError,
     hasData: hasInsightsData,
     refetch: refetchInsights,
@@ -119,7 +117,12 @@ export default function ObligationsTab() {
     (insightsError === undefined || hasInsightsData)
 
   const handleRefresh = async () => {
-    await Promise.all([refetch(), refetchPayments(), refetchInsights()])
+    setManualRefreshing(true)
+    try {
+      await Promise.all([refetch(), refetchPayments(), refetchInsights()])
+    } finally {
+      setManualRefreshing(false)
+    }
   }
 
   useEffect(() => {
@@ -187,7 +190,8 @@ export default function ObligationsTab() {
         contentContainerStyle={[styles.list, filteredData.length === 0 && styles.listEmpty]}
         refreshControl={
           <RefreshControl
-            refreshing={isFetching || isPaymentsFetching || isInsightsFetching}
+            refreshing={manualRefreshing}
+            testID="obligations-refresh-control"
             onRefresh={() => {
               void handleRefresh()
             }}

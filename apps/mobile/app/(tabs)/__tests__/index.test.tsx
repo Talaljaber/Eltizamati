@@ -1,4 +1,5 @@
 import React from 'react'
+import { RefreshControl } from 'react-native'
 import { fireEvent, render, waitFor, within } from '@testing-library/react-native'
 import { makeError, Money, type AppErrorCode, type Provenance } from '@eltizamati/domain'
 import HomeTab, { SummaryCard } from '../index'
@@ -177,6 +178,26 @@ describe('Home financial rendering', () => {
     })
     ;(useHomeAggregates as jest.Mock).mockReturnValue({ status: 'loading', retry: jest.fn() })
     expect(() => render(<HomeTab />)).not.toThrow()
+  })
+
+  it('does not show pull-to-refresh UI for a shared background fetch', () => {
+    ;(useObligations as jest.Mock).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isFetching: true,
+      error: null,
+      refetch: refetchObligations,
+    })
+    ;(useInsights as jest.Mock).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isFetching: true,
+      error: null,
+      refetch: refetchInsights,
+    })
+    ;(useHomeAggregates as jest.Mock).mockReturnValue({ status: 'success', retry: jest.fn() })
+
+    expect(render(<HomeTab />).UNSAFE_getByType(RefreshControl).props.refreshing).toBe(false)
   })
 
   it.each<[AppErrorCode, string]>([

@@ -2,6 +2,7 @@ import { View, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { TextField, space } from '@/core/design-system'
 import type { MurabahaFormState } from '../types'
+import { DatePickerField } from './DatePickerField'
 
 export interface MurabahaFormFieldsProps {
   readonly state: MurabahaFormState
@@ -23,11 +24,10 @@ export function MurabahaFormFields({ state, onChange }: MurabahaFormFieldsProps)
         value={state.institutionName}
         onChangeText={(institutionName) => onChange({ institutionName })}
       />
-      <TextField
+      <DatePickerField
         label={t('obligationForm.openedDate')}
         value={state.openedDate}
-        onChangeText={(openedDate) => onChange({ openedDate })}
-        placeholder="YYYY-MM-DD"
+        onChange={(openedDate) => onChange({ openedDate })}
       />
       <TextField
         label={t('obligationDetail.totalSalePrice')}
@@ -59,11 +59,10 @@ export function MurabahaFormFields({ state, onChange }: MurabahaFormFieldsProps)
         onChangeText={(termMonths) => onChange({ termMonths })}
         keyboardType="numeric"
       />
-      <TextField
+      <DatePickerField
         label={t('obligationForm.startDate')}
         value={state.startDate}
-        onChangeText={(startDate) => onChange({ startDate })}
-        placeholder="YYYY-MM-DD"
+        onChange={(startDate) => onChange({ startDate })}
       />
       <TextField
         label={t('obligationForm.profitRateDisclosedOptional')}

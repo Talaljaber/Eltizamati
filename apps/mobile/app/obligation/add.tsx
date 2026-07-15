@@ -1,5 +1,12 @@
 import { useState } from 'react'
-import { View, StyleSheet, ScrollView, I18nManager } from 'react-native'
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  I18nManager,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter, Stack } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -57,15 +64,41 @@ function AddObligationInner() {
   const [murabahaState, setMurabahaState] = useState<MurabahaFormState>(emptyMurabahaFormState)
   const [cardState, setCardState] = useState<CardFormState>(emptyCardFormState)
   const [error, setError] = useState<string | undefined>(undefined)
+  const [diagnostic, setDiagnostic] = useState<string | undefined>(undefined)
   const [saving, setSaving] = useState(false)
+
+  function reportSaveFailure(
+    stage: AddableKind,
+    failure: { readonly code: string; readonly safeMetadata?: Record<string, unknown> },
+  ): void {
+    const safeDiagnostic = { stage, code: failure.code, safeMetadata: failure.safeMetadata }
+    setDiagnostic(JSON.stringify(safeDiagnostic))
+    if (__DEV__ && process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console -- Development-only obligation diagnostics; form values, user identity, credentials, and tokens are excluded.
+      console.error('[obligation-create-debug] Save failed', safeDiagnostic)
+    }
+  }
+
+  function reportValidationFailure(stage: AddableKind, validationKey: string): void {
+    const safeDiagnostic = { stage, validationKey }
+    setDiagnostic(JSON.stringify(safeDiagnostic))
+    if (__DEV__ && process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console -- Development-only validation diagnostics contain field category only, never entered values.
+      console.info('[obligation-create-debug] Validation failed', safeDiagnostic)
+    }
+  }
 
   async function handleSave() {
     if (!activeUser || kind === null) return
     setError(undefined)
+    setDiagnostic(undefined)
 
     if (kind === 'conventionalLoan') {
       const validationKey = validateLoanForm(loanState, true)
-      if (validationKey !== undefined) return setError(t(validationKey))
+      if (validationKey !== undefined) {
+        reportValidationFailure(kind, validationKey)
+        return setError(t(validationKey))
+      }
       setSaving(true)
       const result = await service.createLoan(
         activeUser,
@@ -86,7 +119,10 @@ function AddObligationInner() {
         repos,
       )
       setSaving(false)
-      if (!result.ok) return setError(t('obligationForm.errors.saveFailed'))
+      if (!result.ok) {
+        reportSaveFailure(kind, result.error)
+        return setError(t('obligationForm.errors.saveFailed'))
+      }
       await queryClient.invalidateQueries()
       router.replace(`/obligation/${result.value.id}`)
       return
@@ -94,7 +130,10 @@ function AddObligationInner() {
 
     if (kind === 'murabaha') {
       const validationKey = validateMurabahaForm(murabahaState)
-      if (validationKey !== undefined) return setError(t(validationKey))
+      if (validationKey !== undefined) {
+        reportValidationFailure(kind, validationKey)
+        return setError(t(validationKey))
+      }
       setSaving(true)
       const result = await service.createMurabaha(
         activeUser,
@@ -116,7 +155,10 @@ function AddObligationInner() {
         repos,
       )
       setSaving(false)
-      if (!result.ok) return setError(t('obligationForm.errors.saveFailed'))
+      if (!result.ok) {
+        reportSaveFailure(kind, result.error)
+        return setError(t('obligationForm.errors.saveFailed'))
+      }
       await queryClient.invalidateQueries()
       router.replace(`/obligation/${result.value.id}`)
       return
@@ -124,7 +166,10 @@ function AddObligationInner() {
 
     if (kind === 'creditCard') {
       const validationKey = validateCardForm(cardState)
-      if (validationKey !== undefined) return setError(t(validationKey))
+      if (validationKey !== undefined) {
+        reportValidationFailure(kind, validationKey)
+        return setError(t(validationKey))
+      }
       setSaving(true)
       const result = await service.createCard(
         activeUser,
@@ -143,102 +188,124 @@ function AddObligationInner() {
         repos,
       )
       setSaving(false)
-      if (!result.ok) return setError(t('obligationForm.errors.saveFailed'))
+      if (!result.ok) {
+        reportSaveFailure(kind, result.error)
+        return setError(t('obligationForm.errors.saveFailed'))
+      }
       await queryClient.invalidateQueries()
       router.replace(`/obligation/${result.value.id}`)
     }
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll}>
-      <Stack.Screen options={{ title: t('obligationForm.addTitle') }} />
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        automaticallyAdjustKeyboardInsets
+      >
+        <Stack.Screen options={{ title: t('obligationForm.addTitle') }} />
 
-      {kind === null ? (
-        <View style={styles.pickerGroup}>
-          <Text variant="bodySmall" color="secondary">
-            {t('obligationForm.pickKind')}
-          </Text>
-          <View
-            style={[
-              styles.pickerList,
-              { backgroundColor: theme.bgElevated, borderColor: theme.border },
-            ]}
-          >
-            <ListRow
-              onPress={() => setKind('conventionalLoan')}
-              leading={<Ionicons name="business-outline" size={20} color={theme.textSecondary} />}
-              trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
-            >
-              <Text variant="body">{t('obligationKind.conventionalLoan')}</Text>
-            </ListRow>
-            <ListRow
-              onPress={() => setKind('murabaha')}
-              leading={<Ionicons name="storefront-outline" size={20} color={theme.textSecondary} />}
-              trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
-            >
-              <Text variant="body">{t('obligationKind.murabaha')}</Text>
-            </ListRow>
-            <ListRow
-              onPress={() => setKind('creditCard')}
-              leading={<Ionicons name="card-outline" size={20} color={theme.textSecondary} />}
-              trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
-            >
-              <Text variant="body">{t('obligationKind.creditCard')}</Text>
-            </ListRow>
-          </View>
-        </View>
-      ) : (
-        <View style={styles.formGroup}>
-          {kind === 'conventionalLoan' && (
-            <LoanFormFields
-              state={loanState}
-              onChange={(patch) => setLoanState((s) => ({ ...s, ...patch }))}
-              showInitialRate
-            />
-          )}
-          {kind === 'murabaha' && (
-            <MurabahaFormFields
-              state={murabahaState}
-              onChange={(patch) => setMurabahaState((s) => ({ ...s, ...patch }))}
-            />
-          )}
-          {kind === 'creditCard' && (
-            <CardFormFields
-              state={cardState}
-              onChange={(patch) => setCardState((s) => ({ ...s, ...patch }))}
-            />
-          )}
-
-          {error !== undefined && (
-            <Text variant="bodySmall" color="critical">
-              {error}
+        {kind === null ? (
+          <View style={styles.pickerGroup}>
+            <Text variant="bodySmall" color="secondary">
+              {t('obligationForm.pickKind')}
             </Text>
-          )}
-
-          <View style={styles.actions}>
-            <Button
-              label={t('common.cancel')}
-              variant="ghost"
-              onPress={() => setKind(null)}
-              disabled={saving}
-            />
-            <Button
-              label={t('obligationForm.save')}
-              onPress={() => void handleSave()}
-              loading={saving}
-            />
+            <View
+              style={[
+                styles.pickerList,
+                { backgroundColor: theme.bgElevated, borderColor: theme.border },
+              ]}
+            >
+              <ListRow
+                onPress={() => setKind('conventionalLoan')}
+                leading={<Ionicons name="business-outline" size={20} color={theme.textSecondary} />}
+                trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
+              >
+                <Text variant="body">{t('obligationKind.conventionalLoan')}</Text>
+              </ListRow>
+              <ListRow
+                onPress={() => setKind('murabaha')}
+                leading={
+                  <Ionicons name="storefront-outline" size={20} color={theme.textSecondary} />
+                }
+                trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
+              >
+                <Text variant="body">{t('obligationKind.murabaha')}</Text>
+              </ListRow>
+              <ListRow
+                onPress={() => setKind('creditCard')}
+                leading={<Ionicons name="card-outline" size={20} color={theme.textSecondary} />}
+                trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
+              >
+                <Text variant="body">{t('obligationKind.creditCard')}</Text>
+              </ListRow>
+            </View>
           </View>
-        </View>
-      )}
-    </ScrollView>
+        ) : (
+          <View style={styles.formGroup}>
+            {kind === 'conventionalLoan' && (
+              <LoanFormFields
+                state={loanState}
+                onChange={(patch) => setLoanState((s) => ({ ...s, ...patch }))}
+                showInitialRate
+              />
+            )}
+            {kind === 'murabaha' && (
+              <MurabahaFormFields
+                state={murabahaState}
+                onChange={(patch) => setMurabahaState((s) => ({ ...s, ...patch }))}
+              />
+            )}
+            {kind === 'creditCard' && (
+              <CardFormFields
+                state={cardState}
+                onChange={(patch) => setCardState((s) => ({ ...s, ...patch }))}
+              />
+            )}
+
+            {error !== undefined && (
+              <Text variant="bodySmall" color="critical">
+                {error}
+              </Text>
+            )}
+            {__DEV__ && diagnostic !== undefined ? (
+              <Text variant="caption" color="secondary">
+                {`Debug: ${diagnostic}`}
+              </Text>
+            ) : null}
+
+            <View style={styles.actions}>
+              <Button
+                label={t('common.cancel')}
+                variant="ghost"
+                onPress={() => setKind(null)}
+                disabled={saving}
+              />
+              <Button
+                label={t('obligationForm.save')}
+                onPress={() => void handleSave()}
+                loading={saving}
+              />
+            </View>
+          </View>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   scroll: {
     padding: space[4],
     gap: space[4],
-    paddingBottom: space[8],
+    paddingBottom: space[10],
   },
   pickerGroup: {
     gap: space[3],
