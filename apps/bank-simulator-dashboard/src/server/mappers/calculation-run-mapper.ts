@@ -12,6 +12,7 @@ import {
 import type { Database, Json } from '../supabase/database.types'
 
 type CalculationRunRow = Database['public']['Tables']['calculation_runs']['Row']
+type CalculationRunInsert = Database['public']['Tables']['calculation_runs']['Insert']
 
 function toConfidence(value: string): Confidence {
   if (value === 'official' || value === 'high' || value === 'medium' || value === 'low')
@@ -68,5 +69,29 @@ export function calculationRunRowToDomain(row: CalculationRunRow): CalculationRu
     outcome,
     assumptions: toMissingFields(row.assumptions_json),
     calculatedAt: row.calculated_at,
+  }
+}
+
+export function calculationRunDomainToRow(run: CalculationRun): CalculationRunInsert {
+  const isResult = run.outcome.kind === 'result'
+  return {
+    id: run.id,
+    user_id: run.userId,
+    obligation_id: run.obligationId ?? null,
+    formula_id: run.formulaId,
+    formula_version: run.formulaVersion,
+    as_of: run.asOf,
+    inputs_json: run.inputsSnapshot as Json,
+    inputs_hash: run.inputsHash,
+    outcome_kind: run.outcome.kind,
+    confidence: isResult ? run.outcome.confidence : null,
+    result_json: isResult ? (run.outcome.resultSnapshot as Json) : null,
+    missing_fields_json: !isResult ? (run.outcome.missingFields as unknown as Json) : null,
+    partial_json:
+      !isResult && run.outcome.partialSnapshot !== undefined
+        ? (run.outcome.partialSnapshot as Json)
+        : null,
+    assumptions_json: run.assumptions as unknown as Json,
+    calculated_at: run.calculatedAt,
   }
 }

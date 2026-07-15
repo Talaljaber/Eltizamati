@@ -6,6 +6,7 @@ import {
 } from '@/server/rate-campaign-eligibility'
 import { computeImpactPreview, type ServicingPolicy } from '@/server/impact-preview-service'
 import { formatMoney, formatRate } from '@/format/money'
+import { publishCampaignAction } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,8 +76,9 @@ export default async function BankRateSimulatorPage({
     <div>
       <h1 className="page-title">Bank Rate Simulator</h1>
       <p className="page-subtitle">
-        Preview only — publishing a campaign (appending the rate history, running the impact
-        calculation, and queuing notifications) lands in Phase 4. Nothing shown here is persisted.
+        Preview a rate change, then publish to append the real rate history, re-run the affected
+        loans&apos; calculations and insights, and queue notifications. Rate history is append-only
+        — publishing never rewrites an existing rate period.
       </p>
 
       <form method="get" className="card" style={{ marginBlockEnd: 'var(--space-5)' }}>
@@ -146,20 +148,83 @@ export default async function BankRateSimulatorPage({
         </div>
       </form>
 
-      {!hasSubmitted || eligibility === undefined || newAnnualRate === undefined ? (
+      {institution === undefined || eligibility === undefined || newAnnualRate === undefined ? (
         <div className="card">
           <p>
             Select an institution and a new annual rate to preview eligible loans and their impact.
           </p>
         </div>
       ) : (
-        <CampaignPreview
-          eligibility={eligibility}
-          newAnnualRate={newAnnualRate}
-          effectiveDate={effectiveDate}
-          servicingPolicy={servicingPolicy}
-          today={today}
-        />
+        <>
+          <CampaignPreview
+            eligibility={eligibility}
+            newAnnualRate={newAnnualRate}
+            effectiveDate={effectiveDate}
+            servicingPolicy={servicingPolicy}
+            today={today}
+          />
+          {eligibility.eligible.length > 0 ? (
+            <form
+              action={publishCampaignAction}
+              className="card"
+              style={{ marginBlockStart: 'var(--space-5)' }}
+            >
+              <h3 style={{ marginBlockStart: 0, fontSize: 15 }}>Publish this campaign</h3>
+              <input type="hidden" name="institution" value={institution} />
+              <input
+                type="hidden"
+                name="newAnnualRate"
+                value={str(resolved, 'newAnnualRate') ?? ''}
+              />
+              <input type="hidden" name="effectiveDate" value={effectiveDate} />
+              <input type="hidden" name="servicingPolicy" value={servicingPolicy} />
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-3)',
+                  maxInlineSize: 480,
+                }}
+              >
+                <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
+                  Campaign name
+                  <input
+                    type="text"
+                    name="campaignName"
+                    required
+                    defaultValue={`${institution} rate adjustment — ${effectiveDate}`}
+                    style={{ padding: 4, borderRadius: 4, border: '1px solid var(--color-border)' }}
+                  />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
+                  Reason
+                  <input
+                    type="text"
+                    name="reason"
+                    style={{ padding: 4, borderRadius: 4, border: '1px solid var(--color-border)' }}
+                  />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
+                  Source note
+                  <input
+                    type="text"
+                    name="sourceNote"
+                    style={{ padding: 4, borderRadius: 4, border: '1px solid var(--color-border)' }}
+                  />
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                  <input type="checkbox" name="emailNotificationEnabled" />
+                  Send email notifications (subject to the recipient allowlist and current email
+                  mode)
+                </label>
+                <button type="submit" className="button-primary">
+                  Publish campaign ({eligibility.eligible.length} loan
+                  {eligibility.eligible.length === 1 ? '' : 's'})
+                </button>
+              </div>
+            </form>
+          ) : null}
+        </>
       )}
     </div>
   )

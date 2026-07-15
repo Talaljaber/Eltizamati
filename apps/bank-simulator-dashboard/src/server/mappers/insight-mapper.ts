@@ -13,6 +13,7 @@ import {
 import type { Database, Json } from '../supabase/database.types'
 
 type InsightRow = Database['public']['Tables']['insights']['Row']
+type InsightInsert = Database['public']['Tables']['insights']['Insert']
 
 function toSeverity(value: string): InsightSeverity {
   if (value === 'info' || value === 'attention' || value === 'urgent' || value === 'positive') {
@@ -43,5 +44,22 @@ export function insightRowToDomain(row: InsightRow): Insight {
     deepLink: row.deep_link ?? undefined,
     readAt: row.read_at ?? undefined,
     createdAt: row.created_at,
+  }
+}
+
+export function insightDomainToRow(insight: Insight): InsightInsert {
+  return {
+    id: insight.id,
+    user_id: insight.userId,
+    rule_id: insight.ruleId,
+    obligation_id: insight.obligationId ?? null,
+    severity: insight.severity,
+    title_key: insight.titleKey,
+    body_key: insight.bodyKey,
+    params_json: insight.params ? (insight.params as unknown as Json) : null,
+    trigger_hash: insight.triggerHash,
+    deep_link: insight.deepLink ?? null,
+    read_at: insight.readAt ?? null,
+    created_at: insight.createdAt,
   }
 }

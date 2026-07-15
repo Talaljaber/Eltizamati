@@ -301,9 +301,175 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['consent_records']['Insert']>
         Relationships: []
       }
+      demo_rate_campaigns: {
+        Row: {
+          id: string
+          campaign_name: string
+          institution_name: string
+          reason: string | null
+          source_note: string | null
+          old_annual_rate: number | null
+          new_annual_rate: number
+          effective_date: string
+          product_scope: string
+          installment_policy: string
+          email_notification_enabled: boolean
+          status: string
+          created_at: string
+          published_at: string | null
+        }
+        Insert: {
+          id: string
+          campaign_name: string
+          institution_name: string
+          reason?: string | null
+          source_note?: string | null
+          old_annual_rate?: number | null
+          new_annual_rate: number
+          effective_date: string
+          product_scope?: string
+          installment_policy: string
+          email_notification_enabled?: boolean
+          status?: string
+          created_at?: string
+          published_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['demo_rate_campaigns']['Insert']>
+        Relationships: []
+      }
+      demo_rate_campaign_targets: {
+        Row: {
+          id: string
+          campaign_id: string
+          obligation_id: string
+          user_id: string
+          eligibility: string
+          exclusion_reason: string | null
+          previous_rate_period_id: string | null
+          new_rate_period_id: string | null
+          calculation_run_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          campaign_id: string
+          obligation_id: string
+          user_id: string
+          eligibility: string
+          exclusion_reason?: string | null
+          previous_rate_period_id?: string | null
+          new_rate_period_id?: string | null
+          calculation_run_id?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['demo_rate_campaign_targets']['Insert']>
+        Relationships: []
+      }
+      demo_benchmark_rates: {
+        Row: {
+          id: string
+          benchmark_name: string
+          previous_rate: number
+          new_rate: number
+          announcement_date: string
+          effective_date: string
+          explanation: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          benchmark_name: string
+          previous_rate: number
+          new_rate: number
+          announcement_date: string
+          effective_date: string
+          explanation?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['demo_benchmark_rates']['Insert']>
+        Relationships: []
+      }
+      demo_email_outbox: {
+        Row: {
+          id: string
+          campaign_id: string | null
+          user_id: string
+          locale: string
+          recipient_hash: string
+          recipient_masked: string
+          template_id: string
+          status: string
+          attempt_count: number
+          idempotency_key: string
+          safe_error_code: string | null
+          created_at: string
+          sent_at: string | null
+        }
+        Insert: {
+          id?: string
+          campaign_id?: string | null
+          user_id: string
+          locale: string
+          recipient_hash: string
+          recipient_masked: string
+          template_id: string
+          status: string
+          attempt_count?: number
+          idempotency_key: string
+          safe_error_code?: string | null
+          created_at?: string
+          sent_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['demo_email_outbox']['Insert']>
+        Relationships: []
+      }
+      demo_dashboard_activity: {
+        Row: {
+          id: string
+          event_type: string
+          campaign_id: string | null
+          summary: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_type: string
+          campaign_id?: string | null
+          summary: string
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['demo_dashboard_activity']['Insert']>
+        Relationships: []
+      }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      demo_publish_rate_campaign: {
+        Args: {
+          p_campaign_id: string
+          p_campaign_name: string
+          p_institution_name: string
+          p_reason: string | null
+          p_source_note: string | null
+          p_old_annual_rate: number | null
+          p_new_annual_rate: number
+          p_effective_date: string
+          p_installment_policy: string
+          p_email_notification_enabled: boolean
+          p_target_obligation_ids: string[]
+        }
+        Returns: Database['public']['Tables']['demo_rate_campaigns']['Row']
+      }
+      demo_record_excluded_targets: {
+        Args: {
+          p_campaign_id: string
+          p_obligation_ids: string[]
+          p_user_ids: string[]
+          p_reasons: string[]
+        }
+        Returns: undefined
+      }
+    }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }
