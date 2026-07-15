@@ -62,13 +62,13 @@ mode only, clearly labelled as not live AI.
 
 ## Screen inventory and acceptance criteria
 
-* Learn home: search, journeys, topic navigation, dated snapshot, assistant
+- Learn home: search, journeys, topic navigation, dated snapshot, assistant
   entry, Arabic translations, and no financial recommendation language.
-* Compare: public preference intake, matches/no-match, source and freshness
+- Compare: public preference intake, matches/no-match, source and freshness
   information, and no eligibility promise.
-* Assistant: privacy notice, offline/unavailable state, sample-only response,
+- Assistant: privacy notice, offline/unavailable state, sample-only response,
   citations, assumptions, and questions to ask the institution.
-* Topic detail: related glossary and improved navigation continuity.
+- Topic detail: related glossary and improved navigation continuity.
 
 Acceptance requires both EN/AR keys, accessible controls, deterministic tests
 for filtering/ranking and payload minimization, source validation, and existing

@@ -26,7 +26,8 @@ export interface FinancialInstitution {
   readonly bankingModel: 'conventional' | 'islamic' | 'mixed'
   readonly website: string
   readonly sourceId: string
-  readonly status: 'verified' | 'partially-verified' | 'no-public-product-data-found' | 'pending-review'
+  readonly status:
+    'verified' | 'partially-verified' | 'no-public-product-data-found' | 'pending-review'
   readonly lastReviewedAt: string
 }
 
@@ -46,11 +47,13 @@ export interface FinancingProduct {
   readonly nameEn: string
   readonly nameAr: string | null
   readonly category: 'personal' | 'vehicle' | 'housing' | 'education' | 'credit-card' | 'other'
-  readonly structure: 'conventional-loan' | 'murabaha' | 'ijara' | 'diminishing-musharakah' | 'credit-card' | 'other'
+  readonly structure:
+    'conventional-loan' | 'murabaha' | 'ijara' | 'diminishing-musharakah' | 'credit-card' | 'other'
   readonly amountRange: { readonly minimum: Money | null; readonly maximum: Money | null }
   readonly termMonths: { readonly minimum: number | null; readonly maximum: number | null }
   readonly pricing: {
-    readonly kind: 'fixed-interest' | 'variable-interest' | 'profit-rate' | 'advertised-from' | 'not-published'
+    readonly kind:
+      'fixed-interest' | 'variable-interest' | 'profit-rate' | 'advertised-from' | 'not-published'
     readonly minimumAnnualRate: Rate | null
     readonly maximumAnnualRate: Rate | null
     readonly benchmarkName: string | null
