@@ -5,6 +5,7 @@ import { Stack } from 'expo-router'
 import { Button, Card, Screen, SectionHeader, Text, TextField } from '@/core/design-system'
 import { SOURCE_RECORDS } from '@/features/learn/model/catalogue-snapshot'
 import { createLearningAssistantRequest } from '@/features/learn/model/assistant'
+import { SupabaseLearningAssistantGateway } from '@/features/learn/model/supabase-learning-assistant-gateway'
 
 type ChatMessage =
   | {
@@ -23,11 +24,12 @@ type ChatMessage =
 export default function LearnAssistantScreen() {
   const { t, i18n } = useTranslation()
   const [draft, setDraft] = useState('')
+  const [isSending, setIsSending] = useState(false)
   const [messages, setMessages] = useState<readonly ChatMessage[]>([
     { id: 'greeting', role: 'assistant', text: t('learn.assistantGreeting'), sourceIds: [] },
   ])
 
-  const send = () => {
+  const send = async () => {
     const request = createLearningAssistantRequest({
       question: draft,
       language: i18n.language.startsWith('ar') ? 'ar' : 'en',
@@ -36,14 +38,46 @@ export default function LearnAssistantScreen() {
     setMessages((current) => [
       ...current,
       { id: `user-${current.length}`, role: 'user', text: request.question, sourceIds: [] },
-      {
-        id: `unavailable-${current.length}`,
-        role: 'assistant',
-        text: t('learn.assistantUnavailable'),
-        sourceIds: [],
-      },
     ])
     setDraft('')
+    setIsSending(true)
+    try {
+      const result = await new SupabaseLearningAssistantGateway().answer(request)
+      if (!result.ok) {
+        setMessages((current) => [
+          ...current,
+          {
+            id: `unavailable-${current.length}`,
+            role: 'assistant',
+            text: t('learn.assistantUnavailable'),
+            sourceIds: [],
+          },
+        ])
+        return
+      }
+      const response = result.value
+      setMessages((current) => [
+        ...current,
+        {
+          id: `assistant-${current.length}`,
+          role: 'assistant',
+          text: response.answer || t('learn.assistantUnavailable'),
+          sourceIds: response.sourceIds,
+        },
+      ])
+    } catch {
+      setMessages((current) => [
+        ...current,
+        {
+          id: `unavailable-${current.length}`,
+          role: 'assistant',
+          text: t('learn.assistantUnavailable'),
+          sourceIds: [],
+        },
+      ])
+    } finally {
+      setIsSending(false)
+    }
   }
 
   return (
@@ -75,8 +109,11 @@ export default function LearnAssistantScreen() {
         />
         <Button
           label={t('learn.assistantSend')}
-          onPress={send}
-          disabled={draft.trim().length === 0}
+          onPress={() => {
+            void send()
+          }}
+          disabled={draft.trim().length === 0 || isSending}
+          loading={isSending}
           testID="learn-assistant-send"
         />
       </View>

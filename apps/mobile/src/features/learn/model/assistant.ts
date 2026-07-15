@@ -23,7 +23,7 @@ export interface LearningAssistantResponse {
 }
 
 export interface LearningAssistantGateway {
-  answer(request: LearningAssistantRequest): Promise<LearningAssistantResponse>
+  answer(request: LearningAssistantRequest): Promise<Result<LearningAssistantResponse, AppError>>
 }
 
 /** Reject provider output that cites un-retrieved sources or introduces new numeric claims. */
@@ -52,3 +52,4 @@ export function createLearningAssistantRequest(input: {
         : null,
   }
 }
+import type { AppError, Result } from '@eltizamati/domain'

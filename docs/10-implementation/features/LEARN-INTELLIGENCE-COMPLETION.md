@@ -66,6 +66,13 @@ inventory and source reviews; establish refresh cadence; deploy migration;
 provide server-side provider secret; deploy Edge Function; set rate limits,
 allowed origins, monitoring, and output-validation tests.
 
+For the live chat, set `OPENAI_API_KEY` and optional `OPENAI_MODEL` in the
+**Supabase Edge Function secret environment** (or dashboard), then deploy
+`learn-assistant`. `apps/mobile/.env` must contain only
+`EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`; adding the
+OpenAI key there would expose it in the mobile bundle. A safe template is at
+`supabase/functions/.env.example`.
+
 ## Verification
 
 - `pnpm --filter @eltizamati/mobile typecheck` — passed.
