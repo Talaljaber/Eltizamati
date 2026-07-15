@@ -2,6 +2,25 @@
 
 > Read this first, then the active phase file. Update this file at every session end and every phase state change. Pre-plan history: [status-m0-session-log.md](status-m0-session-log.md) (the mid-M0 session log) and (independent audit, 2026-07-11). Master plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
 
+## 2026-07-15 addendum — Password auth with first-time signup verification
+
+[ADR-0019](../09-decisions/ADR-0019-password-auth-with-signup-email-verification.md) supersedes
+ADR-0018. Personal accounts now use separate password sign-up/sign-in; only a new registration is
+verified with a six-digit Confirm-signup email code. New verified profiles collect full name, E.164
+contact phone, and primary bank under existing owner-only RLS. Hosted configuration and live delivery
+remain owner actions requiring verification.
+
+## 2026-07-15 historical addendum — superseded OTP-only implementation
+
+[ADR-0018](../09-decisions/ADR-0018-passwordless-email-otp.md) replaces production password auth
+with one email-only six-digit OTP flow. Repository implementation now includes explicit unified-user
+creation, in-app OTP verification, memory-only attempt state, authenticated create-if-absent profile
+provisioning, profile-before-consent startup repair, globally exclusive entry, legacy-route redirects,
+and a local Mailpit OTP template/harness. Password sign-in, sign-up, reset, update, and callback
+behavior is removed. Hosted template/SMTP/rate-limit checks and device/live-email acceptance remain
+**OWNER ACTION — NOT VERIFIED**. This correction is uncommitted and must stop for independent review;
+it does not change the active Phase 8.5/Phase 9 gate.
+
 ## 2026-07-15 addendum — STOP-SHIP remediation Waves 1–3: five confirmed repository defects fixed and verified
 
 The five confirmed repository defects surfaced by the `docs/ship-situation.md` review were fixed

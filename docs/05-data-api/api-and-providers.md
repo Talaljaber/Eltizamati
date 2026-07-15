@@ -25,7 +25,7 @@ Commands/queries are zod-validated DTOs in each feature's `api/` module; service
 - **Edge Functions (TypeScript/Deno):** `POST /providers/crif/sync` (consent-checked, secrets server-side, returns normalized import records) · `POST /account/delete` (erasure workflow + audit) · `POST /export` (server-side export) — all with `Idempotency-Key` header support and rate limiting (Supabase built-ins + per-user counters).
 - **Versioning:** Edge Function routes under `/v1/`; breaking changes → `/v2/` + deprecation window. DTO schemas shared via `packages/domain` zod (client and functions import the same schemas — the monorepo payoff).
 - **Idempotency:** client-generated uuid v7 entity ids; upsert semantics on sync; `Idempotency-Key` for non-entity commands.
-- **Auth:** Supabase JWT; session refresh via supabase-js; tokens in SecureStore (NFR-SEC-003).
+- **Auth:** ADR-0019 email/password (`signUp`, `signInWithPassword`) plus in-app signup `verifyOtp`; Supabase JWT/session refresh; tokens in SecureStore. Profile provisioning is authenticated, RLS-bound, insert-only-if-absent, and precedes consent/repository entry.
 
 ## 3. External provider contracts (P1; shapes assumed per ASM-003 — revalidate against real sandbox docs, RES-002)
 
