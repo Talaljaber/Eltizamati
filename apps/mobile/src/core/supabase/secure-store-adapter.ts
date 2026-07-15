@@ -46,10 +46,10 @@ async function readChunked(key: string, chunkCount: number): Promise<string | nu
   return chunks.join('')
 }
 
-async function deleteChunks(key: string, chunkCount: number): Promise<void> {
+async function deleteChunks(key: string, chunkCount: number, fromIndex = 0): Promise<void> {
   await Promise.all(
-    Array.from({ length: chunkCount }, (_, index) =>
-      SecureStore.deleteItemAsync(`${key}_${index}`),
+    Array.from({ length: chunkCount - fromIndex }, (_, offset) =>
+      SecureStore.deleteItemAsync(`${key}_${fromIndex + offset}`),
     ),
   )
 }
@@ -70,8 +70,19 @@ export const secureStoreAdapter: SupportedStorage = {
   },
 
   async setItem(key: string, value: string): Promise<void> {
+    // A previous write may have chunked this key. If the new value is
+    // unchunked, or chunks into fewer pieces, the leftover chunk items are
+    // no longer referenced by anything and must be reclaimed — otherwise
+    // stale ciphertext (e.g. a superseded refresh token) lingers in the
+    // Keychain/Keystore indefinitely.
+    const previous = (await Promise.resolve(SecureStore.getItemAsync(key)).catch(() => null)) ?? null
+    const previousChunkCount = previous === null ? undefined : parseManifest(previous)
+
     if (value.length <= CHUNK_SIZE) {
       await SecureStore.setItemAsync(key, value)
+      if (previousChunkCount !== undefined) {
+        await deleteChunks(key, previousChunkCount)
+      }
       return
     }
     const chunks = chunksOf(value, CHUNK_SIZE)
@@ -81,6 +92,9 @@ export const secureStoreAdapter: SupportedStorage = {
     // Written last so a value is never observed as chunked before all of its
     // chunks exist.
     await SecureStore.setItemAsync(key, `${MANIFEST_PREFIX}${chunks.length}`)
+    if (previousChunkCount !== undefined && previousChunkCount > chunks.length) {
+      await deleteChunks(key, previousChunkCount, chunks.length)
+    }
   },
 
   async removeItem(key: string): Promise<void> {
