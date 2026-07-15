@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { localDateFromDate } from '@eltizamati/domain'
 import { listAllowlistedProfiles } from '@/server/repositories/profile-repository'
 import { listAllowlistedObligations } from '@/server/repositories/obligation-repository'
@@ -172,7 +173,9 @@ export default async function ClientsPage({
           <tbody>
             {rows.map((row) => (
               <tr key={row.userId} style={{ borderBlockEnd: '1px solid var(--color-border)' }}>
-                <Td>{row.maskedName}</Td>
+                <Td>
+                  <Link href={`/clients/${row.userId}`}>{row.maskedName}</Link>
+                </Td>
                 <Td>{row.locale.toUpperCase()}</Td>
                 <Td>{row.primaryBank ?? '—'}</Td>
                 <Td>{row.obligationCount}</Td>
