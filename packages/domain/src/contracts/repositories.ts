@@ -64,5 +64,7 @@ export interface ConsentRepository {
 
 export interface UserProfileRepository {
   get(userId: Id<'user'>): Promise<Result<UserProfile, AppError>>
+  /** Inserts only when absent and returns the existing row on a uniqueness race. */
+  createIfAbsent(profile: UserProfile): Promise<Result<UserProfile, AppError>>
   save(profile: UserProfile): Promise<Result<UserProfile, AppError>>
 }

@@ -22,7 +22,15 @@
  *     construct the real client; only invoking the returned getter does.
  */
 
-import { createContext, useCallback, useContext, useRef, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from 'react'
 import {
   DomainInvariantError,
   err,
@@ -31,15 +39,21 @@ import {
   type ConsentRepository,
   type Result,
 } from '@eltizamati/domain'
-import { getSupabaseClient } from '@/core/supabase/client'
+import { disposeSupabaseAuthLifecycle, getSupabaseClient } from '@/core/supabase/client'
 import type { AuthService } from '@/services/auth/auth-service'
 import { SupabaseAuthService } from '@/services/auth/supabase-auth-service'
 import { SupabaseConsentRepository } from '@/services/repositories/supabase/consent-repository'
+import {
+  createPersonalRepositoryRegistry,
+  type RepositoryRegistry,
+} from '@/services/composition-root'
 
 interface PersonalAuthServices {
   readonly authService: AuthService
   /** For the sign-up/first-sign-in server-backed consent write (PHASE-04 §3). */
   readonly consentRepository: ConsentRepository
+  /** Built from the same client as auth; installed by personal-mode boot only. */
+  readonly repositories: RepositoryRegistry
 }
 
 type ServicesGetter = () => Result<PersonalAuthServices, AppError>
@@ -61,9 +75,12 @@ export function AuthServiceProvider({ children }: { children: ReactNode }) {
     cachedRef.current = ok({
       authService: new SupabaseAuthService(client),
       consentRepository: new SupabaseConsentRepository(client),
+      repositories: createPersonalRepositoryRegistry(client),
     })
     return cachedRef.current
   }, [])
+
+  useEffect(() => () => disposeSupabaseAuthLifecycle(), [])
 
   return <AuthServiceContext.Provider value={getServices}>{children}</AuthServiceContext.Provider>
 }
@@ -81,7 +98,7 @@ function useServicesGetter(): ServicesGetter {
 
 export function useAuthService(): Result<AuthService, AppError> {
   const result = useServicesGetter()()
-  return result.ok ? ok(result.value.authService) : result
+  return useMemo(() => (result.ok ? ok(result.value.authService) : result), [result])
 }
 
 /**
@@ -99,7 +116,24 @@ export function useAuthServiceIfAvailable(): Result<AuthService, AppError> | nul
 
 export function useConsentRepository(): Result<ConsentRepository, AppError> {
   const result = useServicesGetter()()
-  return result.ok ? ok(result.value.consentRepository) : result
+  return useMemo(() => (result.ok ? ok(result.value.consentRepository) : result), [result])
+}
+
+export function useConsentRepositoryLazy(): () => Result<ConsentRepository, AppError> {
+  const getServices = useServicesGetter()
+  return useCallback((): Result<ConsentRepository, AppError> => {
+    const result = getServices()
+    return result.ok ? ok(result.value.consentRepository) : result
+  }, [getServices])
+}
+
+/** Returns the production personal repository registry without constructing another client or root. */
+export function usePersonalRepositoriesLazy(): () => Result<RepositoryRegistry, AppError> {
+  const getServices = useServicesGetter()
+  return useCallback((): Result<RepositoryRegistry, AppError> => {
+    const result = getServices()
+    return result.ok ? ok(result.value.repositories) : result
+  }, [getServices])
 }
 
 /**

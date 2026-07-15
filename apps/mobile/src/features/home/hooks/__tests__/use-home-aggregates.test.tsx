@@ -5,21 +5,12 @@ import { createDemoRepositories } from '@/services/repositories/demo'
 import { ImportService } from '@/services/import-service'
 import { DemoSeedProvider } from '@/services/demo-seed-provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { getDataMode } from '@/features/demo/stores/demo-mode-store'
 import * as useReposModule from '@/features/repositories/hooks/use-repositories'
+import { aLoan, DEMO_DATE } from '@eltizamati/demo-data'
+import { toLocalDate } from '@eltizamati/domain'
 
-jest.mock('@/features/demo/stores/demo-mode-store', () => ({
-  getDataMode: jest.fn(),
-}))
-
-jest.mock('@/features/auth/hooks/use-auth-service', () => ({
-  useAuthServiceLazy: jest.fn(() => () => ({
-    ok: true,
-    value: {
-      currentSession: jest.fn().mockResolvedValue({ ok: true, value: { user: { id: 'user-1' } } }),
-      onAuthStateChange: jest.fn(() => jest.fn()),
-    },
-  })),
+jest.mock('@/features/auth/hooks/use-active-user', () => ({
+  useActiveUser: () => 'demo-user',
 }))
 
 describe('useHomeAggregates', () => {
@@ -27,7 +18,11 @@ describe('useHomeAggregates', () => {
 
   beforeEach(() => {
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    ;(getDataMode as jest.Mock).mockResolvedValue('demo')
+  })
+
+  afterEach(() => {
+    queryClient.clear()
+    jest.restoreAllMocks()
   })
 
   it('resolves total monthly commitment and next due payment against seeded demo data', async () => {
@@ -46,7 +41,9 @@ describe('useHomeAggregates', () => {
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )
 
-    const { result } = renderHook(() => useHomeAggregates(obligations), { wrapper })
+    const { result, unmount } = renderHook(() => useHomeAggregates(obligations, DEMO_DATE), {
+      wrapper,
+    })
 
     await waitFor(
       () => {
@@ -62,5 +59,59 @@ describe('useHomeAggregates', () => {
     // This describes aggregate input quality only; the calculated output still
     // has estimate provenance regardless of this value.
     expect(result.current.hasEstimatedInputs).toBe(true)
+    unmount()
+
+    const latestRun = await repos.calculationRunRepository.latestFor(undefined, 'aggregates')
+    expect(latestRun.ok).toBe(true)
+    if (latestRun.ok) expect(latestRun.value?.asOf).toBe(DEMO_DATE)
+  })
+
+  it('treats a new account with no obligations as successful empty data without a calculation run', async () => {
+    const repos = createDemoRepositories()
+    jest.spyOn(useReposModule, 'useRepositories').mockReturnValue(repos)
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+    const { result, unmount } = renderHook(() => useHomeAggregates([], DEMO_DATE), { wrapper })
+
+    await waitFor(() => expect(result.current.status).toBe('success'))
+    expect(result.current.hasEstimatedInputs).toBe(false)
+    const latestRun = await repos.calculationRunRepository.latestFor(undefined, 'aggregates')
+    expect(latestRun).toEqual({ ok: true, value: undefined })
+    unmount()
+  })
+
+  it('persists and applies the explicit personal as-of date instead of the demo fixture date', async () => {
+    const repos = createDemoRepositories()
+    jest.spyOn(useReposModule, 'useRepositories').mockReturnValue(repos)
+    const personalAsOf = toLocalDate('2026-07-17')
+    const demoLoan = aLoan()
+    const personalLoan = {
+      ...demoLoan,
+      provenance: {
+        source: 'userEntered' as const,
+        observedAt: '2026-07-17T00:00:00.000Z',
+        recordedAt: '2026-07-17T00:00:00.000Z',
+      },
+    }
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+    const { result, unmount } = renderHook(() => useHomeAggregates([personalLoan], personalAsOf), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.status).toBe('success'), { timeout: 3000 })
+    unmount()
+
+    const latestRun = await repos.calculationRunRepository.latestFor(undefined, 'aggregates')
+    expect(latestRun.ok).toBe(true)
+    if (latestRun.ok) {
+      expect(latestRun.value?.asOf).toBe(personalAsOf)
+      expect(latestRun.value?.inputsSnapshot).toEqual(
+        expect.objectContaining({ asOf: personalAsOf }),
+      )
+    }
   })
 })

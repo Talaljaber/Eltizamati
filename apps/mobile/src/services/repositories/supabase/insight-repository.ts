@@ -2,7 +2,6 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   err,
   ok,
-  makeError,
   type Result,
   type AppError,
   type Id,
@@ -11,10 +10,7 @@ import {
 } from '@eltizamati/domain'
 import type { Database } from '../../../core/supabase/database.types'
 import { insightDomainToRow, insightRowToDomain } from './mappers/insight-mapper'
-
-function toStorageAppError(error: { code: string; message: string }): AppError {
-  return makeError('storage', { safeMetadata: { postgresErrorCode: error.code }, cause: error })
-}
+import { toSupabaseAppError } from '../../../core/supabase/supabase-error'
 
 export class SupabaseInsightRepository implements InsightRepository {
   constructor(private readonly client: SupabaseClient<Database>) {}
@@ -25,7 +21,7 @@ export class SupabaseInsightRepository implements InsightRepository {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-    if (error) return err(toStorageAppError(error))
+    if (error) return err(toSupabaseAppError(error))
     return ok(data.map(insightRowToDomain))
   }
 
@@ -34,7 +30,7 @@ export class SupabaseInsightRepository implements InsightRepository {
       .from('insights')
       .update({ read_at: new Date().toISOString() })
       .eq('id', id)
-    if (error) return err(toStorageAppError(error))
+    if (error) return err(toSupabaseAppError(error))
     return ok(undefined)
   }
 
@@ -44,7 +40,7 @@ export class SupabaseInsightRepository implements InsightRepository {
       .insert(insightDomainToRow(insight))
       .select('*')
       .single()
-    if (error) return err(toStorageAppError(error))
+    if (error) return err(toSupabaseAppError(error))
     return ok(insightRowToDomain(data))
   }
 }

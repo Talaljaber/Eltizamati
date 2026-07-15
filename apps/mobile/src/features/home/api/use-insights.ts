@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { isOk, type InsightRepository, type Id } from '@eltizamati/domain'
 import { insightKeys } from './keys'
 
-export function useInsights(repository: InsightRepository, userId: Id<'user'>) {
+export function useInsights(repository: InsightRepository, userId: Id<'user'>, isDemoMode = false) {
   return useQuery({
     queryKey: insightKeys.list(userId),
     queryFn: async () => {
@@ -15,6 +15,7 @@ export function useInsights(repository: InsightRepository, userId: Id<'user'>) {
       if (!isOk(result)) throw result.error
       return result.value
     },
-    staleTime: Infinity,
+    enabled: userId !== '',
+    staleTime: isDemoMode ? Infinity : 30_000,
   })
 }

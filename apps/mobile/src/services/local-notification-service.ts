@@ -51,3 +51,23 @@ export async function cancelLocalReminder(): Promise<void> {
   if (id !== null) await Notifications.cancelScheduledNotificationAsync(id)
   await AsyncStorage.removeItem(REMINDER_ID_KEY)
 }
+
+let notificationNavigationEnabled = true
+
+export function enableNotificationNavigation(): void {
+  notificationNavigationEnabled = true
+}
+
+export function disableNotificationNavigation(): void {
+  notificationNavigationEnabled = false
+}
+
+export function canNavigateNotificationResponse(): boolean {
+  return notificationNavigationEnabled
+}
+
+/** Removes a prior user's retained notification response before another account can navigate it. */
+export async function clearLastNotificationResponse(): Promise<void> {
+  disableNotificationNavigation()
+  await Notifications.clearLastNotificationResponseAsync()
+}

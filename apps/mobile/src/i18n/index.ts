@@ -35,7 +35,7 @@ const languageDetector: LanguageDetectorAsyncModule = {
   },
 }
 
-i18n
+export const i18nInitialization: Promise<void> = i18n
   .use(languageDetector)
   .use(initReactI18next)
   .init({
@@ -48,7 +48,11 @@ i18n
       escapeValue: false, // React already safeguards from XSS
     },
   })
-  .catch(console.error)
+  .then(() => undefined)
+
+// Keep the module import safe for callers that do not mount startup, while the
+// original exported promise remains rejectable for StartupCoordinator.
+void i18nInitialization.catch(console.error)
 
 /**
  * Change language and automatically enforce RTL alignment.

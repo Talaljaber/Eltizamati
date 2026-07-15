@@ -31,7 +31,7 @@ function LogPaymentInner() {
   const obligationId = id as Id<'obligation'>
 
   const { data: obligation, isLoading } = useQuery({
-    queryKey: ['obligation', obligationId],
+    queryKey: ['obligation', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.obligationRepository.get(obligationId)
       if (!res.ok) throw res.error

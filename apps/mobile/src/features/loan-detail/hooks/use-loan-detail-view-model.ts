@@ -15,6 +15,7 @@ import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotMoneyAmount } from '@/services/calculation-snapshot'
 import { calculationAsOf } from '@/services/calculation-as-of'
+import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
 
 export interface LoanDetailHeroModel {
   /** Undefined when neither an official balance nor an engine estimate is available — render as "unknown", never a fabricated amount. */
@@ -37,6 +38,7 @@ export interface LoanDetailViewModel {
 export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDetailViewModel {
   const repos = useRepositories()
   const activeUser = useActiveUser()
+  const personalAsOf = usePersonalCalculationAsOf()
 
   const calcService = useMemo(
     () => new CalculationService(repos.calculationRunRepository),
@@ -44,7 +46,7 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
   )
 
   const { data: obligation, isError: isObligationError } = useQuery({
-    queryKey: ['obligation', obligationId],
+    queryKey: ['obligation', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.obligationRepository.get(obligationId)
       if (!res.ok) throw res.error
@@ -53,7 +55,7 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
   })
 
   const { data: ratePeriods } = useQuery({
-    queryKey: ['ratePeriods', obligationId],
+    queryKey: ['ratePeriods', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.ratePeriodRepository.historyFor(obligationId)
       if (!res.ok) throw res.error
@@ -63,7 +65,7 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
   })
 
   const { data: payments } = useQuery({
-    queryKey: ['payments', obligationId],
+    queryKey: ['payments', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.paymentRepository.listFor(obligationId)
       if (!res.ok) throw res.error
@@ -71,16 +73,16 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
     },
     enabled: !!obligation,
   })
+  const asOf = calculationAsOf(typeof repos.reset === 'function' ? 'demo' : 'personal', personalAsOf)
 
   // Hero calculation using variableProjection.v1
   const { data: projectionRun } = useQuery({
-    queryKey: ['projection', obligationId, activeUser],
+    queryKey: ['projection', obligationId, activeUser, asOf],
     queryFn: async (): Promise<CalculationRun | null> => {
       if (!activeUser || !obligation || obligation.kind !== 'conventionalLoan' || !ratePeriods) {
         return null
       }
       // Orchestrate the financial engine call through CalculationService
-      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,

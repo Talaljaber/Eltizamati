@@ -11,6 +11,7 @@ import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { calculationAsOf } from '@/services/calculation-as-of'
+import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
 
 /** NFR-PERF-002 — debounce the recalculation trigger, not every keystroke. */
 const SCENARIO_INPUT_DEBOUNCE_MS = 300
@@ -46,6 +47,7 @@ export interface ScenarioSimulatorViewModel {
 export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSimulatorViewModel {
   const repos = useRepositories()
   const activeUser = useActiveUser()
+  const personalAsOf = usePersonalCalculationAsOf()
   // Default to +50 JOD (TV-304 structural anchor) until the user edits it.
   const [draftExtraMonthly, setDraftExtraMonthly] = useState<number>(50)
   const [extraMonthly, setExtraMonthly] = useState<number>(50)
@@ -63,7 +65,7 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
   )
 
   const { data: obligation, isError: isOblError } = useQuery({
-    queryKey: ['obligation', obligationId],
+    queryKey: ['obligation', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.obligationRepository.get(obligationId)
       if (!res.ok) throw res.error
@@ -72,7 +74,7 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
   })
 
   const { data: ratePeriods } = useQuery({
-    queryKey: ['ratePeriods', obligationId],
+    queryKey: ['ratePeriods', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.ratePeriodRepository.historyFor(obligationId)
       if (!res.ok) throw res.error
@@ -86,9 +88,13 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
     obligation?.kind === 'conventionalLoan' &&
     !!ratePeriods &&
     (extraMonthly > 0 || oneTimeAmount > 0)
+  const asOf = calculationAsOf(
+    typeof repos.reset === 'function' ? 'demo' : 'personal',
+    personalAsOf,
+  )
 
   const { data: run, isError: isRunError } = useQuery({
-    queryKey: ['scenario', obligationId, activeUser, extraMonthly, oneTimeAmount],
+    queryKey: ['scenario', obligationId, activeUser, extraMonthly, oneTimeAmount, asOf],
     queryFn: async (): Promise<CalculationRun> => {
       if (!activeUser || obligation?.kind !== 'conventionalLoan' || !ratePeriods) {
         throw new DomainInvariantError(
@@ -97,7 +103,6 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
         )
       }
       const startedAt = performance.now()
-      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,

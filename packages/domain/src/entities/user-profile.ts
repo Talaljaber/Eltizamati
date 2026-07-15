@@ -11,6 +11,10 @@ export interface UserProfile {
   readonly dataMode: DataMode
   readonly createdAt: string
   readonly updatedAt: string
+  /** Contact/profile details required for newly registered personal accounts. */
+  readonly fullName?: string
+  readonly phoneNumber?: string
+  readonly primaryBank?: string
   /**
    * FR-SET-006 preferences. Notification delivery itself is out of MVP
    * scope (Phase 8 cut #3) — these are stored preferences only; nothing

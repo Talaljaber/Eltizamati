@@ -30,6 +30,13 @@ export class DemoUserProfileRepository implements UserProfileRepository {
     return ok(profile)
   }
 
+  async createIfAbsent(profile: UserProfile): Promise<Result<UserProfile, AppError>> {
+    const existing = this.#store.get(profile.userId)
+    if (existing !== undefined) return ok(existing)
+    this.#store.set(profile.userId, profile)
+    return ok(profile)
+  }
+
   reset(): void {
     this.#store.clear()
   }

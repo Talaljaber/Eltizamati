@@ -6,6 +6,7 @@ import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotArray, snapshotMoneyAmount } from '@/services/calculation-snapshot'
 import { calculationAsOf } from '@/services/calculation-as-of'
+import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
 
 /**
  * Display row for one amortization period. `CalculationRun.resultSnapshot` is
@@ -35,6 +36,7 @@ export function useAmortizationScheduleViewModel(
 ): AmortizationScheduleViewModel {
   const repos = useRepositories()
   const activeUser = useActiveUser()
+  const personalAsOf = usePersonalCalculationAsOf()
 
   const calcService = useMemo(
     () => new CalculationService(repos.calculationRunRepository),
@@ -42,7 +44,7 @@ export function useAmortizationScheduleViewModel(
   )
 
   const { data: obligation, isError: isOblError } = useQuery({
-    queryKey: ['obligation', obligationId],
+    queryKey: ['obligation', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.obligationRepository.get(obligationId)
       if (!res.ok) throw res.error
@@ -51,7 +53,7 @@ export function useAmortizationScheduleViewModel(
   })
 
   const { data: ratePeriods } = useQuery({
-    queryKey: ['ratePeriods', obligationId],
+    queryKey: ['ratePeriods', activeUser ?? '', obligationId],
     queryFn: async () => {
       const res = await repos.ratePeriodRepository.historyFor(obligationId)
       if (!res.ok) throw res.error
@@ -61,9 +63,10 @@ export function useAmortizationScheduleViewModel(
   })
 
   const canRunProjection = !!activeUser && obligation?.kind === 'conventionalLoan' && !!ratePeriods
+  const asOf = calculationAsOf(typeof repos.reset === 'function' ? 'demo' : 'personal', personalAsOf)
 
   const { data: run, isError: isProjError } = useQuery({
-    queryKey: ['projection', obligationId, activeUser],
+    queryKey: ['projection', obligationId, activeUser, asOf],
     queryFn: async (): Promise<CalculationRun> => {
       if (!activeUser || obligation?.kind !== 'conventionalLoan' || !ratePeriods) {
         throw new DomainInvariantError(
@@ -71,7 +74,6 @@ export function useAmortizationScheduleViewModel(
           'projection query ran while enabled gate was false',
         )
       }
-      const asOf = calculationAsOf(obligation)
       const result = await calcService.runCalculation(
         activeUser,
         obligationId,

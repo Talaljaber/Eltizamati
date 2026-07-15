@@ -6,7 +6,7 @@ Ready to begin — Phase 3 verified complete (2026-07-11). Blocked only on user 
 
 ## Objective
 
-Personal mode works end-to-end against Supabase: a user can sign up (email verify), sign in, have consent recorded server-side, read/write owned data through Supabase-backed repositories via TanStack Query, see honest offline/error states, and delete their account — all behind the shared repository interfaces and a single composition root.
+Personal mode works end-to-end against Supabase: a user signs up with a password, verifies a six-digit email code once, later signs in with the password or restores a session, has an authenticated profile ensured before consent/repository entry, reads/writes owned data, sees honest offline/error states, and can delete the account.
 
 ## Why This Phase Exists
 
@@ -19,7 +19,7 @@ Phase 3 complete (schema, RLS, pgTAP, generated types). RES-003 status checked: 
 ## In Scope
 
 1. **Supabase client:** configured from typed env; session persistence via the supported Expo pattern with SecureStore for sensitive session material (NFR-SEC-003); no supabase-js import outside the infrastructure layer (extend dependency-cruiser rules).
-2. **Email auth flows:** sign-up + email verification, sign-in, sign-out, password reset, session restore/refresh — screens SCR-AUTH-SIGNIN / SCR-AUTH-SIGNUP / SCR-AUTH-RESET (per screen-inventory states: loading/error/offline/verification-pending), reachable from onboarding's optional account step (FR-ONB-006) and settings. Demo mode remains fully accessible without auth — "Continue in demo mode" is always present.
+2. **Email auth flows (corrected by ADR-0019):** password sign-up/sign-in plus in-app six-digit verification for first-time signup, sign-out, and session restore/refresh. Demo remains accessible without auth.
 3. **Consent (server-backed):** versioned, timestamped consent records written under RLS on sign-up/first sign-in (app-level disclaimer re-acknowledgment per FR-ONB-003/FR-AUTH-002); re-consent on version bump.
 4. **Supabase repositories:** implement every Phase-2 repository interface over generated types with row↔domain mappers (provenance columns round-trip); no raw rows past the infrastructure boundary.
 5. **TanStack Query foundation:** QueryClient at the composition root; centralized query keys (`api/keys.ts` pattern); mutations invalidate affected keys; AppError mapping (`connectivity`, `auth`, `storage` codes) → typed error states.
@@ -56,7 +56,7 @@ Working repository implementations (personal mode) · auth/session service · qu
 ## Testing Requirements
 
 - **Integration:** repository round-trips (write→read→domain equality incl. provenance) against local Supabase; cross-user denial re-verified through the client path (complements pgTAP).
-- **Auth integration:** sign-up/verify/sign-in/reset/session-restore against local Supabase (documented manual steps where email delivery is involved).
+- **Auth integration:** password signup → Mailpit token → verify signup → password sign-in/session restore against local Supabase.
 - **Contract suite:** repository-interface contract tests that Phase 5's demo repositories must also pass (write it here, parameterized).
 - **Component:** auth screens' loading/error/offline states (RNTL); EN+AR keys present.
 - **Erasure:** account-deletion absence test (all tables count 0 for the deleted user).
@@ -76,7 +76,7 @@ Full auth loop on Metro/dev build against local Supabase (evidence: recorded ste
 
 ## Exit Criteria
 
-1. A synthetic user completes sign-up→verify→sign-in→data write→sign-out→sign-in→data read.
+1. A synthetic user completes password signup→verify→profile ensure→data write→sign-out→password sign-in→data read.
 2. All repositories implement the Phase-2 interfaces; contract suite green.
 3. Cross-user isolation verified through the app path.
 4. Account deletion leaves zero rows (absence evidence) + audit event.
@@ -103,7 +103,7 @@ Reviewer watches: create account → consent → add a row (via a temporary dev-
 
 **Settings _account section_ UI** (sign-out button, delete-account button/confirmation, in the SCR-SET screen) — moved to Phase 8, which already claims it: `PHASE-08-remaining-mvp-flows.md` line 24 lists "account section (Phase-4 hooks)" as part of its own SCR-SET completion criterion. Safe to postpone because it is a thin UI wrapper over Phase-4-owned primitives, not new auth/security surface: the auth session (`SupabaseAuthService`), the account-deletion Edge Function, and the query/mutation hook pattern it will call are all implemented and tested in Phase 4. Phase 8 is adding a button; Phase 4 is what makes that button correct and safe.
 
-This does **not** move the SCR-AUTH-SIGNIN / SCR-AUTH-SIGNUP / SCR-AUTH-RESET screens or the onboarding account-step wiring (In Scope #2) — those remain Phase 4's own scope and are not built as of this closure pass (see STATUS.md).
+ADR-0019 restores separate SCR-AUTH-SIGNIN and SCR-AUTH-SIGNUP routes with SCR-AUTH-VERIFY used only for new-account email confirmation. Reset remains a compatibility route pending a separately reviewed recovery flow.
 
 ## Cuttable Work
 

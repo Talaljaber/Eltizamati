@@ -159,22 +159,24 @@ All screens: RTL-mirrored, a11y per NFR-A11Y-*, one primary CTA.
 
 ## Auth & connect (added 2026-07-11 — resolves the previously-undefined SCR-AUTH-*/SCR-CONSENT/SCR-CONNECT references; per [ADR-0017](../09-decisions/ADR-0017-supabase-first-mvp-persistence.md) personal mode requires an account)
 
-### SCR-AUTH-SIGNIN — Sign in
+### SCR-AUTH-SIGNIN — Password sign in
 
-- **Purpose:** authenticate an existing personal-mode user (Supabase email auth). **Primary:** Sign in; secondary: "Continue in demo mode" (always available — demo never requires auth), links to sign-up and reset.
-- States: L (submitting) · ER (invalid credentials, unverified email, network failure with retry) · OF (offline notice — personal mode needs a connection).
-- Traces: FR-ONB-006, FR-AUTH-001, US-016, NFR-SEC-003.
+- **Purpose:** returning verified users sign in with email/password. **Primary:** Sign in; secondary: create account or continue in demo mode.
+- States: loading · invalid credentials · unverified email · offline · rate-limited.
+- Traces: ADR-0019, FR-ONB-006, FR-AUTH-001, US-016, NFR-SEC-003.
 
 ### SCR-AUTH-SIGNUP — Create account
 
-- **Purpose:** email sign-up with verification. **Primary:** Create account → verification-pending state with resend.
-- States: L · ER (email in use, weak password, network) · verification-pending.
-- Traces: FR-AUTH-001, US-016.
+- **Purpose:** collect full name, E.164 contact phone, primary bank, email, and password. No profile write occurs before verification.
+- States: validation · password mismatch/weakness · offline · rate-limited · sending failure.
 
-### SCR-AUTH-RESET — Password reset
+### SCR-AUTH-VERIFY — Verify email code
 
-- **Purpose:** request + complete password reset. States: L · ER · sent-confirmation.
-- Traces: FR-AUTH-001, US-016.
+- **Purpose:** enter the six-digit first-time signup code in-app; no email address in route parameters.
+- States: loading · invalid code · expired code · too many attempts · offline · resend cooldown · profile/entry failure. Actions: verify, resend, change email.
+- Traces: ADR-0019, FR-AUTH-001/006, US-016.
+
+Legacy callback/update-password routes redirect safely. Password recovery remains a separately reviewed follow-up.
 
 ### SCR-CONSENT-PROVIDER — Per-provider consent
 

@@ -14,24 +14,45 @@ import { ImportService } from '@/services/import-service'
 import * as useReposModule from '@/features/repositories/hooks/use-repositories'
 import * as useAuthServiceModule from '@/features/auth/hooks/use-auth-service'
 
+let unmountScreen: (() => void) | undefined
+
 jest.mock('@/i18n', () => ({
   changeLanguage: jest.fn().mockResolvedValue(undefined),
 }))
 
+jest.mock('@/services/local-notification-service', () => ({
+  cancelLocalReminder: jest.fn().mockResolvedValue(undefined),
+  scheduleLocalReminder: jest.fn().mockResolvedValue('scheduled'),
+}))
+
 function renderScreen(client: QueryClient) {
-  return render(
+  const view = render(
     <QueryClientProvider client={client}>
       <SettingsScreen />
     </QueryClientProvider>,
   )
+  unmountScreen = view.unmount
+  return view
 }
 
 describe('SettingsScreen', () => {
   let client: QueryClient
 
   beforeEach(() => {
-    client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    client = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: Infinity },
+        mutations: { retry: false, gcTime: Infinity },
+      },
+    })
+    unmountScreen = undefined
     jest.clearAllMocks()
+  })
+
+  afterEach(() => {
+    unmountScreen?.()
+    client.clear()
+    jest.restoreAllMocks()
   })
 
   it('does not show a reset control when repositories have no reset() (personal mode)', () => {

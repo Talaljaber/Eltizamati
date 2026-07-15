@@ -11,6 +11,10 @@ import { buildDemoMurabaha, DEMO_DATE } from '@eltizamati/demo-data'
 import { RepositoriesProvider } from '@/features/repositories/hooks/use-repositories'
 import { MurabahaDetailSection } from '../MurabahaDetailSection'
 
+jest.mock('@/features/auth/hooks/use-active-user', () => ({ useActiveUser: () => 'demo-user' }))
+
+const mountedSections: { readonly client: QueryClient; readonly unmount: () => void }[] = []
+
 function renderSection() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const obligation = buildDemoMurabaha(DEMO_DATE)
@@ -21,13 +25,15 @@ function renderSection() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any
 
-  return render(
+  const view = render(
     <QueryClientProvider client={client}>
       <RepositoriesProvider repositories={repos}>
         <MurabahaDetailSection obligationId={obligation.id} obligation={obligation} />
       </RepositoriesProvider>
     </QueryClientProvider>,
   )
+  mountedSections.push({ client, unmount: view.unmount })
+  return view
 }
 
 function flattenText(node: unknown): string {
@@ -41,6 +47,13 @@ function flattenText(node: unknown): string {
 }
 
 describe('MurabahaDetailSection — BR-TERM-001', () => {
+  afterEach(() => {
+    for (const { client, unmount } of mountedSections.splice(0)) {
+      unmount()
+      client.clear()
+    }
+  })
+
   it('never renders "interest" in its render tree, in any casing', () => {
     const { toJSON } = renderSection()
     const text = flattenText(toJSON())

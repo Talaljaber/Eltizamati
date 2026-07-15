@@ -127,7 +127,7 @@ export default function InsightsScreen() {
                           testID={`insight-why-${insight.id}`}
                           hitSlop={8}
                         >
-                          <Text variant="bodySmall" color="understanding">
+                          <Text variant="bodySmall" color="secondary">
                             {t('insights.whyLabel', 'Why did I get this?')}
                           </Text>
                         </Pressable>

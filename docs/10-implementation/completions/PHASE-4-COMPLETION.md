@@ -1,19 +1,36 @@
 # Phase 4 Completion Report
 
+> **2026-07-15 correction (ADR-0019, superseding ADR-0018):** authentication uses password sign-up/sign-in with a six-digit email code only for first-time signup verification and authenticated profile provisioning.
+> Repository tests cover the corrected contract; the local Mailpit integration harness was updated
+> but was not executed in the correction environment because Supabase CLI/Docker were unavailable.
+> Hosted SMTP/template delivery remains OWNER ACTION — NOT VERIFIED.
+
+## Hosted email OTP checklist — OWNER ACTION — NOT VERIFIED
+
+- [ ] Authentication → Email provider enabled; signup allowed.
+- [ ] Confirm signup template displays `{{ .Token }}` and does not depend on `{{ .ConfirmationURL }}`.
+- [ ] Email confirmations enabled; password minimum/character requirements and leaked-password protection reviewed.
+- [ ] OTP length is six; expiry and resend frequency reviewed.
+- [ ] Email-send and token-verification rate limits reviewed; CAPTCHA/bot-protection decision recorded.
+- [ ] Custom SMTP, sender name, and sender address configured only in Supabase server-side settings.
+- [ ] Real test email delivered; no account-existence disclosure in the message or UI.
+- [ ] SPF, DKIM, and DMARC checked when a custom sending domain is used.
+- [ ] Session expiry and refresh-token rotation reviewed; obsolete callback redirect URLs removed.
+
 **Phase:** Phase 4 (Authentication, Repositories, and Application Integration)
 **Status:** Complete.
 **Date:** 2026-07-12
 
 ## 1. Overview
 
-Phase 4 closes out the client half of the Supabase foundation: real email auth (sign-up/sign-in/reset) against `SupabaseAuthService`, all seven Phase-2 repository interfaces implemented over Supabase with row↔domain mappers, a composition root that switches demo/personal by `dataMode`, TanStack Query foundation with a query-key registry, offline/error UI wired through `toErrorUiState()`, and an account-deletion Edge Function — verified end-to-end against a live local Supabase stack, not mocked.
+Phase 4 closes out the client half of the Supabase foundation: Supabase email authentication, all seven repository interfaces, composition, query/error foundations, and account deletion. ADR-0019 defines password authentication plus signup-only email verification and post-verification profile provisioning.
 
 An earlier closure pass (recorded in the prior STATUS.md state) had the backend/data layer done but marked the phase **incomplete**: the three auth screens, the onboarding account-step wiring, and the offline/error UI components were unbuilt, and only one of seven repositories had a dedicated test. This session closes every one of those gaps.
 
 ## 2. What was already done (prior sessions)
 
 - Supabase client, env config, SecureStore session adapter (`apps/mobile/src/core/supabase/`).
-- `SupabaseAuthService` (sign-up/sign-in/sign-out/reset/session-restore) + tests.
+- `SupabaseAuthService` (password sign-up/sign-in, signup OTP verify/resend, sign-out, session restore) + tests.
 - All 7 Supabase repositories + mappers (`apps/mobile/src/services/repositories/supabase/`): user-profile, obligation, payment, rate-period, insight, consent, calculation-run.
 - Composition root (`services/composition-root.ts`) selecting demo vs. Supabase repo family by `dataMode`.
 - `toErrorUiState()` AppError→UI-state mapping + tests (`core/errors/error-ui-state.ts`).
@@ -52,7 +69,7 @@ Biometric app-lock (FR-AUTH-004, cut #5) — not built. Per the phase file, this
 
 | Gate (from this phase's exit criteria)                                 | Status                                         | Evidence                                                                                                                                              |
 | ---------------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Synthetic user: sign-up→verify→sign-in→write→sign-out→sign-in→read  | ✅ Passes                                      | `personal-mode.integration.test.ts`, live local Supabase; also reachable manually via the real `/auth/sign-up` → `/auth/sign-in` screens now built.   |
+| 1. Synthetic user: sign-up→verify→write→sign-out→password sign-in→read | ⏳ Harness updated; rerun required             | `personal-mode.integration.test.ts` uses local Mailpit; local Supabase was unavailable in this correction environment.                                |
 | 2. All repositories implement Phase-2 interfaces; contract suite green | ✅ Passes                                      | 6/6 contract suites green against demo repos (`pnpm run test:app`); Supabase-side behavioral coverage added per §4 (live suite, 8/8 green).           |
 | 3. Cross-user isolation verified through the app path                  | ✅ Passes                                      | `personal-mode.integration.test.ts` — obligation `get` cross-user denial, insight `list` empty for other user, consent `status` empty for other user. |
 | 4. Account deletion leaves zero rows + audit event                     | ✅ Passes (prior session)                      | Edge Function manual test: 401 on invalid token, 200 on real user, confirmed post-deletion sign-in fails.                                             |

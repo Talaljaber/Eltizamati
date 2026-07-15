@@ -6,15 +6,21 @@
 import { useMutation } from '@tanstack/react-query'
 import {
   isErr,
-  brandId,
   type AppError,
   type ConsentRepository,
   type Id,
   type Result,
 } from '@eltizamati/domain'
+import {
+  CURRENT_CONSENT_DOC_TYPE,
+  CURRENT_CONSENT_VERSION,
+  generateConsentId,
+} from '@/features/consent/consent-policy'
 
-export const CONSENT_DOC_TYPE = 'privacy-policy'
-export const CONSENT_VERSION = 'v1'
+export {
+  CURRENT_CONSENT_DOC_TYPE as CONSENT_DOC_TYPE,
+  CURRENT_CONSENT_VERSION as CONSENT_VERSION,
+} from '@/features/consent/consent-policy'
 
 export interface RecordConsentInput {
   readonly userId: Id<'user'>
@@ -22,21 +28,15 @@ export interface RecordConsentInput {
 }
 
 /** `crypto.randomUUID` isn't guaranteed present on Hermes/RN — same fallback as calculation-service.ts's generateId(). */
-function generateId(): string {
-  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `consent-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 9)}`
-}
-
 export function useRecordConsentMutation(repositoryResult: Result<ConsentRepository, AppError>) {
   return useMutation<undefined, AppError, RecordConsentInput>({
     mutationFn: async ({ userId, locale }: RecordConsentInput): Promise<undefined> => {
       if (!repositoryResult.ok) throw repositoryResult.error
       const result = await repositoryResult.value.acknowledge({
-        id: brandId<'consentRecord'>(generateId()),
+        id: generateConsentId(),
         userId,
-        docType: CONSENT_DOC_TYPE,
-        version: CONSENT_VERSION,
+        docType: CURRENT_CONSENT_DOC_TYPE,
+        version: CURRENT_CONSENT_VERSION,
         locale,
         acknowledgedAt: new Date().toISOString(),
       })

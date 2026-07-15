@@ -1,11 +1,27 @@
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import * as SplashScreen from 'expo-splash-screen'
 import { useTranslation } from 'react-i18next'
 import { AppProviders } from '../src/providers'
-import { OnboardingGuard } from '../src/features/demo/components/OnboardingGuard'
+import { StartupCoordinator } from '../src/features/startup/components/StartupCoordinator'
 import '../src/i18n' // Initialize i18n
 import { useNotificationResponse } from '../src/features/notifications/hooks/use-notification-response'
 import { useTheme } from '../src/core/design-system'
+import { isExpoGo } from '../src/core/config/runtime-environment'
+
+// Keep the native splash up past its default auto-hide point — StartupCoordinator
+// decides (asynchronously, via AsyncStorage) whether to show onboarding or the
+// tabs, and hides the splash itself once that decision has landed. Without
+// this, the native splash can auto-hide before that check resolves, exposing
+// a frame of the wrong screen (or, if the JS thread is slow to start, leave
+// the app looking stuck on a plain color screen with no visible progress).
+//
+// Skipped entirely in Expo Go: it never registers a native splash screen for
+// this API in the first place, so calling it (even with a caught rejection)
+// still surfaces a red-box error there — see runtime-environment.ts.
+if (!isExpoGo) {
+  SplashScreen.preventAutoHideAsync().catch(() => undefined)
+}
 
 function NotificationResponseHandler() {
   useNotificationResponse()
@@ -17,9 +33,10 @@ export default function RootLayout() {
   const theme = useTheme()
   return (
     <AppProviders>
-      <NotificationResponseHandler />
-      <OnboardingGuard>
+      <StartupCoordinator>
+        <NotificationResponseHandler />
         <Stack
+          initialRouteName="auth"
           screenOptions={{
             headerStyle: { backgroundColor: theme.brand },
             headerTitleStyle: { color: theme.textOnBrand, fontWeight: '600' },
@@ -37,7 +54,7 @@ export default function RootLayout() {
           <Stack.Screen name="+not-found" options={{ title: t('navigation.notFound') }} />
         </Stack>
         <StatusBar style="auto" />
-      </OnboardingGuard>
+      </StartupCoordinator>
     </AppProviders>
   )
 }

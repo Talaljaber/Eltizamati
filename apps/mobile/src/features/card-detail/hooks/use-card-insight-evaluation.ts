@@ -6,13 +6,16 @@ import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { InsightEvaluationService } from '@/services/insight-evaluation-service'
 import { calculationAsOf } from '@/services/calculation-as-of'
+import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
 import { insightKeys } from '@/features/home/api/keys'
 
 /** Runs HIGH_CARD_UTILIZATION evaluation once per card-detail view (utilization can change between visits). */
 export function useCardInsightEvaluation(obligation: CreditCard | undefined): void {
   const repos = useRepositories()
   const activeUser = useActiveUser()
+  const personalAsOf = usePersonalCalculationAsOf()
   const queryClient = useQueryClient()
+  const asOf = calculationAsOf(typeof repos.reset === 'function' ? 'demo' : 'personal', personalAsOf)
 
   const service = useMemo(
     () =>
@@ -24,14 +27,10 @@ export function useCardInsightEvaluation(obligation: CreditCard | undefined): vo
   )
 
   useQuery({
-    queryKey: ['cardInsightEvaluation', obligation?.id, activeUser],
+    queryKey: ['cardInsightEvaluation', obligation?.id, activeUser, asOf],
     queryFn: async () => {
       if (!activeUser || !obligation) return null
-      const result = await service.evaluateForCard(
-        activeUser,
-        obligation,
-        calculationAsOf(obligation),
-      )
+      const result = await service.evaluateForCard(activeUser, obligation, asOf)
       if (!result.ok) throw result.error
       await queryClient.invalidateQueries({ queryKey: insightKeys.list(activeUser) })
       return result.value

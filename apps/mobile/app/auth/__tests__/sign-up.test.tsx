@@ -1,52 +1,34 @@
-/**
- * SCR-AUTH-SIGNUP component tests — loading/error/offline states and the
- * verification-pending state (no session invented when one isn't returned).
- */
 import React from 'react'
-import { render, fireEvent, waitFor } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ok, err, makeError } from '@eltizamati/domain'
+import { ok } from '@eltizamati/domain'
 import SignUpScreen from '../sign-up'
+import { __resetOtpAttemptForTest, getOtpAttempt } from '@/features/auth/stores/otp-attempt-store'
 
 const mockPush = jest.fn()
 const mockReplace = jest.fn()
-jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn() }),
-}))
-
-jest.mock('@/features/demo/stores/demo-mode-store', () => ({
-  setOnboardingComplete: jest.fn().mockResolvedValue(undefined),
-  setDataMode: jest.fn().mockResolvedValue(undefined),
-}))
-
-const mockBootPersonalMode = jest.fn().mockResolvedValue(undefined)
-jest.mock('@/providers', () => ({
-  usePersonalBoot: () => mockBootPersonalMode,
-}))
-
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush, replace: mockReplace }) }))
 const mockAuthService = {
   signUp: jest.fn(),
   signIn: jest.fn(),
+  verifySignupOtp: jest.fn(),
+  resendSignupOtp: jest.fn(),
   signOut: jest.fn(),
-  resetPassword: jest.fn(),
+  clearLocalSession: jest.fn(),
   currentSession: jest.fn(),
   onAuthStateChange: jest.fn(),
+  deleteAccount: jest.fn(),
 }
-const mockConsentRepo = { status: jest.fn(), acknowledge: jest.fn() }
-
 jest.mock('@/features/auth/hooks/use-auth-service', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { ok: okFn } = require('@eltizamati/domain')
-  return {
-    useAuthService: () => okFn(mockAuthService),
-    useConsentRepository: () => okFn(mockConsentRepo),
-  }
+  const { ok: okResult } = require('@eltizamati/domain')
+  return { useAuthService: () => okResult(mockAuthService) }
 })
 
-const fakeSession = { user: { id: 'user-1', email: 'a@b.com' }, expiresAt: undefined }
-
 function renderScreen() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+  const client = new QueryClient({
+    defaultOptions: { mutations: { retry: false, gcTime: Infinity } },
+  })
   return render(
     <QueryClientProvider client={client}>
       <SignUpScreen />
@@ -54,85 +36,62 @@ function renderScreen() {
   )
 }
 
-describe('SignUpScreen', () => {
+function fillValidForm(view: ReturnType<typeof renderScreen>) {
+  fireEvent.changeText(view.getByTestId('sign-up-full-name'), '  Talal   Example ')
+  fireEvent.changeText(view.getByTestId('sign-up-phone'), '+962 79 123 4567')
+  fireEvent.changeText(view.getByTestId('sign-up-bank'), ' Example Bank ')
+  fireEvent.changeText(view.getByTestId('sign-up-email'), ' User@Example.COM ')
+  fireEvent.changeText(view.getByTestId('sign-up-password'), 'strong-password')
+  fireEvent.changeText(view.getByTestId('sign-up-confirm-password'), 'strong-password')
+}
+
+describe('password sign up', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockConsentRepo.acknowledge.mockResolvedValue(ok({}))
-  })
-
-  it('renders the form fields and submit button', () => {
-    const { getByTestId } = renderScreen()
-    expect(getByTestId('sign-up-email')).toBeTruthy()
-    expect(getByTestId('sign-up-password')).toBeTruthy()
-    expect(getByTestId('sign-up-submit')).toBeTruthy()
-  })
-
-  it('shows verification-pending (not a session) when signUp resolves without a session', async () => {
+    __resetOtpAttemptForTest()
     mockAuthService.signUp.mockResolvedValue(ok(undefined))
-    const { getByTestId } = renderScreen()
-    fireEvent.changeText(getByTestId('sign-up-email'), 'new@example.com')
-    fireEvent.changeText(getByTestId('sign-up-password'), 'secret123')
-    fireEvent.press(getByTestId('sign-up-submit'))
-
-    await waitFor(() => expect(getByTestId('sign-up-verification-pending')).toBeTruthy())
-    expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
   })
 
-  it('on a returned session, records consent, sets personal data mode, boots personal mode, and navigates to the tabs root', async () => {
-    mockAuthService.signUp.mockResolvedValue(ok(fakeSession))
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { setDataMode } = require('@/features/demo/stores/demo-mode-store')
-    const { getByTestId } = renderScreen()
-    fireEvent.changeText(getByTestId('sign-up-email'), 'new@example.com')
-    fireEvent.changeText(getByTestId('sign-up-password'), 'secret123')
-    fireEvent.press(getByTestId('sign-up-submit'))
-
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)/'))
-    expect(mockConsentRepo.acknowledge).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: 'user-1' }),
+  it('collects the approved client fields and keeps the password out of ephemeral state', async () => {
+    const view = renderScreen()
+    fillValidForm(view)
+    fireEvent.press(view.getByTestId('sign-up-submit'))
+    await waitFor(() =>
+      expect(mockAuthService.signUp).toHaveBeenCalledWith('user@example.com', 'strong-password'),
     )
-    expect(setDataMode).toHaveBeenCalledWith('personal')
-    expect(mockBootPersonalMode).toHaveBeenCalledTimes(1)
+    expect(getOtpAttempt()).toMatchObject({
+      normalizedEmail: 'user@example.com',
+      profile: {
+        fullName: 'Talal Example',
+        phoneNumber: '+962791234567',
+        primaryBank: 'Example Bank',
+      },
+    })
+    expect(JSON.stringify(getOtpAttempt())).not.toContain('strong-password')
+    expect(mockPush).toHaveBeenCalledWith('/auth/verify-code')
   })
 
-  it('on a consent-recording failure, does not navigate', async () => {
-    mockAuthService.signUp.mockResolvedValue(ok(fakeSession))
-    mockConsentRepo.acknowledge.mockResolvedValue(err(makeError('unexpected', {})))
-    const { getByTestId } = renderScreen()
-    fireEvent.changeText(getByTestId('sign-up-email'), 'new@example.com')
-    fireEvent.changeText(getByTestId('sign-up-password'), 'secret123')
-    fireEvent.press(getByTestId('sign-up-submit'))
-
-    await waitFor(() => expect(mockConsentRepo.acknowledge).toHaveBeenCalled())
-    expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
-    expect(mockBootPersonalMode).not.toHaveBeenCalled()
+  it('rejects mismatched passwords and invalid contact data before Supabase', () => {
+    const view = renderScreen()
+    fillValidForm(view)
+    fireEvent.changeText(view.getByTestId('sign-up-confirm-password'), 'different-password')
+    fireEvent.press(view.getByTestId('sign-up-submit'))
+    expect(view.getByTestId('sign-up-validation-error')).toBeTruthy()
+    expect(mockAuthService.signUp).not.toHaveBeenCalled()
   })
 
-  it('shows an inline error (form still visible) for a non-connectivity failure', async () => {
-    mockAuthService.signUp.mockResolvedValue(err(makeError('validation', {})))
-    const { getByTestId } = renderScreen()
-    fireEvent.changeText(getByTestId('sign-up-email'), 'taken@example.com')
-    fireEvent.changeText(getByTestId('sign-up-password'), 'secret123')
-    fireEvent.press(getByTestId('sign-up-submit'))
-
-    await waitFor(() => expect(getByTestId('sign-up-error')).toBeTruthy())
-    expect(getByTestId('sign-up-email')).toBeTruthy()
-  })
-
-  it('replaces the whole screen with the offline surface on a connectivity error', async () => {
-    mockAuthService.signUp.mockResolvedValue(err(makeError('connectivity', {})))
-    const { getByTestId, queryByTestId } = renderScreen()
-    fireEvent.changeText(getByTestId('sign-up-email'), 'a@b.com')
-    fireEvent.changeText(getByTestId('sign-up-password'), 'secret123')
-    fireEvent.press(getByTestId('sign-up-submit'))
-
-    await waitFor(() => expect(getByTestId('sign-up-offline')).toBeTruthy())
-    expect(queryByTestId('sign-up-submit')).toBeNull()
-  })
-
-  it('navigates to sign-in via the link text', () => {
-    const { getByTestId } = renderScreen()
-    fireEvent.press(getByTestId('sign-up-sign-in'))
-    expect(mockReplace).toHaveBeenCalledWith('/auth/sign-in')
+  it('prevents duplicate signup requests', async () => {
+    let release: (() => void) | undefined
+    mockAuthService.signUp.mockReturnValue(
+      new Promise((resolve) => {
+        release = () => resolve(ok(undefined))
+      }),
+    )
+    const view = renderScreen()
+    fillValidForm(view)
+    fireEvent.press(view.getByTestId('sign-up-submit'))
+    fireEvent.press(view.getByTestId('sign-up-submit'))
+    await waitFor(() => expect(mockAuthService.signUp).toHaveBeenCalledTimes(1))
+    release?.()
   })
 })

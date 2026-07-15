@@ -16,12 +16,24 @@ import {
   type UserProfileRepository,
 } from '@eltizamati/domain'
 import type { Database } from '../../../core/supabase/database.types'
-import { profileDomainToRow, profileRowToDomain } from './mappers/user-profile-mapper'
+import { toSupabaseAppError } from '../../../core/supabase/supabase-error'
+import {
+  profileDomainToInsertRow,
+  profileDomainToRow,
+  profileRowToDomain,
+} from './mappers/user-profile-mapper'
 
-function toStorageAppError(error: { code: string; message: string }): AppError {
-  return makeError('storage', {
-    safeMetadata: { postgresErrorCode: error.code },
-    cause: error,
+function logProfileProviderError(
+  stage: 'read' | 'save' | 'create',
+  error: { readonly code?: string; readonly message: string; readonly status?: number },
+): void {
+  if (!__DEV__ || process.env.NODE_ENV === 'test') return
+  // eslint-disable-next-line no-console -- Temporary development-only provider diagnostics; no request rows, credentials, or tokens are logged.
+  console.error('[signup-profile-debug] Supabase profile request failed', {
+    stage,
+    providerCode: error.code ?? 'unknown',
+    httpStatus: error.status ?? 'unknown',
+    providerMessage: error.message,
   })
 }
 
@@ -34,7 +46,10 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       .select('*')
       .eq('user_id', userId)
       .maybeSingle()
-    if (error) return err(toStorageAppError(error))
+    if (error) {
+      logProfileProviderError('read', error)
+      return err(toSupabaseAppError(error))
+    }
     if (data === null) return err(makeError('notFound'))
     return ok(profileRowToDomain(data))
   }
@@ -45,7 +60,24 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       .upsert(profileDomainToRow(profile))
       .select('*')
       .single()
-    if (error) return err(toStorageAppError(error))
+    if (error) {
+      logProfileProviderError('save', error)
+      return err(toSupabaseAppError(error))
+    }
+    return ok(profileRowToDomain(data))
+  }
+
+  async createIfAbsent(profile: UserProfile): Promise<Result<UserProfile, AppError>> {
+    const { data, error } = await this.client
+      .from('profiles')
+      .insert(profileDomainToInsertRow(profile))
+      .select('*')
+      .single()
+    if (error?.code === '23505') return this.get(profile.userId)
+    if (error) {
+      logProfileProviderError('create', error)
+      return err(toSupabaseAppError(error))
+    }
     return ok(profileRowToDomain(data))
   }
 }

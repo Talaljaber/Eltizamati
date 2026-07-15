@@ -1,7 +1,19 @@
 import { DEMO_DATE } from '@eltizamati/demo-data'
-import { localDateFromDate, type LocalDate, type Obligation } from '@eltizamati/domain'
+import { type DataMode, type LocalDate } from '@eltizamati/domain'
 
-/** Demo calculations stay frozen; personal calculations use an explicit current local date. */
-export function calculationAsOf(obligation: Obligation, now = new Date()): LocalDate {
-  return obligation.provenance.source === 'demo' ? DEMO_DATE : localDateFromDate(now)
+/**
+ * Resolves a calculation date without reading the clock. The application
+ * composition root owns the current personal-mode date and supplies it to
+ * every workflow; demo data remains anchored to the signed fixture date.
+ */
+export function calculationAsOf(dataMode: DataMode, personalAsOf: LocalDate): LocalDate {
+  return dataMode === 'demo' ? DEMO_DATE : personalAsOf
+}
+
+/**
+ * One date for an aggregate/list workflow. A non-empty, wholly-demo data set
+ * is deterministic; every other set uses the explicit personal-mode date.
+ */
+export function calculationAsOfForObligations(dataMode: DataMode, personalAsOf: LocalDate): LocalDate {
+  return calculationAsOf(dataMode, personalAsOf)
 }

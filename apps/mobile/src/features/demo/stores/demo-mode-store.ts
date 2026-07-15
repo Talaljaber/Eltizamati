@@ -20,7 +20,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { DataMode } from '@eltizamati/domain'
+import { err, makeError, ok, type AppError, type DataMode, type Result } from '@eltizamati/domain'
 
 const DATA_MODE_KEY = '@Eltizamati:dataMode'
 const ONBOARDING_KEY = '@Eltizamati:onboardingComplete'
@@ -46,9 +46,40 @@ export async function setOnboardingComplete(): Promise<void> {
   await AsyncStorage.setItem(ONBOARDING_KEY, 'true')
 }
 
+export interface StartupTrustState {
+  readonly dataMode: DataMode | null
+  readonly onboardingComplete: boolean
+}
+
+/** Startup uses a strict read so storage failure becomes a retryable UI state. */
+export async function readStartupTrustState(): Promise<Result<StartupTrustState, AppError>> {
+  try {
+    const entries = await AsyncStorage.multiGet([DATA_MODE_KEY, ONBOARDING_KEY])
+    const rawMode = entries[0]?.[1]
+    return ok({
+      dataMode: rawMode === 'demo' || rawMode === 'personal' ? rawMode : null,
+      onboardingComplete: entries[1]?.[1] === 'true',
+    })
+  } catch (cause) {
+    return err(
+      makeError('storage', {
+        safeMetadata: { operation: 'startup_trust_state' },
+        cause,
+      }),
+    )
+  }
+}
+
 export async function clearDataMode(): Promise<void> {
-  await Promise.all([
-    AsyncStorage.removeItem(DATA_MODE_KEY),
-    AsyncStorage.removeItem(ONBOARDING_KEY),
-  ]).catch(() => undefined)
+  await Promise.all([AsyncStorage.removeItem(DATA_MODE_KEY), AsyncStorage.removeItem(ONBOARDING_KEY)])
+}
+
+/** Clears only the selected repository family, preserving language. */
+export async function clearDataModeSelection(): Promise<void> {
+  await AsyncStorage.removeItem(DATA_MODE_KEY)
+}
+
+/** Clears the completed-onboarding trust marker, preserving language. */
+export async function clearOnboardingTrust(): Promise<void> {
+  await AsyncStorage.removeItem(ONBOARDING_KEY)
 }

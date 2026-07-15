@@ -6,14 +6,28 @@
  * this is one query, grouped client-side, rather than one query per row.
  */
 import { useQuery } from '@tanstack/react-query'
-import { isOk, type InsightRepository, type Insight, type Id } from '@eltizamati/domain'
+import {
+  isOk,
+  type AppError,
+  type InsightRepository,
+  type Insight,
+  type Id,
+} from '@eltizamati/domain'
 import { insightKeys } from './keys'
 
 export function useInsightsByObligation(
   repository: InsightRepository,
   userId: Id<'user'> | null,
-): { data: ReadonlyMap<string, readonly Insight[]>; isLoading: boolean } {
-  const { data, isLoading } = useQuery({
+  isDemoMode = false,
+): {
+  data: ReadonlyMap<string, readonly Insight[]>
+  isLoading: boolean
+  isFetching: boolean
+  error: AppError | undefined
+  hasData: boolean
+  refetch: () => Promise<void>
+} {
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: insightKeys.list(userId ?? ''),
     queryFn: async () => {
       if (!userId) return []
@@ -22,7 +36,7 @@ export function useInsightsByObligation(
       return result.value
     },
     enabled: userId !== null,
-    staleTime: Infinity,
+    staleTime: isDemoMode ? Infinity : 30_000,
   })
 
   const grouped = new Map<string, Insight[]>()
@@ -36,5 +50,14 @@ export function useInsightsByObligation(
     }
   }
 
-  return { data: grouped, isLoading: userId !== null && isLoading }
+  return {
+    data: grouped,
+    isLoading: userId !== null && isLoading,
+    isFetching,
+    error: (error as AppError | null) ?? undefined,
+    hasData: data !== undefined,
+    refetch: async () => {
+      await refetch()
+    },
+  }
 }

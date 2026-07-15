@@ -29,6 +29,7 @@ import type { AuthService } from '@/services/auth/auth-service'
 import { authKeys } from '@/features/auth/api/keys'
 import { isValidDecimal, isValidPositiveInt } from '@/features/obligation-form/validation'
 import { cancelLocalReminder, scheduleLocalReminder } from '@/services/local-notification-service'
+import { useAuthExitCoordinator } from '@/features/auth/hooks/use-auth-exit-coordinator'
 
 const MAX_REMINDER_DAY = 28
 
@@ -49,7 +50,10 @@ export default function SettingsScreen() {
   const isPersonalMode = repos !== null && typeof repos.reset !== 'function'
 
   const { data: session } = useQuery({
-    queryKey: ['settingsCurrentSession'],
+    // Namespaced under the centralized auth key factory (no ad-hoc string
+    // keys — system-architecture.md §4) so it lives inside the `auth`
+    // namespace that boundary cleanup's queryClient.clear() wipes on sign-out.
+    queryKey: authKeys.session(),
     queryFn: async () => {
       if (!authServiceResult.ok) return null
       const result = await authServiceResult.value.currentSession()
@@ -58,13 +62,12 @@ export default function SettingsScreen() {
     enabled: isPersonalMode,
   })
 
-  const signOutMutation = useSignOutMutation(authServiceResult)
-  const deleteAccountMutation = useDeleteAccountMutation(authServiceResult)
+  const authExitCoordinator = useAuthExitCoordinator(authServiceResult)
+  const signOutMutation = useSignOutMutation(authServiceResult, authExitCoordinator)
+  const deleteAccountMutation = useDeleteAccountMutation(authServiceResult, authExitCoordinator)
 
   function handleSignOut() {
-    signOutMutation.mutate(undefined, {
-      onSuccess: () => router.replace('/auth/sign-in'),
-    })
+    signOutMutation.mutate(undefined)
   }
 
   function handleDeleteAccount() {
@@ -74,9 +77,7 @@ export default function SettingsScreen() {
         text: t('settings.deleteAccountConfirmAction'),
         style: 'destructive',
         onPress: () => {
-          deleteAccountMutation.mutate(undefined, {
-            onSuccess: () => router.replace('/auth/sign-in'),
-          })
+          deleteAccountMutation.mutate(undefined)
         },
       },
     ])

@@ -38,6 +38,7 @@ export function useDataStatusViewModel(): DataStatusViewModel {
   const { data: paymentsByObligation, isLoading: paymentsLoading } = usePaymentsByObligation(
     repos.paymentRepository,
     obligations ?? [],
+    activeUser,
   )
 
   return useMemo((): DataStatusViewModel => {

@@ -18,7 +18,10 @@ export type ErrorUiState =
 
 export function toErrorUiState(error: AppError): ErrorUiState {
   if (error.code === 'connectivity') return { kind: 'offline' }
-  if (error.code === 'auth' || error.code === 'authorization') return { kind: 'authRequired' }
+  if (error.code === 'auth') return { kind: 'authRequired' }
+  if (error.code === 'authorization') {
+    return { kind: 'fatal', userMessageKey: error.userMessageKey }
+  }
   if (error.retryable) return { kind: 'retryable', userMessageKey: error.userMessageKey }
   return { kind: 'fatal', userMessageKey: error.userMessageKey }
 }

@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { Sheet, Text, FieldRow, ProvenanceBadge, space, useTheme } from '@/core/design-system'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
+import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import type { Id } from '@eltizamati/domain'
 
 export interface ExplainSheetProps {
@@ -15,6 +16,7 @@ export interface ExplainSheetProps {
 export function ExplainSheet({ visible, onClose, obligationId, formulaId }: ExplainSheetProps) {
   const { t } = useTranslation()
   const repos = useRepositories()
+  const activeUser = useActiveUser()
   const theme = useTheme()
 
   const {
@@ -22,7 +24,7 @@ export function ExplainSheet({ visible, onClose, obligationId, formulaId }: Expl
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['calculationRun', obligationId, formulaId],
+    queryKey: ['calculationRun', activeUser ?? '', obligationId, formulaId],
     queryFn: async () => {
       if (formulaId === undefined) return null
       const res = await repos.calculationRunRepository.latestFor(obligationId, formulaId)

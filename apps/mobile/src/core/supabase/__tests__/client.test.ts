@@ -3,8 +3,16 @@ import type { createClient as CreateClient } from '@supabase/supabase-js'
 import type { loadSupabaseEnv as LoadSupabaseEnv } from '../../config/env'
 import type { getSupabaseClient as GetSupabaseClient } from '../client'
 
+const mockStartAutoRefresh = jest.fn().mockResolvedValue(undefined)
+const mockStopAutoRefresh = jest.fn().mockResolvedValue(undefined)
+let disposeCurrentLifecycle: (() => void) | undefined
+
 jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => ({ mockClient: true })),
+  createClient: jest.fn(() => ({
+    mockClient: true,
+    auth: { startAutoRefresh: mockStartAutoRefresh, stopAutoRefresh: mockStopAutoRefresh },
+  })),
+  processLock: jest.fn(),
 }))
 
 jest.mock('../secure-store-adapter', () => ({
@@ -24,11 +32,16 @@ jest.mock('../../config/env', () => ({
  */
 function requireFresh(): {
   getSupabaseClient: typeof GetSupabaseClient
+  disposeSupabaseAuthLifecycle: () => void
   createClient: jest.MockedFunction<typeof CreateClient>
   loadSupabaseEnv: jest.MockedFunction<typeof LoadSupabaseEnv>
 } {
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- fresh module instance per test needs CJS require, not a static import
-  const clientModule = require('../client') as { getSupabaseClient: typeof GetSupabaseClient }
+  const clientModule = require('../client') as {
+    getSupabaseClient: typeof GetSupabaseClient
+    disposeSupabaseAuthLifecycle: () => void
+  }
+  disposeCurrentLifecycle = clientModule.disposeSupabaseAuthLifecycle
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- must resolve from the same fresh registry as clientModule above
   const supabaseJsModule = require('@supabase/supabase-js') as {
     createClient: jest.MockedFunction<typeof CreateClient>
@@ -40,6 +53,7 @@ function requireFresh(): {
 
   return {
     getSupabaseClient: clientModule.getSupabaseClient,
+    disposeSupabaseAuthLifecycle: clientModule.disposeSupabaseAuthLifecycle,
     createClient: supabaseJsModule.createClient,
     loadSupabaseEnv: envModule.loadSupabaseEnv,
   }
@@ -47,6 +61,9 @@ function requireFresh(): {
 
 describe('getSupabaseClient', () => {
   afterEach(() => {
+    disposeCurrentLifecycle?.()
+    disposeCurrentLifecycle = undefined
+    jest.restoreAllMocks()
     jest.clearAllMocks()
     jest.resetModules()
   })
@@ -89,5 +106,17 @@ describe('getSupabaseClient', () => {
     getSupabaseClient()
 
     expect(createClient).toHaveBeenCalledTimes(1)
+  })
+
+  it('handles a rejected detached auth lifecycle transition', async () => {
+    const { getSupabaseClient, disposeSupabaseAuthLifecycle, loadSupabaseEnv } = requireFresh()
+    loadSupabaseEnv.mockReturnValue(ok({ url: 'http://127.0.0.1:54321', anonKey: 'test-anon-key' }))
+    getSupabaseClient()
+    mockStopAutoRefresh.mockRejectedValueOnce(makeError('unexpected'))
+
+    disposeSupabaseAuthLifecycle()
+    await Promise.resolve()
+
+    expect(mockStopAutoRefresh).toHaveBeenCalled()
   })
 })
