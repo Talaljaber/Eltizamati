@@ -5,6 +5,7 @@ import {
   CURRENT_CONSENT_DOC_TYPE,
   CURRENT_CONSENT_VERSION,
   ensurePersonalConsent,
+  generateConsentId,
   isCurrentLocalConsent,
   readLocalConsent,
 } from '../consent-policy'
@@ -22,6 +23,12 @@ describe('central consent policy', () => {
   beforeEach(async () => {
     await AsyncStorage.clear()
     jest.clearAllMocks()
+  })
+
+  it('generates a PostgreSQL-compatible UUID for consent records', () => {
+    expect(generateConsentId()).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    )
   })
 
   it('persists an affirmative local acknowledgement with version, locale, and timestamp', async () => {

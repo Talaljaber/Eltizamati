@@ -1,16 +1,18 @@
 import { act, renderHook } from '@testing-library/react-native'
 import { err, makeError, ok } from '@eltizamati/domain'
 import { useEntryCompletion } from '../use-entry-completion'
+import { __resetEntrySingleFlightForTest } from '../../services/entry-single-flight'
 
 const mockReplace = jest.fn()
 jest.mock('expo-router', () => ({ useRouter: () => ({ replace: mockReplace }) }))
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ i18n: { language: 'en' } }),
+}))
 
 const mockReadLocalConsent = jest.fn()
-const mockEnsurePersonalConsent = jest.fn()
 jest.mock('../../consent-policy', () => ({
   readLocalConsent: () => mockReadLocalConsent(),
   isCurrentLocalConsent: () => true,
-  ensurePersonalConsent: (...args: unknown[]) => mockEnsurePersonalConsent(...args),
 }))
 
 const mockSetDataMode = jest.fn()
@@ -28,159 +30,125 @@ jest.mock('@/providers', () => ({
 }))
 
 const mockGetAuthService = jest.fn()
-const mockGetConsentRepository = jest.fn()
+const mockGetPersonalRepositories = jest.fn()
 jest.mock('@/features/auth/hooks/use-auth-service', () => ({
   useAuthServiceLazy: () => mockGetAuthService,
-  useConsentRepositoryLazy: () => mockGetConsentRepository,
+  usePersonalRepositoriesLazy: () => mockGetPersonalRepositories,
 }))
-jest.mock('@/features/auth/services/auth-boundary-events', () => ({
-  notifyAuthBoundaryChanged: jest.fn(),
-}))
-jest.mock('@/services/local-notification-service', () => ({
-  enableNotificationNavigation: jest.fn(),
+
+const mockPreparePersonalEntry = jest.fn()
+jest.mock('../../services/prepare-personal-entry', () => ({
+  preparePersonalEntry: (...args: unknown[]) => mockPreparePersonalEntry(...args),
 }))
 
 const SESSION = { user: { id: 'user-1', email: 'a@b.co' }, expiresAt: undefined }
+const repositories = { userProfileRepository: {}, consentRepository: {} }
 
 describe('useEntryCompletion', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    __resetEntrySingleFlightForTest()
     mockReadLocalConsent.mockResolvedValue(ok({ version: 'v1' }))
-    mockEnsurePersonalConsent.mockResolvedValue(ok(undefined))
     mockSetDataMode.mockResolvedValue(undefined)
     mockSetOnboardingComplete.mockResolvedValue(undefined)
     mockBootDemo.mockResolvedValue(undefined)
     mockBootPersonal.mockResolvedValue(undefined)
-    mockGetConsentRepository.mockReturnValue(ok({ status: jest.fn(), acknowledge: jest.fn() }))
+    mockGetPersonalRepositories.mockReturnValue(ok(repositories))
     mockGetAuthService.mockReturnValue(
       ok({ currentSession: jest.fn().mockResolvedValue(ok(SESSION)) }),
     )
+    mockPreparePersonalEntry.mockResolvedValue(ok('ready'))
   })
 
-  it('returns a typed failure and does not mark onboarding complete when demo boot fails', async () => {
-    mockBootDemo.mockRejectedValue(makeError('storage'))
-    const { result } = renderHook(() => useEntryCompletion())
-
-    let completion: Awaited<ReturnType<typeof result.current.completeDemoEntry>> | undefined
-    await act(async () => {
-      completion = await result.current.completeDemoEntry()
-    })
-
-    expect(completion).toMatchObject({ ok: false })
-    expect(mockSetOnboardingComplete).not.toHaveBeenCalled()
-    expect(mockReplace).not.toHaveBeenCalled()
-  })
-
-  it('shares rapid demo completion calls and navigates only after the single boot settles', async () => {
-    let resolveBoot: (() => void) | undefined
-    mockBootDemo.mockReturnValue(new Promise<void>((resolve) => (resolveBoot = resolve)))
-    const { result } = renderHook(() => useEntryCompletion())
+  it('shares entry work globally across hook instances', async () => {
+    let release: (() => void) | undefined
+    mockBootDemo.mockReturnValue(new Promise<void>((resolve) => (release = resolve)))
+    const firstHook = renderHook(() => useEntryCompletion())
+    const secondHook = renderHook(() => useEntryCompletion())
 
     let first: Promise<unknown> | undefined
     let second: Promise<unknown> | undefined
     act(() => {
-      first = result.current.completeDemoEntry()
-      second = result.current.completeDemoEntry()
+      first = firstHook.result.current.completeDemoEntry()
+      second = secondHook.result.current.completePersonalEntry(SESSION)
     })
+
     expect(first).toBe(second)
-    expect(mockSetOnboardingComplete).not.toHaveBeenCalled()
-    resolveBoot?.()
+    release?.()
     await act(async () => {
       await first
     })
-
     expect(mockBootDemo).toHaveBeenCalledTimes(1)
-    expect(mockSetOnboardingComplete).toHaveBeenCalledTimes(1)
-    expect(mockReplace).toHaveBeenCalledWith('/(tabs)/')
+    expect(mockPreparePersonalEntry).not.toHaveBeenCalled()
   })
 
-  it('runs demo and personal entry exclusively — a concurrent pair cannot both mutate state', async () => {
-    let resolveDemoBoot: (() => void) | undefined
-    mockBootDemo.mockReturnValue(new Promise<void>((resolve) => (resolveDemoBoot = resolve)))
-    const { result } = renderHook(() => useEntryCompletion())
-
-    let demo: Promise<unknown> | undefined
-    let personal: Promise<unknown> | undefined
-    act(() => {
-      demo = result.current.completeDemoEntry()
-      personal = result.current.completePersonalEntry(SESSION)
-    })
-    // The second caller receives the first in-flight operation, not its own.
-    expect(demo).toBe(personal)
-    resolveDemoBoot?.()
-    await act(async () => {
-      await demo
-    })
-
-    // Only the demo path mutated global state; personal boot never ran.
-    expect(mockSetDataMode).toHaveBeenCalledTimes(1)
-    expect(mockSetDataMode).toHaveBeenCalledWith('demo')
-    expect(mockBootPersonal).not.toHaveBeenCalled()
-  })
-
-  it('converts a thrown currentSession() into a typed Result during resume', async () => {
-    mockGetAuthService.mockReturnValue(
-      ok({ currentSession: jest.fn().mockRejectedValue(makeError('unexpected')) }),
-    )
-    const { result } = renderHook(() => useEntryCompletion())
-
-    let completion: Awaited<ReturnType<typeof result.current.resumePersonalEntry>> | undefined
-    await act(async () => {
-      completion = await result.current.resumePersonalEntry()
-    })
-
-    expect(completion).toMatchObject({ ok: false })
-    expect(mockReplace).not.toHaveBeenCalled()
-    expect(mockBootPersonal).not.toHaveBeenCalled()
-  })
-
-  it('resumes to sign-in when no session exists, then clears the slot for a later retry', async () => {
-    mockGetAuthService.mockReturnValue(
-      ok({ currentSession: jest.fn().mockResolvedValue(ok(undefined)) }),
-    )
-    const { result } = renderHook(() => useEntryCompletion())
-
-    let completion: Awaited<ReturnType<typeof result.current.resumePersonalEntry>> | undefined
-    await act(async () => {
-      completion = await result.current.resumePersonalEntry()
-    })
-
-    expect(completion).toMatchObject({ ok: true, value: false })
-    expect(mockReplace).toHaveBeenCalledWith('/auth/sign-in')
-  })
-
-  it('clears the in-flight slot after failure so a retry can succeed', async () => {
-    mockBootDemo.mockRejectedValueOnce(makeError('storage'))
-    const { result } = renderHook(() => useEntryCompletion())
-
-    let firstResult: Awaited<ReturnType<typeof result.current.completeDemoEntry>> | undefined
-    await act(async () => {
-      firstResult = await result.current.completeDemoEntry()
-    })
-    expect(firstResult).toMatchObject({ ok: false })
-
-    mockBootDemo.mockResolvedValueOnce(undefined)
-    let retryResult: Awaited<ReturnType<typeof result.current.completeDemoEntry>> | undefined
-    await act(async () => {
-      retryResult = await result.current.completeDemoEntry()
-    })
-
-    expect(retryResult).toMatchObject({ ok: true })
-    expect(mockReplace).toHaveBeenCalledWith('/(tabs)/')
-  })
-
-  it('never produces an unhandled rejection on failure', async () => {
-    const unhandled = jest.fn()
-    process.on('unhandledRejection', unhandled)
-    mockGetConsentRepository.mockReturnValue(err(makeError('unexpected')))
+  it('prepares profile, consent, and repositories before navigating Home', async () => {
     const { result } = renderHook(() => useEntryCompletion())
 
     await act(async () => {
       await result.current.completePersonalEntry(SESSION)
     })
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    process.off('unhandledRejection', unhandled)
 
-    expect(unhandled).not.toHaveBeenCalled()
+    expect(mockPreparePersonalEntry).toHaveBeenCalledWith({
+      session: SESSION,
+      locale: 'en',
+      repositories,
+      bootPersonalMode: mockBootPersonal,
+    })
+    expect(mockReplace).toHaveBeenCalledWith('/(tabs)/')
+  })
+
+  it('routes to consent without entering Home when consent is required', async () => {
+    mockPreparePersonalEntry.mockResolvedValue(ok('consentRequired'))
+    const { result } = renderHook(() => useEntryCompletion())
+
+    await act(async () => {
+      await result.current.completePersonalEntry(SESSION)
+    })
+
+    expect(mockReplace).toHaveBeenCalledWith('/onboarding/consent?next=personal')
+    expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
+  })
+
+  it('blocks Home on provisioning/preparation failure and allows retry', async () => {
+    mockPreparePersonalEntry
+      .mockResolvedValueOnce(err(makeError('storage')))
+      .mockResolvedValueOnce(ok('ready'))
+    const { result } = renderHook(() => useEntryCompletion())
+
+    let first: unknown
+    await act(async () => {
+      first = await result.current.completePersonalEntry(SESSION)
+    })
+    expect(first).toMatchObject({ ok: false })
+    expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)/')
+
+    await act(async () => {
+      await result.current.completePersonalEntry(SESSION)
+    })
+    expect(mockReplace).toHaveBeenCalledWith('/(tabs)/')
+  })
+
+  it('restores a valid session without requesting another OTP', async () => {
+    const { result } = renderHook(() => useEntryCompletion())
+    await act(async () => {
+      await result.current.resumePersonalEntry()
+    })
+
+    expect(mockPreparePersonalEntry).toHaveBeenCalled()
+    expect(mockReplace).toHaveBeenCalledWith('/(tabs)/')
+  })
+
+  it('routes a missing restored session to email entry', async () => {
+    mockGetAuthService.mockReturnValue(
+      ok({ currentSession: jest.fn().mockResolvedValue(ok(undefined)) }),
+    )
+    const { result } = renderHook(() => useEntryCompletion())
+    await act(async () => {
+      await result.current.resumePersonalEntry()
+    })
+
+    expect(mockReplace).toHaveBeenCalledWith('/auth/sign-in')
+    expect(mockPreparePersonalEntry).not.toHaveBeenCalled()
   })
 })
