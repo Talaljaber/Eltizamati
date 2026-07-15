@@ -73,6 +73,11 @@ For the live chat, set `OPENAI_API_KEY` and optional `OPENAI_MODEL` in the
 OpenAI key there would expose it in the mobile bundle. A safe template is at
 `supabase/functions/.env.example`.
 
+The deployed function keeps Supabase JWT verification enabled. Live chat is
+therefore available only to a signed-in personal-mode user; demo mode continues
+to show the unavailable state. This prevents an unauthenticated caller from
+using the project's OpenAI balance.
+
 ## Verification
 
 - `pnpm --filter @eltizamati/mobile typecheck` — passed.
