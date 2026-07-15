@@ -9,6 +9,7 @@ import {
   type Id,
   type Result,
 } from '@eltizamati/domain'
+import { generateUuid } from '@/core/ids/generate-uuid'
 
 export const CURRENT_CONSENT_DOC_TYPE = 'privacy-policy'
 export const CURRENT_CONSENT_VERSION = 'v1'
@@ -41,16 +42,7 @@ function storageError(cause: unknown): AppError {
 }
 
 export function generateConsentId(): Id<'consentRecord'> {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return brandId<'consentRecord'>(crypto.randomUUID())
-  }
-  let remainingTimestamp = Date.now()
-  const id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (placeholder) => {
-    const randomNibble = ((remainingTimestamp + Math.random() * 16) % 16) | 0
-    remainingTimestamp = Math.floor(remainingTimestamp / 16)
-    return (placeholder === 'x' ? randomNibble : (randomNibble & 0x3) | 0x8).toString(16)
-  })
-  return brandId<'consentRecord'>(id)
+  return brandId<'consentRecord'>(generateUuid())
 }
 
 export async function readLocalConsent(): Promise<

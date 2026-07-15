@@ -21,12 +21,7 @@ import {
   type FormulaInput,
   type FormulaVersion,
 } from '@eltizamati/finance-engine'
-
-function generateId(): string {
-  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `calc-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 9)}`
-}
+import { generateUuid } from '@/core/ids/generate-uuid'
 
 /**
  * CalculationService orchestrates the execution of pure finance-engine formulas
@@ -104,7 +99,7 @@ export class CalculationService {
     const assumptions = outcome.kind === 'ok' ? outcome.assumptions : []
 
     const run: CalculationRun = {
-      id: brandId<'calculationRun'>(generateId()),
+      id: brandId<'calculationRun'>(generateUuid()),
       userId,
       obligationId,
       formulaId,

@@ -7,20 +7,28 @@
  * state.
  */
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
-import { isErr, type Id, type UserProfile, type UserProfileRepository } from '@eltizamati/domain'
+import {
+  isErr,
+  makeError,
+  type Id,
+  type UserProfile,
+  type UserProfileRepository,
+} from '@eltizamati/domain'
 import { authKeys } from './keys'
 
 export function useProfileQuery(
   repository: UserProfileRepository,
-  userId: Id<'user'>,
+  userId: Id<'user'> | null,
 ): UseQueryResult<UserProfile> {
   return useQuery({
-    queryKey: authKeys.profile(userId),
+    queryKey: authKeys.profile(userId ?? 'pending'),
     queryFn: async () => {
+      if (userId === null) throw makeError('auth')
       const result = await repository.get(userId)
       if (isErr(result)) throw result.error
       return result.value
     },
+    enabled: userId !== null,
   })
 }
 
