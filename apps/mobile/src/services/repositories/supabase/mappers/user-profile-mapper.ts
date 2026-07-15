@@ -29,6 +29,9 @@ export function profileRowToDomain(row: ProfileRow): UserProfile {
     dataMode: toDataMode(row.data_mode),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    fullName: row.full_name ?? undefined,
+    phoneNumber: row.phone_number ?? undefined,
+    primaryBank: row.primary_bank ?? undefined,
     reminderDayOfMonth: row.reminder_day_of_month ?? undefined,
     userThresholdAmount:
       row.user_threshold_amount === null || row.user_threshold_amount === undefined
@@ -44,8 +47,23 @@ export function profileDomainToRow(profile: UserProfile): ProfileInsert {
     data_mode: profile.dataMode,
     created_at: profile.createdAt,
     updated_at: profile.updatedAt,
+    full_name: profile.fullName ?? null,
+    phone_number: profile.phoneNumber ?? null,
+    primary_bank: profile.primaryBank ?? null,
     reminder_day_of_month: profile.reminderDayOfMonth ?? null,
     user_threshold_amount:
       profile.userThresholdAmount === undefined ? null : Number(profile.userThresholdAmount),
   }
+}
+
+/**
+ * New profiles do not yet have user preferences. Omit those optional columns
+ * from the insert instead of sending explicit nulls, so signup provisioning is
+ * independent from later preference configuration.
+ */
+export function profileDomainToInsertRow(profile: UserProfile): ProfileInsert {
+  const insert = { ...profileDomainToRow(profile) }
+  delete insert.reminder_day_of_month
+  delete insert.user_threshold_amount
+  return insert
 }

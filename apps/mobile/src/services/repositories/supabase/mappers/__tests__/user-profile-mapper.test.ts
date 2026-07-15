@@ -1,5 +1,9 @@
 import { brandId, type UserProfile } from '@eltizamati/domain'
-import { profileDomainToRow, profileRowToDomain } from '../user-profile-mapper'
+import {
+  profileDomainToInsertRow,
+  profileDomainToRow,
+  profileRowToDomain,
+} from '../user-profile-mapper'
 import type { Database } from '../../../../../core/supabase/database.types'
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row']
@@ -13,6 +17,9 @@ describe('user-profile-mapper', () => {
     updated_at: '2026-07-02T00:00:00.000Z',
     reminder_day_of_month: null,
     user_threshold_amount: null,
+    full_name: null,
+    phone_number: null,
+    primary_bank: null,
   }
 
   const profile: UserProfile = {
@@ -23,6 +30,9 @@ describe('user-profile-mapper', () => {
     updatedAt: '2026-07-02T00:00:00.000Z',
     reminderDayOfMonth: undefined,
     userThresholdAmount: undefined,
+    fullName: undefined,
+    phoneNumber: undefined,
+    primaryBank: undefined,
   }
 
   it('profileRowToDomain maps every column to its domain field', () => {
@@ -31,6 +41,19 @@ describe('user-profile-mapper', () => {
 
   it('profileDomainToRow maps every domain field back to its column', () => {
     expect(profileDomainToRow(profile)).toEqual(row)
+  })
+
+  it('omits unset preference columns from initial profile inserts', () => {
+    expect(profileDomainToInsertRow(profile)).toEqual({
+      user_id: profile.userId,
+      locale: profile.locale,
+      data_mode: profile.dataMode,
+      created_at: profile.createdAt,
+      updated_at: profile.updatedAt,
+      full_name: null,
+      phone_number: null,
+      primary_bank: null,
+    })
   })
 
   it('round-trips row -> domain -> row without loss', () => {

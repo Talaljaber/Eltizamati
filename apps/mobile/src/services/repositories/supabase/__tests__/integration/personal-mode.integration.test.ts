@@ -5,8 +5,7 @@
  * `pnpm run supabase:start` (Docker) first; run via `pnpm run test:integration`.
  * Never part of `pnpm test`/`pnpm check` — see jest.config.js.
  *
- * Exercises PHASE-04 exit criteria 1/2/3/5 for real: sign-up (local dev has
- * `enable_confirmations = false`, so "verify" is auto-satisfied) → sign-in →
+ * Exercises PHASE-04 exit criteria 1/2/3/5 for real: request OTP → verify →
  * write every repository → read back → cross-user isolation via the actual
  * client (not SQL) → sign-out → sign-in → session-restored read.
  */
@@ -35,6 +34,7 @@ import { SupabaseRatePeriodRepository } from '../../rate-period-repository'
 import { SupabaseInsightRepository } from '../../insight-repository'
 import { SupabaseConsentRepository } from '../../consent-repository'
 import { SupabaseCalculationRunRepository } from '../../calculation-run-repository'
+import { authenticateWithLocalEmailOtp } from '../../integration/local-email-otp'
 
 // Supabase's well-known fixed local-dev anon key (supabase/config.toml default) —
 // not a secret, identical for every `supabase start` on this machine.
@@ -71,7 +71,6 @@ function makeTestClient(): SupabaseClient<Database> {
 interface SyntheticUser {
   readonly userId: string
   readonly email: string
-  readonly password: string
 }
 
 async function signUpSyntheticUser(
@@ -79,19 +78,8 @@ async function signUpSyntheticUser(
   tag: string,
 ): Promise<SyntheticUser> {
   const email = `phase4-${tag}-${Date.now()}-${Math.random().toString(36).slice(2)}@eltizamati.test`
-  const password = 'correct-horse-battery-staple'
-  const { data, error } = await client.auth.signUp({ email, password })
-  // Test-setup fail-fast, not application error handling — ADR-0014's
-  // AppError taxonomy governs app code paths, not beforeAll() plumbing.
-  // eslint-disable-next-line no-restricted-syntax
-  if (error !== null) throw new Error(`signUp failed for ${tag}: ${error.message}`)
-  if (data.session === null) {
-    // eslint-disable-next-line no-restricted-syntax
-    throw new Error(
-      `signUp for ${tag} did not return a session — is enable_confirmations left on in supabase/config.toml?`,
-    )
-  }
-  return { userId: data.session.user.id, email, password }
+  const userId = await authenticateWithLocalEmailOtp(client, email)
+  return { userId, email }
 }
 
 describe('Phase 4 personal-mode integration (live local Supabase)', () => {
@@ -113,7 +101,7 @@ describe('Phase 4 personal-mode integration (live local Supabase)', () => {
     // (loan_details/rate_periods/payments/calculation_runs/insights) per
     // Phase 3's ON DELETE CASCADE. Re-sign-in first since a later test
     // deliberately signs user A out.
-    await clientA.auth.signInWithPassword({ email: userA.email, password: userA.password })
+    await authenticateWithLocalEmailOtp(clientA, userA.email)
     if (obligationId !== undefined) {
       await clientA.from('obligations').delete().eq('id', obligationId)
     }
@@ -488,11 +476,7 @@ describe('Phase 4 personal-mode integration (live local Supabase)', () => {
     const resultWhileSignedOut = await obligationRepo.get(brandId(obligationId))
     expect(isErr(resultWhileSignedOut)).toBe(true)
 
-    const { error: signInError } = await clientA.auth.signInWithPassword({
-      email: userA.email,
-      password: userA.password,
-    })
-    expect(signInError).toBeNull()
+    await authenticateWithLocalEmailOtp(clientA, userA.email)
 
     const resultAfterSignIn = await obligationRepo.get(brandId(obligationId))
     expect(isOk(resultAfterSignIn)).toBe(true)

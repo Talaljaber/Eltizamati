@@ -41,6 +41,7 @@ import {
 import type { createPersonalRepositoryRegistry as CreatePersonalRepositoryRegistry } from '../../../../composition-root'
 import type { getSupabaseClient as GetSupabaseClient } from '../../../../../core/supabase/client'
 import type { SupabaseAuthService as SupabaseAuthServiceType } from '../../../../auth/supabase-auth-service'
+import { authenticateWithLocalEmailOtp } from '../../integration/local-email-otp'
 
 // Supabase's well-known fixed local-dev anon key (supabase/config.toml default) —
 // not a secret, identical for every `supabase start` on this machine.
@@ -70,7 +71,6 @@ describe('createCompositionRoot(personal) — real wiring path (live local Supab
   let getSupabaseClient: typeof GetSupabaseClient
   let SupabaseAuthService: typeof SupabaseAuthServiceType
   const email = `phase6-wiring-${Date.now()}-${Math.random().toString(36).slice(2)}@eltizamati.test`
-  const password = 'correct-horse-battery-staple'
   let userId: string
   let obligationId: string
 
@@ -91,6 +91,7 @@ describe('createCompositionRoot(personal) — real wiring path (live local Supab
     return {
       ok: true as const,
       value: {
+        client: clientResult.value,
         authService: new SupabaseAuthService(clientResult.value),
         repositories: createPersonalRepositoryRegistry(clientResult.value),
       },
@@ -103,7 +104,7 @@ describe('createCompositionRoot(personal) — real wiring path (live local Supab
     // eslint-disable-next-line no-restricted-syntax -- test-teardown fail-fast, not application error handling.
     if (!root.ok) throw new Error('composition root failed during cleanup')
     // Re-sign-in first since the suite deliberately signs the user out.
-    await root.value.authService?.signIn(email, password)
+    await authenticateWithLocalEmailOtp(root.value.client, email)
     await root.value.repositories?.obligationRepository.delete(brandId(obligationId))
   }, 15_000)
 
@@ -117,14 +118,8 @@ describe('createCompositionRoot(personal) — real wiring path (live local Supab
     expect(repositories).toBeDefined()
     if (authService === undefined || repositories === undefined) return
 
-    // ── Sign-up (local dev has enable_confirmations = false, so a session
-    // comes back immediately — no verification step to wait out). ──
-    const signUpResult = await authService.signUp(email, password)
-    expect(isOk(signUpResult)).toBe(true)
-    if (!isOk(signUpResult)) return
-    expect(signUpResult.value).toBeDefined()
-    if (signUpResult.value === undefined) return
-    userId = signUpResult.value.user.id
+    // ── Unified email OTP creates or signs in the synthetic local user. ──
+    userId = await authenticateWithLocalEmailOtp(root.value.client, email)
     const brandedUserId = brandId<'user'>(userId)
 
     // ── Consent, through the composition root's own repository instance. ──
@@ -174,8 +169,7 @@ describe('createCompositionRoot(personal) — real wiring path (live local Supab
 
     // ── Sign back in and prove the session restores access to the same
     // user's own data through the same repository instances. ──
-    const signInResult = await authService.signIn(email, password)
-    expect(isOk(signInResult)).toBe(true)
+    await authenticateWithLocalEmailOtp(root.value.client, email)
 
     const afterSignIn = await repositories.obligationRepository.get(oblId)
     expect(isOk(afterSignIn)).toBe(true)

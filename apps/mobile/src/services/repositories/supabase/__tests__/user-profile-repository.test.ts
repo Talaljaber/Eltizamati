@@ -7,6 +7,9 @@ const row = {
   data_mode: 'personal',
   created_at: '2026-07-01T00:00:00.000Z',
   updated_at: '2026-07-02T00:00:00.000Z',
+  full_name: null,
+  phone_number: null,
+  primary_bank: null,
 }
 
 const profile: UserProfile = {
@@ -21,6 +24,7 @@ interface FakeQueryBuilder {
   select: jest.Mock<FakeQueryBuilder, [string]>
   eq: jest.Mock<FakeQueryBuilder, [string, string]>
   upsert: jest.Mock<FakeQueryBuilder, [unknown]>
+  insert: jest.Mock<FakeQueryBuilder, [unknown]>
   maybeSingle: jest.Mock<Promise<unknown>, []>
   single: jest.Mock<Promise<unknown>, []>
 }
@@ -31,12 +35,14 @@ function makeFakeClient(options: { maybeSingle?: unknown; single?: unknown }) {
     select: jest.fn(),
     eq: jest.fn(),
     upsert: jest.fn(),
+    insert: jest.fn(),
     maybeSingle: jest.fn(() => Promise.resolve(options.maybeSingle)),
     single: jest.fn(() => Promise.resolve(options.single)),
   }
   builder.select.mockReturnValue(builder)
   builder.eq.mockReturnValue(builder)
   builder.upsert.mockReturnValue(builder)
+  builder.insert.mockReturnValue(builder)
 
   return {
     from: jest.fn(() => builder),
@@ -69,7 +75,7 @@ describe('SupabaseUserProfileRepository', () => {
       if (isErr(result)) expect(result.error.code).toBe('notFound')
     })
 
-    it('returns a storage AppError when the query fails', async () => {
+    it('returns an authorization AppError when RLS denies the query', async () => {
       const client = makeFakeClient({
         maybeSingle: { data: null, error: { code: '42501', message: 'permission denied' } },
       })
@@ -79,8 +85,8 @@ describe('SupabaseUserProfileRepository', () => {
 
       expect(isErr(result)).toBe(true)
       if (isErr(result)) {
-        expect(result.error.code).toBe('storage')
-        expect(result.error.safeMetadata).toEqual({ postgresErrorCode: '42501' })
+        expect(result.error.code).toBe('authorization')
+        expect(result.error.safeMetadata).toEqual({ providerCode: '42501' })
       }
     })
   })
@@ -102,6 +108,9 @@ describe('SupabaseUserProfileRepository', () => {
         updated_at: profile.updatedAt,
         reminder_day_of_month: null,
         user_threshold_amount: null,
+        full_name: null,
+        phone_number: null,
+        primary_bank: null,
       })
     })
 
@@ -115,6 +124,28 @@ describe('SupabaseUserProfileRepository', () => {
 
       expect(isErr(result)).toBe(true)
       if (isErr(result)) expect(result.error.code).toBe('storage')
+    })
+  })
+
+  describe('createIfAbsent', () => {
+    it('inserts without upserting existing preferences', async () => {
+      const client = makeFakeClient({ single: { data: row, error: null } })
+      const result = await new SupabaseUserProfileRepository(client).createIfAbsent(profile)
+
+      expect(isOk(result)).toBe(true)
+      expect(client.builder.insert).toHaveBeenCalledTimes(1)
+      expect(client.builder.upsert).not.toHaveBeenCalled()
+    })
+
+    it('re-reads the winning profile on a uniqueness race', async () => {
+      const client = makeFakeClient({
+        single: { data: null, error: { code: '23505', message: 'duplicate key' } },
+        maybeSingle: { data: row, error: null },
+      })
+      const result = await new SupabaseUserProfileRepository(client).createIfAbsent(profile)
+
+      expect(isOk(result)).toBe(true)
+      expect(client.builder.maybeSingle).toHaveBeenCalledTimes(1)
     })
   })
 })
