@@ -73,12 +73,13 @@ describe('useHomeAggregates', () => {
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )
 
-    const { result } = renderHook(() => useHomeAggregates([], DEMO_DATE), { wrapper })
+    const { result, unmount } = renderHook(() => useHomeAggregates([], DEMO_DATE), { wrapper })
 
     await waitFor(() => expect(result.current.status).toBe('success'))
     expect(result.current.hasEstimatedInputs).toBe(false)
     const latestRun = await repos.calculationRunRepository.latestFor(undefined, 'aggregates')
     expect(latestRun).toEqual({ ok: true, value: undefined })
+    unmount()
   })
 
   it('persists and applies the explicit personal as-of date instead of the demo fixture date', async () => {
