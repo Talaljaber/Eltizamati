@@ -6,13 +6,12 @@ function makeAuthService(): jest.Mocked<AuthService> {
   return {
     signUp: jest.fn(),
     signIn: jest.fn(),
+    verifySignupOtp: jest.fn(),
+    resendSignupOtp: jest.fn(),
     signOut: jest.fn().mockResolvedValue(ok(undefined)),
     clearLocalSession: jest.fn().mockResolvedValue(ok(undefined)),
-    resetPassword: jest.fn(),
     currentSession: jest.fn(),
     onAuthStateChange: jest.fn(),
-    exchangeCallbackUrl: jest.fn(),
-    updatePassword: jest.fn(),
     deleteAccount: jest.fn().mockResolvedValue(ok(undefined)),
   }
 }

@@ -8,7 +8,6 @@ import {
   cancelLocalReminder,
   clearLastNotificationResponse,
 } from '@/services/local-notification-service'
-import { useResetAppRuntimeIfAvailable } from '@/providers'
 import { runLocalUserBoundaryCleanup } from '../services/local-user-boundary-cleanup'
 import { subscribeAuthBoundaryChanged } from '../services/auth-boundary-events'
 
@@ -17,10 +16,9 @@ import { subscribeAuthBoundaryChanged } from '../services/auth-boundary-events'
  * settings actions perform their server operation separately, then this same
  * local boundary is safe to run again when Supabase emits SIGNED_OUT.
  */
-export function AuthBoundaryCoordinator() {
+export function AuthBoundaryCoordinator({ resetRuntime }: { readonly resetRuntime: () => void }) {
   const getAuthService = useAuthServiceLazy()
   const queryClient = useQueryClient()
-  const resetRuntime = useResetAppRuntimeIfAvailable()
   const router = useRouter()
   const lastUserId = useRef<string | undefined>(undefined)
   const cleanupInFlight = useRef<Promise<void> | undefined>(undefined)

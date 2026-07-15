@@ -2,20 +2,17 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useRouter, useSegments, type Href } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { brandId, makeError, type AppError } from '@eltizamati/domain'
+import { makeError, type AppError } from '@eltizamati/domain'
 import { ErrorState, useTheme } from '@/core/design-system'
 import { toErrorUiState } from '@/core/errors/error-ui-state'
 import { releaseNativeSplash } from '@/features/startup/services/splash-release'
 import { readStartupTrustState } from '@/features/demo/stores/demo-mode-store'
-import {
-  ensurePersonalConsent,
-  isCurrentLocalConsent,
-  readLocalConsent,
-} from '@/features/consent/consent-policy'
+import { isCurrentLocalConsent, readLocalConsent } from '@/features/consent/consent-policy'
 import {
   useAuthServiceLazy,
-  useConsentRepositoryLazy,
+  usePersonalRepositoriesLazy,
 } from '@/features/auth/hooks/use-auth-service'
+import { preparePersonalEntry } from '@/features/consent/services/prepare-personal-entry'
 import { useDemoBoot, usePersonalBoot } from '@/providers'
 import { i18nInitialization } from '@/i18n'
 
@@ -33,8 +30,9 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
   const theme = useTheme()
   const router = useRouter()
   const segments = useSegments()
+  const initialSegmentsRef = useRef<readonly string[]>(segments)
   const getAuthService = useAuthServiceLazy()
-  const getConsentRepository = useConsentRepositoryLazy()
+  const getPersonalRepositories = usePersonalRepositoriesLazy()
   const bootDemoMode = useDemoBoot()
   const bootPersonalMode = usePersonalBoot()
   const [phase, setPhase] = useState<StartupPhase>('starting')
@@ -85,7 +83,7 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
         await waitForI18n()
         if (!active) return
 
-        const segmentPath = segments as readonly string[]
+        const segmentPath = initialSegmentsRef.current
         const group = segmentPath[0]
         // Callback and auth screens own their own recoverable states. They
         // must be mountable on a cold start before a data mode exists.
@@ -114,12 +112,16 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
           return
         }
 
-        if (!trust.onboardingComplete || trust.dataMode === null || !hasCurrentConsent) {
+        if (!trust.onboardingComplete || trust.dataMode === null) {
           await settle('/onboarding/language')
           return
         }
 
         if (trust.dataMode === 'demo') {
+          if (!hasCurrentConsent) {
+            await settle('/onboarding/consent?next=demo')
+            return
+          }
           await bootDemoMode()
           if (!active) return
           await settle()
@@ -136,16 +138,21 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
           return
         }
 
-        const consentRepositoryResult = getConsentRepository()
-        if (!consentRepositoryResult.ok) throw consentRepositoryResult.error
-        const consentResult = await ensurePersonalConsent(
-          brandId<'user'>(sessionResult.value.user.id),
-          consentRepositoryResult.value,
-        )
-        if (!consentResult.ok) throw consentResult.error
-        await bootPersonalMode()
+        const repositoriesResult = getPersonalRepositories()
+        if (!repositoriesResult.ok) throw repositoriesResult.error
+        const preparation = await preparePersonalEntry({
+          session: sessionResult.value,
+          locale: i18nRef.current.language.startsWith('ar') ? 'ar' : 'en',
+          repositories: repositoriesResult.value,
+          bootPersonalMode,
+        })
+        if (!preparation.ok) throw preparation.error
         if (!active) return
-        await settle()
+        await settle(
+          preparation.value === 'consentRequired'
+            ? '/onboarding/consent?next=personal'
+            : '/(tabs)/',
+        )
       } catch (error) {
         if (!active) return
         setStartupError(asAppError(error))
@@ -167,7 +174,7 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
     return () => {
       active = false
     }
-  }, [attempt, bootDemoMode, bootPersonalMode, getAuthService, getConsentRepository, segments])
+  }, [attempt, bootDemoMode, bootPersonalMode, getAuthService, getPersonalRepositories])
 
   // Issue the redirect only after the Stack is mounted (phase 'ready'),
   // never while the spinner is up — replacing before the navigator mounts is

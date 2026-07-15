@@ -27,7 +27,6 @@ jest.mock('@/services/local-notification-service', () => ({
 }))
 
 const mockResetRuntime = jest.fn()
-jest.mock('@/providers', () => ({ useResetAppRuntimeIfAvailable: () => mockResetRuntime }))
 
 const mockGetAuthService = jest.fn()
 jest.mock('@/features/auth/hooks/use-auth-service', () => ({
@@ -65,7 +64,7 @@ describe('AuthBoundaryCoordinator', () => {
     queryClient.setQueryData(['obligation', 'user-a', 'obligation-a'], { owner: 'user-a' })
     render(
       <QueryClientProvider client={queryClient}>
-        <AuthBoundaryCoordinator />
+        <AuthBoundaryCoordinator resetRuntime={mockResetRuntime} />
       </QueryClientProvider>,
     )
 
@@ -83,7 +82,7 @@ describe('AuthBoundaryCoordinator', () => {
     queryClient.setQueryData(['obligation', 'user-a', 'obligation-a'], { owner: 'user-a' })
     render(
       <QueryClientProvider client={queryClient}>
-        <AuthBoundaryCoordinator />
+        <AuthBoundaryCoordinator resetRuntime={mockResetRuntime} />
       </QueryClientProvider>,
     )
 
@@ -104,7 +103,7 @@ describe('AuthBoundaryCoordinator', () => {
     queryClient.setQueryData(['payments', 'user-a', 'obligation-a'], [{ owner: 'user-a' }])
     render(
       <QueryClientProvider client={queryClient}>
-        <AuthBoundaryCoordinator />
+        <AuthBoundaryCoordinator resetRuntime={mockResetRuntime} />
       </QueryClientProvider>,
     )
 

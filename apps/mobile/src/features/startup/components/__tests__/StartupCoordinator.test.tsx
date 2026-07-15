@@ -51,20 +51,23 @@ const localConsent = {
   acknowledgedAt: '2026-07-14T00:00:00.000Z',
 }
 const mockReadLocalConsent = jest.fn()
-const mockEnsurePersonalConsent = jest.fn()
 jest.mock('@/features/consent/consent-policy', () => ({
   readLocalConsent: () => mockReadLocalConsent(),
   isCurrentLocalConsent: (value: unknown) =>
     (value as { version?: string } | undefined)?.version === 'v1',
-  ensurePersonalConsent: (...args: unknown[]) => mockEnsurePersonalConsent(...args),
 }))
 
 const mockCurrentSession = jest.fn()
 const mockGetAuthService = jest.fn()
-const mockGetConsentRepository = jest.fn()
+const mockGetPersonalRepositories = jest.fn()
 jest.mock('@/features/auth/hooks/use-auth-service', () => ({
   useAuthServiceLazy: () => mockGetAuthService,
-  useConsentRepositoryLazy: () => mockGetConsentRepository,
+  usePersonalRepositoriesLazy: () => mockGetPersonalRepositories,
+}))
+
+const mockPreparePersonalEntry = jest.fn()
+jest.mock('@/features/consent/services/prepare-personal-entry', () => ({
+  preparePersonalEntry: (...args: unknown[]) => mockPreparePersonalEntry(...args),
 }))
 
 const mockBootDemo = jest.fn()
@@ -87,8 +90,15 @@ describe('StartupCoordinator', () => {
       ok({ user: { id: 'user-1', email: 'user@example.com' }, expiresAt: undefined }),
     )
     mockGetAuthService.mockReturnValue(ok({ currentSession: mockCurrentSession }))
-    mockGetConsentRepository.mockReturnValue(ok({ status: jest.fn(), acknowledge: jest.fn() }))
-    mockEnsurePersonalConsent.mockResolvedValue(ok(undefined))
+    mockGetPersonalRepositories.mockReturnValue(
+      ok({ userProfileRepository: {}, consentRepository: {} }),
+    )
+    mockPreparePersonalEntry.mockImplementation(
+      async ({ bootPersonalMode }: { bootPersonalMode: () => Promise<void> }) => {
+        await bootPersonalMode()
+        return ok('ready')
+      },
+    )
     mockI18nInitialization = Promise.resolve()
     mockHideAsync.mockResolvedValue(undefined)
     mockUseTranslation.mockReturnValue(defaultTranslation)
@@ -124,6 +134,26 @@ describe('StartupCoordinator', () => {
     expect(mockGetAuthService).not.toHaveBeenCalled()
   })
 
+  it('does not restart cold-start coordination when internal navigation changes segments', async () => {
+    const view = render(
+      <StartupCoordinator>
+        <Text>product</Text>
+      </StartupCoordinator>,
+    )
+    await waitFor(() => expect(view.getByText('product')).toBeTruthy())
+    expect(mockReadStartupTrustState).toHaveBeenCalledTimes(1)
+
+    mockSegments = ['onboarding', 'consent']
+    view.rerender(
+      <StartupCoordinator>
+        <Text>product</Text>
+      </StartupCoordinator>,
+    )
+
+    expect(view.getByText('product')).toBeTruthy()
+    expect(mockReadStartupTrustState).toHaveBeenCalledTimes(1)
+  })
+
   it('redirects an expired personal session to sign-in, rendering the Stack and releasing the splash', async () => {
     mockReadStartupTrustState.mockResolvedValue(
       ok({ dataMode: 'personal', onboardingComplete: true }),
@@ -156,7 +186,7 @@ describe('StartupCoordinator', () => {
     expect(mockHideAsync).toHaveBeenCalledTimes(1)
   })
 
-  it('checks server consent before booting returning personal mode', async () => {
+  it('repairs profile and consent before booting returning personal mode', async () => {
     mockReadStartupTrustState.mockResolvedValue(
       ok({ dataMode: 'personal', onboardingComplete: true }),
     )
@@ -167,7 +197,11 @@ describe('StartupCoordinator', () => {
     )
 
     await waitFor(() => expect(getByText('product')).toBeTruthy())
-    expect(mockEnsurePersonalConsent).toHaveBeenCalled()
+    expect(mockPreparePersonalEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        session: expect.objectContaining({ user: expect.objectContaining({ id: 'user-1' }) }),
+      }),
+    )
     expect(mockBootPersonal).toHaveBeenCalledTimes(1)
   })
 

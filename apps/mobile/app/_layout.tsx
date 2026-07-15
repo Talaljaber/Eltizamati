@@ -36,6 +36,7 @@ export default function RootLayout() {
       <StartupCoordinator>
         <NotificationResponseHandler />
         <Stack
+          initialRouteName="auth"
           screenOptions={{
             headerStyle: { backgroundColor: theme.brand },
             headerTitleStyle: { color: theme.textOnBrand, fontWeight: '600' },
