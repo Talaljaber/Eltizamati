@@ -10,6 +10,7 @@ import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { toLocalDate, type Id } from '@eltizamati/domain'
 import { ObligationService } from '@/services/obligation-service'
 import { isValidDecimal, isValidLocalDate } from '@/features/obligation-form/validation'
+import { DatePickerField } from '@/features/obligation-form/components/DatePickerField'
 
 const service = new ObligationService()
 
@@ -83,11 +84,10 @@ function LogRateChangeInner() {
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
       <Stack.Screen options={{ title: t('obligationForm.logRateTitle') }} />
-      <TextField
+      <DatePickerField
         label={t('obligationForm.rateEffectiveFrom')}
         value={effectiveFrom}
-        onChangeText={setEffectiveFrom}
-        placeholder="YYYY-MM-DD"
+        onChange={setEffectiveFrom}
       />
       <TextField
         label={t('obligationForm.annualRatePercent')}
