@@ -1,156 +1,148 @@
-/**
- * SCR-AUTH-SIGNUP — email sign-up with verification.
- * States: L (submitting) · ER (email in use/weak password/network, inline
- * w/ retry) · OF (offline — full-screen) · verification-pending (w/ resend).
- * Primary: create account → verification-pending state.
- */
 import { useState } from 'react'
-import { View, StyleSheet } from 'react-native'
-import { useTranslation } from 'react-i18next'
+import { StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Text, Button, EmptyState, ErrorState, space, useTheme } from '@/core/design-system'
+import { Button, ErrorState, Text, space, useTheme } from '@/core/design-system'
+import { useSignUpMutation } from '@/features/auth/api/use-auth-mutations'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
 import { useAuthService } from '@/features/auth/hooks/use-auth-service'
-import { useSignUpMutation } from '@/features/auth/api/use-auth-mutations'
-import { useEntryCompletion } from '@/features/consent/hooks/use-entry-completion'
+import { normalizeSignupProfile } from '@/features/auth/services/signup-profile'
+import {
+  beginOtpOperation,
+  finishOtpOperation,
+  startOtpAttempt,
+} from '@/features/auth/stores/otp-attempt-store'
+import { normalizeAuthEmail } from '@/services/auth/auth-email'
 
 export default function SignUpScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
-  const { completePersonalEntry } = useEntryCompletion()
-
+  const signUp = useSignUpMutation(useAuthService())
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [verificationPending, setVerificationPending] = useState(false)
-  // Covers the whole submit chain (both mutations + the boot sequence), not
-  // just signUp's own pending state — see sign-in.tsx for why.
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | undefined>(undefined)
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [primaryBank, setPrimaryBank] = useState('')
+  const [validationError, setValidationError] = useState<string>()
 
-  const authServiceResult = useAuthService()
-  const signUp = useSignUpMutation(authServiceResult)
-
-  async function handleSubmit() {
-    setSubmitError(undefined)
-    setIsSubmitting(true)
+  async function submit(): Promise<void> {
+    const normalizedEmail = normalizeAuthEmail(email)
+    const profile = normalizeSignupProfile({ fullName, phoneNumber, primaryBank })
+    const errorKey =
+      normalizedEmail === undefined
+        ? 'auth.invalidEmail'
+        : password.length < 12
+          ? 'auth.passwordRequirements'
+          : password !== confirmPassword
+            ? 'auth.passwordMismatch'
+            : profile === undefined
+              ? 'auth.profileValidation'
+              : undefined
+    setValidationError(errorKey)
+    if (errorKey !== undefined || normalizedEmail === undefined || profile === undefined) return
+    if (!beginOtpOperation('requesting')) return
     try {
-      let session
-      try {
-        session = await signUp.mutateAsync({ email, password })
-      } catch {
-        // Already captured in signUp.error — rendered below.
-        return
-      }
-      if (session === undefined) {
-        // Email verification required — no session yet (BR: never invent one).
-        setVerificationPending(true)
-        return
-      }
-      const completion = await completePersonalEntry(session)
-      if (!completion.ok) {
-        // Signed up successfully, but couldn't record consent — must be
-        // visible, not a silent dead end.
-        setSubmitError(t('auth.signInConsentFailed'))
-        return
-      }
+      await signUp.mutateAsync({ email: normalizedEmail, password })
+      startOtpAttempt(normalizedEmail, profile)
+      router.push('/auth/verify-code')
+    } catch {
+      // The typed mutation error remains visible below.
     } finally {
-      setIsSubmitting(false)
+      finishOtpOperation()
     }
   }
 
   const error = signUp.error ?? undefined
-  const isOffline = error !== undefined && error.code === 'connectivity'
-
-  if (verificationPending) {
-    return (
-      <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
-        <EmptyState
-          title={t('auth.signUpVerificationPendingTitle')}
-          subtitle={t('auth.signUpVerificationPendingBody', { email })}
-          ctaLabel={t('auth.signUpBackToSignIn')}
-          onCta={() => router.replace('/auth/sign-in')}
-          testID="sign-up-verification-pending"
-        />
-      </SafeAreaView>
-    )
-  }
-
+  const offline = error?.code === 'connectivity'
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
-      {isOffline ? (
-        <ErrorState
-          state={{ kind: 'offline' }}
-          onRetry={() => {
-            void handleSubmit()
-          }}
-          testID="sign-up-offline"
-        />
+      {offline ? (
+        <ErrorState state={{ kind: 'offline' }} onRetry={() => void submit()} />
       ) : (
         <DismissKeyboardView style={styles.content}>
           <Text variant="title" align="center">
             {t('auth.signUpTitle')}
           </Text>
-
           <View style={styles.form}>
+            <AuthTextField
+              label={t('auth.fullName')}
+              value={fullName}
+              onChangeText={setFullName}
+              autoComplete="name"
+              testID="sign-up-full-name"
+            />
+            <AuthTextField
+              label={t('auth.phoneNumber')}
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              keyboardType="phone-pad"
+              autoComplete="tel"
+              textContentType="telephoneNumber"
+              testID="sign-up-phone"
+            />
+            <AuthTextField
+              label={t('auth.primaryBank')}
+              value={primaryBank}
+              onChangeText={setPrimaryBank}
+              testID="sign-up-bank"
+            />
             <AuthTextField
               label={t('auth.emailLabel')}
               value={email}
               onChangeText={setEmail}
-              placeholder={t('auth.emailPlaceholder')}
               autoCapitalize="none"
               keyboardType="email-address"
-              editable={!isSubmitting}
+              autoComplete="email"
+              textContentType="emailAddress"
               testID="sign-up-email"
             />
             <AuthTextField
               label={t('auth.passwordLabel')}
               value={password}
               onChangeText={setPassword}
-              placeholder={t('auth.passwordPlaceholder')}
               secureTextEntry
               autoCapitalize="none"
-              editable={!isSubmitting}
+              autoComplete="new-password"
+              textContentType="newPassword"
               testID="sign-up-password"
             />
-
-            {error !== undefined ? (
+            <AuthTextField
+              label={t('auth.confirmPassword')}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="new-password"
+              textContentType="newPassword"
+              testID="sign-up-confirm-password"
+            />
+            {validationError !== undefined ? (
+              <Text variant="bodySmall" color="critical" testID="sign-up-validation-error">
+                {t(validationError)}
+              </Text>
+            ) : null}
+            {error !== undefined && !offline ? (
               <Text variant="bodySmall" color="critical" testID="sign-up-error">
-                {t(error.userMessageKey)}
+                {t(error.code === 'rateLimited' ? 'auth.emailRateLimited' : 'auth.signUpFailed')}
               </Text>
             ) : null}
-            {submitError !== undefined ? (
-              <Text variant="bodySmall" color="critical" testID="sign-up-submit-error">
-                {submitError}
-              </Text>
-            ) : null}
-
             <Button
               variant="primary"
-              label={t('auth.signUpButton')}
-              loading={isSubmitting}
-              disabled={email === '' || password === ''}
-              onPress={() => {
-                void handleSubmit()
-              }}
+              label={t('auth.createAccount')}
+              loading={signUp.isPending}
+              disabled={signUp.isPending}
+              onPress={() => void submit()}
               testID="sign-up-submit"
             />
-          </View>
-
-          <View style={styles.linkRow}>
-            <Text variant="bodySmall" color="secondary">
-              {t('auth.signUpHaveAccount')}
-            </Text>
-            <Text
-              variant="bodySmall"
-              color="brand"
+            <Button
+              variant="ghost"
+              label={t('auth.backToSignIn')}
               onPress={() => router.replace('/auth/sign-in')}
-              testID="sign-up-sign-in"
-            >
-              {t('auth.signUpSignIn')}
-            </Text>
+            />
           </View>
         </DismissKeyboardView>
       )}
@@ -159,22 +151,7 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: space[6],
-    paddingVertical: space[6],
-    justifyContent: 'center',
-    gap: space[6],
-  },
-  form: {
-    gap: space[4],
-  },
-  linkRow: {
-    flexDirection: 'row',
-    gap: space[1],
-    justifyContent: 'center',
-  },
+  root: { flex: 1 },
+  content: { flexGrow: 1, justifyContent: 'center', gap: space[5], padding: space[6] },
+  form: { gap: space[3] },
 })

@@ -1,4 +1,11 @@
-import { TextInput, View, StyleSheet } from 'react-native'
+import {
+  TextInput,
+  View,
+  StyleSheet,
+  type StyleProp,
+  type TextInputProps,
+  type TextStyle,
+} from 'react-native'
 import { Text, space, radius, minTouchTarget, useTheme } from '@/core/design-system'
 
 export interface AuthTextFieldProps {
@@ -8,13 +15,18 @@ export interface AuthTextFieldProps {
   readonly placeholder?: string
   readonly secureTextEntry?: boolean
   readonly autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters'
-  readonly keyboardType?: 'default' | 'email-address'
+  readonly keyboardType?: 'default' | 'email-address' | 'number-pad' | 'phone-pad'
   readonly editable?: boolean
+  readonly textContentType?: TextInputProps['textContentType']
+  readonly autoComplete?: TextInputProps['autoComplete']
+  readonly maxLength?: number
+  readonly accessibilityLabel?: string
+  readonly style?: StyleProp<TextStyle>
   readonly testID?: string
 }
 
 /**
- * Shared email/password field for the three SCR-AUTH-* screens. Not yet a
+ * Shared authentication text field. Not yet a
  * core/design-system primitive — introduced here since auth is the first
  * feature needing a text input; promote it if a second feature needs one.
  */
@@ -27,6 +39,11 @@ export function AuthTextField({
   autoCapitalize = 'sentences',
   keyboardType = 'default',
   editable = true,
+  textContentType,
+  autoComplete,
+  maxLength,
+  accessibilityLabel,
+  style,
   testID,
 }: AuthTextFieldProps) {
   const theme = useTheme()
@@ -45,11 +62,15 @@ export function AuthTextField({
         autoCapitalize={autoCapitalize}
         autoCorrect={false}
         keyboardType={keyboardType}
+        textContentType={textContentType}
+        autoComplete={autoComplete}
+        maxLength={maxLength}
         editable={editable}
-        accessibilityLabel={label}
+        accessibilityLabel={accessibilityLabel ?? label}
         testID={testID}
         style={[
           styles.input,
+          style,
           {
             borderColor: theme.border,
             backgroundColor: theme.bgElevated,
