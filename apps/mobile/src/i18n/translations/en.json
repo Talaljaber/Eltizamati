@@ -295,6 +295,11 @@
     "continueInDemoMode": "Continue in demo mode",
     "signInTitle": "Sign in",
     "signIn": "Sign in",
+    "otherSignInMethods": "Other sign-in methods",
+    "faceId": "Sign in with Face ID",
+    "sanad": "Sign in with Sanad",
+    "previewOnlyLabel": "Preview only — these options are not connected yet.",
+    "previewOnlyMessage": "This sign-in option is shown for the interface preview and is not available yet.",
     "signUpTitle": "Create your account",
     "createAccount": "Create account",
     "backToSignIn": "Back to sign in",
@@ -646,6 +651,15 @@
       "notificationTitle": "Eltizamati reminder",
       "notificationBody": "You have an upcoming obligation to review."
     }
+  },
+  "profile": {
+    "title": "Profile",
+    "personalDetails": "Personal details",
+    "demoMessage": "Sign in to create and manage your personal profile.",
+    "save": "Save profile",
+    "saved": "Your profile was updated.",
+    "saveFailed": "We couldn't update your profile. Please try again.",
+    "accountManagement": "Account management"
   },
   "dataStatus": {
     "title": "Data Status",

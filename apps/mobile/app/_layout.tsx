@@ -51,6 +51,7 @@ export default function RootLayout() {
             name="settings/index"
             options={{ title: t('navigation.settings'), presentation: 'modal' }}
           />
+          <Stack.Screen name="profile" options={{ title: t('profile.title') }} />
           <Stack.Screen name="+not-found" options={{ title: t('navigation.notFound') }} />
         </Stack>
         <StatusBar style="auto" />
