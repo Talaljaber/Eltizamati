@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { View, StyleSheet, TouchableOpacity } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { Text, Card, FieldRow, ProgressBar, SectionHeader, space } from '@/core/design-system'
+import {
+  Text,
+  Card,
+  FieldRow,
+  ProgressBar,
+  SectionHeader,
+  Amount,
+  space,
+} from '@/core/design-system'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import type { Id, MurabahaFinancing } from '@eltizamati/domain'
 import type { MurabahaProgressModel } from '../hooks/use-murabaha-detail-view-model'
@@ -31,19 +39,53 @@ export function MurabahaDetailSection({
         </View>
         <FieldRow
           label={t('obligationDetail.totalSalePrice')}
-          value={details.totalSalePrice.value.toStorageString()}
+          value={
+            <Amount
+              money={details.totalSalePrice.value}
+              provenance={details.totalSalePrice.provenance}
+              precision={
+                details.totalSalePrice.provenance.source === 'estimate' ? 'estimate' : 'official'
+              }
+              variant="body"
+            />
+          }
         />
         <FieldRow
           label={t('obligationDetail.assetCost')}
-          value={details.assetCost.value.toStorageString()}
+          value={
+            <Amount
+              money={details.assetCost.value}
+              provenance={details.assetCost.provenance}
+              precision={details.assetCost.provenance.source === 'estimate' ? 'estimate' : 'official'}
+              variant="body"
+            />
+          }
         />
         <FieldRow
           label={t('obligationDetail.disclosedProfit')}
-          value={details.disclosedProfit.value.toStorageString()}
+          value={
+            <Amount
+              money={details.disclosedProfit.value}
+              provenance={details.disclosedProfit.provenance}
+              precision={
+                details.disclosedProfit.provenance.source === 'estimate' ? 'estimate' : 'official'
+              }
+              variant="body"
+            />
+          }
         />
         <FieldRow
           label={t('obligationDetail.installment')}
-          value={details.installment.value.toStorageString()}
+          value={
+            <Amount
+              money={details.installment.value}
+              provenance={details.installment.provenance}
+              precision={
+                details.installment.provenance.source === 'estimate' ? 'estimate' : 'official'
+              }
+              variant="body"
+            />
+          }
         />
         <FieldRow
           label={t('obligationDetail.term')}
