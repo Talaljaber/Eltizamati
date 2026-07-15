@@ -435,7 +435,7 @@
     "partial": "Some published information is unknown.",
     "assistantTitle": "Ask Eltizamati",
     "assistantPrivacy": "Eltizamati sends only this conversation and the comparison details you enter here. Your account credentials and stored obligation records are not sent to the AI assistant.",
-    "assistantOffline": "AI comparison is unavailable offline. You can still browse saved educational content and the dated comparison snapshot.",
+    "assistantOffline": "Live AI comparison is not configured in this build. You can still browse educational content and the dated comparison snapshot.",
     "sampleTitle": "Sample explanation — not a live AI response",
     "sampleAnswer": "Compare the published structure, pricing type, fees, salary-transfer requirement, and what is still unknown. Ask the institution for the final offer and its effective date.",
     "sources": "Sources and freshness",
