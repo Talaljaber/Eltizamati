@@ -9,5 +9,9 @@ build
 coverage
 *.generated.*
 apps/mobile/src/core/supabase/database.types.ts
+apps/bank-simulator-dashboard/src/server/supabase/database.types.ts
+apps/bank-simulator-dashboard/.next
+apps/bank-simulator-dashboard/playwright-report
+apps/bank-simulator-dashboard/test-results
 supabase/.temp
 pnpm-lock.yaml

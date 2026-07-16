@@ -18,6 +18,10 @@ export default defineConfig([
       '**/build/**',
       '**/*.generated.*',
       'apps/mobile/src/core/supabase/database.types.ts',
+      'apps/bank-simulator-dashboard/src/server/supabase/database.types.ts',
+      'apps/bank-simulator-dashboard/.next/**',
+      'apps/bank-simulator-dashboard/playwright-report/**',
+      'apps/bank-simulator-dashboard/test-results/**',
       'supabase/**',
       // drizzle-kit output
       '**/drizzle/**',
@@ -89,6 +93,30 @@ export default defineConfig([
     rules: {
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
+
+  // ─── Bank Simulator Dashboard (Next.js web app) ───────────────────────────
+  {
+    files: ['apps/bank-simulator-dashboard/**/*.tsx', 'apps/bank-simulator-dashboard/**/*.ts'],
+    plugins: {
+      react: reactPlugin,
+      'react-hooks': reactHooksPlugin,
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
+  {
+    // `@supabase/*` and privileged env values must never leave the server
+    // boundary of this app — the depcruise rule
+    // `no-supabase-outside-dashboard-server-boundary` enforces the import
+    // graph; this eslint override is the one sanctioned `console.*` call
+    // site (the app-wide logger), see src/server/logging/logger.ts's header.
+    files: ['apps/bank-simulator-dashboard/src/server/logging/logger.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 

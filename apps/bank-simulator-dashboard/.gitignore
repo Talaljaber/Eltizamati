@@ -1,0 +1,13 @@
+# Next.js
+/.next/
+/out/
+
+# Env — never commit real values
+.env
+.env.local
+.env.*.local
+
+# Test artifacts
+/playwright-report/
+/test-results/
+/coverage/

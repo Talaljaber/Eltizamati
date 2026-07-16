@@ -85,6 +85,31 @@ module.exports = {
         path: 'node_modules/@supabase',
       },
     },
+    {
+      name: 'no-supabase-outside-dashboard-server-boundary',
+      comment:
+        'The dashboard uses a service-role Supabase client (no RLS backstop — bypasses it entirely), so supabase-js and nodemailer are confined to src/server/** (docs/dashboard.md §3: privileged access is server-only, never in a browser component or client boundary).',
+      severity: 'error',
+      from: {
+        path: '^apps/bank-simulator-dashboard/',
+        pathNot: '^apps/bank-simulator-dashboard/src/server/',
+      },
+      to: {
+        path: 'node_modules/(@supabase|nodemailer)',
+      },
+    },
+    {
+      name: 'no-dashboard-secrets-in-shared-components',
+      comment:
+        'src/components/** are shared presentation primitives (used from both server and client boundaries) and must stay secret-free — server-only env/Supabase/email modules belong in src/app/** route files or server actions, not in reusable components.',
+      severity: 'error',
+      from: {
+        path: '^apps/bank-simulator-dashboard/src/components/',
+      },
+      to: {
+        path: '^apps/bank-simulator-dashboard/src/server/(env|allowlist|supabase|email)',
+      },
+    },
     // ─── MONEY / FORMATTING RULES ────────────────────────────────────────────
     {
       name: 'no-raw-console-in-features',
