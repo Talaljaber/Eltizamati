@@ -18,7 +18,9 @@ export function ratePeriodRowToDomain(row: RatePeriodRow): RatePeriod {
     obligationId: brandId<'obligation'>(row.obligation_id),
     annualRate: Rate.fromDecimal(String(row.annual_rate)),
     effectiveFrom: toLocalDate(row.effective_from),
-    supersededBy: row.superseded_by !== null ? brandId<'ratePeriod'>(row.superseded_by) : undefined,
+    ...(row.superseded_by !== null
+      ? { supersededBy: brandId<'ratePeriod'>(row.superseded_by) }
+      : {}),
     provenance: jsonToProvenance(row.provenance_json),
     createdAt: row.created_at,
   }
