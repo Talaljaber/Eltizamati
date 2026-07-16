@@ -4,7 +4,7 @@ import { ProvenanceBadge } from './provenance-badge'
 
 export function SourcedMoneyValue({ sourced }: { sourced: Sourced<Money> | undefined }) {
   if (sourced === undefined)
-    return <span style={{ color: 'var(--color-text-secondary)' }}>Unknown</span>
+    return <span style={{ color: 'var(--color-text-secondary)' }}>—</span>
   return (
     <span className="figure">
       {formatMoney(sourced.value)}
@@ -15,7 +15,7 @@ export function SourcedMoneyValue({ sourced }: { sourced: Sourced<Money> | undef
 
 export function SourcedRateValue({ sourced }: { sourced: Sourced<Rate> | undefined }) {
   if (sourced === undefined)
-    return <span style={{ color: 'var(--color-text-secondary)' }}>Unknown</span>
+    return <span style={{ color: 'var(--color-text-secondary)' }}>—</span>
   return (
     <span className="figure">
       {formatRate(sourced.value)}

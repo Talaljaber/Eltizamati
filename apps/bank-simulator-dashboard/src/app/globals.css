@@ -34,6 +34,34 @@
 
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono-figures: 'Menlo', 'Consolas', ui-monospace, monospace;
+
+  /* Chart palette (dataviz skill's validated reference instance — categorical
+     order is the CVD-safety mechanism, never reassigned per-chart). */
+  --chart-surface: #fcfcfb;
+  --chart-ink-primary: #0b0b0b;
+  --chart-ink-secondary: #52514e;
+  --chart-ink-muted: #898781;
+  --chart-gridline: #e1e0d9;
+  --chart-cat-1: #2a78d6; /* blue */
+  --chart-cat-2: #008300; /* green */
+  --chart-cat-3: #e87ba4; /* magenta */
+  --chart-cat-4: #eda100; /* yellow */
+  --chart-cat-5: #1baf7a; /* aqua */
+  --chart-cat-6: #eb6834; /* orange */
+  --chart-cat-7: #4a3aa7; /* violet */
+  --chart-cat-8: #e34948; /* red */
+  --chart-status-good: #0ca30c;
+  --chart-status-warning: #fab219;
+  --chart-status-serious: #ec835a;
+  --chart-status-critical: #d03b3b;
+  /* Ordinal (single-hue, light→dark) — bucket/order-carrying distributions. */
+  --chart-ordinal-1: #86b6ef;
+  --chart-ordinal-2: #6da7ec;
+  --chart-ordinal-3: #5598e7;
+  --chart-ordinal-4: #3987e5;
+  --chart-ordinal-5: #2a78d6;
+  --chart-ordinal-6: #1c5cab;
+  --chart-ordinal-7: #104281;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,6 +71,31 @@
     --color-border: #253347;
     --color-text-primary: #e7ecf2;
     --color-text-secondary: #a9b7c6;
+
+    --chart-surface: #1a1a19;
+    --chart-ink-primary: #ffffff;
+    --chart-ink-secondary: #c3c2b7;
+    --chart-ink-muted: #898781;
+    --chart-gridline: #2c2c2a;
+    --chart-cat-1: #3987e5;
+    --chart-cat-2: #008300;
+    --chart-cat-3: #d55181;
+    --chart-cat-4: #c98500;
+    --chart-cat-5: #199e70;
+    --chart-cat-6: #d95926;
+    --chart-cat-7: #9085e9;
+    --chart-cat-8: #e66767;
+    --chart-status-good: #0ca30c;
+    --chart-status-warning: #fab219;
+    --chart-status-serious: #ec835a;
+    --chart-status-critical: #d03b3b;
+    --chart-ordinal-1: #184f95;
+    --chart-ordinal-2: #1c5cab;
+    --chart-ordinal-3: #256abf;
+    --chart-ordinal-4: #2a78d6;
+    --chart-ordinal-5: #3987e5;
+    --chart-ordinal-6: #5598e7;
+    --chart-ordinal-7: #6da7ec;
   }
 }
 
@@ -193,4 +246,105 @@ a {
 .status-pill--missing {
   background: #fbe9e7;
   color: var(--color-danger);
+}
+
+/* Shared table chrome (docs/dashboard.md §14) — every data table in the app uses
+   this one structure via components/table.tsx, so column padding, header
+   treatment, and row rules never drift page to page. */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: start;
+  padding: var(--space-2) var(--space-3);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-block-end: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: var(--space-2) var(--space-3);
+  border-block-start: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background: var(--color-surface);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-block-start: 0;
+  margin-block-end: var(--space-1);
+}
+
+.section-summary {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-block-end: var(--space-3);
+}
+
+/* ─── Charts (dataviz skill — categorical order + ordinal ramps from the
+   validated reference palette; see the --chart-* tokens above). ─── */
+
+.chart-card {
+  padding-block-end: var(--space-2);
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-3);
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.chart-legend-swatch {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.chart-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.chart-bar-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 28%) 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.chart-bar-track {
+  block-size: 10px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.chart-bar-fill {
+  block-size: 100%;
+  border-radius: 999px;
+  min-inline-size: 3px;
 }

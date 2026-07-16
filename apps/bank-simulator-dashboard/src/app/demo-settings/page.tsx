@@ -1,6 +1,7 @@
 import { loadDashboardConfigStatus } from '@/server/config-status'
 import { renderRateChangeEmail } from '@/server/email/templates'
 import { resolveEmailMode } from '@/server/email/gateway'
+import { Th, Td } from '@/components/table'
 
 const SAMPLE_EMAIL_PARAMS = {
   obligationNickname: 'Demo loan',
@@ -57,15 +58,19 @@ export default function DemoSettingsPage() {
         Configuration state only — no secret values are ever shown here.
       </p>
 
-      <div className="card" style={{ marginBottom: 'var(--space-5)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="card" style={{ marginBlockEnd: 'var(--space-5)' }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <Th>Setting</Th>
+              <Th align="end">Status</Th>
+            </tr>
+          </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.label} style={{ borderBlockEnd: '1px solid var(--color-border)' }}>
-                <td style={{ padding: '8px 0', color: 'var(--color-text-secondary)' }}>
-                  {row.label}
-                </td>
-                <td style={{ padding: '8px 0', textAlign: 'end' }}>
+              <tr key={row.label}>
+                <Td>{row.label}</Td>
+                <Td align="end">
                   {typeof row.value === 'boolean' ? (
                     <span className={`status-pill status-pill--${row.value ? 'ready' : 'missing'}`}>
                       {row.value ? 'yes' : 'no'}
@@ -73,14 +78,14 @@ export default function DemoSettingsPage() {
                   ) : (
                     row.value
                   )}
-                </td>
+                </Td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <div className="card" style={{ marginBottom: 'var(--space-5)' }}>
+      <div className="card" style={{ marginBlockEnd: 'var(--space-5)' }}>
         <h2 style={{ fontSize: 16, marginBlockStart: 0 }}>Current email mode</h2>
         <p style={{ fontSize: 13 }}>
           <span className="status-pill status-pill--ready">{emailMode}</span> — derived from
@@ -88,12 +93,18 @@ export default function DemoSettingsPage() {
         </p>
       </div>
 
-      <div className="card" style={{ marginBottom: 'var(--space-5)' }}>
+      <div className="card" style={{ marginBlockEnd: 'var(--space-5)' }}>
         <h2 style={{ fontSize: 16, marginBlockStart: 0 }}>Preview sample email</h2>
         <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
           Read-only render with sample data — no network call, nothing is sent or persisted.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 'var(--space-4)',
+          }}
+        >
           <div>
             <div style={{ fontSize: 12, fontWeight: 600 }}>English — {sampleEnglish.subject}</div>
             <pre

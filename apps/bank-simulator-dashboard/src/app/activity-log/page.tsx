@@ -35,7 +35,7 @@ export default async function ActivityLogPage() {
         </div>
       ) : (
         <div className="card">
-          <ul style={{ margin: 0, paddingInlineStart: 18, listStyle: 'none' }}>
+          <ul style={{ margin: 0, paddingInlineStart: 0, listStyle: 'none' }}>
             {activityResult.value.map((event) => (
               <li
                 key={event.id}

@@ -9,6 +9,9 @@ import { maskClientName } from '@/server/masking'
 import { formatMoney } from '@/format/money'
 import { SourcedMoneyValue, SourcedRateValue } from '@/components/sourced-amount'
 import { ProvenanceBadge } from '@/components/provenance-badge'
+import { Th, Td, TableScroll } from '@/components/table'
+import { getLocale } from '@/i18n/locale'
+import { t } from '@/i18n/translations'
 import type {
   ConventionalLoan,
   CreditCard,
@@ -24,13 +27,14 @@ export default async function ClientDetailPage({
   params: Promise<{ userId: string }>
 }) {
   const { userId } = await params
+  const locale = await getLocale()
 
   if (!isUserAllowlisted(userId)) {
     return (
       <div>
         <h1 className="page-title">Client not available</h1>
         <div className="card">
-          <p>This client is not on the demo allowlist.</p>
+          <p>{t(locale, 'warning.notAllowlisted')}</p>
         </div>
       </div>
     )
@@ -48,7 +52,7 @@ export default async function ClientDetailPage({
       <div>
         <h1 className="page-title">Client detail</h1>
         <div className="card">
-          <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
+          <p>{t(locale, 'warning.couldNotLoadData')}</p>
         </div>
       </div>
     )
@@ -67,7 +71,7 @@ export default async function ClientDetailPage({
       <div>
         <h1 className="page-title">Client not found</h1>
         <div className="card">
-          <p>No profile row exists for this allowlisted user id.</p>
+          <p>{t(locale, 'warning.noProfile')}</p>
         </div>
       </div>
     )
@@ -77,21 +81,29 @@ export default async function ClientDetailPage({
     <div>
       <h1 className="page-title">{maskClientName(profile.fullName, profile.userId)}</h1>
       <p className="page-subtitle">
-        <Link href="/clients">← Back to clients</Link>
+        <Link href="/clients">{t(locale, 'clientSummary.backToClients')}</Link>
       </p>
 
       <div className="card" style={{ marginBlockEnd: 'var(--space-5)' }}>
-        <h2 style={{ fontSize: 16, marginBlockStart: 0 }}>Profile</h2>
+        <h2 style={{ fontSize: 16, marginBlockStart: 0 }}>{t(locale, 'clientSummary.title')}</h2>
         <dl
           style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 16px', margin: 0 }}
         >
-          <dt style={{ color: 'var(--color-text-secondary)' }}>Language</dt>
+          <dt style={{ color: 'var(--color-text-secondary)' }}>
+            {t(locale, 'clientSummary.language')}
+          </dt>
           <dd>{profile.locale.toUpperCase()}</dd>
-          <dt style={{ color: 'var(--color-text-secondary)' }}>Primary bank</dt>
+          <dt style={{ color: 'var(--color-text-secondary)' }}>
+            {t(locale, 'clientSummary.primaryBank')}
+          </dt>
           <dd>{profile.primaryBank ?? '—'}</dd>
-          <dt style={{ color: 'var(--color-text-secondary)' }}>Data mode</dt>
+          <dt style={{ color: 'var(--color-text-secondary)' }}>
+            {t(locale, 'clientSummary.dataMode')}
+          </dt>
           <dd>{profile.dataMode}</dd>
-          <dt style={{ color: 'var(--color-text-secondary)' }}>Updated</dt>
+          <dt style={{ color: 'var(--color-text-secondary)' }}>
+            {t(locale, 'clientSummary.updated')}
+          </dt>
           <dd>{profile.updatedAt.slice(0, 10)}</dd>
         </dl>
       </div>
@@ -106,78 +118,77 @@ export default async function ClientDetailPage({
       )}
 
       <h2 style={{ fontSize: 18, marginBlockStart: 'var(--space-6)' }}>Payment history</h2>
-      <div className="card" style={{ overflowX: 'auto', marginBlockEnd: 'var(--space-6)' }}>
+      <div className="card" style={{ marginBlockEnd: 'var(--space-6)' }}>
         {payments.length === 0 ? (
           <p>No payments on file.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'start' }}>
-                <th style={{ padding: 4 }}>Date</th>
-                <th style={{ padding: 4 }}>Amount</th>
-                <th style={{ padding: 4 }}>Allocation</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments
-                .slice()
-                .sort((a, b) => (a.date < b.date ? 1 : -1))
-                .map((payment) => (
-                  <tr
-                    key={payment.id}
-                    style={{ borderBlockStart: '1px solid var(--color-border)' }}
-                  >
-                    <td style={{ padding: 4 }}>{payment.date}</td>
-                    <td className="figure" style={{ padding: 4 }}>
-                      {formatMoney(payment.amount)}
-                    </td>
-                    <td style={{ padding: 4 }}>
-                      {payment.allocation === undefined
-                        ? '—'
-                        : `${formatMoney(payment.allocation.principal)} principal / ${formatMoney(payment.allocation.cost)} cost (${payment.allocation.allocationSource})`}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          <TableScroll>
+            <table className="table">
+              <thead>
+                <tr>
+                  <Th>Date</Th>
+                  <Th>Amount</Th>
+                  <Th>Allocation</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments
+                  .slice()
+                  .sort((a, b) => (a.date < b.date ? 1 : -1))
+                  .map((payment) => (
+                    <tr key={payment.id}>
+                      <Td>{payment.date}</Td>
+                      <Td className="figure">{formatMoney(payment.amount)}</Td>
+                      <Td>
+                        {payment.allocation === undefined
+                          ? '—'
+                          : `${formatMoney(payment.allocation.principal)} principal / ${formatMoney(payment.allocation.cost)} cost (${payment.allocation.allocationSource})`}
+                      </Td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </TableScroll>
         )}
       </div>
 
       <h2 style={{ fontSize: 18 }}>Calculations</h2>
-      <div className="card" style={{ overflowX: 'auto', marginBlockEnd: 'var(--space-6)' }}>
+      <div className="card" style={{ marginBlockEnd: 'var(--space-6)' }}>
         {calcRuns.length === 0 ? (
           <p>No calculation runs on file.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'start' }}>
-                <th style={{ padding: 4 }}>Formula</th>
-                <th style={{ padding: 4 }}>As of</th>
-                <th style={{ padding: 4 }}>Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              {calcRuns.map((run) => (
-                <tr key={run.id} style={{ borderBlockStart: '1px solid var(--color-border)' }}>
-                  <td style={{ padding: 4 }}>
-                    {run.formulaId} v{run.formulaVersion}
-                  </td>
-                  <td style={{ padding: 4 }}>{run.asOf}</td>
-                  <td style={{ padding: 4 }}>
-                    {run.outcome.kind === 'result' ? (
-                      <span className="status-pill status-pill--ready">
-                        result ({run.outcome.confidence})
-                      </span>
-                    ) : (
-                      <span className="status-pill status-pill--missing">
-                        refused ({run.outcome.missingFields.join(', ')})
-                      </span>
-                    )}
-                  </td>
+          <TableScroll>
+            <table className="table">
+              <thead>
+                <tr>
+                  <Th>Formula</Th>
+                  <Th>As of</Th>
+                  <Th>Outcome</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {calcRuns.map((run) => (
+                  <tr key={run.id}>
+                    <Td>
+                      {run.formulaId} v{run.formulaVersion}
+                    </Td>
+                    <Td>{run.asOf}</Td>
+                    <Td>
+                      {run.outcome.kind === 'result' ? (
+                        <span className="status-pill status-pill--ready">
+                          result ({run.outcome.confidence})
+                        </span>
+                      ) : (
+                        <span className="status-pill status-pill--missing">
+                          refused ({run.outcome.missingFields.join(', ')})
+                        </span>
+                      )}
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableScroll>
         )}
       </div>
 
@@ -254,7 +265,7 @@ function LoanFields({ loan }: { loan: ConventionalLoan }) {
             <ProvenanceBadge source={activeRate.provenance.source} />
           </span>
         ) : (
-          'Unknown'
+          '—'
         )}
       </Field>
       <Field label="Maturity date">{loanDetails.maturityDate}</Field>
@@ -265,30 +276,28 @@ function LoanFields({ loan }: { loan: ConventionalLoan }) {
         <summary style={{ cursor: 'pointer', fontSize: 12, color: 'var(--color-text-secondary)' }}>
           Rate history ({loanDetails.ratePeriods.length})
         </summary>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBlockStart: 4 }}>
-          <thead>
-            <tr style={{ textAlign: 'start' }}>
-              <th style={{ padding: 4 }}>Effective from</th>
-              <th style={{ padding: 4 }}>Rate</th>
-              <th style={{ padding: 4 }}>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[...loanDetails.ratePeriods]
-              .sort((a, b) => (a.effectiveFrom < b.effectiveFrom ? -1 : 1))
-              .map((period) => (
-                <tr key={period.id} style={{ borderBlockStart: '1px solid var(--color-border)' }}>
-                  <td style={{ padding: 4 }}>{period.effectiveFrom}</td>
-                  <td className="figure" style={{ padding: 4 }}>
-                    {period.annualRate.toPercent().toFixed(3)}%
-                  </td>
-                  <td style={{ padding: 4 }}>
-                    {period.supersededBy === undefined ? 'Active' : 'Superseded'}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+        <TableScroll>
+          <table className="table" style={{ marginBlockStart: 4 }}>
+            <thead>
+              <tr>
+                <Th>Effective from</Th>
+                <Th>Rate</Th>
+                <Th>Status</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...loanDetails.ratePeriods]
+                .sort((a, b) => (a.effectiveFrom < b.effectiveFrom ? -1 : 1))
+                .map((period) => (
+                  <tr key={period.id}>
+                    <Td>{period.effectiveFrom}</Td>
+                    <Td className="figure">{period.annualRate.toPercent().toFixed(3)}%</Td>
+                    <Td>{period.supersededBy === undefined ? 'Active' : 'Superseded'}</Td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </TableScroll>
       </details>
     </div>
   )

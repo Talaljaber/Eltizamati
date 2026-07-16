@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { localDateFromDate } from '@eltizamati/domain'
+import { localDateFromDate, Money } from '@eltizamati/domain'
 import { listAllowlistedProfiles } from '@/server/repositories/profile-repository'
 import { listAllowlistedObligations } from '@/server/repositories/obligation-repository'
 import { listAllowlistedInsights } from '@/server/repositories/insight-repository'
@@ -7,7 +7,15 @@ import {
   buildClientDirectoryRows,
   filterClientDirectoryRows,
   type ClientDirectoryFilters,
+  type DataCompletenessState,
 } from '@/server/client-directory-service'
+import { formatMoney } from '@/format/money'
+import { Th, Td, TableScroll } from '@/components/table'
+
+const COMPLETENESS_LABEL: Record<DataCompletenessState, string> = {
+  complete: 'Complete',
+  incomplete: 'Incomplete',
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -155,70 +163,58 @@ export default async function ClientsPage({
         </div>
       </form>
 
-      <div className="card" style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ textAlign: 'start', borderBlockEnd: '2px solid var(--color-border)' }}>
-              <Th>Client</Th>
-              <Th>Language</Th>
-              <Th>Primary bank</Th>
-              <Th># Obligations</Th>
-              <Th>Monthly commitment</Th>
-              <Th>Variable exposure</Th>
-              <Th>Active insights</Th>
-              <Th>Data completeness</Th>
-              <Th>Last updated</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.userId} style={{ borderBlockEnd: '1px solid var(--color-border)' }}>
-                <Td>
-                  <Link href={`/clients/${row.userId}`}>{row.maskedName}</Link>
-                </Td>
-                <Td>{row.locale.toUpperCase()}</Td>
-                <Td>{row.primaryBank ?? '—'}</Td>
-                <Td>{row.obligationCount}</Td>
-                <Td className="figure">{row.totalKnownMonthlyCommitment} JOD</Td>
-                <Td>{row.hasVariableRateExposure ? 'Yes' : 'No'}</Td>
-                <Td>{row.activeInsightCount}</Td>
-                <Td>
-                  <span
-                    className={`status-pill status-pill--${row.dataCompleteness === 'complete' ? 'ready' : 'missing'}`}
-                  >
-                    {row.dataCompleteness}
-                  </span>
-                </Td>
-                <Td>{row.lastUpdated.slice(0, 10)}</Td>
-              </tr>
-            ))}
-            {rows.length === 0 ? (
+      <div className="card">
+        <TableScroll>
+          <table className="table">
+            <thead>
               <tr>
-                <td colSpan={9} style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
-                  No clients match the selected filters.
-                </td>
+                <Th>Client</Th>
+                <Th>Language</Th>
+                <Th>Primary bank</Th>
+                <Th># Obligations</Th>
+                <Th>Monthly commitment</Th>
+                <Th>Has variable rate</Th>
+                <Th>Active insights</Th>
+                <Th>Data completeness</Th>
+                <Th>Last updated</Th>
               </tr>
-            ) : null}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.userId}>
+                  <Td>
+                    <Link href={`/clients/${row.userId}`}>{row.maskedName}</Link>
+                  </Td>
+                  <Td>{row.locale.toUpperCase()}</Td>
+                  <Td>{row.primaryBank ?? '—'}</Td>
+                  <Td>{row.obligationCount}</Td>
+                  <Td className="figure">
+                    {formatMoney(Money.of(row.totalKnownMonthlyCommitment, 'JOD'))}
+                  </Td>
+                  <Td>{row.hasVariableRateExposure ? 'Yes' : 'No'}</Td>
+                  <Td>{row.activeInsightCount}</Td>
+                  <Td>
+                    <span
+                      className={`status-pill status-pill--${row.dataCompleteness === 'complete' ? 'ready' : 'missing'}`}
+                    >
+                      {COMPLETENESS_LABEL[row.dataCompleteness]}
+                    </span>
+                  </Td>
+                  <Td>{row.lastUpdated.slice(0, 10)}</Td>
+                </tr>
+              ))}
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={9} style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
+                    No clients match the selected filters.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </TableScroll>
       </div>
     </div>
-  )
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th style={{ padding: '8px', fontSize: 12, color: 'var(--color-text-secondary)' }}>
-      {children}
-    </th>
-  )
-}
-
-function Td({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <td className={className} style={{ padding: '8px', fontSize: 13 }}>
-      {children}
-    </td>
   )
 }
 

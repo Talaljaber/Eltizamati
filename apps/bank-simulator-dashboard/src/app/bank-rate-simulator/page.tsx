@@ -6,6 +6,9 @@ import {
 } from '@/server/rate-campaign-eligibility'
 import { computeImpactPreview, type ServicingPolicy } from '@/server/impact-preview-service'
 import { formatMoney, formatRate } from '@/format/money'
+import { getLocale } from '@/i18n/locale'
+import { t, type Locale } from '@/i18n/translations'
+import { Th, Td, TableScroll } from '@/components/table'
 import { publishCampaignAction } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -44,14 +47,15 @@ export default async function BankRateSimulatorPage({
 }) {
   const resolved = await searchParams
   const today = localDateFromDate(new Date())
+  const locale = await getLocale()
 
   const obligationsResult = await listAllowlistedObligations()
   if (!obligationsResult.ok) {
     return (
       <div>
-        <h1 className="page-title">Bank Rate Simulator</h1>
+        <h1 className="page-title">{t(locale, 'bankRateSimulator.title')}</h1>
         <div className="card">
-          <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
+          <p>{t(locale, 'warning.couldNotLoadData')}</p>
         </div>
       </div>
     )
@@ -74,19 +78,15 @@ export default async function BankRateSimulatorPage({
 
   return (
     <div>
-      <h1 className="page-title">Bank Rate Simulator</h1>
-      <p className="page-subtitle">
-        Preview a rate change, then publish to append the real rate history, re-run the affected
-        loans&apos; calculations and insights, and queue notifications. Rate history is append-only
-        — publishing never rewrites an existing rate period.
-      </p>
+      <h1 className="page-title">{t(locale, 'bankRateSimulator.title')}</h1>
+      <p className="page-subtitle">{t(locale, 'bankRateSimulator.subtitle')}</p>
 
       <form method="get" className="card" style={{ marginBlockEnd: 'var(--space-5)' }}>
         <div
           style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', alignItems: 'end' }}
         >
           <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
-            Institution
+            {t(locale, 'bankRateSimulator.institution')}
             <select
               name="institution"
               defaultValue={institution ?? ''}
@@ -94,7 +94,7 @@ export default async function BankRateSimulatorPage({
               style={{ padding: 4, borderRadius: 4, border: '1px solid var(--color-border)' }}
             >
               <option value="" disabled>
-                Select institution
+                {t(locale, 'bankRateSimulator.selectInstitution')}
               </option>
               {institutions.map((name) => (
                 <option key={name} value={name}>
@@ -104,7 +104,7 @@ export default async function BankRateSimulatorPage({
             </select>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
-            New annual rate (%)
+            {t(locale, 'bankRateSimulator.newAnnualRate')}
             <input
               type="number"
               name="newAnnualRate"
@@ -122,7 +122,7 @@ export default async function BankRateSimulatorPage({
             />
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
-            Effective date
+            {t(locale, 'bankRateSimulator.effectiveDate')}
             <input
               type="date"
               name="effectiveDate"
@@ -131,28 +131,30 @@ export default async function BankRateSimulatorPage({
             />
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
-            Installment policy
+            {t(locale, 'bankRateSimulator.installmentPolicy')}
             <select
               name="servicingPolicy"
               defaultValue={servicingPolicy}
               style={{ padding: 4, borderRadius: 4, border: '1px solid var(--color-border)' }}
             >
-              <option value="unchanged">Unchanged installment (default)</option>
-              <option value="recalculated">Recalculated installment</option>
-              <option value="unknownTreatment">Unknown contract treatment</option>
+              <option value="unchanged">{t(locale, 'bankRateSimulator.policyUnchanged')}</option>
+              <option value="recalculated">
+                {t(locale, 'bankRateSimulator.policyRecalculated')}
+              </option>
+              <option value="unknownTreatment">
+                {t(locale, 'bankRateSimulator.policyUnknown')}
+              </option>
             </select>
           </label>
           <button type="submit" className="button-primary">
-            Preview campaign
+            {t(locale, 'bankRateSimulator.previewCampaign')}
           </button>
         </div>
       </form>
 
       {institution === undefined || eligibility === undefined || newAnnualRate === undefined ? (
         <div className="card">
-          <p>
-            Select an institution and a new annual rate to preview eligible loans and their impact.
-          </p>
+          <p>{t(locale, 'bankRateSimulator.selectPrompt')}</p>
         </div>
       ) : (
         <>
@@ -162,6 +164,7 @@ export default async function BankRateSimulatorPage({
             effectiveDate={effectiveDate}
             servicingPolicy={servicingPolicy}
             today={today}
+            locale={locale}
           />
           {eligibility.eligible.length > 0 ? (
             <form
@@ -169,7 +172,9 @@ export default async function BankRateSimulatorPage({
               className="card"
               style={{ marginBlockStart: 'var(--space-5)' }}
             >
-              <h3 style={{ marginBlockStart: 0, fontSize: 15 }}>Publish this campaign</h3>
+              <h3 style={{ marginBlockStart: 0, fontSize: 15 }}>
+                {t(locale, 'bankRateSimulator.publishSection')}
+              </h3>
               <input type="hidden" name="institution" value={institution} />
               <input
                 type="hidden"
@@ -187,7 +192,7 @@ export default async function BankRateSimulatorPage({
                 }}
               >
                 <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
-                  Campaign name
+                  {t(locale, 'bankRateSimulator.campaignName')}
                   <input
                     type="text"
                     name="campaignName"
@@ -197,7 +202,7 @@ export default async function BankRateSimulatorPage({
                   />
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
-                  Reason
+                  {t(locale, 'bankRateSimulator.reason')}
                   <input
                     type="text"
                     name="reason"
@@ -205,7 +210,7 @@ export default async function BankRateSimulatorPage({
                   />
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
-                  Source note
+                  {t(locale, 'bankRateSimulator.sourceNote')}
                   <input
                     type="text"
                     name="sourceNote"
@@ -214,11 +219,10 @@ export default async function BankRateSimulatorPage({
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                   <input type="checkbox" name="emailNotificationEnabled" />
-                  Send email notifications (subject to the recipient allowlist and current email
-                  mode)
+                  {t(locale, 'bankRateSimulator.sendEmail')}
                 </label>
                 <button type="submit" className="button-primary">
-                  Publish campaign ({eligibility.eligible.length} loan
+                  {t(locale, 'bankRateSimulator.publishButton')} ({eligibility.eligible.length} loan
                   {eligibility.eligible.length === 1 ? '' : 's'})
                 </button>
               </div>
@@ -236,12 +240,14 @@ function CampaignPreview({
   effectiveDate,
   servicingPolicy,
   today,
+  locale,
 }: {
   eligibility: ReturnType<typeof evaluateRateCampaignEligibility>
   newAnnualRate: Rate
   effectiveDate: ReturnType<typeof toLocalDate>
   servicingPolicy: ServicingPolicy
   today: ReturnType<typeof toLocalDate>
+  locale: Locale
 }) {
   return (
     <div>
@@ -270,11 +276,13 @@ function CampaignPreview({
             </p>
             {preview.kind === 'unavailable' ? (
               <p>
-                <span className="status-pill status-pill--missing">Unavailable</span>{' '}
+                <span className="status-pill status-pill--missing">
+                  {t(locale, 'impactPreview.unavailable')}
+                </span>{' '}
                 {preview.reason}
               </p>
             ) : (
-              <ImpactPreviewDisplay preview={preview} />
+              <ImpactPreviewDisplay preview={preview} locale={locale} />
             )}
           </div>
         )
@@ -282,28 +290,29 @@ function CampaignPreview({
 
       {eligibility.excluded.length > 0 ? (
         <div className="card">
-          <h3 style={{ marginBlockStart: 0, fontSize: 15 }}>Excluded obligations</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'start' }}>
-                <th style={{ padding: 4 }}>Nickname</th>
-                <th style={{ padding: 4 }}>Institution</th>
-                <th style={{ padding: 4 }}>Reason</th>
-              </tr>
-            </thead>
-            <tbody>
-              {eligibility.excluded.map((x) => (
-                <tr
-                  key={x.obligationId}
-                  style={{ borderBlockStart: '1px solid var(--color-border)' }}
-                >
-                  <td style={{ padding: 4 }}>{x.nickname}</td>
-                  <td style={{ padding: 4 }}>{x.institution}</td>
-                  <td style={{ padding: 4 }}>{EXCLUSION_REASON_LABEL[x.reason]}</td>
+          <h3 style={{ marginBlockStart: 0, fontSize: 15 }}>
+            {t(locale, 'bankRateSimulator.excludedObligations')}
+          </h3>
+          <TableScroll>
+            <table className="table">
+              <thead>
+                <tr>
+                  <Th>Nickname</Th>
+                  <Th>Institution</Th>
+                  <Th>Reason</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {eligibility.excluded.map((x) => (
+                  <tr key={x.obligationId}>
+                    <Td>{x.nickname}</Td>
+                    <Td>{x.institution}</Td>
+                    <Td>{EXCLUSION_REASON_LABEL[x.reason]}</Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableScroll>
         </div>
       ) : null}
     </div>
@@ -312,49 +321,49 @@ function CampaignPreview({
 
 function ImpactPreviewDisplay({
   preview,
+  locale,
 }: {
   preview: Extract<ReturnType<typeof computeImpactPreview>, { kind: 'available' }>
+  locale: Locale
 }) {
   return (
     <div>
-      <p style={{ fontStyle: 'italic', fontSize: 13 }}>
-        Your simulated interest rate increased while your monthly installment remained unchanged. A
-        larger part of each payment now covers interest, leaving less to reduce the principal. Based
-        on the available information, an estimated balance may remain at the original maturity date.
-      </p>
+      <p style={{ fontStyle: 'italic', fontSize: 13 }}>{t(locale, 'impactPreview.narrative')}</p>
       <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 16px', margin: 0 }}>
-        <dt>Monthly installment</dt>
+        <dt>{t(locale, 'impactPreview.installment')}</dt>
         <dd className="figure">{formatMoney(preview.installment)}</dd>
-        <dt>Installment policy</dt>
+        <dt>{t(locale, 'impactPreview.installmentPolicy')}</dt>
         <dd>{preview.installmentPolicy}</dd>
-        <dt>Previous estimated interest portion</dt>
+        <dt>{t(locale, 'impactPreview.previousInterest')}</dt>
         <dd className="figure">{formatMoney(preview.previousInterestPortion)}</dd>
-        <dt>New estimated interest portion</dt>
+        <dt>{t(locale, 'impactPreview.newInterest')}</dt>
         <dd className="figure">{formatMoney(preview.newInterestPortion)}</dd>
-        <dt>Previous estimated principal portion</dt>
+        <dt>{t(locale, 'impactPreview.previousPrincipal')}</dt>
         <dd className="figure">{formatMoney(preview.previousPrincipalPortion)}</dd>
-        <dt>New estimated principal portion</dt>
+        <dt>{t(locale, 'impactPreview.newPrincipal')}</dt>
         <dd className="figure">{formatMoney(preview.newPrincipalPortion)}</dd>
-        <dt>Contractual maturity date</dt>
+        <dt>{t(locale, 'impactPreview.contractualMaturity')}</dt>
         <dd>{preview.contractualMaturityDate}</dd>
-        <dt>Projected residual at maturity</dt>
+        <dt>{t(locale, 'impactPreview.projectedResidual')}</dt>
         <dd className="figure">
           {formatMoney(preview.projectedResidualAtMaturity)}
           {preview.hasResidualRisk ? (
             <span className="status-pill status-pill--missing" style={{ marginInlineStart: 6 }}>
-              Residual risk
+              {t(locale, 'impactPreview.residualRisk')}
             </span>
           ) : null}
         </dd>
-        <dt>Estimated equivalent additional installments</dt>
+        <dt>{t(locale, 'impactPreview.additionalInstallments')}</dt>
         <dd>{preview.estimatedEquivalentAdditionalInstallments ?? '—'}</dd>
       </dl>
       <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBlockEnd: 0 }}>
-        Assumptions: {preview.assumptions.join(' ')}
+        {t(locale, 'impactPreview.assumptions')}: {preview.assumptions.join(' ')}
       </p>
       {preview.negativeAmortizationPeriods.length > 0 ? (
         <p style={{ fontSize: 12, color: 'var(--color-danger)' }}>
-          Negative amortization detected in {preview.negativeAmortizationPeriods.length} period(s).
+          {t(locale, 'impactPreview.negativeAmortization', {
+            count: preview.negativeAmortizationPeriods.length,
+          })}
         </p>
       ) : null}
     </div>

@@ -13,3 +13,12 @@ export function formatMoney(money: Money): string {
 export function formatRate(rate: Rate): string {
   return `${rate.toPercent().toFixed(3)}%`
 }
+
+/**
+ * Same precision/format as `formatRate`, for callers holding a raw decimal
+ * fraction (e.g. a `numeric(9,6)` column value) rather than a `Rate` value
+ * object — avoids constructing a `Rate` purely for display formatting.
+ */
+export function formatRateDecimal(value: number): string {
+  return `${(value * 100).toFixed(3)}%`
+}

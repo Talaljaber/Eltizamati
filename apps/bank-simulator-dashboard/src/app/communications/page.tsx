@@ -1,5 +1,6 @@
 import { resolveEmailMode } from '@/server/email/gateway'
 import { listEmailOutbox } from '@/server/repositories/demo-email-outbox-repository'
+import { Th, Td, TableScroll } from '@/components/table'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,15 @@ const STATUS_CLASS: Record<string, string> = {
   failed: 'missing',
   suppressed: 'missing',
   'sending-disabled': 'missing',
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  sent: 'Sent',
+  queued: 'Queued',
+  preview: 'Preview',
+  failed: 'Failed',
+  suppressed: 'Suppressed',
+  'sending-disabled': 'Sending disabled',
 }
 
 export default async function CommunicationsPage() {
@@ -38,42 +48,42 @@ export default async function CommunicationsPage() {
           <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
         </div>
       ) : (
-        <div className="card" style={{ overflowX: 'auto' }}>
+        <div className="card">
           {outboxResult.value.length === 0 ? (
             <p>No emails queued yet — publish a rate campaign with notifications enabled.</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ textAlign: 'start' }}>
-                  <th style={{ padding: 4 }}>Recipient</th>
-                  <th style={{ padding: 4 }}>Locale</th>
-                  <th style={{ padding: 4 }}>Template</th>
-                  <th style={{ padding: 4 }}>Status</th>
-                  <th style={{ padding: 4 }}>Created</th>
-                  <th style={{ padding: 4 }}>Sent</th>
-                </tr>
-              </thead>
-              <tbody>
-                {outboxResult.value.map((row) => (
-                  <tr key={row.id} style={{ borderBlockStart: '1px solid var(--color-border)' }}>
-                    <td style={{ padding: 4 }}>{row.recipientMasked}</td>
-                    <td style={{ padding: 4 }}>{row.locale.toUpperCase()}</td>
-                    <td style={{ padding: 4 }}>{row.templateId}</td>
-                    <td style={{ padding: 4 }}>
-                      <span
-                        className={`status-pill status-pill--${STATUS_CLASS[row.status] ?? 'missing'}`}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: 4 }}>{row.createdAt.slice(0, 16).replace('T', ' ')}</td>
-                    <td style={{ padding: 4 }}>
-                      {row.sentAt?.slice(0, 16).replace('T', ' ') ?? '—'}
-                    </td>
+            <TableScroll>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <Th>Recipient</Th>
+                    <Th>Locale</Th>
+                    <Th>Template</Th>
+                    <Th>Status</Th>
+                    <Th>Created</Th>
+                    <Th>Sent</Th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {outboxResult.value.map((row) => (
+                    <tr key={row.id}>
+                      <Td>{row.recipientMasked}</Td>
+                      <Td>{row.locale.toUpperCase()}</Td>
+                      <Td>{row.templateId}</Td>
+                      <Td>
+                        <span
+                          className={`status-pill status-pill--${STATUS_CLASS[row.status] ?? 'missing'}`}
+                        >
+                          {STATUS_LABEL[row.status] ?? row.status}
+                        </span>
+                      </Td>
+                      <Td>{row.createdAt.slice(0, 16).replace('T', ' ')}</Td>
+                      <Td>{row.sentAt?.slice(0, 16).replace('T', ' ') ?? '—'}</Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableScroll>
           )}
         </div>
       )}
