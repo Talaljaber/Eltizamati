@@ -47,7 +47,7 @@ export interface ClientDirectoryFilters {
   readonly locale?: 'en' | 'ar'
 }
 
-function isObligationDataComplete(obligation: Obligation): boolean {
+export function isObligationDataComplete(obligation: Obligation): boolean {
   if (obligation.kind === 'conventionalLoan') {
     return obligation.loanDetails.outstandingBalance !== undefined
   }

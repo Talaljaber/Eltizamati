@@ -9,7 +9,7 @@
 -- dashboard's own service-role client will call them in production.
 
 begin;
-select plan(17);
+select plan(18);
 
 insert into auth.users (id, email) values
   ('c0000000-0000-0000-0000-00000000000c', 'demo-user-c@eltizamati.test');
@@ -99,6 +99,12 @@ select is(
     where obligation_id = 'e0000000-0000-0000-0000-000000000001' and id <> 'f0000000-0000-0000-0000-000000000001'
   ),
   'demo', 'the newly appended rate period is marked demo provenance, never official'
+);
+
+select isnt(
+  (select superseded_by from public.rate_periods where id = 'f0000000-0000-0000-0000-000000000001'),
+  null,
+  'the ORIGINAL rate period is marked superseded by the newly appended one (20260716020000 fix — only one period is ever truly active)'
 );
 
 select is(
