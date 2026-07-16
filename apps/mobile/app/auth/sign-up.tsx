@@ -141,7 +141,7 @@ export default function SignUpScreen() {
             <Button
               variant="ghost"
               label={t('auth.backToSignIn')}
-              onPress={() => router.replace('/auth/sign-in')}
+              onPress={() => router.back()}
             />
           </View>
         </DismissKeyboardView>

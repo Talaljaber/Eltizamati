@@ -154,7 +154,12 @@ describe('StartupCoordinator', () => {
     expect(mockReadStartupTrustState).toHaveBeenCalledTimes(1)
   })
 
-  it('redirects an expired personal session to sign-in, rendering the Stack and releasing the splash', async () => {
+  it('settles an expired personal session at sign-in without a redundant replace, releasing the splash', async () => {
+    // The root Stack's initialRouteName="auth" + the auth group's own
+    // initialRouteName="sign-in" already render '/auth/sign-in' as the Stack's default
+    // first frame the instant it mounts — no explicit router.replace('/auth/sign-in') is
+    // needed (or wanted: doing so used to double-mount the sign-in screen on a cold
+    // start with no session).
     mockReadStartupTrustState.mockResolvedValue(
       ok({ dataMode: 'personal', onboardingComplete: true }),
     )
@@ -166,7 +171,7 @@ describe('StartupCoordinator', () => {
     )
 
     await waitFor(() => expect(getByText('product')).toBeTruthy())
-    expect(mockReplace).toHaveBeenCalledWith('/auth/sign-in')
+    expect(mockReplace).not.toHaveBeenCalledWith('/auth/sign-in')
     expect(mockHideAsync).toHaveBeenCalledTimes(1)
     expect(mockBootPersonal).not.toHaveBeenCalled()
   })
