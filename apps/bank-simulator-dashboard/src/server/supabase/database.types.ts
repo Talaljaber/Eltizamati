@@ -37,6 +37,7 @@ export interface Database {
           primary_bank: string | null
           reminder_day_of_month: number | null
           user_threshold_amount: number | null
+          email: string | null
         }
         Insert: {
           user_id: string
@@ -49,6 +50,7 @@ export interface Database {
           primary_bank?: string | null
           reminder_day_of_month?: number | null
           user_threshold_amount?: number | null
+          email?: string | null
         }
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>
         Relationships: []

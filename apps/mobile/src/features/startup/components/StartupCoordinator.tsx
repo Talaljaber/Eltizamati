@@ -179,8 +179,17 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
   // Issue the redirect only after the Stack is mounted (phase 'ready'),
   // never while the spinner is up — replacing before the navigator mounts is
   // dropped by expo-router. A throw here is a recoverable startup error.
+  //
+  // The root Stack's initialRouteName="auth" (app/_layout.tsx) combined with the auth
+  // group's own initialRouteName="sign-in" (app/auth/_layout.tsx) means '/auth/sign-in'
+  // is ALREADY the very first route the Stack renders the instant it mounts here — before
+  // this effect runs at all. Replacing to that identical path was a redundant no-op
+  // navigation that still played a full mount/transition, visibly rendering sign-in twice
+  // on a cold start with no session. Every other redirect target below genuinely differs
+  // from that default, so it still needs the explicit replace.
   useEffect(() => {
     if (phase !== 'ready' || redirectTarget === undefined) return
+    if (redirectTarget === '/auth/sign-in') return
     try {
       routerRef.current.replace(redirectTarget)
     } catch (error) {

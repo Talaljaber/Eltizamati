@@ -120,11 +120,16 @@ export async function publishCampaign(
   })
 
   if (!publishResult.ok) {
+    const pgMessage = publishResult.error.safeMetadata?.['postgresErrorMessage']
+    const detail = typeof pgMessage === 'string' && pgMessage.length > 0 ? `: ${pgMessage}` : ''
     await recordActivity(
       'operation_failed',
-      `Campaign publish failed (code: ${publishResult.error.code})`,
+      `Campaign publish failed (code: ${publishResult.error.code}${detail})`,
     )
-    return { ok: false, reason: 'Publishing the campaign failed. See the activity log.' }
+    return {
+      ok: false,
+      reason: `Publishing the campaign failed${detail}. See the activity log for the full record.`,
+    }
   }
 
   await recordExcludedTargets(

@@ -1,8 +1,10 @@
+import { t, type Locale } from '@/i18n/translations'
+
 /** Permanent demo banner (docs/dashboard.md §2) — rendered on every page. */
-export function DemoBanner() {
+export function DemoBanner({ locale }: { locale: Locale }) {
   return (
     <div className="demo-banner" role="status">
-      Demo environment — not an official bank or Central Bank system.
+      {t(locale, 'demoBanner.text')}
     </div>
   )
 }

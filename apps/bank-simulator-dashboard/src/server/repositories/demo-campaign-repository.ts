@@ -53,7 +53,13 @@ export async function publishRateCampaign(
 
   if (error !== null) {
     return err(
-      makeError('storage', { safeMetadata: { postgresErrorCode: error.code }, cause: error }),
+      makeError('storage', {
+        // The RPC's own `raise exception '...'` text (e.g. "obligation % is not a
+        // variable-rate loan") lands in error.message — surfacing it is the only way
+        // to see *why* a publish failed instead of the generic 'storage' code.
+        safeMetadata: { postgresErrorCode: error.code, postgresErrorMessage: error.message },
+        cause: error,
+      }),
     )
   }
 

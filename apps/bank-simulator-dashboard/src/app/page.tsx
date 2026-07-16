@@ -2,8 +2,11 @@ import { localDateFromDate } from '@eltizamati/domain'
 import { listAllowlistedProfiles } from '@/server/repositories/profile-repository'
 import { listAllowlistedObligations } from '@/server/repositories/obligation-repository'
 import { listAllowlistedInsights } from '@/server/repositories/insight-repository'
+import { listDemoCampaigns } from '@/server/repositories/demo-campaign-repository'
+import { listEmailOutbox } from '@/server/repositories/demo-email-outbox-repository'
 import { computeOverviewStats, type AggregateFigure } from '@/server/overview-service'
 import { formatMoney } from '@/format/money'
+import { DonutChart } from '@/components/charts/donut-chart'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,11 +59,14 @@ function StatTile({
 export default async function OverviewPage() {
   const today = localDateFromDate(new Date())
 
-  const [profilesResult, obligationsResult, insightsResult] = await Promise.all([
-    listAllowlistedProfiles(),
-    listAllowlistedObligations(),
-    listAllowlistedInsights(),
-  ])
+  const [profilesResult, obligationsResult, insightsResult, campaignsResult, outboxResult] =
+    await Promise.all([
+      listAllowlistedProfiles(),
+      listAllowlistedObligations(),
+      listAllowlistedInsights(),
+      listDemoCampaigns(),
+      listEmailOutbox(),
+    ])
 
   if (!profilesResult.ok) return <ErrorState code={profilesResult.error.code} />
   if (!obligationsResult.ok) return <ErrorState code={obligationsResult.error.code} />
@@ -72,6 +78,11 @@ export default async function OverviewPage() {
     insightsResult.value,
     today,
   )
+
+  const recentCampaignCount = campaignsResult.ok ? campaignsResult.value.length : undefined
+  const pendingEmailCount = outboxResult.ok
+    ? outboxResult.value.filter((row) => row.status === 'queued').length
+    : undefined
 
   const grid: React.CSSProperties = {
     display: 'grid',
@@ -114,6 +125,29 @@ export default async function OverviewPage() {
         />
       </div>
 
+      {stats.fixedRateExposure.loanCount + stats.variableRateExposure.loanCount > 0 ? (
+        <div className="card chart-card" style={{ marginBlockEnd: 'var(--space-6)' }}>
+          <h3 className="section-title">Rate-type mix (by loan count)</h3>
+          <p className="section-summary">
+            Conventional loans only — see Portfolio for the full balance-weighted breakdown.
+          </p>
+          <DonutChart
+            ariaLabel="Loans by rate type"
+            centerValue={String(stats.fixedRateExposure.loanCount + stats.variableRateExposure.loanCount)}
+            centerLabel="loans"
+            data={[
+              { label: 'Fixed', value: stats.fixedRateExposure.loanCount, color: 'var(--chart-cat-1)' },
+              {
+                label: 'Variable',
+                value: stats.variableRateExposure.loanCount,
+                color: 'var(--chart-cat-2)',
+              },
+              { label: 'Mixed/unknown', value: stats.otherRateTypeLoanCount, color: 'var(--chart-cat-3)' },
+            ]}
+          />
+        </div>
+      ) : null}
+
       <div style={grid}>
         <StatTile label="Upcoming maturities (90 days)" value={stats.upcomingMaturities.length} />
         <StatTile label="Active residual-risk insights" value={stats.activeResidualRiskInsights} />
@@ -123,11 +157,15 @@ export default async function OverviewPage() {
           caption=">70% of credit limit"
         />
         <StatTile
-          label="Recent simulated rate changes"
-          value="—"
-          caption="Available from Phase 4"
+          label="Recorded rate campaigns"
+          value={recentCampaignCount ?? '—'}
+          caption={recentCampaignCount === undefined ? 'Could not load' : undefined}
         />
-        <StatTile label="Email queue status" value="—" caption="Available from Phase 4" />
+        <StatTile
+          label="Emails queued (not yet sent)"
+          value={pendingEmailCount ?? '—'}
+          caption={pendingEmailCount === undefined ? 'Could not load' : undefined}
+        />
       </div>
     </div>
   )

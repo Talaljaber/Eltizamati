@@ -7,6 +7,9 @@ import { Button, ErrorState, Text, space, useTheme } from '@/core/design-system'
 import { useSignUpMutation } from '@/features/auth/api/use-auth-mutations'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
+import { PickerSheetField } from '@/features/auth/components/PickerSheetField'
+import { COUNTRY_CODES, type CountryCode } from '@/features/auth/data/country-codes'
+import { JORDAN_BANKS, type JordanBank } from '@/features/auth/data/jordan-banks'
 import { useAuthService } from '@/features/auth/hooks/use-auth-service'
 import { normalizeSignupProfile } from '@/features/auth/services/signup-profile'
 import {
@@ -15,6 +18,8 @@ import {
   startOtpAttempt,
 } from '@/features/auth/stores/otp-attempt-store'
 import { normalizeAuthEmail } from '@/services/auth/auth-email'
+
+const DEFAULT_COUNTRY_ID = 'jo'
 
 export default function SignUpScreen() {
   const { t } = useTranslation()
@@ -25,13 +30,22 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [primaryBank, setPrimaryBank] = useState('')
+  const [countryId, setCountryId] = useState(DEFAULT_COUNTRY_ID)
+  const [localNumber, setLocalNumber] = useState('')
+  const [bankId, setBankId] = useState<string | undefined>(undefined)
   const [validationError, setValidationError] = useState<string>()
+
+  const selectedCountry = COUNTRY_CODES.find((c) => c.id === countryId)
+  const selectedBank = JORDAN_BANKS.find((b) => b.id === bankId)
 
   async function submit(): Promise<void> {
     const normalizedEmail = normalizeAuthEmail(email)
-    const profile = normalizeSignupProfile({ fullName, phoneNumber, primaryBank })
+    const phoneNumber = `${selectedCountry?.dialCode ?? ''}${localNumber.replace(/\D/g, '')}`
+    const profile = normalizeSignupProfile({
+      fullName,
+      phoneNumber,
+      primaryBank: selectedBank?.name ?? '',
+    })
     const errorKey =
       normalizedEmail === undefined
         ? 'auth.invalidEmail'
@@ -75,19 +89,41 @@ export default function SignUpScreen() {
               autoComplete="name"
               testID="sign-up-full-name"
             />
-            <AuthTextField
-              label={t('auth.phoneNumber')}
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              keyboardType="phone-pad"
-              autoComplete="tel"
-              textContentType="telephoneNumber"
-              testID="sign-up-phone"
-            />
-            <AuthTextField
+            <View style={styles.phoneRow}>
+              <PickerSheetField<CountryCode>
+                label={t('auth.countryCode')}
+                items={COUNTRY_CODES}
+                getId={(c) => c.id}
+                getLabel={(c) => `${c.flag} ${c.name} (${c.dialCode})`}
+                getSearchText={(c) => `${c.name} ${c.dialCode}`}
+                selectedId={countryId}
+                onSelect={(c) => setCountryId(c.id)}
+                placeholder={t('auth.countryCode')}
+                searchPlaceholder={t('auth.searchCountry')}
+                renderTriggerValue={(c) => `${c.flag} ${c.dialCode}`}
+                compact
+                testID="sign-up-country-code"
+              />
+              <AuthTextField
+                label={t('auth.phoneNumber')}
+                value={localNumber}
+                onChangeText={setLocalNumber}
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                textContentType="telephoneNumber"
+                style={styles.phoneInput}
+                testID="sign-up-phone"
+              />
+            </View>
+            <PickerSheetField<JordanBank>
               label={t('auth.primaryBank')}
-              value={primaryBank}
-              onChangeText={setPrimaryBank}
+              items={JORDAN_BANKS}
+              getId={(b) => b.id}
+              getLabel={(b) => b.name}
+              selectedId={bankId}
+              onSelect={(b) => setBankId(b.id)}
+              placeholder={t('auth.selectBank')}
+              searchPlaceholder={t('auth.searchBank')}
               testID="sign-up-bank"
             />
             <AuthTextField
@@ -141,7 +177,7 @@ export default function SignUpScreen() {
             <Button
               variant="ghost"
               label={t('auth.backToSignIn')}
-              onPress={() => router.replace('/auth/sign-in')}
+              onPress={() => router.back()}
             />
           </View>
         </DismissKeyboardView>
@@ -154,4 +190,6 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { flexGrow: 1, justifyContent: 'center', gap: space[5], padding: space[6] },
   form: { gap: space[3] },
+  phoneRow: { flexDirection: 'row', gap: space[2], alignItems: 'flex-end' },
+  phoneInput: { flex: 1 },
 })

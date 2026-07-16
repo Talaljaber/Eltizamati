@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
-import { Screen, Text, SectionHeader, ListRow, Card, Button, TextField } from '@/core/design-system'
+import { Screen, Text, SectionHeader, ListRow, Card, Button } from '@/core/design-system'
 import {
   EDUCATION_TOPICS,
   type EducationCategory,
@@ -13,26 +13,15 @@ const CATEGORY_ORDER: readonly EducationCategory[] = ['conventional', 'islamic',
 export default function LearnScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const [query, setQuery] = useState('')
-  const visibleTopics = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase()
-    return normalized === ''
-      ? EDUCATION_TOPICS
-      : EDUCATION_TOPICS.filter((topic) =>
-          [t(`learnTopics.${topic.id}.title`), t(`learnTopics.${topic.id}.body`)].some((value) =>
-            value.toLocaleLowerCase().includes(normalized),
-          ),
-        )
-  }, [query, t])
   const topicsByCategory = useMemo(() => {
     const map = new Map<EducationCategory, EducationTopic[]>()
     for (const category of CATEGORY_ORDER)
       map.set(
         category,
-        visibleTopics.filter((topic) => topic.category === category),
+        EDUCATION_TOPICS.filter((topic) => topic.category === category),
       )
     return map
-  }, [visibleTopics])
+  }, [])
 
   return (
     <Screen>
@@ -40,15 +29,6 @@ export default function LearnScreen() {
       <Text variant="body" color="secondary">
         {t('learn.guideBody')}
       </Text>
-      <Card>
-        <TextField
-          label={t('learn.searchLabel')}
-          value={query}
-          onChangeText={setQuery}
-          placeholder={t('learn.searchPlaceholder')}
-          testID="learn-search"
-        />
-      </Card>
       <SectionHeader title={t('learn.journeys')} />
       <Card>
         <ListRow onPress={() => router.push('/learn/howLoansWork')}>
@@ -72,20 +52,14 @@ export default function LearnScreen() {
           variant="secondary"
         />
       </Card>
-      {visibleTopics.length === 0 ? (
-        <Text variant="body" color="secondary">
-          {t('learn.searchEmpty')}
-        </Text>
-      ) : (
-        CATEGORY_ORDER.map((category) => (
-          <CategorySection
-            key={category}
-            category={category}
-            topics={topicsByCategory.get(category) ?? []}
-            onSelect={(id) => router.push(`/learn/${id}`)}
-          />
-        ))
-      )}
+      {CATEGORY_ORDER.map((category) => (
+        <CategorySection
+          key={category}
+          category={category}
+          topics={topicsByCategory.get(category) ?? []}
+          onSelect={(id) => router.push(`/learn/${id}`)}
+        />
+      ))}
     </Screen>
   )
 }
