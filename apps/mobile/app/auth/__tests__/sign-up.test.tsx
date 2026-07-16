@@ -38,8 +38,10 @@ function renderScreen() {
 
 function fillValidForm(view: ReturnType<typeof renderScreen>) {
   fireEvent.changeText(view.getByTestId('sign-up-full-name'), '  Talal   Example ')
-  fireEvent.changeText(view.getByTestId('sign-up-phone'), '+962 79 123 4567')
-  fireEvent.changeText(view.getByTestId('sign-up-bank'), ' Example Bank ')
+  // Country code defaults to Jordan (+962) — only the local number is typed.
+  fireEvent.changeText(view.getByTestId('sign-up-phone'), '79 123 4567')
+  fireEvent.press(view.getByTestId('sign-up-bank'))
+  fireEvent.press(view.getByText('Arab Bank'))
   fireEvent.changeText(view.getByTestId('sign-up-email'), ' User@Example.COM ')
   fireEvent.changeText(view.getByTestId('sign-up-password'), 'strong-password')
   fireEvent.changeText(view.getByTestId('sign-up-confirm-password'), 'strong-password')
@@ -64,7 +66,7 @@ describe('password sign up', () => {
       profile: {
         fullName: 'Talal Example',
         phoneNumber: '+962791234567',
-        primaryBank: 'Example Bank',
+        primaryBank: 'Arab Bank',
       },
     })
     expect(JSON.stringify(getOtpAttempt())).not.toContain('strong-password')
