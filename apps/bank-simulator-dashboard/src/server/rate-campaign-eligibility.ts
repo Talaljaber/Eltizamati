@@ -64,9 +64,15 @@ function currentActiveRate(loan: ConventionalLoan): Rate | undefined {
   return latest?.annualRate
 }
 
+/**
+ * `institution: undefined` means "every institution" — used by the "apply to
+ * all banks" flow, which fans a single admin action out into one publish per
+ * distinct institution among the eligible loans (see actions.ts). The
+ * institution-mismatch exclusion simply never fires in that mode.
+ */
 export function evaluateRateCampaignEligibility(
   obligations: readonly Obligation[],
-  institution: string,
+  institution: string | undefined,
 ): EligibilityResult {
   const eligible: EligibleLoan[] = []
   const excluded: ExcludedObligation[] = []
@@ -92,7 +98,7 @@ export function evaluateRateCampaignEligibility(
       continue
     }
 
-    if (obligation.institution.name !== institution) {
+    if (institution !== undefined && obligation.institution.name !== institution) {
       excluded.push({
         obligationId: obligation.id,
         nickname: obligation.nickname,

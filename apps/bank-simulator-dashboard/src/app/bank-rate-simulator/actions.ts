@@ -10,6 +10,7 @@ import {
   type PublishCampaignRequest,
 } from '@/server/rate-campaign-publish-service'
 import type { ServicingPolicy } from '@/server/impact-preview-service'
+import { ALL_INSTITUTIONS } from '@/server/rate-campaign-constants'
 
 function requiredString(formData: FormData, key: string): string {
   const value = formData.get(key)
@@ -23,30 +24,32 @@ function requiredString(formData: FormData, key: string): string {
 }
 
 export async function publishCampaignAction(formData: FormData): Promise<void> {
-  const institutionName = requiredString(formData, 'institution')
+  const institutionInput = requiredString(formData, 'institution')
   const newAnnualRateInput = requiredString(formData, 'newAnnualRate')
   const effectiveDateInput = requiredString(formData, 'effectiveDate')
   const servicingPolicy = requiredString(formData, 'servicingPolicy') as ServicingPolicy
-  const campaignName = requiredString(formData, 'campaignName')
+  const campaignNameInput = requiredString(formData, 'campaignName')
   const emailNotificationEnabled = formData.get('emailNotificationEnabled') === 'on'
   const reason = formData.get('reason')
   const sourceNote = formData.get('sourceNote')
 
   const today = localDateFromDate(new Date())
+  const applyToAll = institutionInput === ALL_INSTITUTIONS
 
   const obligationsResult = await listAllowlistedObligations()
   if (!obligationsResult.ok) {
     redirect('/bank-rate-simulator?publishError=couldNotLoadData')
   }
 
-  const eligibility = evaluateRateCampaignEligibility(obligationsResult.value, institutionName)
+  const eligibility = evaluateRateCampaignEligibility(
+    obligationsResult.value,
+    applyToAll ? undefined : institutionInput,
+  )
   const recipientEmailByUserId = emailNotificationEnabled
     ? await getUserEmailsByUserId(eligibility.eligible.map((t) => t.obligation.userId))
     : new Map<string, string>()
 
-  const request: PublishCampaignRequest = {
-    campaignName,
-    institutionName,
+  const baseRequest: Omit<PublishCampaignRequest, 'campaignName' | 'institutionName'> = {
     reason: typeof reason === 'string' && reason.length > 0 ? reason : undefined,
     sourceNote: typeof sourceNote === 'string' && sourceNote.length > 0 ? sourceNote : undefined,
     newAnnualRate: Rate.fromPercent(newAnnualRateInput),
@@ -57,11 +60,46 @@ export async function publishCampaignAction(formData: FormData): Promise<void> {
     asOf: today,
   }
 
-  const result = await publishCampaign(request)
-
-  if (!result.ok) {
-    redirect(`/bank-rate-simulator?publishError=${encodeURIComponent(result.reason)}`)
+  if (!applyToAll) {
+    const result = await publishCampaign({
+      ...baseRequest,
+      campaignName: campaignNameInput,
+      institutionName: institutionInput,
+    })
+    if (!result.ok) {
+      redirect(`/bank-rate-simulator?publishError=${encodeURIComponent(result.reason)}`)
+    }
+    redirect(`/activity-log?campaignId=${result.value.campaignId}`)
   }
 
-  redirect(`/activity-log?campaignId=${result.value.campaignId}`)
+  // "Apply to all banks": fan out into one atomic publish per distinct
+  // institution among the eligible loans — demo_publish_rate_campaign is
+  // scoped to a single institution per campaign row by design, so this
+  // reuses that exact same safe, atomic path once per institution rather
+  // than attempting a wider (and unproven) multi-institution transaction.
+  const institutionNames = [
+    ...new Set(eligibility.eligible.map((e) => e.obligation.institution.name)),
+  ]
+  if (institutionNames.length === 0) {
+    redirect('/bank-rate-simulator?publishError=noEligibleLoans')
+  }
+
+  let successCount = 0
+  let lastCampaignId: string | undefined
+  for (const institutionName of institutionNames) {
+    const result = await publishCampaign({
+      ...baseRequest,
+      campaignName: `${campaignNameInput} — ${institutionName}`,
+      institutionName,
+    })
+    if (result.ok) {
+      successCount += 1
+      lastCampaignId = result.value.campaignId
+    }
+  }
+
+  if (successCount === 0) {
+    redirect('/bank-rate-simulator?publishError=allInstitutionsFailed')
+  }
+  redirect(lastCampaignId !== undefined ? `/activity-log?campaignId=${lastCampaignId}` : '/activity-log')
 }

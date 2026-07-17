@@ -5,6 +5,8 @@ import {
   EXCLUSION_REASON_LABEL,
 } from '@/server/rate-campaign-eligibility'
 import { computeImpactPreview, type ServicingPolicy } from '@/server/impact-preview-service'
+import { JORDAN_BANKS } from '@/server/jordan-banks'
+import { ALL_INSTITUTIONS } from '@/server/rate-campaign-constants'
 import { formatMoney, formatRate } from '@/format/money'
 import { getLocale } from '@/i18n/locale'
 import { t, type Locale } from '@/i18n/translations'
@@ -62,7 +64,15 @@ export default async function BankRateSimulatorPage({
   }
   const obligations = obligationsResult.value
 
-  const institutions = [...new Set(obligations.map((o) => o.institution.name))].sort()
+  // The full curated bank catalogue, plus any institution name already present in the
+  // seeded data that isn't in it — so nothing already working (exact-string matched
+  // against obligations.institution_name by eligibility/publish) can silently disappear.
+  const curatedNames = JORDAN_BANKS.map((b) => b.name)
+  const curatedNameSet = new Set(curatedNames)
+  const uncuratedNames = [...new Set(obligations.map((o) => o.institution.name))]
+    .filter((name) => !curatedNameSet.has(name))
+    .sort()
+  const institutions = [...curatedNames, ...uncuratedNames]
 
   const institution = str(resolved, 'institution')
   const newAnnualRate = parseRate(str(resolved, 'newAnnualRate'))
@@ -71,10 +81,15 @@ export default async function BankRateSimulatorPage({
     (str(resolved, 'servicingPolicy') as ServicingPolicy | undefined) ?? 'unchanged'
 
   const hasSubmitted = institution !== undefined && newAnnualRate !== undefined
+  const applyToAll = institution === ALL_INSTITUTIONS
 
   const eligibility = hasSubmitted
-    ? evaluateRateCampaignEligibility(obligations, institution)
+    ? evaluateRateCampaignEligibility(obligations, applyToAll ? undefined : institution)
     : undefined
+
+  const eligibleInstitutionCount = eligibility
+    ? new Set(eligibility.eligible.map((e) => e.obligation.institution.name)).size
+    : 0
 
   return (
     <div>
@@ -95,6 +110,9 @@ export default async function BankRateSimulatorPage({
             >
               <option value="" disabled>
                 {t(locale, 'bankRateSimulator.selectInstitution')}
+              </option>
+              <option value={ALL_INSTITUTIONS}>
+                {t(locale, 'bankRateSimulator.allInstitutions')}
               </option>
               {institutions.map((name) => (
                 <option key={name} value={name}>
@@ -197,7 +215,7 @@ export default async function BankRateSimulatorPage({
                     type="text"
                     name="campaignName"
                     required
-                    defaultValue={`${institution} rate adjustment — ${effectiveDate}`}
+                    defaultValue={`${applyToAll ? t(locale, 'bankRateSimulator.allInstitutions') : institution} rate adjustment — ${effectiveDate}`}
                     style={{ padding: 4, borderRadius: 4, border: '1px solid var(--color-border)' }}
                   />
                 </label>
@@ -221,9 +239,16 @@ export default async function BankRateSimulatorPage({
                   <input type="checkbox" name="emailNotificationEnabled" />
                   {t(locale, 'bankRateSimulator.sendEmail')}
                 </label>
+                {applyToAll && (
+                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: 0 }}>
+                    Publishes one campaign per institution ({eligibleInstitutionCount}) — the
+                    activity log will show each one separately.
+                  </p>
+                )}
                 <button type="submit" className="button-primary">
                   {t(locale, 'bankRateSimulator.publishButton')} ({eligibility.eligible.length} loan
-                  {eligibility.eligible.length === 1 ? '' : 's'})
+                  {eligibility.eligible.length === 1 ? '' : 's'}
+                  {applyToAll ? `, ${eligibleInstitutionCount} institutions` : ''})
                 </button>
               </div>
             </form>
@@ -269,7 +294,12 @@ function CampaignPreview({
         })
         return (
           <div key={obligation.id} className="card" style={{ marginBlockEnd: 'var(--space-4)' }}>
-            <h3 style={{ marginBlockStart: 0, fontSize: 15 }}>{obligation.nickname}</h3>
+            <h3 style={{ marginBlockStart: 0, fontSize: 15 }}>
+              {obligation.nickname}{' '}
+              <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)' }}>
+                · {obligation.institution.name}
+              </span>
+            </h3>
             <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
               Current rate: <span className="figure">{formatRate(currentRate)}</span> → New rate:{' '}
               <span className="figure">{formatRate(newAnnualRate)}</span>, effective {effectiveDate}

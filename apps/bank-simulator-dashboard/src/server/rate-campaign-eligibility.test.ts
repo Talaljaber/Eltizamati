@@ -249,4 +249,60 @@ describe('evaluateRateCampaignEligibility', () => {
 
     expect(result.eligible[0]?.currentRate.toStorageString()).toBe('0.0925')
   })
+
+  it('institution=undefined includes eligible loans from every institution ("apply to all banks")', () => {
+    const bankA = makeLoan({
+      id: 'loan-bank-a',
+      rateType: 'variable',
+      institution: 'Bank A',
+      outstandingBalance: 1000,
+      ratePeriods: [
+        ratePeriod({
+          id: 'rp-a',
+          obligationId: 'loan-bank-a',
+          annualRate: '0.06',
+          effectiveFrom: '2020-01-01',
+        }),
+      ],
+    })
+    const bankB = makeLoan({
+      id: 'loan-bank-b',
+      rateType: 'variable',
+      institution: 'Bank B',
+      outstandingBalance: 2000,
+      ratePeriods: [
+        ratePeriod({
+          id: 'rp-b',
+          obligationId: 'loan-bank-b',
+          annualRate: '0.07',
+          effectiveFrom: '2020-01-01',
+        }),
+      ],
+    })
+    const fixedAtBankA = makeLoan({
+      id: 'loan-fixed-a',
+      rateType: 'fixed',
+      institution: 'Bank A',
+      outstandingBalance: 500,
+      ratePeriods: [
+        ratePeriod({
+          id: 'rp-fixed-a',
+          obligationId: 'loan-fixed-a',
+          annualRate: '0.05',
+          effectiveFrom: '2020-01-01',
+        }),
+      ],
+    })
+
+    const result = evaluateRateCampaignEligibility([bankA, bankB, fixedAtBankA], undefined)
+
+    expect(result.eligible.map((e) => e.obligation.id).sort()).toEqual([
+      'loan-bank-a',
+      'loan-bank-b',
+    ])
+    expect(result.excluded.some((x) => x.reason === 'institutionMismatch')).toBe(false)
+    expect(
+      result.excluded.find((x) => x.obligationId === 'loan-fixed-a')?.reason,
+    ).toBe('fixedRate')
+  })
 })
