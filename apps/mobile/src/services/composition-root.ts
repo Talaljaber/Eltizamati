@@ -10,6 +10,7 @@ import type {
   CalculationRunRepository,
   ConsentRepository,
   InsightRepository,
+  LoanApplicationRepository,
   ObligationRepository,
   PaymentRepository,
   RatePeriodRepository,
@@ -22,6 +23,7 @@ import { SupabaseRatePeriodRepository } from './repositories/supabase/rate-perio
 import { SupabaseCalculationRunRepository } from './repositories/supabase/calculation-run-repository'
 import { SupabaseInsightRepository } from './repositories/supabase/insight-repository'
 import { SupabaseConsentRepository } from './repositories/supabase/consent-repository'
+import { SupabaseLoanApplicationRepository } from './repositories/supabase/loan-application-repository'
 
 type PersonalRepositoryClient = ConstructorParameters<typeof SupabaseObligationRepository>[0]
 
@@ -33,6 +35,7 @@ export interface RepositoryRegistry {
   readonly insightRepository: InsightRepository
   readonly consentRepository: ConsentRepository
   readonly userProfileRepository: UserProfileRepository
+  readonly loanApplicationRepository: LoanApplicationRepository
   /** Only present for the demo family — personal mode has no in-memory state to reset. */
   readonly reset?: () => void
 }
@@ -48,5 +51,6 @@ export function createPersonalRepositoryRegistry(
     insightRepository: new SupabaseInsightRepository(client),
     consentRepository: new SupabaseConsentRepository(client),
     userProfileRepository: new SupabaseUserProfileRepository(client),
+    loanApplicationRepository: new SupabaseLoanApplicationRepository(client),
   }
 }
