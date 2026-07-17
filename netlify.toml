@@ -1,0 +1,8 @@
+[build.environment]
+  # DEMO_ALLOWED_USER_IDS holds fixture Supabase Auth UUIDs for the demo
+  # dashboard's seed accounts (supabase/seed/demo-obligations-seed.sql) —
+  # not a credential, knowing a UUID grants no access on its own. It's
+  # deliberately documented in that seed file and docs/dashboard.md, which
+  # trips Netlify's literal-value secret scanner. Excluded by key rather
+  # than by path so the seed file can keep documenting it inline.
+  SECRETS_SCAN_OMIT_KEYS = "DEMO_ALLOWED_USER_IDS"
