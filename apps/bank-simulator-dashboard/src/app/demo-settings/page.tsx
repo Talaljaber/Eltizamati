@@ -45,7 +45,6 @@ export default function DemoSettingsPage() {
     { label: 'Supabase secret configured', value: status.supabaseSecretConfigured },
     { label: 'Gmail SMTP configured', value: status.gmailSmtpConfigured },
     { label: 'Email sending enabled', value: status.emailSendingEnabled },
-    { label: 'Recipient allowlist configured', value: status.recipientAllowlistConfigured },
     { label: 'Allowed test users configured', value: status.allowedTestUsersConfigured },
     { label: 'Environment', value: status.environment },
     { label: 'Remote deployment allowed', value: status.remoteDeploymentAllowed },

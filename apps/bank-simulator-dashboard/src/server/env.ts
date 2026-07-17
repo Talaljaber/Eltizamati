@@ -48,7 +48,6 @@ export interface RawDashboardEnv {
   readonly supabaseUrl: string | undefined
   readonly supabaseSecretKey: string | undefined
   readonly emailSendingEnabled: string | undefined
-  readonly emailRecipientAllowlist: string | undefined
   readonly smtpHost: string | undefined
   readonly smtpPort: string | undefined
   readonly smtpUser: string | undefined
@@ -75,7 +74,6 @@ function readRawEnvFromProcess(): RawDashboardEnv {
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseSecretKey: process.env.SUPABASE_SECRET_KEY,
     emailSendingEnabled: process.env.EMAIL_SENDING_ENABLED,
-    emailRecipientAllowlist: process.env.EMAIL_RECIPIENT_ALLOWLIST,
     smtpHost: process.env.SMTP_HOST,
     smtpPort: process.env.SMTP_PORT,
     smtpUser: process.env.SMTP_USER,
@@ -95,7 +93,6 @@ const dashboardEnvSchema = z
     supabaseUrl: z.string().url(),
     supabaseSecretKey: z.string().min(1),
     emailSendingEnabled: z.boolean(),
-    emailRecipientAllowlist: z.array(z.string().email()),
     smtpHost: z.string().min(1),
     smtpPort: z.number().int().positive(),
     smtpUser: z.string(),
@@ -149,7 +146,6 @@ export function loadDashboardEnv(
     supabaseUrl: raw.supabaseUrl,
     supabaseSecretKey: raw.supabaseSecretKey,
     emailSendingEnabled: parseBoolean(raw.emailSendingEnabled, false),
-    emailRecipientAllowlist: parseCsvList(raw.emailRecipientAllowlist),
     smtpHost: raw.smtpHost ?? '',
     smtpPort: Number(raw.smtpPort ?? '587'),
     smtpUser: raw.smtpUser ?? '',

@@ -21,7 +21,6 @@ export interface DashboardConfigStatus {
   readonly supabaseSecretConfigured: boolean
   readonly gmailSmtpConfigured: boolean
   readonly emailSendingEnabled: boolean
-  readonly recipientAllowlistConfigured: boolean
   readonly allowedTestUsersConfigured: boolean
   readonly environment: 'local' | 'demo'
   readonly remoteDeploymentAllowed: boolean
@@ -40,7 +39,6 @@ export function loadDashboardConfigStatus(): DashboardConfigStatus {
       isSet(process.env.SMTP_USER) &&
       isSet(process.env.SMTP_APP_PASSWORD),
     emailSendingEnabled: isTrue(process.env.EMAIL_SENDING_ENABLED),
-    recipientAllowlistConfigured: isSet(process.env.EMAIL_RECIPIENT_ALLOWLIST),
     allowedTestUsersConfigured: isSet(process.env.DEMO_ALLOWED_USER_IDS),
     environment,
     remoteDeploymentAllowed: isTrue(process.env.DEMO_DASHBOARD_ALLOW_REMOTE),

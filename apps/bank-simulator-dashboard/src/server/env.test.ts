@@ -10,7 +10,6 @@ const validRaw: RawDashboardEnv = {
   supabaseUrl: 'http://127.0.0.1:54321',
   supabaseSecretKey: 'service-role-secret',
   emailSendingEnabled: 'false',
-  emailRecipientAllowlist: 'talal@example.com',
   smtpHost: 'smtp.gmail.com',
   smtpPort: '587',
   smtpUser: 'demo@gmail.com',

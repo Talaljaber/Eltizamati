@@ -142,7 +142,6 @@ Required configuration:
 DEMO_DASHBOARD_ENABLED=true
 DEMO_DASHBOARD_ALLOW_REMOTE=false
 EMAIL_SENDING_ENABLED=false
-EMAIL_RECIPIENT_ALLOWLIST=approved-test-addresses
 SUPABASE_URL=
 SUPABASE_SECRET_KEY=
 SMTP_HOST=smtp.gmail.com
@@ -677,11 +676,9 @@ The UI must clearly show the current mode.
 
 ## Recipient controls
 
-Only send to addresses listed in:
+Only send to an email address already on file (`profiles.email`) for an account listed in `DEMO_ALLOWED_USER_IDS` — there is no separate recipient allowlist to configure. Because `profiles.email` is only ever read through `listAllowlistedProfiles()`, which is itself scoped to `DEMO_ALLOWED_USER_IDS`, this can never be broader than the existing test-data allowlist.
 
-EMAIL_RECIPIENT_ALLOWLIST
-
-If the selected user email is not allowlisted:
+If the selected user has no email on file, or isn't allowlisted:
 
 - do not send;
 - mark the email as suppressed;

@@ -1,10 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { resetDashboardEnvCacheForTests } from './env'
-import {
-  assertAllowlistConfigured,
-  isEmailRecipientAllowlisted,
-  isUserAllowlisted,
-} from './allowlist'
+import { assertAllowlistConfigured, isUserAllowlisted } from './allowlist'
 
 const requiredEnv = {
   DEMO_DASHBOARD_ENABLED: 'true',
@@ -25,12 +21,7 @@ function setProcessEnv(overrides: Record<string, string | undefined>): void {
 describe('allowlist gate', () => {
   afterEach(() => {
     resetDashboardEnvCacheForTests()
-    for (const key of [
-      ...Object.keys(requiredEnv),
-      'DEMO_ALLOWED_USER_IDS',
-      'DEMO_ALLOWED_EMAILS',
-      'EMAIL_RECIPIENT_ALLOWLIST',
-    ]) {
+    for (const key of [...Object.keys(requiredEnv), 'DEMO_ALLOWED_USER_IDS', 'DEMO_ALLOWED_EMAILS']) {
       Reflect.deleteProperty(process.env, key)
     }
   })
@@ -49,11 +40,5 @@ describe('allowlist gate', () => {
     setProcessEnv({ DEMO_ALLOWED_USER_IDS: 'user-1,user-2' })
     expect(isUserAllowlisted('user-1')).toBe(true)
     expect(isUserAllowlisted('user-3')).toBe(false)
-  })
-
-  it('checks recipient membership case-insensitively', () => {
-    setProcessEnv({ EMAIL_RECIPIENT_ALLOWLIST: 'Talal@Example.com' })
-    expect(isEmailRecipientAllowlisted('talal@example.com')).toBe(true)
-    expect(isEmailRecipientAllowlisted('someoneelse@example.com')).toBe(false)
   })
 })
