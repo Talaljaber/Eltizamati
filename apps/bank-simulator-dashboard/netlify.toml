@@ -1,0 +1,6 @@
+[build.environment]
+  # See ../../netlify.toml for the full explanation — duplicated here in
+  # case Netlify's configured base directory for this site is this folder
+  # rather than the repo root, since Netlify only reads netlify.toml from
+  # the base directory.
+  SECRETS_SCAN_OMIT_KEYS = "DEMO_ALLOWED_USER_IDS,DEMO_ALLOWED_EMAILS"
