@@ -14,9 +14,17 @@
  * inside the transport config object nodemailer builds — never logged,
  * never persisted (the outbox schema has no column that could hold it).
  */
+import { setDefaultResultOrder } from 'node:dns'
 import nodemailer from 'nodemailer'
+
+// Some Windows/ISP networks resolve smtp.gmail.com to an IPv6 address whose
+// outbound route silently hangs even though IPv4 connects fine — nodemailer
+// doesn't expose a per-connection "force IPv4" option, so this reorders
+// Node's own dns.lookup() results process-wide. Safe globally: this module
+// is the only place in the app that makes outbound network connections.
+setDefaultResultOrder('ipv4first')
 import { getDashboardEnv } from '../env'
-import { isEmailRecipientAllowlisted } from '../allowlist'
+import { isEmailOnAllowlistedProfile } from '../repositories/profile-repository'
 import { logger } from '../logging/logger'
 import {
   markEmailFailed,
@@ -25,7 +33,16 @@ import {
   type EmailOutboxStatus,
 } from '../repositories/demo-email-outbox-repository'
 import { hashEmail, maskEmail } from './masking'
-import { renderRateChangeEmail, type RateChangeEmailParams } from './templates'
+import {
+  renderCustomEmail,
+  renderLoanApprovedEmail,
+  renderLoanRejectedEmail,
+  renderRateChangeEmail,
+  type LoanApprovedEmailParams,
+  type LoanRejectedEmailParams,
+  type RateChangeEmailParams,
+  type RenderedEmail,
+} from './templates'
 
 export type EmailMode = 'disabled' | 'dev-sink' | 'gmail'
 
@@ -51,22 +68,29 @@ export interface SendEmailResult {
   readonly outboxId: string | undefined
 }
 
-export async function sendRateChangeEmail(
-  input: SendRateChangeEmailInput,
-): Promise<SendEmailResult> {
+interface DeliverEmailInput {
+  readonly campaignId: string | undefined
+  readonly userId: string
+  readonly recipientEmail: string
+  readonly locale: 'en' | 'ar'
+  readonly templateId: string
+  readonly idempotencyKey: string
+  readonly render: () => RenderedEmail
+}
+
+async function deliverEmail(input: DeliverEmailInput): Promise<SendEmailResult> {
   const mode = resolveEmailMode()
   const recipientHash = hashEmail(input.recipientEmail)
   const recipientMasked = maskEmail(input.recipientEmail)
-  const templateId = `rate-change-${input.locale}`
 
-  if (!isEmailRecipientAllowlisted(input.recipientEmail)) {
+  if (!(await isEmailOnAllowlistedProfile(input.recipientEmail))) {
     const outbox = await queueEmail({
       campaignId: input.campaignId,
       userId: input.userId,
       locale: input.locale,
       recipientHash,
       recipientMasked,
-      templateId,
+      templateId: input.templateId,
       status: 'suppressed',
       idempotencyKey: input.idempotencyKey,
       safeErrorCode: 'recipientNotAllowlisted',
@@ -81,7 +105,7 @@ export async function sendRateChangeEmail(
       locale: input.locale,
       recipientHash,
       recipientMasked,
-      templateId,
+      templateId: input.templateId,
       status: 'sending-disabled',
       idempotencyKey: input.idempotencyKey,
     })
@@ -94,7 +118,7 @@ export async function sendRateChangeEmail(
     locale: input.locale,
     recipientHash,
     recipientMasked,
-    templateId,
+    templateId: input.templateId,
     status: 'queued',
     idempotencyKey: input.idempotencyKey,
   })
@@ -107,10 +131,14 @@ export async function sendRateChangeEmail(
     return { status: 'sent', outboxId: queued.value.id }
   }
 
-  const rendered = renderRateChangeEmail(input.locale, input.params)
+  const rendered = input.render()
 
   if (mode === 'dev-sink') {
-    logger.info('email dev-sink render', { outboxId: queued.value.id, templateId, recipientMasked })
+    logger.info('email dev-sink render', {
+      outboxId: queued.value.id,
+      templateId: input.templateId,
+      recipientMasked,
+    })
     await markEmailSent(queued.value.id)
     return { status: 'sent', outboxId: queued.value.id }
   }
@@ -132,9 +160,96 @@ export async function sendRateChangeEmail(
     await markEmailSent(queued.value.id)
     return { status: 'sent', outboxId: queued.value.id }
   } catch (error) {
-    logger.error('gmail send failed', { outboxId: queued.value.id })
-    void error
+    // SMTP error fields describe the protocol-level failure reason (auth
+    // rejected, connection refused, …) and never contain the credentials
+    // themselves — the SMTP server response text is what populates these,
+    // not the outgoing auth payload — so they're safe to log.
+    const smtp = error as {
+      code?: unknown
+      responseCode?: unknown
+      command?: unknown
+      message?: unknown
+    }
+    logger.error('gmail send failed', {
+      outboxId: queued.value.id,
+      smtpCode: typeof smtp.code === 'string' ? smtp.code : undefined,
+      smtpResponseCode: typeof smtp.responseCode === 'number' ? smtp.responseCode : undefined,
+      smtpCommand: typeof smtp.command === 'string' ? smtp.command : undefined,
+      errorMessage:
+        typeof smtp.message === 'string' ? smtp.message.slice(0, 300) : String(error).slice(0, 300),
+    })
     await markEmailFailed(queued.value.id, 'smtpSendFailed')
     return { status: 'failed', outboxId: queued.value.id }
   }
+}
+
+export async function sendRateChangeEmail(
+  input: SendRateChangeEmailInput,
+): Promise<SendEmailResult> {
+  return deliverEmail({
+    campaignId: input.campaignId,
+    userId: input.userId,
+    recipientEmail: input.recipientEmail,
+    locale: input.locale,
+    templateId: `rate-change-${input.locale}`,
+    idempotencyKey: input.idempotencyKey,
+    render: () => renderRateChangeEmail(input.locale, input.params),
+  })
+}
+
+export interface SendCustomEmailInput {
+  readonly userId: string
+  readonly recipientEmail: string
+  readonly locale: 'en' | 'ar'
+  readonly subject: string
+  readonly body: string
+  readonly idempotencyKey: string
+}
+
+/** Operator-composed message from Communications → Compose — not tied to a campaign. */
+export async function sendCustomEmail(input: SendCustomEmailInput): Promise<SendEmailResult> {
+  return deliverEmail({
+    campaignId: undefined,
+    userId: input.userId,
+    recipientEmail: input.recipientEmail,
+    locale: input.locale,
+    templateId: `custom-${input.locale}`,
+    idempotencyKey: input.idempotencyKey,
+    render: () => renderCustomEmail(input.locale, { subject: input.subject, body: input.body }),
+  })
+}
+
+export interface SendLoanDecisionEmailInput {
+  readonly userId: string
+  readonly recipientEmail: string
+  readonly locale: 'en' | 'ar'
+  readonly idempotencyKey: string
+}
+
+export async function sendLoanApprovedEmail(
+  input: SendLoanDecisionEmailInput & { readonly params: LoanApprovedEmailParams },
+): Promise<SendEmailResult> {
+  return deliverEmail({
+    campaignId: undefined,
+    userId: input.userId,
+    recipientEmail: input.recipientEmail,
+    locale: input.locale,
+    templateId: `loan-approved-${input.locale}`,
+    idempotencyKey: input.idempotencyKey,
+    render: () => renderLoanApprovedEmail(input.locale, input.params),
+  })
+}
+
+export async function sendLoanRejectedEmail(
+  input: SendLoanDecisionEmailInput & { readonly params: LoanRejectedEmailParams },
+): Promise<SendEmailResult> {
+  return deliverEmail({
+    campaignId: undefined,
+    userId: input.userId,
+    recipientEmail: input.recipientEmail,
+    locale: input.locale,
+    templateId: `loan-rejected-${input.locale}`,
+    idempotencyKey: input.idempotencyKey,
+    render: () => renderLoanRejectedEmail(input.locale, input.params),
+  })
 }

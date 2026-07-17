@@ -57,6 +57,116 @@ function renderEnglish(params: RateChangeEmailParams): RenderedEmail {
   return { subject: 'Demo rate-change notification — Eltizamati', text }
 }
 
+export interface LoanApprovedEmailParams {
+  readonly institutionName: string
+  readonly approvedAmount: string
+  readonly approvedTermMonths: number
+  readonly approvedRatePercent: string
+  readonly currency: string
+}
+
+export interface LoanRejectedEmailParams {
+  readonly institutionName: string
+  readonly reason: string
+}
+
+export function renderLoanApprovedEmail(
+  locale: 'en' | 'ar',
+  params: LoanApprovedEmailParams,
+): RenderedEmail {
+  if (locale === 'ar') {
+    const text = [
+      'تحديث بشأن طلب القرض — محاكي البنك من Eltizamati (تجريبي)',
+      '',
+      `تمت الموافقة على طلب قرضك مع ${params.institutionName}.`,
+      `المبلغ المعتمد: ${params.approvedAmount} ${params.currency} على مدى ${params.approvedTermMonths} شهرًا بمعدل سنوي ${params.approvedRatePercent}%.`,
+      '',
+      'افتح تطبيق Eltizamati لرؤية القرض ضمن التزاماتك.',
+      '',
+      'هذا محاكاة ضمن مسابقة هاكاثون وليس إشعارًا رسميًا من بنكك.',
+    ].join('\n')
+    return { subject: 'تمت الموافقة على طلب قرضك — Eltizamati', text }
+  }
+  const text = [
+    'Loan application update — Eltizamati Bank Simulator (demo)',
+    '',
+    `Your loan application with ${params.institutionName} has been approved.`,
+    `Approved: ${params.approvedAmount} ${params.currency} over ${params.approvedTermMonths} months at ${params.approvedRatePercent}% per year.`,
+    '',
+    'Open Eltizamati to see the loan among your obligations.',
+    '',
+    'This is a hackathon simulation and not an official notification from your bank.',
+  ].join('\n')
+  return { subject: 'Your loan application was approved — Eltizamati', text }
+}
+
+export function renderLoanRejectedEmail(
+  locale: 'en' | 'ar',
+  params: LoanRejectedEmailParams,
+): RenderedEmail {
+  if (locale === 'ar') {
+    const text = [
+      'تحديث بشأن طلب القرض — محاكي البنك من Eltizamati (تجريبي)',
+      '',
+      `لم تتم الموافقة على طلب قرضك مع ${params.institutionName} في هذه المرة.`,
+      `السبب: ${params.reason}`,
+      '',
+      'يمكنك مراجعة طلباتك داخل تطبيق Eltizamati.',
+      '',
+      'هذا محاكاة ضمن مسابقة هاكاثون وليس إشعارًا رسميًا من بنكك.',
+    ].join('\n')
+    return { subject: 'تحديث بشأن طلب قرضك — Eltizamati', text }
+  }
+  const text = [
+    'Loan application update — Eltizamati Bank Simulator (demo)',
+    '',
+    `Your loan application with ${params.institutionName} was not approved this time.`,
+    `Reason: ${params.reason}`,
+    '',
+    'You can review your applications in the Eltizamati app.',
+    '',
+    'This is a hackathon simulation and not an official notification from your bank.',
+  ].join('\n')
+  return { subject: 'An update on your loan application — Eltizamati', text }
+}
+
+export interface CustomEmailParams {
+  readonly subject: string
+  readonly body: string
+}
+
+/**
+ * A free-text message an operator composes from the dashboard (Communications
+ * → Compose), not tied to any rate campaign. The demo disclaimer is always
+ * appended regardless of what the operator wrote — this can never read as
+ * official bank correspondence, no matter the subject/body content.
+ */
+export function renderCustomEmail(locale: 'en' | 'ar', params: CustomEmailParams): RenderedEmail {
+  return locale === 'ar' ? renderCustomArabic(params) : renderCustomEnglish(params)
+}
+
+function renderCustomEnglish(params: CustomEmailParams): RenderedEmail {
+  const text = [
+    'Message from Eltizamati Bank Simulator (demo)',
+    '',
+    params.body,
+    '',
+    'This is a hackathon simulation and not an official notification from your bank.',
+  ].join('\n')
+  return { subject: params.subject, text }
+}
+
+function renderCustomArabic(params: CustomEmailParams): RenderedEmail {
+  const text = [
+    'رسالة من محاكي البنك من Eltizamati (تجريبي)',
+    '',
+    params.body,
+    '',
+    'هذا محاكاة ضمن مسابقة هاكاثون وليس إشعارًا رسميًا من بنكك.',
+  ].join('\n')
+  return { subject: params.subject, text }
+}
+
 function renderArabic(params: RateChangeEmailParams): RenderedEmail {
   const residualLine =
     params.projectedResidualAmount !== undefined
