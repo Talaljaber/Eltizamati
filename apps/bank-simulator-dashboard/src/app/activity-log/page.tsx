@@ -12,6 +12,9 @@ const EVENT_LABEL: Record<string, string> = {
   email_sent: 'Email sent',
   email_suppressed: 'Email suppressed',
   operation_failed: 'Operation failed',
+  loan_application_submitted: 'Loan application submitted',
+  loan_application_approved: 'Loan application approved',
+  loan_application_rejected: 'Loan application rejected',
 }
 
 export default async function ActivityLogPage() {

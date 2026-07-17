@@ -16,6 +16,9 @@ export type DemoActivityEventType =
   | 'email_sent'
   | 'email_suppressed'
   | 'operation_failed'
+  | 'loan_application_submitted'
+  | 'loan_application_approved'
+  | 'loan_application_rejected'
 
 export async function recordActivity(
   eventType: DemoActivityEventType,

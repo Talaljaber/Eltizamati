@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/portfolio', key: 'nav.portfolio' },
   { href: '/bank-rate-simulator', key: 'nav.bankRateSimulator' },
   { href: '/benchmark-simulator', key: 'nav.benchmarkSimulator' },
+  { href: '/loan-applications', key: 'nav.loanApplications' },
   { href: '/communications', key: 'nav.communications' },
   { href: '/activity-log', key: 'nav.activityLog' },
   { href: '/demo-settings', key: 'nav.demoSettings' },
