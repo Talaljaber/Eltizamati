@@ -39,7 +39,7 @@ export default function RootLayout() {
           initialRouteName="auth"
           screenOptions={{
             headerStyle: { backgroundColor: theme.brand },
-            headerTitleStyle: { color: theme.textOnBrand, fontWeight: '600' },
+            headerTitleStyle: { color: theme.textOnBrand, fontWeight: '600', fontSize: 18 },
             headerTintColor: theme.textOnBrand,
           }}
         >
