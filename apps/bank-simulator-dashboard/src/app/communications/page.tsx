@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { resolveEmailMode } from '@/server/email/gateway'
 import { listEmailOutbox } from '@/server/repositories/demo-email-outbox-repository'
 import { Th, Td, TableScroll } from '@/components/table'
@@ -42,6 +43,16 @@ export default async function CommunicationsPage() {
       <div className="card" style={{ marginBlockEnd: 'var(--space-5)' }}>
         <strong>Current email mode:</strong> {MODE_LABEL[mode]}
       </div>
+
+      <p style={{ marginBlockEnd: 'var(--space-5)' }}>
+        <Link
+          href="/communications/compose"
+          className="button-primary"
+          style={{ display: 'inline-block', textDecoration: 'none' }}
+        >
+          Compose message
+        </Link>
+      </p>
 
       {!outboxResult.ok ? (
         <div className="card">
