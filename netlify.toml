@@ -6,4 +6,15 @@
   # deliberately documented in that seed file and docs/dashboard.md, which
   # trips Netlify's literal-value secret scanner. Excluded by key rather
   # than by path so the seed file can keep documenting them inline.
-  SECRETS_SCAN_OMIT_KEYS = "DEMO_ALLOWED_USER_IDS,DEMO_ALLOWED_EMAILS"
+  #
+  # SMTP_HOST ("smtp.gmail.com") and SMTP_PORT ("587") are public, generic
+  # constants — the same values every Gmail SMTP integration uses — and
+  # appear throughout docs/dashboard.md and test fixtures for that reason.
+  # Deliberately NOT omitting SMTP_USER, SMTP_APP_PASSWORD,
+  # SMTP_SENDER_EMAIL, SUPABASE_URL, or SUPABASE_SECRET_KEY here — those
+  # are real credentials/PII and should keep failing the build if their
+  # actual values ever end up committed.
+  # SMTP_SENDER_NAME ("Eltizamati Demo") is just the display name shown in
+  # the From field of demo emails — branding text, not a secret — and
+  # appears in docs/test fixtures for the same reason as SMTP_HOST/PORT.
+  SECRETS_SCAN_OMIT_KEYS = "DEMO_ALLOWED_USER_IDS,DEMO_ALLOWED_EMAILS,SMTP_HOST,SMTP_PORT,SMTP_SENDER_NAME"
