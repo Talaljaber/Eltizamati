@@ -94,6 +94,9 @@ export function PickerSheetField<T>({
             placeholderTextColor={theme.textTertiary}
             autoCapitalize="none"
             autoCorrect={false}
+            autoComplete="off"
+            importantForAutofill="no"
+            textContentType="none"
             accessibilityLabel={searchPlaceholder}
             style={[styles.searchInput, { color: theme.textPrimary }]}
           />

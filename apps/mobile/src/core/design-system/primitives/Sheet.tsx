@@ -2,6 +2,7 @@ import { View, StyleSheet, Modal, TouchableWithoutFeedback } from 'react-native'
 import { Text } from './Text'
 import { space, radius } from '../tokens'
 import { useTheme } from '../use-theme'
+import { useKeyboardHeight } from '../use-keyboard-height'
 
 export interface SheetProps {
   visible: boolean
@@ -12,34 +13,45 @@ export interface SheetProps {
 
 export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const theme = useTheme()
+  // Raw keyboard-height tracking (not KeyboardAvoidingView — unreliable inside
+  // Modal on Android, see use-keyboard-height.ts) keeps the sheet, and any
+  // scrollable search results inside it, pinned above the keyboard.
+  const keyboardHeight = useKeyboardHeight()
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay} />
-      </TouchableWithoutFeedback>
-      <View style={[styles.sheet, { backgroundColor: theme.bgElevated }]}>
-        <View style={styles.handleContainer}>
-          <View style={[styles.handle, { backgroundColor: theme.border }]} />
-        </View>
-        {title !== undefined && title !== '' && (
-          <View style={{ marginBottom: 16 }}>
-            <Text variant="heading">{title}</Text>
+      <View style={styles.container}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.overlay} />
+        </TouchableWithoutFeedback>
+        <View
+          style={[styles.sheet, { backgroundColor: theme.bgElevated, bottom: keyboardHeight }]}
+        >
+          <View style={styles.handleContainer}>
+            <View style={[styles.handle, { backgroundColor: theme.border }]} />
           </View>
-        )}
-        <View style={styles.content}>{children}</View>
+          {title !== undefined && title !== '' && (
+            <View style={{ marginBottom: 16 }}>
+              <Text variant="heading">{title}</Text>
+            </View>
+          )}
+          <View style={styles.content}>{children}</View>
+        </View>
       </View>
     </Modal>
   )
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   sheet: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
     borderTopLeftRadius: radius.lg,
