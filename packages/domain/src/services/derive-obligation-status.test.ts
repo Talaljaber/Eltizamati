@@ -289,6 +289,15 @@ describe('deriveObligationStatus', () => {
     expect(status).toBe('onTrack')
   })
 
+  it('BR-STAT-001: onTrack for a brand-new loan whose first payment has not come due yet', () => {
+    // Regression: a loan opened today has a fully-known schedule (term,
+    // rate, next due date) even though zero periods have elapsed yet —
+    // this must not fall through to `unknown` for lack of payment history.
+    const obligation = loan({ startDate: TODAY, termMonths: sourced(36) })
+    const status = deriveObligationStatus({ obligation, payments: [], insights: [], today: TODAY })
+    expect(status).toBe('onTrack')
+  })
+
   it('BR-STAT-001: unknown when a P1 stub kind has no derivable schedule or balance signal', () => {
     const obligation = {
       id: brandId<'obligation'>('obl-generic'),

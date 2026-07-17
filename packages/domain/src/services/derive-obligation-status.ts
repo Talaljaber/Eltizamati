@@ -354,9 +354,15 @@ export function deriveObligationStatus(inputs: StatusDerivationInputs): Obligati
     if (daysUntilDue >= 0 && daysUntilDue <= CONV_7_DUE_SOON_HORIZON_DAYS) return 'dueSoon'
   }
 
-  // 9. onTrack — only claimable when a schedule signal actually exists
+  // 9. onTrack — only claimable when a schedule signal actually exists. A
+  // defined `cadence` already means termMonths/startDate produced a real
+  // due-date schedule (buildCadence returns undefined otherwise) — that's
+  // true even for a brand-new loan whose first period hasn't come due yet
+  // (dueDatesUpToToday is empty but nextDueDate is known), so it must not
+  // be excluded here or a fresh loan falls through to `unknown` despite
+  // having complete schedule data.
   const hasScheduleSignal =
-    (cadence !== undefined && cadence.dueDatesUpToToday.length > 0) ||
+    cadence !== undefined ||
     (obligation.kind === 'creditCard' && obligation.cardDetails.dueDate !== undefined)
   if (hasScheduleSignal) return 'onTrack'
 
