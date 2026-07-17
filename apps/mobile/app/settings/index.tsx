@@ -214,17 +214,6 @@ export default function SettingsScreen() {
 
       <View style={styles.section}>
         <Text variant="bodySmall" color="secondary">
-          {t('mockConnect.settingsLabel')}
-        </Text>
-        <Button
-          label={t('mockConnect.settingsAction')}
-          onPress={() => router.push('/connect-mock/consent')}
-          variant="secondary"
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text variant="bodySmall" color="secondary">
           {t('legalDoc.title')}
         </Text>
         <Button
