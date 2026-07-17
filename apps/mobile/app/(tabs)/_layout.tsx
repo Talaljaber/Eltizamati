@@ -15,7 +15,7 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: true,
           headerStyle: { backgroundColor: theme.brand },
-          headerTitleStyle: { color: theme.textOnBrand, fontWeight: '600' },
+          headerTitleStyle: { color: theme.textOnBrand, fontWeight: '600', fontSize: 18 },
           headerTintColor: theme.textOnBrand,
           tabBarActiveTintColor: theme.brand,
           tabBarInactiveTintColor: theme.textTertiary,
@@ -54,6 +54,27 @@ export default function TabLayout() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={t('obligationForm.addTitle')}
+                  hitSlop={8}
+                  style={{ marginHorizontal: 16 }}
+                >
+                  <Ionicons name="add" size={28} color={theme.textOnBrand} />
+                </Pressable>
+              </Link>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="loans"
+          options={{
+            title: t('tabs.loans'),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="cash-outline" size={size} color={color} />
+            ),
+            headerRight: () => (
+              <Link href="/loan-application/apply" asChild>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('loanApplication.applyTitle')}
                   hitSlop={8}
                   style={{ marginHorizontal: 16 }}
                 >
