@@ -213,6 +213,63 @@ export type Database = {
           },
         ]
       }
+      loan_applications: {
+        Row: {
+          applicant_note: string | null
+          approved_amount: number | null
+          approved_annual_rate: number | null
+          approved_term_months: number | null
+          created_at: string
+          decided_at: string | null
+          decision_reason: string | null
+          id: string
+          institution_name: string
+          purpose: string
+          requested_amount: number
+          requested_term_months: number
+          resulting_obligation_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applicant_note?: string | null
+          approved_amount?: number | null
+          approved_annual_rate?: number | null
+          approved_term_months?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decision_reason?: string | null
+          id?: string
+          institution_name: string
+          purpose: string
+          requested_amount: number
+          requested_term_months: number
+          resulting_obligation_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applicant_note?: string | null
+          approved_amount?: number | null
+          approved_annual_rate?: number | null
+          approved_term_months?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decision_reason?: string | null
+          id?: string
+          institution_name?: string
+          purpose?: string
+          requested_amount?: number
+          requested_term_months?: number
+          resulting_obligation_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       loan_details: {
         Row: {
           contractual_balloon: number | null

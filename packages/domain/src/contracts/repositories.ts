@@ -23,6 +23,7 @@ import type { CalculationRun } from '../entities/calculation-run.js'
 import type { Insight } from '../entities/insight.js'
 import type { ConsentRecord } from '../entities/consent-record.js'
 import type { UserProfile } from '../entities/user-profile.js'
+import type { LoanApplication, LoanApplicationDraft } from '../entities/loan-application.js'
 
 export interface ObligationRepository {
   list(userId: Id<'user'>): Promise<Result<readonly Obligation[], AppError>>
@@ -67,4 +68,14 @@ export interface UserProfileRepository {
   /** Inserts only when absent and returns the existing row on a uniqueness race. */
   createIfAbsent(profile: UserProfile): Promise<Result<UserProfile, AppError>>
   save(profile: UserProfile): Promise<Result<UserProfile, AppError>>
+}
+
+export interface LoanApplicationRepository {
+  /** The applicant's own applications, newest first. */
+  list(userId: Id<'user'>): Promise<Result<readonly LoanApplication[], AppError>>
+  /** Submits a new `pending` application — the only write the applicant can make. */
+  submit(
+    userId: Id<'user'>,
+    draft: LoanApplicationDraft,
+  ): Promise<Result<LoanApplication, AppError>>
 }

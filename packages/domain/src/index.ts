@@ -74,6 +74,11 @@ export type { Insight, InsightSeverity } from './entities/insight.js'
 export type { ConsentRecord } from './entities/consent-record.js'
 export type { DataMode, UserProfile } from './entities/user-profile.js'
 export type {
+  LoanApplication,
+  LoanApplicationDraft,
+  LoanApplicationStatus,
+} from './entities/loan-application.js'
+export type {
   CalculationOutcome,
   CalculationOutcomeResult,
   CalculationOutcomeRefused,
@@ -110,6 +115,7 @@ export type {
   InsightRepository,
   ConsentRepository,
   UserProfileRepository,
+  LoanApplicationRepository,
 } from './contracts/repositories.js'
 
 // ─── Errors & Result ─────────────────────────────────────────────────────────
