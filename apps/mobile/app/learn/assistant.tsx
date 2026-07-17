@@ -92,7 +92,7 @@ export default function LearnAssistantScreen() {
       <Stack.Screen options={{ title: t('learn.assistantTitle') }} />
       <KeyboardAvoidingView
         style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 96 : 0}
       >
         <FlatList

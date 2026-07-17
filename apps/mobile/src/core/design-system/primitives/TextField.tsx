@@ -46,6 +46,13 @@ export function TextField({
         editable={editable}
         accessibilityLabel={label}
         testID={testID}
+        // Manual-entry fields (amounts, nicknames, terms) are never autofill
+        // candidates — without this Android's autofill/suggestion service can
+        // paint the field yellow and, on some OEM keyboards, swallow the
+        // first tap intended for typing instead of focusing the input.
+        autoComplete="off"
+        importantForAutofill="no"
+        textContentType="none"
         style={[
           styles.input,
           {
