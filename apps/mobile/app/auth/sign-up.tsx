@@ -95,7 +95,7 @@ export default function SignUpScreen() {
                 items={COUNTRY_CODES}
                 getId={(c) => c.id}
                 getLabel={(c) => `${c.flag} ${c.name} (${c.dialCode})`}
-                getSearchText={(c) => `${c.name} ${c.dialCode}`}
+                getSearchText={(c) => `${c.name} ${c.nameAr} ${c.dialCode}`}
                 selectedId={countryId}
                 onSelect={(c) => setCountryId(c.id)}
                 placeholder={t('auth.countryCode')}
@@ -120,6 +120,7 @@ export default function SignUpScreen() {
               items={JORDAN_BANKS}
               getId={(b) => b.id}
               getLabel={(b) => b.name}
+              getSearchText={(b) => `${b.name} ${b.nameAr}`}
               selectedId={bankId}
               onSelect={(b) => setBankId(b.id)}
               placeholder={t('auth.selectBank')}
@@ -152,8 +153,8 @@ export default function SignUpScreen() {
               onChangeText={setConfirmPassword}
               secureTextEntry
               autoCapitalize="none"
-              autoComplete="new-password"
-              textContentType="newPassword"
+              autoComplete="password"
+              textContentType="password"
               testID="sign-up-confirm-password"
             />
             {validationError !== undefined ? (
