@@ -102,7 +102,8 @@
     "loadingTitle": "Loading obligations…",
     "errorTitle": "Could not load obligations",
     "obligationCount": "{{count}} obligation",
-    "obligationCount_plural": "{{count}} obligations"
+    "obligationCount_plural": "{{count}} obligations",
+    "balanceUnavailable": "Balance not on file"
   },
   "obligationDetail": {
     "title": "Obligation Detail",
@@ -160,19 +161,26 @@
     "currentBalance": "Current balance",
     "heroTitle": "Loan Overview",
     "officialBalance": "Official Balance",
-    "projectedResidual": "Estimated Residual at Maturity",
+    "projectedResidual": "Projected Final Balloon at Maturity",
     "source": "Source",
     "asOf": "As of",
     "deterministic": "Deterministic",
     "estimated": "Estimated",
     "navRateHistory": "Rate History",
     "navRateImpact": "Rate Impact",
-    "navSchedule": "Schedule",
+    "navSchedule": "Agreed Schedule",
+    "navScheduleProposal": "Recommended Schedule",
+    "navScheduleGenerator": "Custom Schedule Generator",
     "navScenario": "Simulator",
-    "navBankQuestions": "Bank Questions"
+    "navBankQuestions": "Bank Questions",
+    "currentPublishedRate": "Current published rate",
+    "projectedRemainingPayable": "Projected remaining payable",
+    "residualNotBalloonWarning": "At the unchanged installment, an estimated balance may remain at the original maturity date.",
+    "scheduleChangeTitle": "Your payment plan needs attention",
+    "scheduleChangeNotice": "The published rate changes how much of each installment goes to interest and principal. Review the agreed schedule, its final balloon, or compare alternative schedules."
   },
   "rateHistory": {
-    "annualRate": "{{rate}} per year",
+    "annualRate": "{{rate}}% per year",
     "title": "Rate History",
     "effectiveFrom": "Effective from",
     "error": "Error loading rate history.",
@@ -183,14 +191,21 @@
   "rateImpact": {
     "title": "Rate Impact",
     "summary": "Impact Summary",
-    "hasResidual": "Detected Residual Risk",
+    "hasResidual": "Final balloon in agreed schedule",
     "addedCost": "Added Total Cost",
-    "addedCostPending": "Pending finance validation",
+    "addedCostPending": "Not calculated in this version",
+    "addedCostPendingDetail": "This figure isn't available yet — it requires sign-off from the finance team before the app can show a verified number. It isn't loading; there's nothing to wait for.",
+    "addedCostEstimateDetail": "Estimate, pending finance team sign-off — the extra interest this loan is projected to cost over its full term because of the rate change on file, versus if the original rate had never changed.",
     "error": "Error loading rate impact.",
     "unsupported": "Rate impact isn't available for this obligation type yet.",
     "residualAmount": "Estimated residual amount",
     "confidenceDeterministic": "Deterministic",
     "confidenceEstimated": "Estimated",
+    "appliedRate": "Applied published rate",
+    "projectedRemainingPayable": "Projected remaining payable",
+    "residualNotBalloonWarning": "This estimated remaining balance is not a contractual balloon or a confirmed final payment. The bank must confirm how it will be handled.",
+    "scheduleReviewTitle": "Review the updated payment plan",
+    "scheduleReviewNotice": "The installment remains unchanged, so the updated rate may produce a larger final payment. Open the agreed schedule to see it clearly, or compare the recommended and custom alternatives.",
     "causeTitle": "Why this residual exists",
     "causes": {
       "rateIncreaseWithUnchangedInstallment": "Your rate increased while your installment stayed the same, so more of each payment covers cost instead of principal.",
@@ -200,7 +215,7 @@
     }
   },
   "schedule": {
-    "title": "Schedule",
+    "title": "Agreed Schedule",
     "period": "Period",
     "installment": "Installment",
     "principalPortion": "Principal",
@@ -210,7 +225,44 @@
     "unsupported": "Schedule isn't available for this obligation type yet.",
     "empty": "No schedule entries available.",
     "costIncreaseBadge": "+{{percent}}% vs last period",
-    "costDecreaseBadge": "-{{percent}}% vs last period"
+    "costDecreaseBadge": "-{{percent}}% vs last period",
+    "remainingSchedule": "Agreed remaining payment schedule",
+    "appliedRate": "Published rate: {{rate}}%",
+    "projectedRemainingPayable": "Projected remaining payable",
+    "residualNotBalloonWarning": "The unchanged installment leaves a final balance at maturity.",
+    "finalBalloonTitle": "Final balloon payment",
+    "finalBalloonNotice": "The agreed installment does not fully clear the balance by maturity. The final month clearly includes the remaining balloon amount shown below.",
+    "agreedBalloonBadge": "Final balloon",
+    "projectedBalloonBadge": "Projected final balloon",
+    "agreedFinalBalloon": "Agreed final balloon",
+    "projectedFinalBalloon": "Projected final balloon"
+  },
+  "scheduleProposal": {
+    "title": "Recommended Schedule",
+    "nonBindingNotice": "This recommended alternative recalculates payments to clear the projected balance by the original maturity date. It is a comparison only and does not change the agreed schedule.",
+    "appliedRate": "Published rate used: {{rate}}%",
+    "installment": "Proposed monthly installment",
+    "calculate": "Generate recommended schedule",
+    "summary": "Schedule summary",
+    "recommendedInstallment": "Recommended next installment",
+    "projectedRemainingPayable": "Projected remaining payable under this proposal",
+    "unresolvedAtMaturity": "Unresolved projected balance at original maturity",
+    "notBalloonWarning": "This amount is shown separately for safety. It is not inserted as a last installment, contractual balloon, or confirmed final payment. The bank must confirm its treatment.",
+    "accept": "Send to bank for review",
+    "reject": "Reject",
+    "acceptedLocally": "Sent to the bank for review. Your agreed schedule remains unchanged until the bank approves it.",
+    "invalidInstallment": "Enter a valid installment greater than zero.",
+    "calculationError": "The proposal could not be calculated from the available loan data.",
+    "loadError": "The loan or its published rate history could not be loaded.",
+    "submitError": "The proposal could not be sent. You may already have a pending proposal for this loan."
+  },
+  "scheduleGenerator": {
+    "title": "Custom Schedule Generator",
+    "nonBindingNotice": "Choose any installment to generate a private comparison. The final month will clearly show any resulting balloon. Nothing here changes the agreed schedule.",
+    "calculate": "Generate custom schedule",
+    "resultInstallment": "Customer-selected installment",
+    "finalBalloonTitle": "Projected final balloon: {{amount}} JOD",
+    "finalBalloonNotice": "This balloon is part of the generated scenario's final month. It becomes real only if the customer and bank formally agree to this schedule."
   },
   "scenario": {
     "oneTimeLabel": "One-time extra payment (JOD)",
@@ -449,7 +501,8 @@
       "percent": "Enter a valid percentage.",
       "termMonths": "Enter a valid term in months.",
       "saveFailed": "We couldn't save this. Please check your entries and try again.",
-      "rateOverlap": "This rate change conflicts with existing rate history."
+      "rateOverlap": "This rate change conflicts with existing rate history.",
+      "rateEffectiveDateOutsideTerm": "That date is outside this loan's term. Pick a date between the loan's start and maturity."
     }
   },
   "learn": {
@@ -843,6 +896,14 @@
     "userThreshold": {
       "title": "Your gap threshold was reached",
       "body": "The projected gap on this obligation ({{gap}} JOD) has crossed the threshold you set ({{threshold}} JOD)."
+    },
+    "scheduleProposalApproved": {
+      "title": "Your proposed schedule was approved",
+      "body": "The bank approved your proposal. It is now your agreed payment schedule."
+    },
+    "scheduleProposalRejected": {
+      "title": "Your proposed schedule was not approved",
+      "body": "Your current agreed schedule remains unchanged. {{reason}}"
     }
   }
 }
