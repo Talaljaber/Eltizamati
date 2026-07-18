@@ -47,6 +47,25 @@ Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (request.method !== 'POST')
     return Response.json({ error: 'method_not_allowed' }, { status: 405, headers: cors })
+  try {
+    return await handle(request)
+  } catch (error) {
+    // Any unhandled throw below (e.g. JSON.parse on an unexpectedly
+    // non-JSON upstream body) would otherwise crash past every cors-headered
+    // Response.json call and hit the browser as a bare, header-less 500 —
+    // which reads as a CORS failure, not the real error. Always return a
+    // real Response with cors headers, and log what actually happened.
+    console.error('learn-assistant: unhandled error', {
+      message: error instanceof Error ? error.message : String(error),
+    })
+    return Response.json(
+      { ...unavailable(), unknowns: ['The live assistant hit an unexpected error.'] },
+      { status: 500, headers: cors },
+    )
+  }
+})
+
+async function handle(request: Request): Promise<Response> {
   const body = (await request.json().catch(() => null)) as AssistantRequest | null
   if (
     !body ||
@@ -187,4 +206,4 @@ Deno.serve(async (request) => {
     return Response.json(unavailable(), { status: 502, headers: cors })
   }
   return Response.json(parsed, { headers: cors })
-})
+}
