@@ -2,6 +2,35 @@
 
 > Read this first, then the active phase file. Update this file at every session end and every phase state change. Pre-plan history: [status-m0-session-log.md](status-m0-session-log.md) (the mid-M0 session log) and (independent audit, 2026-07-11). Master plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
 
+## 2026-07-18 addendum — Phase 9 code/config subset implemented; manual/device items still open
+
+The owner asked for Phase 9 to be started despite it formally being gated on Phase 8.5's close
+(see the 2026-07-17 entry below) and despite most of its scope being physical-device/paid-account
+work this session couldn't touch (no hardware, no EAS/Sentry accounts, no budget for new paid
+services right now — CI billing lock is a separate, unrelated GitHub Actions issue). Scope was
+explicitly narrowed to code/config only; see
+[PHASE-9-COMPLETION.md](completions/PHASE-9-COMPLETION.md) for the full breakdown. Summary:
+
+- **Done (code, tested, in the gate):** `@sentry/react-native` installed and wired
+  (`src/core/observability/sentry.ts`) — release-only, `sendDefaultPii:false`, `beforeSend`/
+  `beforeBreadcrumb` scrubbers, inert without an `EXPO_PUBLIC_SENTRY_DSN`; a structured logger
+  module (`src/core/logging/logger.ts`) that is now the app's one sanctioned `console.*` call
+  site (every prior raw `console.*` site migrated); a deep-link route allow-list + route-guard
+  hook (`src/core/security/`); `eas.json` with dev/preview/production profiles; `.gitleaks.toml`;
+  4 Maestro flow YAMLs (demo spine EN+AR, add-obligation, log-payment, erase-reset); demo runbook
+  - reset checklist docs. Full local gate green: typecheck, lint, depcruise, format, and the
+    mobile test suite (new suites: `logger`, `sentry` scrubbers, `deep-link-allowlist`,
+    `use-deep-link-guard`, plus a `calculation-service` regression case).
+- **Still open (needs the owner, hardware, or a funded account):** every physical-device item
+  (normal/airplane-mode/Arabic rehearsal, performance-budget numbers, accessibility pass on a real
+  screen reader), an actual EAS build (`eas.projectId` doesn't exist yet — no `eas login`/`eas
+init` has been run), a real Sentry project + DSN + a verified test event, the Maestro flows
+  actually executed against a device/emulator (written and Prettier-validated, never run — no
+  Maestro CLI/Android tooling in this environment), running `.gitleaks.toml` against the real
+  gitleaks binary, the `demo-v1` tag + GitHub release, and the dress-rehearsal Exit Demo itself.
+  Phase 9 cannot be marked complete until these close — this session only removes the
+  "nothing exists yet" blocker for the parts that don't need hardware or money.
+
 ## 2026-07-17 addendum — repository position corrected to `main` @ `0363bb3` (this file was behind code)
 
 A final-review pass found this file describing a repository state that no longer matches the code.
