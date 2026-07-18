@@ -64,8 +64,8 @@ Fetch the latest remote state and create the isolated worktree:
 git fetch origin
 
 git worktree add ../Eltizamati-bank-dashboard \
-  -b feature/bank-simulator-dashboard \
-  origin/main
+-b feature/bank-simulator-dashboard \
+origin/main
 
 If the branch or worktree already exists, stop and report it. Do not overwrite or delete it.
 
@@ -539,7 +539,7 @@ When a simulated bank campaign is published:
 
 1. Revalidate that all target users are allowlisted.
 2. Revalidate that every target obligation is variable-rate.
-3. Revalidate the current active rate.
+3. Revalidate the latest non-corrected rate effective on the campaign date.
 4. Create a new rate period with the selected effective date.
 5. Preserve all historical rate periods.
 6. Attach demo provenance.
@@ -561,7 +561,7 @@ Do not alter an existing historical rate’s:
 - obligation ID;
 - provenance.
 
-Corrections must follow the existing `superseded_by` semantics.
+Corrections must follow the existing `superseded_by` semantics. A normal later-effective repricing is not a correction: both it and the preceding historical period remain non-superseded so calculations can apply each over its effective interval.
 
 Read the current implementation before using it.
 
@@ -1091,7 +1091,6 @@ No real client data was accessed.
 No non-allowlisted email was sent.
 Waiting for Talal’s review and merge approval.
 
-
 correction
 
 # Required variable-rate simulation behavior
@@ -1231,10 +1230,10 @@ For the hackathon simulation, a separate clearly labeled scenario may show:
 
 Under that assumption, display:
 
-Scheduled final installment
-+
+Scheduled final installment +
 Projected residual at maturity
 =
+
 Simulated final payment
 
 The entire result must remain marked:

@@ -45,12 +45,12 @@ Acceptance criteria live with user stories (`user-stories.md`) and screen specs 
 
 ## Rates
 
-| ID          | Requirement                                                                                                                                                                                         | Scope |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| FR-RATE-001 | Obligation detail shows rate history as a timeline (value, effective date, source).                                                                                                                 | MVP   |
-| FR-RATE-002 | User can log a rate change (new rate, effective date); validation rejects overlapping/duplicate effective dates.                                                                                    | MVP   |
-| FR-RATE-003 | A logged/imported rate change triggers recalculation of the projection and (if criteria met) a residual-balance insight.                                                                            | MVP   |
-| FR-RATE-004 | Rate-change impact view shows: previous rate, new rate, effective date, estimated added total cost, principal-reduction impact, projected residual balance — each labeled estimate with confidence. | MVP   |
+| ID          | Requirement                                                                                                                                                                          | Scope |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| FR-RATE-001 | Obligation detail shows rate history as a timeline (value, effective date, source).                                                                                                  | MVP   |
+| FR-RATE-002 | Customer can run a non-persistent hypothetical rate-change scenario (new rate, effective date); only the authorized dashboard campaign may append a later authoritative rate period. | MVP   |
+| FR-RATE-003 | A dashboard-published/imported authoritative rate change triggers persisted recalculation and, if criteria are met, a residual-balance insight; a customer what-if triggers neither. | MVP   |
+| FR-RATE-004 | Rate-change impact distinguishes current outstanding principal, projected total still payable, and projected residual; all projections are labeled estimates with confidence.        | MVP   |
 
 ## Calculation & explanation
 

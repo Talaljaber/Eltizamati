@@ -67,21 +67,20 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
-    participant UI as SCR-RATE-ADD
+    participant UI as Dashboard campaign / SCR-RATE-ADD what-if
     participant M as useLogRateChange (mutation)
     participant S as ObligationService
     participant R as ObligationRepo (SQLite)
     participant E as finance-engine
     participant I as InsightRules
 
-    UI->>M: submit(newRate, effectiveFrom)
-    M->>S: logRateChange(cmd)
-    S->>S: validate (BR-OBL-002)
-    S->>R: append RatePeriod (BR-RATE-001)
-    S->>E: variableProjection.v1(inputs, asOf)
+    UI->>M: dashboard publishes rate OR customer submits what-if
+    M->>S: authoritative publish OR ephemeral scenario
+    S->>R: dashboard only appends RatePeriod (BR-RATE-001)
+    S->>E: variableProjection/rateChangeScenario(inputs, asOf)
     E-->>S: schedule + residual + confidence + assumptions
-    S->>R: persist CalculationRun (FR-CALC-005)
-    S-->>I: events: RateChangeLogged, CalculationCompleted
+    S->>R: dashboard only persists CalculationRun (FR-CALC-005)
+    S-->>I: dashboard events only
     I->>R: raise Insight(s) (dedup FR-INS-004)
     M-->>UI: success → invalidate queries
     Note over UI: Query invalidation re-renders detail,<br/>timeline, dashboard, insights badge

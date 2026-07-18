@@ -127,7 +127,7 @@ All screens: RTL-mirrored, a11y per NFR-A11Y-*, one primary CTA.
 
 ### SCR-PAY-ADD — log payment (modal) — US-005; date ≤ today, amount, optional split; overpayment warning.
 
-### SCR-RATE-ADD — log rate change (modal) — FR-RATE-002; overlap validation; effective-date bounds.
+### SCR-RATE-ADD — what-if rate scenario (modal) — FR-RATE-002; effective-date bounds; calculation is ephemeral and never changes rate history, balance, or installment.
 
 ### SCR-PAY-LIST — payment history — FR-PAY-001; provenance badges; allocation split with estimate labels (BR-CALC-010).
 
