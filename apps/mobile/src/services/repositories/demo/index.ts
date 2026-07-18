@@ -25,6 +25,7 @@ import { DemoConsentRepository } from './demo-consent-repository'
 import { DemoUserProfileRepository } from './demo-user-profile-repository'
 import { DemoCalculationRunRepository } from './demo-calculation-run-repository'
 import { DemoLoanApplicationRepository } from './demo-loan-application-repository'
+import { DemoLoanScheduleProposalRepository } from './demo-loan-schedule-proposal-repository'
 
 export interface DemoRepositories {
   readonly obligationRepository: DemoObligationRepository
@@ -35,6 +36,7 @@ export interface DemoRepositories {
   readonly userProfileRepository: DemoUserProfileRepository
   readonly calculationRunRepository: DemoCalculationRunRepository
   readonly loanApplicationRepository: DemoLoanApplicationRepository
+  readonly loanScheduleProposalRepository: DemoLoanScheduleProposalRepository
   /** Reset all repositories to empty state. */
   readonly reset: () => void
 }
@@ -52,6 +54,7 @@ export function createDemoRepositories(): DemoRepositories {
   const userProfileRepository = new DemoUserProfileRepository()
   const calculationRunRepository = new DemoCalculationRunRepository()
   const loanApplicationRepository = new DemoLoanApplicationRepository()
+  const loanScheduleProposalRepository = new DemoLoanScheduleProposalRepository()
 
   function reset(): void {
     obligationRepository.reset()
@@ -62,6 +65,7 @@ export function createDemoRepositories(): DemoRepositories {
     userProfileRepository.reset()
     calculationRunRepository.reset()
     loanApplicationRepository.reset()
+    loanScheduleProposalRepository.reset()
   }
 
   return {
@@ -73,6 +77,7 @@ export function createDemoRepositories(): DemoRepositories {
     userProfileRepository,
     calculationRunRepository,
     loanApplicationRepository,
+    loanScheduleProposalRepository,
     reset,
   }
 }
@@ -85,3 +90,4 @@ export { DemoConsentRepository } from './demo-consent-repository'
 export { DemoUserProfileRepository } from './demo-user-profile-repository'
 export { DemoCalculationRunRepository } from './demo-calculation-run-repository'
 export { DemoLoanApplicationRepository } from './demo-loan-application-repository'
+export { DemoLoanScheduleProposalRepository } from './demo-loan-schedule-proposal-repository'

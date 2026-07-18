@@ -45,15 +45,21 @@ export default function InsightsScreen() {
       }
     }
     if (insight.obligationId !== undefined) {
+      const isScheduleDecision = [
+        'SCHEDULE_PROPOSAL_APPROVED',
+        'SCHEDULE_PROPOSAL_REJECTED',
+      ].includes(insight.ruleId)
       const isRateImpactInsight = [
         'RATE_INCREASED',
         'INSTALLMENT_UNCHANGED_AFTER_INCREASE',
         'RESIDUAL_RISK',
       ].includes(insight.ruleId)
       router.push(
-        isRateImpactInsight
-          ? `/obligation/${insight.obligationId}/rate-impact`
-          : `/obligation/${insight.obligationId}`,
+        isScheduleDecision
+          ? `/obligation/${insight.obligationId}/schedule`
+          : isRateImpactInsight
+            ? `/obligation/${insight.obligationId}/rate-impact`
+            : `/obligation/${insight.obligationId}`,
       )
     }
   }
