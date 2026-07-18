@@ -20,6 +20,9 @@ import {
   radius,
   minTouchTarget,
   useTheme,
+  useResponsiveLayout,
+  layout,
+  PageContent,
   DemoBanner,
   SkeletonCard,
   ListRow,
@@ -67,6 +70,8 @@ export default function ObligationsTab() {
   const activeUser = activeUserState.userId
   const personalAsOf = usePersonalCalculationAsOf()
   const [manualRefreshing, setManualRefreshing] = useState(false)
+  const { isWideWeb, width } = useResponsiveLayout()
+  const columns = isWideWeb ? Math.max(1, Math.floor(width / 420)) : 1
 
   const {
     data,
@@ -176,18 +181,27 @@ export default function ObligationsTab() {
       <DemoBanner visible={isDemoMode} testID="obligations-demo-banner" />
 
       {queryError !== undefined ? (
-        <ObligationsStaleDataNotice
-          error={queryError}
-          onRetry={() => {
-            void handleRefresh()
-          }}
-        />
+        <PageContent maxWidth="content">
+          <ObligationsStaleDataNotice
+            error={queryError}
+            onRetry={() => {
+              void handleRefresh()
+            }}
+          />
+        </PageContent>
       ) : null}
 
       <FlatList
+        key={columns}
         data={filteredData}
+        numColumns={columns}
+        columnWrapperStyle={columns > 1 ? styles.gridRow : undefined}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[styles.list, filteredData.length === 0 && styles.listEmpty]}
+        contentContainerStyle={[
+          styles.list,
+          filteredData.length === 0 && styles.listEmpty,
+          isWideWeb && styles.listWide,
+        ]}
         refreshControl={
           <RefreshControl
             refreshing={manualRefreshing}
@@ -216,7 +230,7 @@ export default function ObligationsTab() {
         renderItem={({ item }) => {
           const payments = paymentsByObligation.get(item.id)
           if (payments === undefined) return null
-          return (
+          const row = (
             <ObligationRow
               obligation={item}
               payments={payments}
@@ -226,6 +240,14 @@ export default function ObligationsTab() {
                 void router.push(`/obligation/${item.id}`)
               }}
             />
+          )
+          if (columns <= 1) return row
+          return (
+            <View
+              style={[styles.gridCell, { borderColor: theme.border, backgroundColor: theme.bg }]}
+            >
+              {row}
+            </View>
           )
         }}
       />
@@ -386,6 +408,22 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingBottom: space[8],
+  },
+  listWide: {
+    width: '100%',
+    maxWidth: layout.contentMaxWidth,
+    alignSelf: 'center',
+    paddingHorizontal: space[7],
+  },
+  gridRow: {
+    gap: space[3],
+  },
+  gridCell: {
+    flex: 1,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.md,
+    marginBottom: space[3],
+    overflow: 'hidden',
   },
   staleNotice: {
     gap: space[2],

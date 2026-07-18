@@ -26,6 +26,8 @@ import {
   InsightBanner,
   Button,
   ErrorState,
+  PageContent,
+  ResponsiveGrid,
 } from '@/core/design-system'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { useInsights } from '@/features/home/api/use-insights'
@@ -196,77 +198,82 @@ export default function HomeTab() {
           />
         }
       >
-        <View style={[styles.hero, { backgroundColor: theme.brand }]}>
-          <View style={styles.heroTopRow}>
-            <View style={styles.heroBrandMark}>
-              <Image
-                source={appIcon}
-                style={styles.heroBrandMarkImage}
-                accessibilityIgnoresInvertColors
-              />
+        <PageContent maxWidth="content">
+          <View style={[styles.hero, { backgroundColor: theme.brand }]}>
+            <View style={styles.heroTopRow}>
+              <View style={styles.heroBrandMark}>
+                <Image
+                  source={appIcon}
+                  style={styles.heroBrandMarkImage}
+                  accessibilityIgnoresInvertColors
+                />
+              </View>
+              <Text variant="bodySmall" color="onBrand">
+                {t('common.appName', 'Eltizamati')}
+              </Text>
             </View>
-            <Text variant="bodySmall" color="onBrand">
-              {t('common.appName', 'Eltizamati')}
+            <Text variant="title" color="onBrand">
+              {t('home.greeting')}
+            </Text>
+            <Text variant="body" color="onBrand">
+              {t('home.subtitle')}
             </Text>
           </View>
-          <Text variant="title" color="onBrand">
-            {t('home.greeting')}
-          </Text>
-          <Text variant="body" color="onBrand">
-            {t('home.subtitle')}
-          </Text>
-        </View>
 
-        <View style={styles.quickActions}>
-          {quickActions.map((action) => (
-            <Pressable
-              key={action.key}
-              onPress={action.onPress}
-              style={styles.quickAction}
-              accessibilityRole="button"
-              accessibilityLabel={action.label}
-              hitSlop={4}
-            >
-              <View style={[styles.quickActionIcon, { backgroundColor: theme.bgSubtle }]}>
-                <Ionicons name={action.icon} size={22} color={theme.brand} />
-              </View>
-              <Text variant="caption" color="secondary" align="center" numberOfLines={1}>
-                {action.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+          <View style={styles.quickActions}>
+            {quickActions.map((action) => (
+              <Pressable
+                key={action.key}
+                onPress={action.onPress}
+                style={styles.quickAction}
+                accessibilityRole="button"
+                accessibilityLabel={action.label}
+                hitSlop={4}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: theme.bgSubtle }]}>
+                  <Ionicons name={action.icon} size={22} color={theme.brand} />
+                </View>
+                <Text variant="caption" color="secondary" align="center" numberOfLines={1}>
+                  {action.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
 
-        <View style={styles.dashboard}>
-          {queryError !== undefined ? (
-            <StaleDataNotice
-              error={queryError}
-              onRetry={() => {
-                void handleRefresh()
-              }}
-              testID="home-stale-query-data"
-            />
-          ) : null}
-          {aggregates.status === 'error' && aggregates.error !== undefined ? (
-            <ErrorState
-              state={toErrorUiState(aggregates.error)}
-              onRetry={aggregates.retry}
-              testID="home-aggregate-error"
-            />
-          ) : (
-            <>
-              {aggregates.isStale === true && aggregates.error !== undefined ? (
-                <StaleDataNotice
-                  error={aggregates.error}
-                  onRetry={aggregates.retry}
-                  testID="home-stale-aggregate-data"
-                />
-              ) : null}
-              <SummaryCard aggregates={aggregates} />
-            </>
-          )}
-          <InsightsPreview insights={insights} />
-        </View>
+          <View style={styles.dashboard}>
+            {queryError !== undefined ? (
+              <StaleDataNotice
+                error={queryError}
+                onRetry={() => {
+                  void handleRefresh()
+                }}
+                testID="home-stale-query-data"
+              />
+            ) : null}
+            {aggregates.status === 'error' && aggregates.error !== undefined ? (
+              <ErrorState
+                state={toErrorUiState(aggregates.error)}
+                onRetry={aggregates.retry}
+                testID="home-aggregate-error"
+              />
+            ) : (
+              <>
+                {aggregates.isStale === true && aggregates.error !== undefined ? (
+                  <StaleDataNotice
+                    error={aggregates.error}
+                    onRetry={aggregates.retry}
+                    testID="home-stale-aggregate-data"
+                  />
+                ) : null}
+                <ResponsiveGrid minColumnWidth={360}>
+                  <SummaryCard aggregates={aggregates} />
+                  <InsightsPreview insights={insights} />
+                </ResponsiveGrid>
+              </>
+            )}
+            {aggregates.status === 'error' ? <InsightsPreview insights={insights} /> : null}
+          </View>
+        </PageContent>
       </ScrollView>
     </SafeAreaView>
   )
