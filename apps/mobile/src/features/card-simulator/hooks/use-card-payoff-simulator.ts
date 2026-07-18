@@ -53,8 +53,12 @@ export function useCardPayoffSimulator(obligationId: Id<'obligation'>) {
       1,
       {
         balance: currentBalance.value,
-        annualRate: purchaseApr?.value,
-        minimumPaymentRule,
+        // Optional fields must be omitted entirely rather than set to
+        // `undefined` — the canonical-JSON serializer behind CalculationRun
+        // hashing rejects `undefined` values, which would otherwise turn a
+        // legitimate "missing data" refusal into a generic error.
+        ...(purchaseApr !== undefined ? { annualRate: purchaseApr.value } : {}),
+        ...(minimumPaymentRule !== undefined ? { minimumPaymentRule } : {}),
         ...(trimmedPayment === ''
           ? {}
           : { fixedPaymentAmount: Money.of(trimmedPayment, obligation.currency) }),
