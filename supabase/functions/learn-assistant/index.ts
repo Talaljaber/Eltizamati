@@ -115,11 +115,19 @@ Deno.serve(async (request) => {
       },
     }),
   })
-  if (!upstream.ok)
+  if (!upstream.ok) {
+    // Logged server-side only (visible via `supabase functions logs
+    // learn-assistant` / the dashboard) — never forwarded to the client,
+    // which only ever sees the generic unavailable() shape.
+    console.error('learn-assistant: OpenRouter request failed', {
+      status: upstream.status,
+      body: await upstream.text().catch(() => '<unreadable>'),
+    })
     return Response.json(
       { ...unavailable(), unknowns: ['The live assistant is temporarily unavailable.'] },
       { status: 503, headers: cors },
     )
+  }
   const raw = (await upstream.json()) as { choices?: { message?: { content?: string } }[] }
   const content = raw.choices?.[0]?.message?.content
   let parsed: AssistantResponse
