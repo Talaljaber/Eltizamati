@@ -1,7 +1,7 @@
 -- pgTAP: F-07 (STOP-SHIP audit, docs/ship-situation.md) — atomic obligation+subtype
 -- writes via save_conventional_loan/save_murabaha/save_card, and append-only
--- rate_periods (annual_rate/effective_from/provenance immutable once written;
--- only the supersession correction — superseded_by — may change).
+-- rate_periods (customer may create the initial row with a loan, but cannot
+-- append, edit, delete, or mark any authoritative rate as corrected).
 --
 -- auth.uid() convention matches 10_rls_cross_user.sql: `set local role authenticated`
 -- + `set local request.jwt.claims`. Fixtures owned by user B are inserted as
@@ -128,24 +128,23 @@ select throws_ok(
   'rate_periods: the owner cannot rewrite provenance_json on an existing period'
 );
 
--- The one approved correction/supersession event — appending a new period and
--- marking the old one superseded — must still work.
-select lives_ok(
+-- A borrower cannot append another period or mark an existing one superseded.
+select throws_ok(
   $$insert into public.rate_periods (id, obligation_id, user_id, annual_rate, effective_from, provenance_json)
     values ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-00000000000a', 0.075, '2025-01-15', '{}')$$,
-  'rate_periods: a new correcting period can be appended'
+  '42501', null,
+  'rate_periods: the owner cannot append a later authoritative rate'
 );
-select lives_ok(
+select throws_ok(
   $$update public.rate_periods set superseded_by = '20000000-0000-0000-0000-000000000002' where id = '20000000-0000-0000-0000-000000000001'$$,
-  'rate_periods: the owner CAN mark a period superseded_by a correction (the one approved mutation)'
+  '42501', null,
+  'rate_periods: the owner cannot supersede a rate period'
 );
 
--- An UPDATE matching zero rows is not itself an error, so lives_ok above only proves
--- "no exception" — this proves the supersession UPDATE actually matched and changed
--- a real row.
+-- Confirm the denied UPDATE did not change the stored row.
 select is(
   (select superseded_by::text from public.rate_periods where id = '20000000-0000-0000-0000-000000000001'),
-  '20000000-0000-0000-0000-000000000002', 'rate_periods: the supersession UPDATE actually matched and changed the row'
+  null, 'rate_periods: denied customer supersession left the initial period unchanged'
 );
 
 select * from finish();
