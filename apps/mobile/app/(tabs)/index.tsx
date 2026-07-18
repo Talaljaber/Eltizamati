@@ -38,10 +38,15 @@ import { toBannerSeverity } from '@/features/insights/severity'
 import {
   engineEstimate,
   makeError,
+  resolveMonthlyCommitment,
+  Money,
   type AppError,
   type Insight,
   type Id,
+  type LocalDate,
   type Obligation,
+  type ObligationKind,
+  type Provenance,
 } from '@eltizamati/domain'
 import appIcon from '../../assets/icon.png'
 import { calculationAsOfForObligations } from '@/services/calculation-as-of'
@@ -269,6 +274,7 @@ export default function HomeTab() {
                   <SummaryCard aggregates={aggregates} />
                   <InsightsPreview insights={insights} />
                 </ResponsiveGrid>
+                <CommitmentBreakdown obligations={obligationsForCalculation} asOf={asOf} />
               </>
             )}
             {aggregates.status === 'error' ? <InsightsPreview insights={insights} /> : null}
@@ -449,6 +455,104 @@ function InsightsPreview({ insights }: { insights: readonly Insight[] }) {
   )
 }
 
+/** Same "client-derived amount, never inherits an 'official' source" rule
+ * card-detail's available-credit figure uses — this is a plain sum over
+ * already-fetched Money values, not a finance-engine calculation run. */
+function derivedEstimateProvenance(recordedAt: string): Provenance {
+  return { source: 'estimate', observedAt: recordedAt, recordedAt }
+}
+
+const BREAKDOWN_KIND_COLOR: Record<ObligationKind, keyof ReturnType<typeof useTheme>> = {
+  conventionalLoan: 'brand',
+  creditCard: 'understanding',
+  murabaha: 'support',
+  genericFacility: 'caution',
+  ijara: 'info',
+  diminishingMusharakah: 'positive',
+}
+
+function CommitmentBreakdown({
+  obligations,
+  asOf,
+}: {
+  obligations: readonly Obligation[]
+  asOf: LocalDate
+}) {
+  const { t } = useTranslation()
+  const theme = useTheme()
+
+  const byKind = new Map<ObligationKind, Money>()
+  for (const obligation of obligations) {
+    const commitment = resolveMonthlyCommitment(obligation, asOf)
+    if (commitment === undefined) continue
+    const existing = byKind.get(obligation.kind) ?? Money.zero(commitment.value.currency)
+    byKind.set(obligation.kind, existing.add(commitment.value))
+  }
+
+  const entries = Array.from(byKind.entries())
+  if (entries.length === 0) return null
+
+  let total = Money.zero(entries[0][1].currency)
+  for (const [, amount] of entries) total = total.add(amount)
+  if (total.isZero()) return null
+
+  const provenance = derivedEstimateProvenance(new Date().toISOString())
+  const segments = entries
+    .map(([kind, amount]) => ({
+      kind,
+      amount,
+      color: theme[BREAKDOWN_KIND_COLOR[kind]],
+      ratio: amount.toDecimal().dividedBy(total.toDecimal()).toNumber(),
+    }))
+    .sort((a, b) => b.ratio - a.ratio)
+
+  return (
+    <Card>
+      <View style={styles.breakdownHeader}>
+        <Text variant="heading">{t('home.commitmentBreakdownTitle')}</Text>
+        <Amount
+          testID="home-breakdown-total"
+          variant="amountMd"
+          money={total}
+          provenance={provenance}
+          precision="estimate"
+        />
+      </View>
+      <View style={styles.breakdownBar}>
+        {segments.map(({ kind, color, ratio }) => (
+          <View
+            key={kind}
+            style={[
+              styles.breakdownSegment,
+              { flexGrow: Math.max(ratio, 0.03), backgroundColor: color },
+            ]}
+          />
+        ))}
+      </View>
+      <View style={styles.breakdownLegend}>
+        {segments.map(({ kind, amount, color, ratio }) => (
+          <View key={kind} style={styles.breakdownLegendRow}>
+            <View style={[styles.breakdownDot, { backgroundColor: color }]} />
+            <View style={styles.breakdownLegendLabel}>
+              <Text variant="bodySmall">{t(`obligationKind.${kind}`)}</Text>
+            </View>
+            <Text variant="caption" color="secondary">
+              {Math.round(ratio * 100)}%
+            </Text>
+            <Amount
+              testID={`home-breakdown-${kind}`}
+              variant="amountSm"
+              money={amount}
+              provenance={provenance}
+              precision="estimate"
+            />
+          </View>
+        ))}
+      </View>
+    </Card>
+  )
+}
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -534,5 +638,39 @@ const styles = StyleSheet.create({
   },
   insightsList: {
     gap: space[2],
+  },
+  breakdownHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: space[4],
+  },
+  breakdownBar: {
+    flexDirection: 'row',
+    height: 10,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+    gap: 2,
+    marginBottom: space[4],
+  },
+  breakdownSegment: {
+    minWidth: 4,
+    borderRadius: radius.full,
+  },
+  breakdownLegend: {
+    gap: space[3],
+  },
+  breakdownLegendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[2],
+  },
+  breakdownDot: {
+    width: 8,
+    height: 8,
+    borderRadius: radius.full,
+  },
+  breakdownLegendLabel: {
+    flex: 1,
   },
 })

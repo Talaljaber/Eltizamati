@@ -88,7 +88,8 @@
     "nextPaymentLabel": "Next due payment",
     "insightsTitle": "Insights",
     "noInsights": "No new insights",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "commitmentBreakdownTitle": "Monthly commitments by type"
   },
   "obligations": {
     "title": "Obligations",

@@ -88,7 +88,8 @@
     "nextPaymentLabel": "الدفعة التالية",
     "insightsTitle": "تنبيهات",
     "noInsights": "لا توجد تنبيهات جديدة",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض الكل",
+    "commitmentBreakdownTitle": "الالتزامات الشهرية حسب النوع"
   },
   "obligations": {
     "title": "الالتزامات",
