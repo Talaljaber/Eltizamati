@@ -29,6 +29,34 @@ const model =
   Deno.env.get('OPENAI_MODEL') ??
   'qwen/qwen3-next-80b-a3b-instruct:free'
 
+const ASSISTANT_STATUSES = [
+  'answered',
+  'insufficient-verified-data',
+  'needs-user-input',
+  'refused',
+] as const
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string')
+}
+
+/** Runtime check for the model's parsed JSON output — see the call site for why. */
+function isValidAssistantResponse(value: unknown): value is AssistantResponse {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return (
+    typeof v.answer === 'string' &&
+    v.comparison === null &&
+    isStringArray(v.assumptions) &&
+    isStringArray(v.unknowns) &&
+    isStringArray(v.questionsToAskTheBank) &&
+    isStringArray(v.sourceIds) &&
+    typeof v.disclaimer === 'string' &&
+    typeof v.status === 'string' &&
+    (ASSISTANT_STATUSES as readonly string[]).includes(v.status)
+  )
+}
+
 function unavailable(): AssistantResponse {
   return {
     answer: '',
@@ -181,9 +209,9 @@ async function handle(request: Request): Promise<Response> {
       { status: 502, headers: cors },
     )
   }
-  let parsed: AssistantResponse
+  let parsedUnknown: unknown
   try {
-    parsed = JSON.parse(content) as AssistantResponse
+    parsedUnknown = JSON.parse(content)
   } catch {
     console.error('learn-assistant: OpenRouter content was not valid JSON', {
       finishReason: raw.choices?.[0]?.finish_reason,
@@ -194,6 +222,21 @@ async function handle(request: Request): Promise<Response> {
       { status: 502, headers: cors },
     )
   }
+  // `response_format.json_schema.strict` is a request, not a guarantee —
+  // several OpenRouter-routed providers only honor it best-effort, so valid
+  // JSON that's still missing/mistyped a required field (e.g. no sourceIds
+  // at all) has been observed in practice. Validate the actual shape rather
+  // than trusting the cast, since the client relies on every field existing.
+  if (!isValidAssistantResponse(parsedUnknown)) {
+    console.error('learn-assistant: model output did not match the required schema', {
+      content,
+    })
+    return Response.json(
+      { ...unavailable(), unknowns: ['The live assistant returned a malformed response.'] },
+      { status: 502, headers: cors },
+    )
+  }
+  const parsed = parsedUnknown
   if (!parsed.sourceIds.every((id) => body.comparison?.sourceIds.includes(id) ?? false)) {
     // Grounding guard: the model cited a source id that wasn't part of the
     // request's retrieved sourceIds (or cited any id at all when there was
