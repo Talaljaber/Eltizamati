@@ -238,6 +238,16 @@ function ObligationDetailInner() {
               onPress={() => router.push(`/obligation/${id}/schedule`)}
             />
             <NavRow
+              icon="document-text-outline"
+              label={t('loanDetail.navScheduleProposal')}
+              onPress={() => router.push(`/obligation/${id}/schedule-proposal?mode=recommended`)}
+            />
+            <NavRow
+              icon="options-outline"
+              label={t('loanDetail.navScheduleGenerator')}
+              onPress={() => router.push(`/obligation/${id}/schedule-proposal?mode=custom`)}
+            />
+            <NavRow
               icon="calculator-outline"
               label={t('loanDetail.navScenario', 'Simulator')}
               onPress={() => router.push(`/obligation/${id}/scenario`)}

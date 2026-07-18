@@ -8,6 +8,7 @@ import { ScheduleRow, SCHEDULE_ROW_HEIGHT } from './ScheduleRow'
 export interface ScheduleListProps {
   readonly schedule: readonly AmortizationScheduleRow[]
   readonly renderAmount: (value: string) => ReactNode
+  readonly header?: ReactNode
 }
 
 /**
@@ -16,7 +17,7 @@ export interface ScheduleListProps {
  * N stacked mini-forms inside a ScrollView. Tapping a row opens its full
  * four-field breakdown in a Sheet.
  */
-export function ScheduleList({ schedule, renderAmount }: ScheduleListProps) {
+export function ScheduleList({ schedule, renderAmount, header }: ScheduleListProps) {
   const { t } = useTranslation()
   const [selected, setSelected] = useState<AmortizationScheduleRow | undefined>(undefined)
 
@@ -24,6 +25,7 @@ export function ScheduleList({ schedule, renderAmount }: ScheduleListProps) {
     <>
       <FlatList
         data={schedule}
+        ListHeaderComponent={header === undefined ? undefined : <>{header}</>}
         keyExtractor={(entry) => String(entry.period)}
         getItemLayout={(_, index) => ({
           length: SCHEDULE_ROW_HEIGHT,
@@ -34,7 +36,14 @@ export function ScheduleList({ schedule, renderAmount }: ScheduleListProps) {
           <ScheduleRow
             entry={item}
             periodLabel={`${t('schedule.period')} ${item.period}`}
-            installment={renderAmount(item.payment)}
+            installment={renderAmount(item.finalBalloonAmount ?? item.payment)}
+            contextLabel={
+              item.finalBalloonAmount === undefined
+                ? undefined
+                : item.finalBalloonKind === 'agreed'
+                  ? t('schedule.agreedBalloonBadge')
+                  : t('schedule.projectedBalloonBadge')
+            }
             onPress={() => setSelected(item)}
           />
         )}
@@ -56,6 +65,16 @@ export function ScheduleList({ schedule, renderAmount }: ScheduleListProps) {
               label={t('schedule.endingBalance')}
               value={renderAmount(selected.closingBalance)}
             />
+            {selected.finalBalloonAmount !== undefined && (
+              <FieldRow
+                label={
+                  selected.finalBalloonKind === 'agreed'
+                    ? t('schedule.agreedFinalBalloon')
+                    : t('schedule.projectedFinalBalloon')
+                }
+                value={renderAmount(selected.finalBalloonAmount)}
+              />
+            )}
             {selected.costPercentChangeFromPrevious !== undefined ? (
               <Text
                 variant="bodySmall"

@@ -45,7 +45,7 @@ export default function RateHistoryScreen() {
                   <View style={styles.rateRow}>
                     <Text variant="heading">
                       {t('rateHistory.annualRate', {
-                        rate: row.period.annualRate.toStorageString(),
+                        rate: row.period.annualRate.toPercent().toFixed(3),
                       })}
                     </Text>
                     {row.percentChangeFromPrevious !== undefined && (

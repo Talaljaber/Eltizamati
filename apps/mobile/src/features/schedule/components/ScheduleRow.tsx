@@ -10,6 +10,7 @@ export interface ScheduleRowProps {
   readonly entry: AmortizationScheduleRow
   readonly periodLabel: string
   readonly installment: ReactNode
+  readonly contextLabel?: string
   readonly onPress: () => void
 }
 
@@ -19,7 +20,13 @@ export interface ScheduleRowProps {
  * Replaces the previous "Period N" mini-form of four stacked FieldRows;
  * tapping opens the full breakdown in a Sheet (progressive disclosure).
  */
-export function ScheduleRow({ entry, periodLabel, installment, onPress }: ScheduleRowProps) {
+export function ScheduleRow({
+  entry,
+  periodLabel,
+  installment,
+  contextLabel,
+  onPress,
+}: ScheduleRowProps) {
   const theme = useTheme()
   const chevronIcon = I18nManager.isRTL ? 'chevron-back-outline' : 'chevron-forward-outline'
   const change = entry.costPercentChangeFromPrevious
@@ -43,7 +50,11 @@ export function ScheduleRow({ entry, periodLabel, installment, onPress }: Schedu
         <Text variant="body" numberOfLines={1}>
           {periodLabel}
         </Text>
-        {change !== undefined ? (
+        {contextLabel !== undefined ? (
+          <Text variant="caption" color="caution">
+            {contextLabel}
+          </Text>
+        ) : change !== undefined ? (
           <Text variant="caption" color={change > 0 ? 'critical' : 'positive'}>
             {change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`}
           </Text>

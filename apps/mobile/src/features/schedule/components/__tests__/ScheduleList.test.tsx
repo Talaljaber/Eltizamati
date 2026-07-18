@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react-native'
 import { ScheduleList } from '../ScheduleList'
+import { Text } from '@/core/design-system'
 import type { AmortizationScheduleRow } from '../../hooks/use-amortization-schedule-view-model'
 
 const entries: AmortizationScheduleRow[] = [
@@ -53,5 +54,38 @@ describe('ScheduleList', () => {
   it('shows the cost-change badge for periods after the first', () => {
     const { getByText } = render(<ScheduleList schedule={entries} renderAmount={renderAmount} />)
     expect(getByText('-10.0%')).toBeTruthy()
+  })
+
+  it('renders an optional proposal summary as the list header', () => {
+    const { getByText } = render(
+      <ScheduleList
+        schedule={entries}
+        renderAmount={renderAmount}
+        header={<Text>Private schedule proposal</Text>}
+      />,
+    )
+    expect(getByText('Private schedule proposal')).toBeTruthy()
+  })
+
+  it('marks a generated final-month balloon and shows its amount in the breakdown', () => {
+    const first = entries[0]
+    const second = entries[1]
+    expect(first).toBeDefined()
+    expect(second).toBeDefined()
+    if (first === undefined || second === undefined) return
+    const withBalloon: AmortizationScheduleRow[] = [
+      first,
+      {
+        ...second,
+        finalBalloonAmount: '1356',
+        finalBalloonKind: 'projected',
+      },
+    ]
+    const { getByText, getByLabelText } = render(
+      <ScheduleList schedule={withBalloon} renderAmount={renderAmount} />,
+    )
+    expect(getByText('schedule.projectedBalloonBadge')).toBeTruthy()
+    fireEvent.press(getByLabelText('schedule.period 2'))
+    expect(getByText('schedule.projectedFinalBalloon')).toBeTruthy()
   })
 })

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Amount, HeroAmount, Text } from '@/core/design-system'
+import { Amount, HeroAmount, InsightBanner, Text } from '@/core/design-system'
 import type { Id } from '@eltizamati/domain'
 import type { LoanDetailHeroModel } from '../hooks/use-loan-detail-view-model'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
@@ -33,8 +33,37 @@ export function LoanDetailHero({
         money={hero.currentBalance}
         provenance={hero.currentBalanceProvenance}
         precision={hero.currentBalancePrecision}
-        supporting={
-          hero.estimatedResidual && hero.estimatedResidualProvenance
+        supporting={[
+          ...(hero.currentRatePercent !== undefined
+            ? [
+                {
+                  label: t('loanDetail.currentPublishedRate'),
+                  value: (
+                    <Text variant="amountSm">
+                      {hero.previousRatePercent !== undefined
+                        ? `${hero.previousRatePercent}% → ${hero.currentRatePercent}%`
+                        : `${hero.currentRatePercent}%`}
+                    </Text>
+                  ),
+                },
+              ]
+            : []),
+          ...(hero.projectedRemainingPayable && hero.projectedRemainingPayableProvenance
+            ? [
+                {
+                  label: t('loanDetail.projectedRemainingPayable'),
+                  value: (
+                    <Amount
+                      variant="amountSm"
+                      money={hero.projectedRemainingPayable}
+                      provenance={hero.projectedRemainingPayableProvenance}
+                      precision="estimate"
+                    />
+                  ),
+                },
+              ]
+            : []),
+          ...(hero.estimatedResidual && hero.estimatedResidualProvenance
             ? [
                 {
                   label: `${t('loanDetail.projectedResidual', 'Estimated Residual at Maturity')} · ${residualLabel}`,
@@ -53,9 +82,16 @@ export function LoanDetailHero({
                   ),
                 },
               ]
-            : undefined
-        }
+            : []),
+        ]}
       />
+      {hero.estimatedResidual?.isPositive() === true && (
+        <InsightBanner
+          severity="attention"
+          title={t('loanDetail.scheduleChangeTitle')}
+          body={t('loanDetail.scheduleChangeNotice')}
+        />
+      )}
       <ExplainSheet
         visible={explainVisible}
         onClose={() => setExplainVisible(false)}

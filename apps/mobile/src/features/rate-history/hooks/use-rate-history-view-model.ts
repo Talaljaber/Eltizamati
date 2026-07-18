@@ -25,6 +25,8 @@ export function useRateHistoryViewModel(obligationId: Id<'obligation'>): RateHis
       if (!res.ok) throw res.error
       return res.value
     },
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   if (isError) {

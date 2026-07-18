@@ -16,6 +16,11 @@ import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotMoneyAmount } from '@/services/calculation-snapshot'
 import { calculationAsOf } from '@/services/calculation-as-of'
 import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
+import {
+  applicableRatePeriods,
+  projectedRemainingPayable,
+  rateHistoryFingerprint,
+} from '@/features/rate-impact/projection-display'
 
 export interface LoanDetailHeroModel {
   /** Undefined when neither an official balance nor an engine estimate is available — render as "unknown", never a fabricated amount. */
@@ -26,6 +31,10 @@ export interface LoanDetailHeroModel {
   estimatedResidualProvenance: Provenance | undefined
   residualConfidence: Confidence | undefined
   residualCalculationRunId: string | undefined
+  projectedRemainingPayable?: Money
+  projectedRemainingPayableProvenance?: Provenance
+  currentRatePercent?: string
+  previousRatePercent?: string
 }
 
 export interface LoanDetailViewModel {
@@ -62,6 +71,8 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
       return res.value
     },
     enabled: !!obligation,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   const { data: payments } = useQuery({
@@ -73,11 +84,15 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
     },
     enabled: !!obligation,
   })
-  const asOf = calculationAsOf(typeof repos.reset === 'function' ? 'demo' : 'personal', personalAsOf)
+  const asOf = calculationAsOf(
+    typeof repos.reset === 'function' ? 'demo' : 'personal',
+    personalAsOf,
+  )
+  const rateFingerprint = rateHistoryFingerprint(ratePeriods)
 
   // Hero calculation using variableProjection.v1
   const { data: projectionRun } = useQuery({
-    queryKey: ['projection', obligationId, activeUser, asOf],
+    queryKey: ['projection', obligationId, activeUser, asOf, rateFingerprint],
     queryFn: async (): Promise<CalculationRun | null> => {
       if (!activeUser || !obligation || obligation.kind !== 'conventionalLoan' || !ratePeriods) {
         return null
@@ -127,6 +142,8 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
     const snapshot = snapshotRecord(projectionRun.outcome.resultSnapshot)
     const estimatedOutstanding = snapshotMoneyAmount(snapshot.outstandingAsOf)
     const estimatedResidual = snapshotMoneyAmount(snapshot.projectedResidualAtMaturity)
+    const remainingPayable = projectedRemainingPayable(snapshot, obligation.currency, asOf)
+    const applicableRates = applicableRatePeriods(ratePeriods, asOf)
     const sourcedBalance = obligation.loanDetails.outstandingBalance
     const currentBalance =
       sourcedBalance?.value ??
@@ -156,6 +173,14 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
             ).provenance,
       residualConfidence: projectionRun.outcome.confidence,
       residualCalculationRunId: projectionRun.id,
+      projectedRemainingPayable: remainingPayable,
+      projectedRemainingPayableProvenance:
+        remainingPayable === undefined
+          ? undefined
+          : engineEstimate(remainingPayable, projectionRun.id, projectionRun.calculatedAt)
+              .provenance,
+      currentRatePercent: applicableRates[0]?.annualRate.toPercent().toFixed(3),
+      previousRatePercent: applicableRates[1]?.annualRate.toPercent().toFixed(3),
     }
   }
 

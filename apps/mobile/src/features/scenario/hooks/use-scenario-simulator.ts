@@ -12,6 +12,7 @@ import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { calculationAsOf } from '@/services/calculation-as-of'
 import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
+import { rateHistoryFingerprint } from '@/features/rate-impact/projection-display'
 
 /** NFR-PERF-002 — debounce the recalculation trigger, not every keystroke. */
 const SCENARIO_INPUT_DEBOUNCE_MS = 300
@@ -81,6 +82,8 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
       return res.value
     },
     enabled: !!obligation,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   const canRunScenario =
@@ -92,9 +95,18 @@ export function useScenarioSimulator(obligationId: Id<'obligation'>): ScenarioSi
     typeof repos.reset === 'function' ? 'demo' : 'personal',
     personalAsOf,
   )
+  const rateFingerprint = rateHistoryFingerprint(ratePeriods)
 
   const { data: run, isError: isRunError } = useQuery({
-    queryKey: ['scenario', obligationId, activeUser, extraMonthly, oneTimeAmount, asOf],
+    queryKey: [
+      'scenario',
+      obligationId,
+      activeUser,
+      extraMonthly,
+      oneTimeAmount,
+      asOf,
+      rateFingerprint,
+    ],
     queryFn: async (): Promise<CalculationRun> => {
       if (!activeUser || obligation?.kind !== 'conventionalLoan' || !ratePeriods) {
         throw new DomainInvariantError(

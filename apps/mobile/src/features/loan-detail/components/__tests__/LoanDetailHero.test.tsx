@@ -78,6 +78,26 @@ describe('LoanDetailHero', () => {
     expect(getByText(/≈ 2,000/)).toBeTruthy()
   })
 
+  it('shows the published-rate transition, remaining payable, and non-balloon warning', () => {
+    const { getByText } = renderHero({
+      currentBalance: Money.of('10000', 'JOD'),
+      currentBalanceProvenance: officialProvenance,
+      currentBalancePrecision: 'official',
+      currentRatePercent: '9.250',
+      previousRatePercent: '7.500',
+      projectedRemainingPayable: Money.of('12500', 'JOD'),
+      projectedRemainingPayableProvenance: estimateProvenance,
+      estimatedResidual: Money.of('2000', 'JOD'),
+      estimatedResidualProvenance: estimateProvenance,
+      residualConfidence: 'medium',
+      residualCalculationRunId: 'run-1',
+    })
+
+    expect(getByText('7.500% → 9.250%')).toBeTruthy()
+    expect(getByText(/≈ 12,500/)).toBeTruthy()
+    expect(getByText('loanDetail.scheduleChangeTitle')).toBeTruthy()
+  })
+
   it('opens the explain sheet when the residual is pressed', () => {
     const { getByRole } = renderHero({
       currentBalance: Money.of('10000', 'JOD'),

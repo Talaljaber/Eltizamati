@@ -4,8 +4,11 @@ import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import {
   Amount,
+  Card,
   ExplainLink,
   InlineState,
+  InsightBanner,
+  Text,
   space,
   layout,
   useResponsiveLayout,
@@ -26,13 +29,22 @@ export default function AmortizationScheduleScreen() {
 
   function renderEstimatedAmount(amount: string) {
     const run = viewModel.run
-    if (amount === '?' || run === undefined) return t('common.unknown')
+    if (amount === '?') return t('common.unknown')
     const money = Money.of(amount, 'JOD')
+    const provenance =
+      run === undefined
+        ? {
+            source: 'official' as const,
+            providerId: 'bank-simulator-dashboard',
+            observedAt: viewModel.approvedAgreementAt ?? new Date().toISOString(),
+            recordedAt: viewModel.approvedAgreementAt ?? new Date().toISOString(),
+          }
+        : engineEstimate(money, run.id, run.calculatedAt).provenance
     return (
       <Amount
         money={money}
-        provenance={engineEstimate(money, run.id, run.calculatedAt).provenance}
-        precision="estimate"
+        provenance={provenance}
+        precision={run === undefined ? 'official' : 'estimate'}
       />
     )
   }
@@ -76,7 +88,40 @@ export default function AmortizationScheduleScreen() {
         )}
 
         {viewModel.status === 'success' && viewModel.schedule.length > 0 && (
-          <ScheduleList schedule={viewModel.schedule} renderAmount={renderEstimatedAmount} />
+          <>
+            <View style={styles.summary}>
+              <Card surface="flat">
+                <View style={styles.summaryContent}>
+                  <Text variant="heading">{t('schedule.remainingSchedule')}</Text>
+                  {viewModel.currentRatePercent !== undefined && (
+                    <Text variant="bodySmall">
+                      {t('schedule.appliedRate', {
+                        rate: viewModel.currentRatePercent,
+                        previousRate: viewModel.previousRatePercent,
+                      })}
+                    </Text>
+                  )}
+                  {viewModel.projectedRemainingPayable !== undefined && (
+                    <View>
+                      <Text variant="bodySmall" color="secondary">
+                        {t('schedule.projectedRemainingPayable')}
+                      </Text>
+                      {renderEstimatedAmount(viewModel.projectedRemainingPayable)}
+                    </View>
+                  )}
+                  {viewModel.projectedResidualAtMaturity !== undefined &&
+                    Money.of(viewModel.projectedResidualAtMaturity, 'JOD').isPositive() && (
+                      <InsightBanner
+                        severity="attention"
+                        title={t('schedule.finalBalloonTitle')}
+                        body={t('schedule.finalBalloonNotice')}
+                      />
+                    )}
+                </View>
+              </Card>
+            </View>
+            <ScheduleList schedule={viewModel.schedule} renderAmount={renderEstimatedAmount} />
+          </>
         )}
       </View>
 
@@ -101,5 +146,12 @@ const styles = StyleSheet.create({
   },
   stateContainer: {
     padding: space[4],
+  },
+  summary: {
+    padding: space[4],
+    paddingBottom: 0,
+  },
+  summaryContent: {
+    gap: space[2],
   },
 })

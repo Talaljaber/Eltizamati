@@ -270,6 +270,63 @@ export type Database = {
         }
         Relationships: []
       }
+      loan_schedule_proposals: {
+        Row: {
+          as_of: string
+          created_at: string
+          currency: string
+          decided_at: string | null
+          decision_reason: string | null
+          final_balloon: number
+          id: string
+          obligation_id: string
+          projected_remaining_payable: number
+          proposal_kind: string
+          proposed_installment: number
+          rate_history_snapshot: Json
+          schedule_snapshot: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          as_of: string
+          created_at?: string
+          currency: string
+          decided_at?: string | null
+          decision_reason?: string | null
+          final_balloon?: number
+          id?: string
+          obligation_id: string
+          projected_remaining_payable: number
+          proposal_kind: string
+          proposed_installment: number
+          rate_history_snapshot: Json
+          schedule_snapshot: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          as_of?: string
+          created_at?: string
+          currency?: string
+          decided_at?: string | null
+          decision_reason?: string | null
+          final_balloon?: number
+          id?: string
+          obligation_id?: string
+          projected_remaining_payable?: number
+          proposal_kind?: string
+          proposed_installment?: number
+          rate_history_snapshot?: Json
+          schedule_snapshot?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       loan_details: {
         Row: {
           contractual_balloon: number | null
