@@ -4,7 +4,15 @@ import { useRouter } from 'expo-router'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Text, useTheme, space, radius, layout, minTouchTarget } from '@/core/design-system'
+import {
+  Text,
+  useTheme,
+  space,
+  radius,
+  layout,
+  minTouchTarget,
+  type WebPressableState,
+} from '@/core/design-system'
 import appIcon from '../../../../assets/icon.png'
 
 /**
@@ -53,10 +61,12 @@ export function AppSidebar({ state, descriptors, navigation }: BottomTabBarProps
               accessibilityState={{ selected: focused }}
               accessibilityLabel={label}
               testID={`app-sidebar-${route.name}`}
-              style={({ pressed }) => [
+              style={({ pressed, hovered }: WebPressableState) => [
                 styles.navRow,
                 focused ? { backgroundColor: theme.brandSoft } : undefined,
-                !focused && pressed ? { backgroundColor: theme.bgSubtle } : undefined,
+                !focused && (pressed || hovered === true)
+                  ? { backgroundColor: theme.bgSubtle }
+                  : undefined,
               ]}
             >
               {icon}
@@ -101,9 +111,9 @@ function SidebarSecondaryRow({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => [
+      style={({ pressed, hovered }: WebPressableState) => [
         styles.navRow,
-        pressed ? { backgroundColor: theme.bgSubtle } : undefined,
+        pressed || hovered === true ? { backgroundColor: theme.bgSubtle } : undefined,
       ]}
     >
       <Ionicons name={icon} size={20} color={theme.textSecondary} />

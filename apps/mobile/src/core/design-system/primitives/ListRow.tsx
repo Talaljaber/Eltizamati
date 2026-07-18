@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Pressable, View, StyleSheet } from 'react-native'
 import { useTheme } from '../use-theme'
 import { space, minTouchTarget } from '../tokens'
+import type { WebPressableState } from '../web-pressable-state'
 
 export interface ListRowProps {
   /** Left/leading content — icon, avatar, or chip. */
@@ -52,9 +53,12 @@ export function ListRow({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [
+      style={({ pressed, hovered }: WebPressableState) => [
         styles.row,
-        { borderBottomColor: theme.border, backgroundColor: pressed ? theme.bgSubtle : undefined },
+        {
+          borderBottomColor: theme.border,
+          backgroundColor: pressed || hovered === true ? theme.bgSubtle : undefined,
+        },
       ]}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"

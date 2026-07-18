@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { radius, space } from '../tokens'
 import { resolveElevation } from '../use-elevation'
 import { useTheme } from '../use-theme'
+import type { WebPressableState } from '../web-pressable-state'
 
 export interface CardProps {
   readonly children: ReactNode
@@ -48,7 +49,11 @@ export function Card({
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         testID={testID}
-        style={({ pressed }) => [...surfaceStyle, pressed ? styles.pressed : undefined]}
+        style={({ pressed, hovered }: WebPressableState) => [
+          ...surfaceStyle,
+          pressed ? styles.pressed : undefined,
+          hovered === true && !pressed ? { borderColor: theme.borderStrong } : undefined,
+        ]}
       >
         {children}
       </Pressable>
