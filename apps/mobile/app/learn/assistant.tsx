@@ -3,10 +3,14 @@ import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import { Stack } from 'expo-router'
-import { Text, useTheme, space } from '@/core/design-system'
+import { Button, Text, useTheme, space } from '@/core/design-system'
 import { SOURCE_RECORDS } from '@/features/learn/model/catalogue-snapshot'
 import type { SourceRecord } from '@/features/learn/model/catalogue'
-import { createLearningAssistantRequest } from '@/features/learn/model/assistant'
+import {
+  createLearningAssistantRequest,
+  validateLearningAssistantResponse,
+  type LearningAssistantResponse,
+} from '@/features/learn/model/assistant'
 import { SupabaseLearningAssistantGateway } from '@/features/learn/model/supabase-learning-assistant-gateway'
 import { ChatBubble } from '@/features/learn/components/ChatBubble'
 import { ChatComposer } from '@/features/learn/components/ChatComposer'
@@ -18,9 +22,19 @@ interface ChatMessage {
   readonly role: 'assistant' | 'user'
   readonly text: string
   readonly sourceIds: readonly string[]
+  readonly assumptions?: readonly string[]
+  readonly unknowns?: readonly string[]
+  readonly questionsToAskTheBank?: readonly string[]
+  readonly disclaimer?: string
+  readonly status?: LearningAssistantResponse['status']
+  /** The original question, present only on a failed/offline assistant reply — lets the user retry. */
+  readonly retryQuestion?: string
 }
 
 const SOURCES_BY_ID = new Map<string, SourceRecord>(SOURCE_RECORDS.map((s) => [s.id, s]))
+// The full set of sources this app actually has on file — the grounding
+// boundary `validateLearningAssistantResponse` checks cited sources against.
+const KNOWN_SOURCE_IDS = SOURCE_RECORDS.map((s) => s.id)
 
 export default function LearnAssistantScreen() {
   const { t, i18n } = useTranslation()
@@ -32,6 +46,19 @@ export default function LearnAssistantScreen() {
 
   function scrollToEnd() {
     requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }))
+  }
+
+  function appendOfflineReply(question: string) {
+    setMessages((current) => [
+      ...current,
+      {
+        id: `offline-${current.length}`,
+        role: 'assistant',
+        text: t('learn.assistantOffline'),
+        sourceIds: [],
+        retryQuestion: question,
+      },
+    ])
   }
 
   const send = async (question: string) => {
@@ -50,18 +77,21 @@ export default function LearnAssistantScreen() {
     try {
       const result = await new SupabaseLearningAssistantGateway().answer(request)
       if (!result.ok) {
-        setMessages((current) => [
-          ...current,
-          {
-            id: `unavailable-${current.length}`,
-            role: 'assistant',
-            text: t('learn.assistantUnavailable'),
-            sourceIds: [],
-          },
-        ])
+        appendOfflineReply(question)
         return
       }
       const response = result.value
+      // Grounding boundary: never trust a response that cites a source this
+      // app doesn't know about or introduces numeric claims we can't check
+      // (no product/comparison context was sent with a general question).
+      const isValid = validateLearningAssistantResponse(response, {
+        sourceIds: KNOWN_SOURCE_IDS,
+        numericValues: [],
+      })
+      if (!isValid) {
+        appendOfflineReply(question)
+        return
+      }
       setMessages((current) => [
         ...current,
         {
@@ -69,18 +99,15 @@ export default function LearnAssistantScreen() {
           role: 'assistant',
           text: response.answer || t('learn.assistantUnavailable'),
           sourceIds: response.sourceIds,
+          assumptions: response.assumptions,
+          unknowns: response.unknowns,
+          questionsToAskTheBank: response.questionsToAskTheBank,
+          disclaimer: response.disclaimer,
+          status: response.status,
         },
       ])
     } catch {
-      setMessages((current) => [
-        ...current,
-        {
-          id: `unavailable-${current.length}`,
-          role: 'assistant',
-          text: t('learn.assistantUnavailable'),
-          sourceIds: [],
-        },
-      ])
+      appendOfflineReply(question)
     } finally {
       setIsSending(false)
       scrollToEnd()
@@ -88,7 +115,10 @@ export default function LearnAssistantScreen() {
   }
 
   return (
-    <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.root, { backgroundColor: theme.bg }]}>
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      style={[styles.root, { backgroundColor: theme.bg }]}
+    >
       <Stack.Screen options={{ title: t('learn.assistantTitle') }} />
       <KeyboardAvoidingView
         style={styles.root}
@@ -120,13 +150,27 @@ export default function LearnAssistantScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <ChatBubble
-              role={item.role}
-              text={item.text}
-              sources={item.sourceIds
-                .map((id) => SOURCES_BY_ID.get(id))
-                .filter((source): source is SourceRecord => source !== undefined)}
-            />
+            <View style={styles.messageGroup}>
+              <ChatBubble
+                role={item.role}
+                text={item.text}
+                sources={item.sourceIds
+                  .map((id) => SOURCES_BY_ID.get(id))
+                  .filter((source): source is SourceRecord => source !== undefined)}
+                assumptions={item.assumptions}
+                unknowns={item.unknowns}
+                questionsToAskTheBank={item.questionsToAskTheBank}
+                disclaimer={item.disclaimer}
+                status={item.status}
+              />
+              {item.retryQuestion !== undefined ? (
+                <Button
+                  variant="ghost"
+                  label={t('common.retry')}
+                  onPress={() => void send(item.retryQuestion as string)}
+                />
+              ) : null}
+            </View>
           )}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListFooterComponent={
@@ -164,6 +208,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     gap: space[3],
+  },
+  messageGroup: {
+    gap: space[2],
   },
   separator: {
     height: space[3],
