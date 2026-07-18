@@ -63,7 +63,11 @@ Deno.serve(async (request) => {
   const instructions = `You are Eltizamati's bilingual financial education assistant for Jordan. Explain general financing concepts in ${body.language}. You are not a financial advisor. Do not claim eligibility, approval, the best bank, guaranteed savings, or current bank terms. Do not invent rates, fees, institutions, legal rights, product facts, or citations. If a question needs institution-specific facts, say that verified catalogue data is unavailable and suggest questions for the institution. Return JSON only matching the requested schema.`
   const requestBody = {
     model,
-    max_tokens: 500,
+    // Some models format their JSON output with generous whitespace (one
+    // key per line, dangling commas) — 500 was cutting the response off
+    // before the required `status` field and closing brace. 900 gives
+    // enough headroom for that style without being wasteful.
+    max_tokens: 900,
     messages: [
       { role: 'system', content: instructions },
       { role: 'user', content: body.question },
@@ -162,7 +166,10 @@ Deno.serve(async (request) => {
   try {
     parsed = JSON.parse(content) as AssistantResponse
   } catch {
-    console.error('learn-assistant: OpenRouter content was not valid JSON', { content })
+    console.error('learn-assistant: OpenRouter content was not valid JSON', {
+      finishReason: raw.choices?.[0]?.finish_reason,
+      content,
+    })
     return Response.json(
       { ...unavailable(), unknowns: ['The live assistant returned an unreadable response.'] },
       { status: 502, headers: cors },
