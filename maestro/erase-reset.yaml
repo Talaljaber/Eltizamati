@@ -1,0 +1,20 @@
+# Phase 9 — reset demo data (pre-stage reset checklist item; see
+# docs/10-implementation/runbooks/demo-runbook.md). NOT run against a
+# device/emulator in this environment — verify before relying on it for
+# rehearsal.
+appId: com.eltizamati.app
+---
+- launchApp:
+    clearState: false
+- tapOn: 'Home'
+- tapOn: 'Profile' # header profile icon (accessibilityLabel)
+- tapOn: 'Settings'
+- tapOn:
+    id: 'settings-reset-demo'
+- assertVisible: 'Reset demo data?'
+- tapOn: 'Reset'
+- assertNotVisible: 'Reset demo data?'
+- assertVisible:
+    id: 'home-demo-banner'
+- assertVisible:
+    id: 'home-total-amount'

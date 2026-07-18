@@ -1,0 +1,16 @@
+# Phase 9 — log a payment against the first (demo-seeded) obligation.
+# Assumes demo mode is already entered. NOT run against a device/emulator
+# in this environment — verify before relying on it for rehearsal.
+appId: com.eltizamati.app
+---
+- launchApp:
+    clearState: false
+- tapOn: 'Obligations'
+- tapOn:
+    id: 'obligation-list-balance'
+    index: 0
+- tapOn: 'Log Payment'
+- tapOn: 'Payment Amount'
+- inputText: '250'
+- tapOn: 'Save'
+- assertNotVisible: 'Log Payment'

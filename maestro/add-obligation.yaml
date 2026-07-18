@@ -1,0 +1,25 @@
+# Phase 9 — add a conventional loan obligation end to end (demo mode).
+# Assumes demo mode is already entered (run demo-spine-en.yaml first, or
+# launch with persisted state). NOT run against a device/emulator in this
+# environment — verify before relying on it for rehearsal.
+appId: com.eltizamati.app
+---
+- launchApp:
+    clearState: false
+- tapOn: 'Obligations'
+- tapOn: 'Add Obligation' # header "+" action (accessibilityLabel)
+- tapOn: 'Conventional Loan'
+- tapOn: 'Nickname'
+- inputText: 'Maestro test loan'
+- tapOn: 'Institution'
+- inputText: 'Test Bank'
+- tapOn: 'Original Principal'
+- inputText: '5000'
+- tapOn: 'Installment'
+- inputText: '250'
+- tapOn: 'Annual Rate (%)'
+- inputText: '8'
+- tapOn: 'Term (months)'
+- inputText: '24'
+- tapOn: 'Save'
+- assertVisible: 'Maestro test loan'

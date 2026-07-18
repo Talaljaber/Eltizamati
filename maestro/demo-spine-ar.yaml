@@ -1,0 +1,44 @@
+# Phase 9 — demo spine (Arabic/RTL): onboard -> dashboard -> loan -> rate impact -> scenario.
+#
+# Written against testIDs/copy in the app as of this commit; NOT run against
+# a device or emulator in this environment (no Maestro/Android tooling
+# available here) — verify on a physical device before relying on this for
+# the judged rehearsal, per PHASE-09-hardening-and-release.md's own
+# "no claim without evidence" gate. This mirrors demo-spine-en.yaml with the
+# Arabic UI strings and RTL layout, per Phase 9 In Scope item 1
+# ("demo spine ... in EN and AR").
+appId: com.eltizamati.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'language-option-ar'
+- tapOn:
+    id: 'intro-continue'
+- tapOn:
+    id: 'mode-demo'
+- tapOn:
+    id: 'consent-checkbox'
+- tapOn:
+    id: 'consent-continue'
+- tapOn:
+    id: 'mode-start-demo'
+- assertVisible:
+    id: 'home-demo-banner'
+- assertVisible:
+    id: 'home-total-amount'
+- tapOn: 'الالتزامات'
+- assertVisible:
+    id: 'obligations-demo-banner'
+- tapOn:
+    id: 'obligation-list-balance'
+    index: 0
+- assertVisible: 'سجل الفائدة'
+- tapOn: 'أثر تغيّر الفائدة'
+- assertVisible: 'أثر تغيّر الفائدة'
+- back
+- tapOn: 'محاكي السيناريوهات'
+- tapOn:
+    id: 'scenario-extra-monthly-input'
+- inputText: '50'
+- assertVisible: '50'
