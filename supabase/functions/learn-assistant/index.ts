@@ -19,7 +19,15 @@ const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-const model = Deno.env.get('OPENAI_MODEL') ?? 'gpt-5-mini'
+// OPENROUTER_MODEL/OPENROUTER_API_KEY take priority; OPENAI_* names are kept
+// as a fallback only so an already-configured secret keeps working without
+// a rename. qwen3-next-80b-a3b-instruct is OpenRouter's free tier at time of
+// writing — strong instruction-following, native JSON-schema structured
+// output support, and solid Arabic (this assistant is bilingual EN/AR).
+const model =
+  Deno.env.get('OPENROUTER_MODEL') ??
+  Deno.env.get('OPENAI_MODEL') ??
+  'qwen/qwen3-next-80b-a3b-instruct:free'
 
 function unavailable(): AssistantResponse {
   return {
@@ -49,21 +57,31 @@ Deno.serve(async (request) => {
   ) {
     return Response.json({ error: 'invalid_request' }, { status: 400, headers: cors })
   }
-  const apiKey = Deno.env.get('OPENAI_API_KEY')
+  const apiKey = Deno.env.get('OPENROUTER_API_KEY') ?? Deno.env.get('OPENAI_API_KEY')
   if (!apiKey) return Response.json(unavailable(), { status: 503, headers: cors })
 
   const instructions = `You are Eltizamati's bilingual financial education assistant for Jordan. Explain general financing concepts in ${body.language}. You are not a financial advisor. Do not claim eligibility, approval, the best bank, guaranteed savings, or current bank terms. Do not invent rates, fees, institutions, legal rights, product facts, or citations. If a question needs institution-specific facts, say that verified catalogue data is unavailable and suggest questions for the institution. Return JSON only matching the requested schema.`
-  const upstream = await fetch('https://api.openai.com/v1/responses', {
+  // OpenRouter is OpenAI-chat-completions-compatible, not the newer OpenAI
+  // Responses API the previous OpenAI-direct integration used — different
+  // request shape (messages[], response_format.json_schema) and response
+  // shape (choices[0].message.content, not output_text).
+  const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'X-Title': 'Eltizamati',
+    },
     body: JSON.stringify({
       model,
-      instructions,
-      input: body.question,
-      max_output_tokens: 500,
-      text: {
-        format: {
-          type: 'json_schema',
+      max_tokens: 500,
+      messages: [
+        { role: 'system', content: instructions },
+        { role: 'user', content: body.question },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
           name: 'learning_assistant_response',
           strict: true,
           schema: {
@@ -102,10 +120,17 @@ Deno.serve(async (request) => {
       { ...unavailable(), unknowns: ['The live assistant is temporarily unavailable.'] },
       { status: 503, headers: cors },
     )
-  const raw = (await upstream.json()) as { output_text?: string }
-  const parsed = raw.output_text
-    ? (JSON.parse(raw.output_text) as AssistantResponse)
-    : unavailable()
+  const raw = (await upstream.json()) as { choices?: { message?: { content?: string } }[] }
+  const content = raw.choices?.[0]?.message?.content
+  let parsed: AssistantResponse
+  try {
+    parsed = content ? (JSON.parse(content) as AssistantResponse) : unavailable()
+  } catch {
+    return Response.json(
+      { ...unavailable(), unknowns: ['The live assistant returned an unreadable response.'] },
+      { status: 502, headers: cors },
+    )
+  }
   if (!parsed.sourceIds.every((id) => body.comparison?.sourceIds.includes(id) ?? false))
     return Response.json(unavailable(), { status: 502, headers: cors })
   return Response.json(parsed, { headers: cors })

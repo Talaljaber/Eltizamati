@@ -66,17 +66,21 @@ inventory and source reviews; establish refresh cadence; deploy migration;
 provide server-side provider secret; deploy Edge Function; set rate limits,
 allowed origins, monitoring, and output-validation tests.
 
-For the live chat, set `OPENAI_API_KEY` and optional `OPENAI_MODEL` in the
-**Supabase Edge Function secret environment** (or dashboard), then deploy
-`learn-assistant`. `apps/mobile/.env` must contain only
+For the live chat, set `OPENROUTER_API_KEY` and optional `OPENROUTER_MODEL`
+(default `qwen/qwen3-next-80b-a3b-instruct:free`) in the **Supabase Edge
+Function secret environment** (or dashboard), then deploy `learn-assistant`.
+The function calls OpenRouter's OpenAI-chat-completions-compatible API, not
+OpenAI directly — `OPENAI_API_KEY`/`OPENAI_MODEL` are still read as a
+fallback if the `OPENROUTER_*` names aren't set, but new setups should use
+the `OPENROUTER_*` names. `apps/mobile/.env` must contain only
 `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`; adding the
-OpenAI key there would expose it in the mobile bundle. A safe template is at
-`supabase/functions/.env.example`.
+provider key there would expose it in the mobile bundle. A safe template is
+at `supabase/functions/.env.example`.
 
 The deployed function keeps Supabase JWT verification enabled. Live chat is
 therefore available only to a signed-in personal-mode user; demo mode continues
 to show the unavailable state. This prevents an unauthenticated caller from
-using the project's OpenAI balance.
+using the project's OpenRouter balance.
 
 ## Verification
 
