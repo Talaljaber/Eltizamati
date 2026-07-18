@@ -10,7 +10,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useRouter, Stack } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { Text, Button, ListRow, space, radius, useTheme } from '@/core/design-system'
+import { Text, Button, ListRow, NavGroup, space, useTheme } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
@@ -64,34 +64,29 @@ function AddObligationInner() {
   const [murabahaState, setMurabahaState] = useState<MurabahaFormState>(emptyMurabahaFormState)
   const [cardState, setCardState] = useState<CardFormState>(emptyCardFormState)
   const [error, setError] = useState<string | undefined>(undefined)
-  const [diagnostic, setDiagnostic] = useState<string | undefined>(undefined)
   const [saving, setSaving] = useState(false)
 
   function reportSaveFailure(
     stage: AddableKind,
     failure: { readonly code: string; readonly safeMetadata?: Record<string, unknown> },
   ): void {
-    const safeDiagnostic = { stage, code: failure.code, safeMetadata: failure.safeMetadata }
-    setDiagnostic(JSON.stringify(safeDiagnostic))
     if (__DEV__ && process.env.NODE_ENV !== 'test') {
+      const safeDiagnostic = { stage, code: failure.code, safeMetadata: failure.safeMetadata }
       // eslint-disable-next-line no-console -- Development-only obligation diagnostics; form values, user identity, credentials, and tokens are excluded.
       console.error('[obligation-create-debug] Save failed', safeDiagnostic)
     }
   }
 
   function reportValidationFailure(stage: AddableKind, validationKey: string): void {
-    const safeDiagnostic = { stage, validationKey }
-    setDiagnostic(JSON.stringify(safeDiagnostic))
     if (__DEV__ && process.env.NODE_ENV !== 'test') {
       // eslint-disable-next-line no-console -- Development-only validation diagnostics contain field category only, never entered values.
-      console.info('[obligation-create-debug] Validation failed', safeDiagnostic)
+      console.info('[obligation-create-debug] Validation failed', { stage, validationKey })
     }
   }
 
   async function handleSave() {
     if (!activeUser || kind === null) return
     setError(undefined)
-    setDiagnostic(undefined)
 
     if (kind === 'conventionalLoan') {
       const validationKey = validateLoanForm(loanState, true)
@@ -216,12 +211,7 @@ function AddObligationInner() {
             <Text variant="bodySmall" color="secondary">
               {t('obligationForm.pickKind')}
             </Text>
-            <View
-              style={[
-                styles.pickerList,
-                { backgroundColor: theme.bgElevated, borderColor: theme.border },
-              ]}
-            >
+            <NavGroup>
               <ListRow
                 onPress={() => setKind('conventionalLoan')}
                 leading={<Ionicons name="business-outline" size={20} color={theme.textSecondary} />}
@@ -245,7 +235,7 @@ function AddObligationInner() {
               >
                 <Text variant="body">{t('obligationKind.creditCard')}</Text>
               </ListRow>
-            </View>
+            </NavGroup>
           </View>
         ) : (
           <View style={styles.formGroup}>
@@ -274,11 +264,6 @@ function AddObligationInner() {
                 {error}
               </Text>
             )}
-            {__DEV__ && diagnostic !== undefined ? (
-              <Text variant="caption" color="secondary">
-                {`Debug: ${diagnostic}`}
-              </Text>
-            ) : null}
 
             <View style={styles.actions}>
               <Button
@@ -309,11 +294,6 @@ const styles = StyleSheet.create({
   },
   pickerGroup: {
     gap: space[3],
-  },
-  pickerList: {
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
   },
   formGroup: {
     gap: space[4],

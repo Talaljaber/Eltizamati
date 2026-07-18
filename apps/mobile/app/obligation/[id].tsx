@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { View, StyleSheet, ScrollView, Alert, I18nManager, Pressable } from 'react-native'
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -20,6 +20,9 @@ import {
   SectionHeader,
   ListRow,
   Amount,
+  NavRow,
+  NavGroup,
+  DangerZone,
 } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { deriveObligationStatus } from '@eltizamati/domain'
@@ -143,21 +146,6 @@ function ObligationDetailInner() {
     }
   }
 
-  function handleArchive() {
-    Alert.alert(
-      t('obligationDetail.archiveConfirmTitle'),
-      t('obligationDetail.archiveConfirmBody'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('obligationDetail.archiveConfirmAction'),
-          style: 'destructive',
-          onPress: () => void performArchive(),
-        },
-      ],
-    )
-  }
-
   async function performDelete() {
     setDeleting(true)
     const result = await obligationService.deleteObligation(obligation.id, repositories)
@@ -166,17 +154,6 @@ function ObligationDetailInner() {
       await queryClient.invalidateQueries()
       router.replace('/(tabs)/obligations')
     }
-  }
-
-  function handleDelete() {
-    Alert.alert(t('obligationDetail.deleteConfirmTitle'), t('obligationDetail.deleteConfirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('obligationDetail.deleteConfirmAction'),
-        style: 'destructive',
-        onPress: () => void performDelete(),
-      },
-    ])
   }
 
   return (
@@ -241,12 +218,7 @@ function ObligationDetailInner() {
         </View>
 
         {obligation.kind === 'conventionalLoan' ? (
-          <View
-            style={[
-              styles.navGroup,
-              { backgroundColor: theme.bgElevated, borderColor: theme.border },
-            ]}
-          >
+          <NavGroup>
             <NavRow
               icon="time-outline"
               label={t('loanDetail.navRateHistory', 'Rate History')}
@@ -277,13 +249,32 @@ function ObligationDetailInner() {
               label={t('obligationDetail.logRateChange')}
               onPress={() => router.push(`/obligation/${id}/log-rate`)}
             />
-          </View>
+          </NavGroup>
         ) : obligation.kind === 'murabaha' ? (
-          <MurabahaDetailSection
-            obligationId={obligation.id}
-            obligation={obligation}
-            progress={murabahaViewModel.progress}
-          />
+          <View style={styles.detailSection}>
+            <MurabahaDetailSection
+              obligationId={obligation.id}
+              obligation={obligation}
+              progress={murabahaViewModel.progress}
+            />
+            <NavGroup>
+              <NavRow
+                icon="calendar-outline"
+                label={t('loanDetail.navSchedule', 'Schedule')}
+                onPress={() => router.push(`/obligation/${id}/schedule`)}
+              />
+              <NavRow
+                icon="calculator-outline"
+                label={t('loanDetail.navScenario', 'Simulator')}
+                onPress={() => router.push(`/obligation/${id}/scenario`)}
+              />
+              <NavRow
+                icon="help-circle-outline"
+                label={t('loanDetail.navBankQuestions', 'Bank Questions')}
+                onPress={() => router.push(`/obligation/${id}/bank-questions`)}
+              />
+            </NavGroup>
+          </View>
         ) : obligation.kind === 'creditCard' ? (
           <View style={styles.detailSection}>
             <CardDetailSection obligation={obligation} />
@@ -339,38 +330,17 @@ function ObligationDetailInner() {
         <ObligationManageActions
           archiving={archiving}
           deleting={deleting}
-          onArchive={handleArchive}
-          onDelete={handleDelete}
+          onArchive={() => void performArchive()}
+          onDelete={() => void performDelete()}
         />
       </ScrollView>
     </SafeAreaView>
   )
 }
 
-export function NavRow({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap
-  label: string
-  onPress: () => void
-}) {
-  const theme = useTheme()
-  const chevronIcon: keyof typeof Ionicons.glyphMap = I18nManager.isRTL
-    ? 'chevron-back-outline'
-    : 'chevron-forward-outline'
-  return (
-    <ListRow
-      onPress={onPress}
-      accessibilityLabel={label}
-      leading={<Ionicons name={icon} size={20} color={theme.textSecondary} />}
-      trailing={<Ionicons name={chevronIcon} size={18} color={theme.textTertiary} />}
-    >
-      <Text variant="body">{label}</Text>
-    </ListRow>
-  )
-}
+// Re-exported for the existing obligation-detail test suite's import path;
+// the promoted primitive lives in the design system (DS-3 single-sourcing).
+export { NavRow }
 
 export function ObligationManageActions({
   archiving,
@@ -385,21 +355,34 @@ export function ObligationManageActions({
 }) {
   const { t } = useTranslation()
   return (
-    <View style={styles.dangerZone} testID="obligation-manage-actions">
-      <SectionHeader title={t('obligationDetail.manage', 'Manage')} />
-      <Button
-        label={t('obligationDetail.archive')}
-        variant="secondary"
-        onPress={onArchive}
-        loading={archiving}
-      />
-      <Button
-        label={t('obligationDetail.delete')}
-        variant="destructive"
-        onPress={onDelete}
-        loading={deleting}
-      />
-    </View>
+    <DangerZone
+      testID="obligation-manage-actions"
+      title={t('obligationDetail.manage', 'Manage')}
+      actions={[
+        {
+          label: t('obligationDetail.archive'),
+          variant: 'secondary',
+          loading: archiving,
+          onPress: onArchive,
+          confirm: {
+            title: t('obligationDetail.archiveConfirmTitle'),
+            body: t('obligationDetail.archiveConfirmBody'),
+            confirmLabel: t('obligationDetail.archiveConfirmAction'),
+          },
+        },
+        {
+          label: t('obligationDetail.delete'),
+          variant: 'destructive',
+          loading: deleting,
+          onPress: onDelete,
+          confirm: {
+            title: t('obligationDetail.deleteConfirmTitle'),
+            body: t('obligationDetail.deleteConfirmBody'),
+            confirmLabel: t('obligationDetail.deleteConfirmAction'),
+          },
+        },
+      ]}
+    />
   )
 }
 
@@ -442,17 +425,8 @@ const styles = StyleSheet.create({
   primaryActionItem: {
     flex: 1,
   },
-  navGroup: {
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-  },
   paymentHistory: {
     marginTop: space[4],
-  },
-  dangerZone: {
-    marginTop: space[6],
-    gap: space[3],
   },
   detailSection: { gap: space[4] },
 })

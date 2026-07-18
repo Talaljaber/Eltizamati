@@ -1,15 +1,15 @@
 /**
- * Obligations List Tab — Phase 5.
+ * Obligations List Tab.
  *
- * Lists all obligations for the user. Uses DemoBanner.
+ * Lists all obligations for the user, filterable by product family
+ * (All / Loans / Cards / Islamic). Uses DemoBanner.
  * Includes derived status mapping via StatusChip.
- *
- * Filters (All / Loans / Cards / Islamic) are visually present
- * but we just render "All" in Phase 5 for simplicity unless there's time.
  */
 
+type ObligationFilter = 'all' | 'loan' | 'card' | 'islamic'
+
 import { useEffect, useMemo, useState } from 'react'
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native'
+import { View, StyleSheet, FlatList, Pressable, RefreshControl } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -18,6 +18,7 @@ import {
   Text,
   space,
   radius,
+  minTouchTarget,
   useTheme,
   DemoBanner,
   SkeletonCard,
@@ -94,8 +95,7 @@ export default function ObligationsTab() {
   const queryError = activeUserError ?? obligationsError ?? paymentsError ?? insightsError
   const sessionRevoked = activeUserState.status === 'signedOut' || queryError?.code === 'auth'
 
-  // Minimal filter state (future extension)
-  const filter = 'all'
+  const [filter, setFilter] = useState<ObligationFilter>('all')
 
   const filteredData = useMemo(() => {
     if (data === undefined) return undefined
@@ -200,6 +200,7 @@ export default function ObligationsTab() {
         }
         ListHeaderComponent={
           <View style={styles.header}>
+            <ObligationFilterRow value={filter} onChange={setFilter} />
             <Text variant="bodySmall" color="secondary">
               {t('obligations.obligationCount', { count: filteredData.length })}
             </Text>
@@ -249,6 +250,52 @@ function ObligationsTerminalState({
       <DemoBanner visible={isDemoMode} testID="obligations-demo-banner" />
       <ErrorState state={toErrorUiState(error)} onRetry={onRetry} testID={testID} />
     </SafeAreaView>
+  )
+}
+
+const FILTER_LABEL_KEY: Record<ObligationFilter, string> = {
+  all: 'obligations.filterAll',
+  loan: 'obligations.filterLoan',
+  card: 'obligations.filterCard',
+  islamic: 'obligations.filterIslamic',
+}
+
+function ObligationFilterRow({
+  value,
+  onChange,
+}: {
+  value: ObligationFilter
+  onChange: (filter: ObligationFilter) => void
+}) {
+  const { t } = useTranslation()
+  const theme = useTheme()
+  const filters: readonly ObligationFilter[] = ['all', 'loan', 'card', 'islamic']
+
+  return (
+    <View style={styles.filterRow} testID="obligations-filter-row">
+      {filters.map((filterValue) => {
+        const selected = filterValue === value
+        const label = t(FILTER_LABEL_KEY[filterValue])
+        return (
+          <Pressable
+            key={filterValue}
+            onPress={() => onChange(filterValue)}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityState={{ selected }}
+            testID={`obligations-filter-${filterValue}`}
+            style={[
+              styles.filterChip,
+              { backgroundColor: selected ? theme.brand : theme.bgSubtle },
+            ]}
+          >
+            <Text variant="bodySmall" color={selected ? 'onBrand' : 'secondary'}>
+              {label}
+            </Text>
+          </Pressable>
+        )
+      })}
+    </View>
   )
 }
 
@@ -352,6 +399,17 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: space[4],
     paddingVertical: space[3],
+    gap: space[3],
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: space[2],
+  },
+  filterChip: {
+    minHeight: minTouchTarget,
+    justifyContent: 'center',
+    borderRadius: radius.full,
+    paddingHorizontal: space[3],
   },
   iconBox: {
     width: 40,

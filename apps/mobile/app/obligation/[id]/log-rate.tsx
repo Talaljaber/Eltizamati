@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Text, Button, TextField, space } from '@/core/design-system'
+import { Text, Button, TextField, SkeletonCard, InlineState, space } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
@@ -66,7 +66,7 @@ function LogRateChangeInner() {
   if (isLoading || !obligation) {
     return (
       <View style={styles.loading}>
-        <Text variant="body">{t('common.loading')}</Text>
+        <SkeletonCard />
       </View>
     )
   }
@@ -74,9 +74,7 @@ function LogRateChangeInner() {
   if (obligation.kind !== 'conventionalLoan') {
     return (
       <View style={styles.loading}>
-        <Text variant="body" color="secondary">
-          {t('obligationForm.rateChangeNotApplicable')}
-        </Text>
+        <InlineState kind="unsupported" message={t('obligationForm.rateChangeNotApplicable')} />
       </View>
     )
   }
@@ -127,8 +125,7 @@ const styles = StyleSheet.create({
   },
   loading: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: space[4],
   },
   actions: {
     flexDirection: 'row',
