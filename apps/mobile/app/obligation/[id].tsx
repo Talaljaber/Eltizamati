@@ -9,7 +9,9 @@ import {
   Text,
   space,
   radius,
+  layout,
   useTheme,
+  useResponsiveLayout,
   DemoBanner,
   SkeletonCard,
   StatusChip,
@@ -78,6 +80,7 @@ function ObligationDetailInner() {
   const theme = useTheme()
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
+  const { isWideWeb } = useResponsiveLayout()
 
   const viewModel = useLoanDetailViewModel(id as Id<'obligation'>)
   const insightsViewModel = useInsightsViewModel(id as Id<'obligation'>)
@@ -178,7 +181,7 @@ function ObligationDetailInner() {
       />
       {isDemo && <DemoBanner />}
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
         <View style={styles.header}>
           <View style={[styles.kindIcon, { backgroundColor: theme.bgSubtle }]}>
             <Ionicons
@@ -401,6 +404,11 @@ const styles = StyleSheet.create({
     padding: space[4],
     gap: space[6],
     paddingBottom: space[8],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.contentMaxWidth,
+    alignSelf: 'center',
   },
   header: {
     alignItems: 'center',
