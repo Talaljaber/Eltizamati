@@ -12,6 +12,7 @@ import {
   Amount,
   ExplainLink,
   InlineState,
+  InsightBanner,
 } from '@/core/design-system'
 import { useRateImpactViewModel } from '@/features/rate-impact/hooks/use-rate-impact-view-model'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
@@ -49,10 +50,41 @@ export default function RateImpactScreen() {
               <Text variant="heading">{t('rateImpact.summary')}</Text>
             </View>
 
+            {viewModel.currentRatePercent !== undefined && (
+              <FieldRow
+                label={t('rateImpact.appliedRate')}
+                value={
+                  viewModel.previousRatePercent === undefined
+                    ? `${viewModel.currentRatePercent}%`
+                    : `${viewModel.previousRatePercent}% → ${viewModel.currentRatePercent}%`
+                }
+              />
+            )}
+
+            {viewModel.projectedRemainingPayable !== undefined &&
+              viewModel.projectionRun !== undefined && (
+                <FieldRow
+                  label={t('rateImpact.projectedRemainingPayable')}
+                  value={
+                    <Amount
+                      money={Money.of(viewModel.projectedRemainingPayable, 'JOD')}
+                      provenance={
+                        engineEstimate(
+                          Money.of(viewModel.projectedRemainingPayable, 'JOD'),
+                          viewModel.projectionRun.id,
+                          viewModel.projectionRun.calculatedAt,
+                        ).provenance
+                      }
+                      precision="estimate"
+                    />
+                  }
+                />
+              )}
+
             <FieldRow
               label={t('rateImpact.hasResidual')}
               value={viewModel.hasResidual ? t('common.yes') : t('common.no')}
-              valueColor={viewModel.hasResidual ? 'critical' : 'positive'}
+              valueColor={viewModel.hasResidual ? 'secondary' : 'positive'}
             />
 
             {viewModel.hasResidual && viewModel.residualAmount !== undefined && (
@@ -91,6 +123,12 @@ export default function RateImpactScreen() {
                   )}
                 </View>
 
+                <InsightBanner
+                  severity="attention"
+                  title={t('rateImpact.scheduleReviewTitle')}
+                  body={t('rateImpact.scheduleReviewNotice')}
+                />
+
                 {viewModel.residualCauses.length > 0 && (
                   <View style={styles.causes}>
                     <Text variant="bodySmall" color="secondary">
@@ -109,9 +147,30 @@ export default function RateImpactScreen() {
             <View style={styles.addedCostRow}>
               <FieldRow
                 label={t('rateImpact.addedCost')}
-                value={viewModel.addedCostAvailable ? '' : t('rateImpact.addedCostPending')}
+                value={
+                  viewModel.addedCostAvailable && viewModel.addedCostAmount !== undefined ? (
+                    <Amount
+                      money={Money.of(viewModel.addedCostAmount, 'JOD')}
+                      provenance={
+                        engineEstimate(
+                          Money.of(viewModel.addedCostAmount, 'JOD'),
+                          viewModel.addedCostCalculationRunId ?? '',
+                          viewModel.addedCostCalculatedAt ?? '',
+                        ).provenance
+                      }
+                      precision="estimate"
+                    />
+                  ) : (
+                    t('rateImpact.addedCostPending')
+                  )
+                }
                 valueColor="secondary"
               />
+              <Text variant="caption" color="secondary">
+                {viewModel.addedCostAvailable
+                  ? t('rateImpact.addedCostEstimateDetail')
+                  : t('rateImpact.addedCostPendingDetail')}
+              </Text>
             </View>
           </Card>
         )}
@@ -151,5 +210,6 @@ const styles = StyleSheet.create({
   },
   addedCostRow: {
     marginTop: space[4],
+    gap: space[1],
   },
 })

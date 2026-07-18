@@ -14,6 +14,11 @@ import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotMoneyAmount, snapshotArray } from '@/services/calculation-snapshot'
 import { calculationAsOf } from '@/services/calculation-as-of'
 import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
+import {
+  applicableRatePeriods,
+  projectedRemainingPayable,
+  rateHistoryFingerprint,
+} from '../projection-display'
 
 export interface RateImpactViewModel {
   status: 'loading' | 'error' | 'unsupported' | 'refused' | 'success'
@@ -24,11 +29,16 @@ export interface RateImpactViewModel {
   residualCauses: readonly ResidualCause[]
   residualCalculationRunId?: string
   residualCalculatedAt?: string
-  /** TV-305 (added total cost from repricing) is PENDING-FINANCE — no signed
-   * formula output exists yet, so this stays false until finance sign-off
-   * lands; the UI must show an honest "pending" state, never a fabricated
-   * number (AI_AGENT_RULES). */
+  /** TV-305's exact figure remains PENDING-FINANCE (calculation-test-vectors.md)
+   * — this estimate ships at 'medium' confidence, never 'official', and the UI
+   * must label it as an estimate pending finance sign-off, never a final number. */
   addedCostAvailable: boolean
+  addedCostAmount?: string
+  addedCostCalculationRunId?: string
+  addedCostCalculatedAt?: string
+  currentRatePercent?: string
+  previousRatePercent?: string
+  projectedRemainingPayable?: string
 }
 
 export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpactViewModel {
@@ -58,6 +68,8 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
       return res.value
     },
     enabled: !!obligation,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   const canRunProjection = !!activeUser && obligation?.kind === 'conventionalLoan' && !!ratePeriods
@@ -65,9 +77,10 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
     typeof repos.reset === 'function' ? 'demo' : 'personal',
     personalAsOf,
   )
+  const rateFingerprint = rateHistoryFingerprint(ratePeriods)
 
   const { data: projectionRun, isError: isProjError } = useQuery({
-    queryKey: ['projection', obligationId, activeUser, asOf],
+    queryKey: ['projection', obligationId, activeUser, asOf, rateFingerprint],
     queryFn: async (): Promise<CalculationRun> => {
       if (!activeUser || obligation?.kind !== 'conventionalLoan' || !ratePeriods) {
         throw new DomainInvariantError(
@@ -104,6 +117,15 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
           snapshotRecord(projectionRun.outcome.resultSnapshot).projectedResidualAtMaturity,
         )
       : undefined
+  const projectionSnapshot =
+    projectionRun?.outcome.kind === 'result'
+      ? snapshotRecord(projectionRun.outcome.resultSnapshot)
+      : undefined
+  const remainingPayable =
+    projectionSnapshot !== undefined && obligation?.kind === 'conventionalLoan'
+      ? projectedRemainingPayable(projectionSnapshot, obligation.currency, asOf)
+      : undefined
+  const applicableRates = applicableRatePeriods(ratePeriods, asOf)
 
   // BR-CALC-012/013: residualDetection reports *why* a residual exists
   // (contractual balloon vs a rate-increase-driven detection) instead of a
@@ -162,7 +184,45 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
     enabled: canRunResidualDetection,
   })
 
-  if (isOblError || isProjError || isResidualError) {
+  const canRunAddedCost =
+    !!activeUser && obligation?.kind === 'conventionalLoan' && !!ratePeriods
+
+  const { data: addedCostRun, isError: isAddedCostError } = useQuery({
+    queryKey: ['addedCostFromRepricing', obligationId, activeUser, asOf, rateFingerprint],
+    queryFn: async (): Promise<CalculationRun> => {
+      if (!activeUser || obligation?.kind !== 'conventionalLoan' || !ratePeriods) {
+        throw new DomainInvariantError(
+          'unexpected',
+          'addedCostFromRepricing query ran while enabled gate was false',
+        )
+      }
+      const result = await calcService.runCalculation(
+        activeUser,
+        obligationId,
+        'addedCostFromRepricing',
+        1,
+        {
+          principal: obligation.loanDetails.originalPrincipal.value,
+          ratePeriods,
+          termMonths: obligation.loanDetails.termMonths.value,
+          startDate: obligation.loanDetails.startDate,
+          installment: obligation.loanDetails.installment.value,
+          asOf,
+        },
+        asOf,
+      )
+
+      if (!result.ok) throw result.error
+      return result.value
+    },
+    enabled: canRunAddedCost,
+  })
+
+  const addedCostSnapshot =
+    addedCostRun?.outcome.kind === 'result' ? snapshotRecord(addedCostRun.outcome.resultSnapshot) : undefined
+  const addedCostAmount = snapshotMoneyAmount(addedCostSnapshot?.addedTotalCost)
+
+  if (isOblError || isProjError || isResidualError || isAddedCostError) {
     return { status: 'error', hasResidual: false, residualCauses: [], addedCostAvailable: false }
   }
 
@@ -227,6 +287,12 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
     residualCauses,
     residualCalculationRunId: residualRun?.id,
     residualCalculatedAt: residualRun?.calculatedAt,
-    addedCostAvailable: false,
+    addedCostAvailable: addedCostAmount !== undefined,
+    addedCostAmount,
+    addedCostCalculationRunId: addedCostRun?.id,
+    addedCostCalculatedAt: addedCostRun?.calculatedAt,
+    currentRatePercent: applicableRates[0]?.annualRate.toPercent().toFixed(3),
+    previousRatePercent: applicableRates[1]?.annualRate.toPercent().toFixed(3),
+    projectedRemainingPayable: remainingPayable?.toStorageString(),
   }
 }
