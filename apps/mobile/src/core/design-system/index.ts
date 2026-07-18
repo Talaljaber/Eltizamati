@@ -8,10 +8,14 @@ export {
   motion,
   motionDuration,
   minTouchTarget,
+  breakpoints,
+  layout,
 } from './tokens'
 export type { ColorScheme, TypographyVariant, ElevationLevel } from './tokens'
 export { resolveElevation } from './use-elevation'
 export { useReducedMotion } from './use-reduced-motion'
+export { useResponsiveLayout, resolveResponsiveLayout } from './use-responsive-layout'
+export type { ResponsiveLayout } from './use-responsive-layout'
 export { resolveFontFamily, fontFamilyConfig, fontRoleForWeight, FONTS_AVAILABLE } from './fonts'
 export type { FontScript, FontRole } from './fonts'
 export { useTheme } from './use-theme'
@@ -69,3 +73,8 @@ export { InlineState } from './primitives/InlineState'
 export type { InlineStateProps, InlineStateKind } from './primitives/InlineState'
 export { DangerZone } from './primitives/DangerZone'
 export type { DangerZoneProps, DangerZoneAction, DangerZoneConfirm } from './primitives/DangerZone'
+// Web-responsive primitives
+export { PageContent } from './primitives/PageContent'
+export type { PageContentProps } from './primitives/PageContent'
+export { ResponsiveGrid } from './primitives/ResponsiveGrid'
+export type { ResponsiveGridProps } from './primitives/ResponsiveGrid'

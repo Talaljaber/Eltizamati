@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { space } from '../tokens'
 import { useTheme } from '../use-theme'
+import { PageContent } from './PageContent'
 
 export interface ScreenProps {
   readonly children: ReactNode
@@ -17,6 +18,12 @@ export interface ScreenProps {
    * are unaffected; new/redesigned screens pass a scale index directly.
    */
   readonly gap?: keyof typeof space
+  /**
+   * Opt-in wide-web centering, folded in via `PageContent` (undefined = no
+   * change, today's full-bleed gutter on every platform). Pass `'content'`
+   * for dashboards/grids or `'readable'` for forms/detail/text screens.
+   */
+  readonly maxWidth?: 'content' | 'readable'
   readonly testID?: string
 }
 
@@ -30,11 +37,14 @@ export function Screen({
   loading = false,
   skeleton,
   gap,
+  maxWidth,
   testID,
 }: ScreenProps) {
   const theme = useTheme()
   const content = loading ? (skeleton ?? children) : children
   const gutterStyle = [styles.gutter, gap !== undefined ? { gap: space[gap] } : undefined]
+  const body =
+    maxWidth !== undefined ? <PageContent maxWidth={maxWidth}>{content}</PageContent> : content
 
   return (
     <SafeAreaView
@@ -44,10 +54,10 @@ export function Screen({
     >
       {scroll ? (
         <ScrollView contentContainerStyle={gutterStyle} showsVerticalScrollIndicator={false}>
-          {content}
+          {body}
         </ScrollView>
       ) : (
-        <View style={gutterStyle}>{content}</View>
+        <View style={gutterStyle}>{body}</View>
       )}
     </SafeAreaView>
   )

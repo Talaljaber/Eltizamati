@@ -278,3 +278,20 @@ export function motionDuration(ms: number, reducedMotion: boolean): number {
 // ─── Touch targets (a11y) ──────────────────────────────────────────────────
 
 export const minTouchTarget = 44
+
+// ─── Responsive layout (web) ──────────────────────────────────────────────
+//
+// Native and narrow web render exactly as before — these tokens are only
+// consumed behind an `isWideWeb` check (see `use-responsive-layout.ts`).
+
+export const breakpoints = {
+  sm: 480,
+  md: 768,
+  lg: 1024,
+} as const
+
+export const layout = {
+  sidebarWidth: 264,
+  contentMaxWidth: 1120,
+  readableMaxWidth: 760,
+} as const
