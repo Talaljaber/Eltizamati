@@ -31,6 +31,11 @@ skills-lock.json
 apps/mobile/app/**/*.d.ts
 apps/mobile/src/**/*.d.ts
 packages/*/vitest.config.d.ts
+# Exception: hand-authored ambient module shim (react-dom has no bundled
+# types and this RN app doesn't carry @types/react-dom) — must be a real
+# .d.ts (TS only allows fresh ambient `declare module` there, not in a
+# plain .ts file, which is treated as an augmentation of the untyped module).
+!apps/mobile/src/core/design-system/primitives/react-dom-shim.d.ts
 
 # Test coverage output
 coverage/

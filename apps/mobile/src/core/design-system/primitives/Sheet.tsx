@@ -1,4 +1,4 @@
-import { View, StyleSheet, Modal, Platform, TouchableWithoutFeedback, type ViewStyle } from 'react-native'
+import { View, StyleSheet, Modal, TouchableWithoutFeedback } from 'react-native'
 import { Text } from './Text'
 import { space, radius } from '../tokens'
 import { useTheme } from '../use-theme'
@@ -12,19 +12,10 @@ export interface SheetProps {
 }
 
 /**
- * `position: 'fixed'` isn't in React Native's `ViewStyle` type (native has no
- * such concept), but react-native-web compiles it straight to CSS — this is
- * a web-only style, hence the cast.
+ * Native only — see `Sheet.web.tsx` for the web implementation. RN's `Modal`
+ * has recurring focus-handling bugs on react-native-web, so web renders a
+ * portal instead rather than going through this file at all.
  */
-const webOverlayRootStyle = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  zIndex: 1000,
-} as unknown as ViewStyle
-
 export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const theme = useTheme()
   // Raw keyboard-height tracking (not KeyboardAvoidingView — unreliable inside
@@ -32,37 +23,26 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
   // scrollable search results inside it, pinned above the keyboard.
   const keyboardHeight = useKeyboardHeight()
 
-  const content = (
-    <View style={styles.container}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay} />
-      </TouchableWithoutFeedback>
-      <View style={[styles.sheet, { backgroundColor: theme.bgElevated, bottom: keyboardHeight }]}>
-        <View style={styles.handleContainer}>
-          <View style={[styles.handle, { backgroundColor: theme.border }]} />
-        </View>
-        {title !== undefined && title !== '' && (
-          <View style={{ marginBottom: 16 }}>
-            <Text variant="heading">{title}</Text>
-          </View>
-        )}
-        <View style={styles.content}>{children}</View>
-      </View>
-    </View>
-  )
-
-  // RN's `Modal` renders through a native/portal layer that react-native-web
-  // has recurring focus-handling bugs with — text inputs inside it can lose
-  // keystrokes on web. A plain fixed-position overlay sidesteps that whole
-  // class of bug and needs no native modal semantics in a browser anyway.
-  if (Platform.OS === 'web') {
-    if (!visible) return null
-    return <View style={webOverlayRootStyle}>{content}</View>
-  }
-
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      {content}
+      <View style={styles.container}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.overlay} />
+        </TouchableWithoutFeedback>
+        <View
+          style={[styles.sheet, { backgroundColor: theme.bgElevated, bottom: keyboardHeight }]}
+        >
+          <View style={styles.handleContainer}>
+            <View style={[styles.handle, { backgroundColor: theme.border }]} />
+          </View>
+          {title !== undefined && title !== '' && (
+            <View style={{ marginBottom: 16 }}>
+              <Text variant="heading">{title}</Text>
+            </View>
+          )}
+          <View style={styles.content}>{children}</View>
+        </View>
+      </View>
     </Modal>
   )
 }
