@@ -65,6 +65,10 @@ export default function LearnAssistantScreen() {
     const request = createLearningAssistantRequest({
       question,
       language: i18n.language.startsWith('ar') ? 'ar' : 'en',
+      // Snapshot of the conversation so far (not yet including this new
+      // question) — createLearningAssistantRequest caps this to the last 15
+      // turns; the server independently re-validates and re-caps it too.
+      history: messages.map((message) => ({ role: message.role, text: message.text })),
     })
     if (request.question.length === 0) return
     setMessages((current) => [

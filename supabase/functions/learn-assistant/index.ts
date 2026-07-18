@@ -1,7 +1,37 @@
+import { CATALOGUE_SOURCE_IDS, renderCataloguePromptSection } from './catalogue-snapshot.ts'
+
+type HistoryTurn = { role: 'user' | 'assistant'; text: string }
+
 type AssistantRequest = {
   question: string
   language: 'ar' | 'en'
   comparison?: { productIds: string[]; sourceIds: string[] } | null
+  /** Prior turns for conversational context — validated/capped server-side below;
+   * never trust the client's own truncation or content. */
+  history?: HistoryTurn[]
+}
+
+const MAX_HISTORY_TURNS = 15
+const MAX_HISTORY_TEXT_LENGTH = 2000
+
+function sanitizeHistory(history: unknown): HistoryTurn[] {
+  if (!Array.isArray(history)) return []
+  const valid: HistoryTurn[] = []
+  for (const turn of history) {
+    if (
+      typeof turn === 'object' &&
+      turn !== null &&
+      (turn as { role?: unknown }).role !== undefined &&
+      ((turn as { role?: unknown }).role === 'user' ||
+        (turn as { role?: unknown }).role === 'assistant') &&
+      typeof (turn as { text?: unknown }).text === 'string' &&
+      (turn as { text: string }).text.length > 0
+    ) {
+      const t = turn as HistoryTurn
+      valid.push({ role: t.role, text: t.text.slice(0, MAX_HISTORY_TEXT_LENGTH) })
+    }
+  }
+  return valid.slice(-MAX_HISTORY_TURNS)
 }
 
 type AssistantResponse = {
@@ -107,7 +137,10 @@ async function handle(request: Request): Promise<Response> {
   const apiKey = Deno.env.get('OPENROUTER_API_KEY') ?? Deno.env.get('OPENAI_API_KEY')
   if (!apiKey) return Response.json(unavailable(), { status: 503, headers: cors })
 
-  const instructions = `You are Eltizamati's bilingual financial education assistant for Jordan. Explain general financing concepts in ${body.language}. You are not a financial advisor. Do not claim eligibility, approval, the best bank, guaranteed savings, or current bank terms. Do not invent rates, fees, institutions, legal rights, product facts, or citations. If a question needs institution-specific facts, say that verified catalogue data is unavailable and suggest questions for the institution. Return JSON only matching the requested schema.`
+  const instructions = `You are Eltizamati's bilingual financial education assistant for Jordan. Explain general financing concepts in ${body.language}. You are not a financial advisor. Do not claim eligibility, approval, the best bank, guaranteed savings, or current bank terms. Do not invent rates, fees, institutions, legal rights, product facts, or citations — the only institution/product facts you may state as confirmed are the ones in the verified catalogue below. Return JSON only matching the requested schema.
+
+${renderCataloguePromptSection()}`
+  const history = sanitizeHistory(body.history)
   const requestBody = {
     model,
     // Some models format their JSON output with generous whitespace (one
@@ -117,6 +150,7 @@ async function handle(request: Request): Promise<Response> {
     max_tokens: 900,
     messages: [
       { role: 'system', content: instructions },
+      ...history.map((turn) => ({ role: turn.role, content: turn.text })),
       { role: 'user', content: body.question },
     ],
     response_format: {
@@ -237,14 +271,19 @@ async function handle(request: Request): Promise<Response> {
     )
   }
   const parsed = parsedUnknown
-  if (!parsed.sourceIds.every((id) => body.comparison?.sourceIds.includes(id) ?? false)) {
-    // Grounding guard: the model cited a source id that wasn't part of the
-    // request's retrieved sourceIds (or cited any id at all when there was
-    // no comparison context, since body.comparison is then null). Log what
-    // it actually cited so an over-eager model is visible, not just a 502.
+  // Grounding guard: the model may only cite the request's retrieved
+  // comparison sourceIds, if any, plus the verified catalogue ids that were
+  // actually injected into its system prompt above — never anything else.
+  const allowedSourceIds: readonly string[] = [
+    ...(body.comparison?.sourceIds ?? []),
+    ...CATALOGUE_SOURCE_IDS,
+  ]
+  if (!parsed.sourceIds.every((id) => allowedSourceIds.includes(id))) {
+    // Log what it actually cited so an over-eager model is visible, not
+    // just a bare 502.
     console.error('learn-assistant: rejected ungrounded sourceIds', {
       citedSourceIds: parsed.sourceIds,
-      allowedSourceIds: body.comparison?.sourceIds ?? [],
+      allowedSourceIds,
     })
     return Response.json(unavailable(), { status: 502, headers: cors })
   }

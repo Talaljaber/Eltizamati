@@ -15,7 +15,23 @@ describe('createLearningAssistantRequest', () => {
       question: 'What fees should I check?',
       language: 'en',
       comparison: { productIds: ['hbtf-automated-personal'], sourceIds: ['hbtf-rates-2026'] },
+      history: [],
     })
+  })
+
+  it('history: caps to the last 15 turns', () => {
+    const history = Array.from({ length: 20 }, (_, i) => ({
+      role: i % 2 === 0 ? ('user' as const) : ('assistant' as const),
+      text: `turn ${i}`,
+    }))
+    const payload = createLearningAssistantRequest({
+      question: 'Next question',
+      language: 'en',
+      history,
+    })
+    expect(payload.history).toHaveLength(15)
+    expect(payload.history[0]).toEqual({ role: 'assistant', text: 'turn 5' })
+    expect(payload.history[14]).toEqual({ role: 'assistant', text: 'turn 19' })
   })
 
   it('grounding: rejects unsupported numbers and source IDs', () => {
