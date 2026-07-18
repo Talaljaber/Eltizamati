@@ -2,6 +2,42 @@
 
 > Read this first, then the active phase file. Update this file at every session end and every phase state change. Pre-plan history: [status-m0-session-log.md](status-m0-session-log.md) (the mid-M0 session log) and (independent audit, 2026-07-11). Master plan: [IMPLEMENTATION_PLAN.md](../08-delivery/IMPLEMENTATION_PLAN.md).
 
+## 2026-07-17 addendum — repository position corrected to `main` @ `0363bb3` (this file was behind code)
+
+A final-review pass found this file describing a repository state that no longer matches the code.
+Corrections (see [audits/FINAL-REVIEW-REPORT.md](audits/FINAL-REVIEW-REPORT.md) for the full pass):
+
+- **Branch/head:** the integrated line is now local **`main` @ `0363bb3`**, in sync with `origin/main`.
+  The `feature/dashboard`, `feature/learn-intelligence`, `phase6-finance-engine`, and `ui-implementation`
+  branches are **all merged into `main`** — no branch convergence remains. The older references below
+  to `phase6-finance-engine` as "the working branch" and to remote `main` @ `7477aa8` are superseded.
+- **Auth model:** the shipping implementation is **password sign-up/sign-in with a six-digit
+  Confirm-signup code for new registrations only** ([ADR-0019](../09-decisions/ADR-0019-password-auth-with-signup-email-verification.md);
+  `supabase-auth-service.ts` uses `signInWithPassword` / `signUp` / `verifyOtp` / `resend`). The
+  2026-07-15 "historical addendum — superseded OTP-only implementation" below describes **ADR-0018,
+  which is NOT what ships** — kept only as history; do not read it as current behavior.
+- **Scope merged since this file was last accurate:** the **Bank Simulator Dashboard**
+  (`apps/bank-simulator-dashboard`), the **Learn-intelligence** feature (mobile Learn + the
+  `learn-assistant` Edge Function, OpenAI-backed, key server-side only), and an entirely new
+  **loan-application feature** (mobile "Apply for a loan" tab + application history, dashboard review
+  queue, the `demo_decide_loan_application` RPC, and migrations through
+  `20260717050000_fix_loan_application_outstanding_balance.sql`). **The loan-application feature has no
+  phase/spec doc yet — one should be written.**
+- **Local gate (2026-07-17):** `typecheck` clean; `test:packages` green; `test:app` 70 suites / 370
+  tests; `test:dashboard` 14 files / 74 tests. `lint`/`format:check`/`depcruise` not re-run in that
+  pass. The mobile suite still emits a non-fatal "worker failed to exit gracefully" warning
+  (`--detectOpenHandles --runInBand` reports no attributable handle — a worker-pool teardown artifact,
+  same class as the finance-engine flake).
+- **Phase 9 release engineering is NOT STARTED in the repo:** no Sentry dependency, no Maestro flows,
+  no `eas.json`, no Sentry/EAS config in `app.json`. Crash reporting, E2E, and a preview-APK pipeline
+  must be built before a final go/no-go. Physical-device, hosted-Supabase, and human-Arabic evidence
+  also remain outstanding (owner actions).
+- **Dashboard deployment note:** the dashboard is a deliberately **no-authentication** demo tool that
+  refuses to boot under `NODE_ENV=production` unless `DEMO_DASHBOARD_ALLOW_REMOTE=true`. It is wired
+  for Netlify. If that flag is set for a public URL, the tool is an unauthenticated admin surface over
+  real allowlisted users — put it behind Netlify access control or only enable it during the live demo
+  window. Owner decision, not a code defect.
+
 ## 2026-07-15 addendum — Password auth with first-time signup verification
 
 [ADR-0019](../09-decisions/ADR-0019-password-auth-with-signup-email-verification.md) supersedes
