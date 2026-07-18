@@ -3,7 +3,15 @@ import { StyleSheet, View } from 'react-native'
 import { Redirect, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Button, ErrorState, Text, space, useTheme } from '@/core/design-system'
+import {
+  Button,
+  ErrorState,
+  Text,
+  space,
+  layout,
+  useTheme,
+  useResponsiveLayout,
+} from '@/core/design-system'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
 import { useAuthService } from '@/features/auth/hooks/use-auth-service'
@@ -36,6 +44,7 @@ export default function VerifyCodeScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
+  const { isWideWeb } = useResponsiveLayout()
   const attempt = useOtpAttempt()
   const authService = useAuthService()
   const { completePersonalEntry, resumePersonalEntry } = useEntryCompletion()
@@ -153,7 +162,7 @@ export default function VerifyCodeScreen() {
           testID="verify-code-offline"
         />
       ) : (
-        <DismissKeyboardView style={styles.content}>
+        <DismissKeyboardView style={[styles.content, isWideWeb && styles.contentWide]}>
           <View style={styles.header}>
             <Text variant="title" align="center">
               {t('auth.verifyCodeTitle')}
@@ -275,6 +284,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[6],
     paddingVertical: space[6],
   },
+  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
   header: { gap: space[3] },
   form: { gap: space[3] },
   entryError: { gap: space[2] },

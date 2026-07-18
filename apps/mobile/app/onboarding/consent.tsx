@@ -10,13 +10,23 @@ import { View, StyleSheet, Pressable } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Text, Button, space, useTheme, radius, minTouchTarget } from '@/core/design-system'
+import {
+  Text,
+  Button,
+  space,
+  layout,
+  useTheme,
+  useResponsiveLayout,
+  radius,
+  minTouchTarget,
+} from '@/core/design-system'
 import { acknowledgeLocalConsent } from '@/features/consent/consent-policy'
 import { useEntryCompletion } from '@/features/consent/hooks/use-entry-completion'
 
 export default function ConsentScreen() {
   const { t, i18n } = useTranslation()
   const theme = useTheme()
+  const { isWideWeb } = useResponsiveLayout()
   const [acknowledged, setAcknowledged] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
@@ -47,7 +57,7 @@ export default function ConsentScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
-      <View style={styles.content}>
+      <View style={[styles.content, isWideWeb && styles.contentWide]}>
         <View style={styles.header}>
           <Text variant="display" align="center">
             {'⚠️'}
@@ -135,6 +145,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space[6],
   },
+  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
   header: {
     alignItems: 'center',
     gap: space[3],

@@ -3,7 +3,15 @@ import { StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Button, ErrorState, Text, space, useTheme } from '@/core/design-system'
+import {
+  Button,
+  ErrorState,
+  Text,
+  space,
+  layout,
+  useTheme,
+  useResponsiveLayout,
+} from '@/core/design-system'
 import { useSignUpMutation } from '@/features/auth/api/use-auth-mutations'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
@@ -25,6 +33,7 @@ export default function SignUpScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
+  const { isWideWeb } = useResponsiveLayout()
   const signUp = useSignUpMutation(useAuthService())
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -77,7 +86,7 @@ export default function SignUpScreen() {
       {offline ? (
         <ErrorState state={{ kind: 'offline' }} onRetry={() => void submit()} />
       ) : (
-        <DismissKeyboardView style={styles.content}>
+        <DismissKeyboardView style={[styles.content, isWideWeb && styles.contentWide]}>
           <Text variant="title" align="center">
             {t('auth.signUpTitle')}
           </Text>
@@ -175,11 +184,7 @@ export default function SignUpScreen() {
               onPress={() => void submit()}
               testID="sign-up-submit"
             />
-            <Button
-              variant="ghost"
-              label={t('auth.backToSignIn')}
-              onPress={() => router.back()}
-            />
+            <Button variant="ghost" label={t('auth.backToSignIn')} onPress={() => router.back()} />
           </View>
         </DismissKeyboardView>
       )}
@@ -190,6 +195,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { flexGrow: 1, justifyContent: 'center', gap: space[5], padding: space[6] },
+  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
   form: { gap: space[3] },
   phoneRow: { flexDirection: 'row', gap: space[2], alignItems: 'flex-end' },
   phoneInput: { flex: 1 },

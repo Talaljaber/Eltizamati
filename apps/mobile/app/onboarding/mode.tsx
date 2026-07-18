@@ -16,12 +16,22 @@ import { View, StyleSheet, Pressable, ActivityIndicator } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Text, Button, space, useTheme, radius, minTouchTarget } from '@/core/design-system'
+import {
+  Text,
+  Button,
+  space,
+  layout,
+  useTheme,
+  useResponsiveLayout,
+  radius,
+  minTouchTarget,
+} from '@/core/design-system'
 import { useEntryCompletion } from '@/features/consent/hooks/use-entry-completion'
 
 export default function ModeScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
+  const { isWideWeb } = useResponsiveLayout()
   const [loading, setLoading] = useState(false)
   const [completionFailed, setCompletionFailed] = useState(false)
   const { completeDemoEntry } = useEntryCompletion()
@@ -42,7 +52,7 @@ export default function ModeScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
-      <View style={styles.content}>
+      <View style={[styles.content, isWideWeb && styles.contentWide]}>
         <View style={styles.header}>
           <Text variant="title" align="center">
             {t('onboarding.modeTitle')}
@@ -186,6 +196,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space[6],
   },
+  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
   header: {
     alignItems: 'center',
   },

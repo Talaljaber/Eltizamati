@@ -3,7 +3,15 @@ import { Alert, Image, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Button, ErrorState, Text, space, useTheme } from '@/core/design-system'
+import {
+  Button,
+  ErrorState,
+  Text,
+  space,
+  layout,
+  useTheme,
+  useResponsiveLayout,
+} from '@/core/design-system'
 import { useSignInMutation } from '@/features/auth/api/use-auth-mutations'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
@@ -17,6 +25,7 @@ export default function SignInScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
+  const { isWideWeb } = useResponsiveLayout()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [validationError, setValidationError] = useState(false)
@@ -70,7 +79,7 @@ export default function SignInScreen() {
           testID="sign-in-offline"
         />
       ) : (
-        <DismissKeyboardView style={styles.content}>
+        <DismissKeyboardView style={[styles.content, isWideWeb && styles.contentWide]}>
           <View style={styles.top}>
             <Image
               source={logo}
@@ -173,6 +182,7 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { flex: 1, justifyContent: 'space-between', padding: space[6] },
+  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
   top: { gap: space[4] },
   logo: { width: 152, height: 64, alignSelf: 'center' },
   form: { gap: space[3] },

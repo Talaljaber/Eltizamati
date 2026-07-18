@@ -6,15 +6,16 @@ import { View, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Text, Button, space, useTheme } from '@/core/design-system'
+import { Text, Button, space, layout, useTheme, useResponsiveLayout } from '@/core/design-system'
 
 export default function IntroScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
+  const { isWideWeb } = useResponsiveLayout()
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
-      <View style={styles.content}>
+      <View style={[styles.content, isWideWeb && styles.contentWide]}>
         <View style={styles.hero}>
           {/* Illustration placeholder — Phase 9 polish */}
           <Text variant="display" align="center">
@@ -74,6 +75,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space[6],
   },
+  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
   hero: {
     alignItems: 'center',
   },

@@ -9,12 +9,21 @@ import { View, StyleSheet, Pressable } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Text, space, useTheme, radius, minTouchTarget } from '@/core/design-system'
+import {
+  Text,
+  space,
+  layout,
+  useTheme,
+  useResponsiveLayout,
+  radius,
+  minTouchTarget,
+} from '@/core/design-system'
 import { changeLanguage } from '@/i18n'
 
 export default function LanguageScreen() {
   const { t } = useTranslation()
   const theme = useTheme()
+  const { isWideWeb } = useResponsiveLayout()
 
   async function selectLanguage(lang: 'en' | 'ar') {
     await changeLanguage(lang)
@@ -23,7 +32,7 @@ export default function LanguageScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
-      <View style={styles.content}>
+      <View style={[styles.content, isWideWeb && styles.contentWide]}>
         <View style={styles.header}>
           <Text variant="display" align="center">
             {'🌐'}
@@ -101,6 +110,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space[8],
   },
+  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
   header: {
     gap: space[3],
     alignItems: 'center',
