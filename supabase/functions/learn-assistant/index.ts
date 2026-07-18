@@ -140,12 +140,29 @@ Deno.serve(async (request) => {
       { status: 503, headers: cors },
     )
   }
-  const raw = (await upstream.json()) as { choices?: { message?: { content?: string } }[] }
+  const rawText = await upstream.text()
+  const raw = JSON.parse(rawText) as {
+    choices?: { message?: { content?: string }; finish_reason?: string }[]
+  }
   const content = raw.choices?.[0]?.message?.content
+  if (!content) {
+    // 200 OK from OpenRouter but no usable text — seen with models that
+    // route output through a non-`content` field (e.g. reasoning models)
+    // or refuse silently. Log the raw body so the actual shape is visible.
+    console.error('learn-assistant: OpenRouter returned no content', {
+      finishReason: raw.choices?.[0]?.finish_reason,
+      body: rawText,
+    })
+    return Response.json(
+      { ...unavailable(), unknowns: ['The live assistant returned no answer text.'] },
+      { status: 502, headers: cors },
+    )
+  }
   let parsed: AssistantResponse
   try {
-    parsed = content ? (JSON.parse(content) as AssistantResponse) : unavailable()
+    parsed = JSON.parse(content) as AssistantResponse
   } catch {
+    console.error('learn-assistant: OpenRouter content was not valid JSON', { content })
     return Response.json(
       { ...unavailable(), unknowns: ['The live assistant returned an unreadable response.'] },
       { status: 502, headers: cors },
