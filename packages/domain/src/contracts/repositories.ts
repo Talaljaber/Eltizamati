@@ -24,6 +24,10 @@ import type { Insight } from '../entities/insight.js'
 import type { ConsentRecord } from '../entities/consent-record.js'
 import type { UserProfile } from '../entities/user-profile.js'
 import type { LoanApplication, LoanApplicationDraft } from '../entities/loan-application.js'
+import type {
+  LoanScheduleProposal,
+  LoanScheduleProposalDraft,
+} from '../entities/loan-schedule-proposal.js'
 
 export interface ObligationRepository {
   list(userId: Id<'user'>): Promise<Result<readonly Obligation[], AppError>>
@@ -78,4 +82,15 @@ export interface LoanApplicationRepository {
     userId: Id<'user'>,
     draft: LoanApplicationDraft,
   ): Promise<Result<LoanApplication, AppError>>
+}
+
+export interface LoanScheduleProposalRepository {
+  listFor(
+    userId: Id<'user'>,
+    obligationId: Id<'obligation'>,
+  ): Promise<Result<readonly LoanScheduleProposal[], AppError>>
+  submit(
+    userId: Id<'user'>,
+    draft: LoanScheduleProposalDraft,
+  ): Promise<Result<LoanScheduleProposal, AppError>>
 }

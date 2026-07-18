@@ -79,6 +79,13 @@ export type {
   LoanApplicationStatus,
 } from './entities/loan-application.js'
 export type {
+  LoanScheduleProposal,
+  LoanScheduleProposalDraft,
+  LoanScheduleProposalKind,
+  LoanScheduleProposalRow,
+  LoanScheduleProposalStatus,
+} from './entities/loan-schedule-proposal.js'
+export type {
   CalculationOutcome,
   CalculationOutcomeResult,
   CalculationOutcomeRefused,
@@ -116,6 +123,7 @@ export type {
   ConsentRepository,
   UserProfileRepository,
   LoanApplicationRepository,
+  LoanScheduleProposalRepository,
 } from './contracts/repositories.js'
 
 // ─── Errors & Result ─────────────────────────────────────────────────────────
