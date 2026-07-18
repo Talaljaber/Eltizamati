@@ -27,6 +27,14 @@ import type {
 } from '../formulas/extra-payment-scenario.js'
 import type { CardPayoffInputs, CardPayoffResult } from '../formulas/card-payoff.js'
 import type { AggregatesInputs, AggregatesResult } from '../formulas/aggregates.js'
+import type {
+  RateChangeScenarioInputs,
+  RateChangeScenarioResult,
+} from '../formulas/rate-change-scenario.js'
+import type {
+  AddedCostFromRepricingInputs,
+  AddedCostFromRepricingResult,
+} from '../formulas/added-cost-from-repricing.js'
 
 export interface FormulaContracts {
   readonly amortization: { readonly input: AmortizationInputs; readonly output: AmortizationResult }
@@ -52,6 +60,14 @@ export interface FormulaContracts {
   }
   readonly cardPayoff: { readonly input: CardPayoffInputs; readonly output: CardPayoffResult }
   readonly aggregates: { readonly input: AggregatesInputs; readonly output: AggregatesResult }
+  readonly rateChangeScenario: {
+    readonly input: RateChangeScenarioInputs
+    readonly output: RateChangeScenarioResult
+  }
+  readonly addedCostFromRepricing: {
+    readonly input: AddedCostFromRepricingInputs
+    readonly output: AddedCostFromRepricingResult
+  }
 }
 
 export type FormulaId = keyof FormulaContracts

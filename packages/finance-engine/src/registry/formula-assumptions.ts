@@ -31,6 +31,18 @@ export const FORMULA_ASSUMPTIONS = {
     'Extra payments reduce principal immediately in full',
     'No prepayment penalties modeled (user must ask bank — SCR-BANK-QUESTIONS)',
   ],
+  rateChangeScenario: [
+    ...GENERIC_LOAN_ASSUMPTIONS,
+    'Hypothetical rate change is not saved to the loan or rate history',
+    'Projected total still payable equals future scheduled payments after as-of date plus projected residual',
+    'Installment amount remains unchanged in this scenario',
+  ],
+  addedCostFromRepricing: [
+    ...GENERIC_LOAN_ASSUMPTIONS,
+    'Compares the actual rate history against a counterfactual holding the original rate constant for the full term',
+    'Installment amount unchanged in both the actual and counterfactual projections',
+    'Reported at estimate/medium confidence — TV-305 exact figure is PENDING-FINANCE (calculation-test-vectors.md)',
+  ],
   cardPayoff: [
     'ASM-011: monthly close interest = balance × APR/12 (daily accrual is more accurate; potential divergence ~10-15% for long horizons)',
     'Statement balance treated as starting balance',

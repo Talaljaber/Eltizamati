@@ -30,5 +30,7 @@ export * from './formulas/murabaha-progress.js'
 export * from './formulas/extra-payment-scenario.js'
 export * from './formulas/card-payoff.js'
 export * from './formulas/aggregates.js'
+export * from './formulas/rate-change-scenario.js'
+export * from './formulas/added-cost-from-repricing.js'
 
 export * from './insights/rules.js'

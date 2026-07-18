@@ -12,6 +12,8 @@ import { murabahaProgress } from '../formulas/murabaha-progress.js'
 import { extraPaymentScenario } from '../formulas/extra-payment-scenario.js'
 import { cardPayoff } from '../formulas/card-payoff.js'
 import { aggregates } from '../formulas/aggregates.js'
+import { rateChangeScenario } from '../formulas/rate-change-scenario.js'
+import { addedCostFromRepricing } from '../formulas/added-cost-from-repricing.js'
 import { makeError, err, ok, type Result, type AppError } from '@eltizamati/domain'
 import { FORMULA_ASSUMPTIONS } from './formula-assumptions.js'
 
@@ -73,6 +75,22 @@ export const FORMULA_REGISTRY: FormulaRegistry = {
     description: 'Total outstanding + total monthly commitment across all obligations',
     assumptions: FORMULA_ASSUMPTIONS.aggregates,
     execute: aggregates,
+  },
+  rateChangeScenario: {
+    id: 'rateChangeScenario',
+    version: 1,
+    description:
+      'Compares the authoritative loan projection with an ephemeral hypothetical rate change',
+    assumptions: FORMULA_ASSUMPTIONS.rateChangeScenario,
+    execute: rateChangeScenario,
+  },
+  addedCostFromRepricing: {
+    id: 'addedCostFromRepricing',
+    version: 1,
+    description:
+      'Estimates the added total interest cost caused by the loan\'s actual rate history vs a flat-original-rate counterfactual (TV-305)',
+    assumptions: FORMULA_ASSUMPTIONS.addedCostFromRepricing,
+    execute: addedCostFromRepricing,
   },
 }
 
