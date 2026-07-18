@@ -294,4 +294,6 @@ export const layout = {
   sidebarWidth: 264,
   contentMaxWidth: 1120,
   readableMaxWidth: 760,
+  /** Narrow single-purpose forms (sign-in/sign-up/verify) — a card, not a stretched phone form. */
+  authMaxWidth: 440,
 } as const

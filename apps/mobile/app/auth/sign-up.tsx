@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   Button,
+  Card,
   ErrorState,
   Text,
   space,
@@ -81,112 +82,125 @@ export default function SignUpScreen() {
 
   const error = signUp.error ?? undefined
   const offline = error?.code === 'connectivity'
+
+  const formContent = (
+    <>
+      <Text variant="title" align="center">
+        {t('auth.signUpTitle')}
+      </Text>
+      <View style={styles.form}>
+        <AuthTextField
+          label={t('auth.fullName')}
+          value={fullName}
+          onChangeText={setFullName}
+          autoComplete="name"
+          testID="sign-up-full-name"
+        />
+        <View style={styles.phoneRow}>
+          <PickerSheetField<CountryCode>
+            label={t('auth.countryCode')}
+            items={COUNTRY_CODES}
+            getId={(c) => c.id}
+            getLabel={(c) => `${c.flag} ${c.name} (${c.dialCode})`}
+            getSearchText={(c) => `${c.name} ${c.nameAr} ${c.dialCode}`}
+            selectedId={countryId}
+            onSelect={(c) => setCountryId(c.id)}
+            placeholder={t('auth.countryCode')}
+            searchPlaceholder={t('auth.searchCountry')}
+            renderTriggerValue={(c) => `${c.flag} ${c.dialCode}`}
+            compact
+            testID="sign-up-country-code"
+          />
+          <AuthTextField
+            label={t('auth.phoneNumber')}
+            value={localNumber}
+            onChangeText={setLocalNumber}
+            keyboardType="phone-pad"
+            autoComplete="tel"
+            textContentType="telephoneNumber"
+            style={styles.phoneInput}
+            testID="sign-up-phone"
+          />
+        </View>
+        <PickerSheetField<JordanBank>
+          label={t('auth.primaryBank')}
+          items={JORDAN_BANKS}
+          getId={(b) => b.id}
+          getLabel={(b) => b.name}
+          getSearchText={(b) => `${b.name} ${b.nameAr}`}
+          selectedId={bankId}
+          onSelect={(b) => setBankId(b.id)}
+          placeholder={t('auth.selectBank')}
+          searchPlaceholder={t('auth.searchBank')}
+          testID="sign-up-bank"
+        />
+        <AuthTextField
+          label={t('auth.emailLabel')}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          textContentType="emailAddress"
+          testID="sign-up-email"
+        />
+        <AuthTextField
+          label={t('auth.passwordLabel')}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete="new-password"
+          textContentType="newPassword"
+          testID="sign-up-password"
+        />
+        <AuthTextField
+          label={t('auth.confirmPassword')}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete="password"
+          textContentType="password"
+          testID="sign-up-confirm-password"
+        />
+        {validationError !== undefined ? (
+          <Text variant="bodySmall" color="critical" testID="sign-up-validation-error">
+            {t(validationError)}
+          </Text>
+        ) : null}
+        {error !== undefined && !offline ? (
+          <Text variant="bodySmall" color="critical" testID="sign-up-error">
+            {t(error.code === 'rateLimited' ? 'auth.emailRateLimited' : 'auth.signUpFailed')}
+          </Text>
+        ) : null}
+        <Button
+          variant="primary"
+          label={t('auth.createAccount')}
+          loading={signUp.isPending}
+          disabled={signUp.isPending}
+          onPress={() => void submit()}
+          testID="sign-up-submit"
+        />
+        <Button variant="ghost" label={t('auth.backToSignIn')} onPress={() => router.back()} />
+      </View>
+    </>
+  )
+
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
       {offline ? (
         <ErrorState state={{ kind: 'offline' }} onRetry={() => void submit()} />
-      ) : (
-        <DismissKeyboardView style={[styles.content, isWideWeb && styles.contentWide]}>
-          <Text variant="title" align="center">
-            {t('auth.signUpTitle')}
-          </Text>
-          <View style={styles.form}>
-            <AuthTextField
-              label={t('auth.fullName')}
-              value={fullName}
-              onChangeText={setFullName}
-              autoComplete="name"
-              testID="sign-up-full-name"
-            />
-            <View style={styles.phoneRow}>
-              <PickerSheetField<CountryCode>
-                label={t('auth.countryCode')}
-                items={COUNTRY_CODES}
-                getId={(c) => c.id}
-                getLabel={(c) => `${c.flag} ${c.name} (${c.dialCode})`}
-                getSearchText={(c) => `${c.name} ${c.nameAr} ${c.dialCode}`}
-                selectedId={countryId}
-                onSelect={(c) => setCountryId(c.id)}
-                placeholder={t('auth.countryCode')}
-                searchPlaceholder={t('auth.searchCountry')}
-                renderTriggerValue={(c) => `${c.flag} ${c.dialCode}`}
-                compact
-                testID="sign-up-country-code"
-              />
-              <AuthTextField
-                label={t('auth.phoneNumber')}
-                value={localNumber}
-                onChangeText={setLocalNumber}
-                keyboardType="phone-pad"
-                autoComplete="tel"
-                textContentType="telephoneNumber"
-                style={styles.phoneInput}
-                testID="sign-up-phone"
-              />
-            </View>
-            <PickerSheetField<JordanBank>
-              label={t('auth.primaryBank')}
-              items={JORDAN_BANKS}
-              getId={(b) => b.id}
-              getLabel={(b) => b.name}
-              getSearchText={(b) => `${b.name} ${b.nameAr}`}
-              selectedId={bankId}
-              onSelect={(b) => setBankId(b.id)}
-              placeholder={t('auth.selectBank')}
-              searchPlaceholder={t('auth.searchBank')}
-              testID="sign-up-bank"
-            />
-            <AuthTextField
-              label={t('auth.emailLabel')}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-              textContentType="emailAddress"
-              testID="sign-up-email"
-            />
-            <AuthTextField
-              label={t('auth.passwordLabel')}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="new-password"
-              textContentType="newPassword"
-              testID="sign-up-password"
-            />
-            <AuthTextField
-              label={t('auth.confirmPassword')}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="password"
-              textContentType="password"
-              testID="sign-up-confirm-password"
-            />
-            {validationError !== undefined ? (
-              <Text variant="bodySmall" color="critical" testID="sign-up-validation-error">
-                {t(validationError)}
-              </Text>
-            ) : null}
-            {error !== undefined && !offline ? (
-              <Text variant="bodySmall" color="critical" testID="sign-up-error">
-                {t(error.code === 'rateLimited' ? 'auth.emailRateLimited' : 'auth.signUpFailed')}
-              </Text>
-            ) : null}
-            <Button
-              variant="primary"
-              label={t('auth.createAccount')}
-              loading={signUp.isPending}
-              disabled={signUp.isPending}
-              onPress={() => void submit()}
-              testID="sign-up-submit"
-            />
-            <Button variant="ghost" label={t('auth.backToSignIn')} onPress={() => router.back()} />
+      ) : isWideWeb ? (
+        <DismissKeyboardView style={styles.wideOuter}>
+          <View style={styles.authCard}>
+            <Card>
+              <View style={styles.wideCardInner}>{formContent}</View>
+            </Card>
           </View>
         </DismissKeyboardView>
+      ) : (
+        <DismissKeyboardView style={styles.content}>{formContent}</DismissKeyboardView>
       )}
     </SafeAreaView>
   )
@@ -195,7 +209,9 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { flexGrow: 1, justifyContent: 'center', gap: space[5], padding: space[6] },
-  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
+  wideOuter: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space[6] },
+  authCard: { width: '100%', maxWidth: layout.authMaxWidth },
+  wideCardInner: { gap: space[5] },
   form: { gap: space[3] },
   phoneRow: { flexDirection: 'row', gap: space[2], alignItems: 'flex-end' },
   phoneInput: { flex: 1 },

@@ -30,7 +30,10 @@ export function AppSidebar({ state, descriptors, navigation }: BottomTabBarProps
   return (
     <SafeAreaView
       edges={['top', 'left', 'right', 'bottom']}
-      style={[styles.root, { width: layout.sidebarWidth, borderColor: theme.border }]}
+      style={[
+        styles.root,
+        { width: layout.sidebarWidth, borderColor: theme.border, backgroundColor: theme.bg },
+      ]}
       testID="app-sidebar"
     >
       <View style={styles.brandRow}>

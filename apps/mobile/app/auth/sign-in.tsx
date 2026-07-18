@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   Button,
+  Card,
   ErrorState,
   Text,
   space,
@@ -70,6 +71,105 @@ export default function SignInScreen() {
           ? 'auth.invalidCredentials'
           : (error?.userMessageKey ?? 'error.auth')
 
+  const topContent = (
+    <View style={styles.top}>
+      <Image
+        source={logo}
+        style={styles.logo}
+        accessibilityIgnoresInvertColors
+        accessibilityLabel={t('common.appName', 'Eltizamati')}
+        resizeMode="contain"
+      />
+      <Text variant="title" align="center">
+        {t('auth.signInTitle')}
+      </Text>
+      <View style={styles.form}>
+        <AuthTextField
+          label={t('auth.emailLabel')}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          textContentType="emailAddress"
+          autoComplete="email"
+          editable={!signIn.isPending}
+          testID="sign-in-email"
+        />
+        <AuthTextField
+          label={t('auth.passwordLabel')}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          textContentType="password"
+          autoComplete="current-password"
+          editable={!signIn.isPending}
+          testID="sign-in-password"
+        />
+        {validationError ? (
+          <Text variant="bodySmall" color="critical" testID="sign-in-validation-error">
+            {t('auth.signInValidation')}
+          </Text>
+        ) : null}
+        {error !== undefined && !offline ? (
+          <Text variant="bodySmall" color="critical" testID="sign-in-error">
+            {t(errorKey)}
+          </Text>
+        ) : null}
+        {entryError !== undefined ? (
+          <Text variant="bodySmall" color="critical" testID="sign-in-entry-error">
+            {entryError}
+          </Text>
+        ) : null}
+        <Button
+          variant="primary"
+          label={t('auth.signIn')}
+          loading={signIn.isPending}
+          disabled={email.trim() === '' || password === '' || signIn.isPending}
+          onPress={() => void submit()}
+          testID="sign-in-submit"
+        />
+        <View style={styles.alternativeMethods}>
+          <Text variant="bodySmall" color="secondary" align="center">
+            {t('auth.otherSignInMethods')}
+          </Text>
+          <Button
+            variant="secondary"
+            label={t('auth.faceId')}
+            onPress={() => showPreviewOnly('faceId')}
+            testID="sign-in-face-id"
+          />
+          <Button
+            variant="secondary"
+            label={t('auth.sanad')}
+            onPress={() => showPreviewOnly('sanad')}
+            testID="sign-in-sanad"
+          />
+          <Text variant="bodySmall" color="secondary" align="center">
+            {t('auth.previewOnlyLabel')}
+          </Text>
+        </View>
+        <Button
+          variant="ghost"
+          label={t('auth.createAccount')}
+          onPress={() => router.push('/auth/sign-up')}
+          testID="sign-in-create-account"
+        />
+      </View>
+    </View>
+  )
+
+  const bottomContent = (
+    <View style={styles.bottom}>
+      <Button
+        variant="secondary"
+        label={t('auth.continueInDemoMode')}
+        onPress={() => void continueInDemo()}
+        testID="sign-in-continue-demo"
+      />
+    </View>
+  )
+
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
       {offline ? (
@@ -78,101 +178,21 @@ export default function SignInScreen() {
           onRetry={() => void submit()}
           testID="sign-in-offline"
         />
-      ) : (
-        <DismissKeyboardView style={[styles.content, isWideWeb && styles.contentWide]}>
-          <View style={styles.top}>
-            <Image
-              source={logo}
-              style={styles.logo}
-              accessibilityIgnoresInvertColors
-              accessibilityLabel={t('common.appName', 'Eltizamati')}
-              resizeMode="contain"
-            />
-            <Text variant="title" align="center">
-              {t('auth.signInTitle')}
-            </Text>
-            <View style={styles.form}>
-              <AuthTextField
-                label={t('auth.emailLabel')}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoComplete="email"
-                editable={!signIn.isPending}
-                testID="sign-in-email"
-              />
-              <AuthTextField
-                label={t('auth.passwordLabel')}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                textContentType="password"
-                autoComplete="current-password"
-                editable={!signIn.isPending}
-                testID="sign-in-password"
-              />
-              {validationError ? (
-                <Text variant="bodySmall" color="critical" testID="sign-in-validation-error">
-                  {t('auth.signInValidation')}
-                </Text>
-              ) : null}
-              {error !== undefined && !offline ? (
-                <Text variant="bodySmall" color="critical" testID="sign-in-error">
-                  {t(errorKey)}
-                </Text>
-              ) : null}
-              {entryError !== undefined ? (
-                <Text variant="bodySmall" color="critical" testID="sign-in-entry-error">
-                  {entryError}
-                </Text>
-              ) : null}
-              <Button
-                variant="primary"
-                label={t('auth.signIn')}
-                loading={signIn.isPending}
-                disabled={email.trim() === '' || password === '' || signIn.isPending}
-                onPress={() => void submit()}
-                testID="sign-in-submit"
-              />
-              <View style={styles.alternativeMethods}>
-                <Text variant="bodySmall" color="secondary" align="center">
-                  {t('auth.otherSignInMethods')}
-                </Text>
-                <Button
-                  variant="secondary"
-                  label={t('auth.faceId')}
-                  onPress={() => showPreviewOnly('faceId')}
-                  testID="sign-in-face-id"
-                />
-                <Button
-                  variant="secondary"
-                  label={t('auth.sanad')}
-                  onPress={() => showPreviewOnly('sanad')}
-                  testID="sign-in-sanad"
-                />
-                <Text variant="bodySmall" color="secondary" align="center">
-                  {t('auth.previewOnlyLabel')}
-                </Text>
+      ) : isWideWeb ? (
+        <DismissKeyboardView style={styles.wideOuter}>
+          <View style={styles.authCard}>
+            <Card>
+              <View style={styles.wideCardInner}>
+                {topContent}
+                {bottomContent}
               </View>
-              <Button
-                variant="ghost"
-                label={t('auth.createAccount')}
-                onPress={() => router.push('/auth/sign-up')}
-                testID="sign-in-create-account"
-              />
-            </View>
+            </Card>
           </View>
-          <View style={styles.bottom}>
-            <Button
-              variant="secondary"
-              label={t('auth.continueInDemoMode')}
-              onPress={() => void continueInDemo()}
-              testID="sign-in-continue-demo"
-            />
-          </View>
+        </DismissKeyboardView>
+      ) : (
+        <DismissKeyboardView style={styles.content}>
+          {topContent}
+          {bottomContent}
         </DismissKeyboardView>
       )}
     </SafeAreaView>
@@ -182,7 +202,9 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { flex: 1, justifyContent: 'space-between', padding: space[6] },
-  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
+  wideOuter: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space[6] },
+  authCard: { width: '100%', maxWidth: layout.authMaxWidth },
+  wideCardInner: { gap: space[6] },
   top: { gap: space[4] },
   logo: { width: 152, height: 64, alignSelf: 'center' },
   form: { gap: space[3] },

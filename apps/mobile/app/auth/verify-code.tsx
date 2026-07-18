@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   Button,
+  Card,
   ErrorState,
   Text,
   space,
@@ -151,6 +152,117 @@ export default function VerifyCodeScreen() {
     router.back()
   }
 
+  const formContent = (
+    <>
+      <View style={styles.header}>
+        <Text variant="title" align="center">
+          {t('auth.verifyCodeTitle')}
+        </Text>
+        <Text variant="body" color="secondary" align="center">
+          {t('auth.verifyCodeBody', { email: activeAttempt.maskedEmail })}
+        </Text>
+      </View>
+      <View style={styles.form}>
+        {emailVerified ? (
+          <Text variant="body" align="center" testID="verify-code-email-verified">
+            {t('auth.emailVerifiedSavingPending')}
+          </Text>
+        ) : null}
+        {!emailVerified ? (
+          <>
+            <AuthTextField
+              label={t('auth.codeLabel')}
+              value={code}
+              onChangeText={(value) =>
+                setCode(value.replace(/\D/g, '').slice(0, SIGNUP_EMAIL_OTP_LENGTH))
+              }
+              keyboardType="number-pad"
+              textContentType="oneTimeCode"
+              autoComplete="one-time-code"
+              maxLength={SIGNUP_EMAIL_OTP_LENGTH}
+              editable={!busy}
+              accessibilityLabel={t('auth.codeAccessibilityLabel')}
+              style={styles.codeInput}
+              testID="verify-code-input"
+            />
+            {resendSucceeded ? (
+              <Text variant="bodySmall" color="secondary" testID="verify-code-resend-success">
+                {t('auth.codeResent')}
+              </Text>
+            ) : null}
+          </>
+        ) : null}
+        {activeError !== undefined && !offline ? (
+          <Text variant="bodySmall" color="critical" testID="verify-code-error">
+            {t(
+              activeError === requestOtp.error
+                ? activeError.code === 'rateLimited'
+                  ? 'auth.emailRateLimited'
+                  : 'auth.resendCodeFailed'
+                : verificationErrorKey(activeError),
+            )}
+          </Text>
+        ) : null}
+        {entryError !== undefined ? (
+          <View style={styles.entryError}>
+            <Text variant="bodySmall" color="critical" testID="verify-code-entry-error">
+              {entryError}
+            </Text>
+            <Button
+              variant="ghost"
+              label={t('common.retry')}
+              disabled={busy}
+              onPress={() => {
+                void retryEntry()
+              }}
+              testID="verify-code-entry-retry"
+            />
+          </View>
+        ) : null}
+        {__DEV__ && entryDiagnostic !== undefined ? (
+          <Text variant="caption" color="secondary" testID="verify-code-debug-diagnostic">
+            {`Debug: ${entryDiagnostic}`}
+          </Text>
+        ) : null}
+        {!emailVerified ? (
+          <Button
+            variant="primary"
+            label={t('auth.verifyCode')}
+            loading={verifyOtp.isPending}
+            disabled={code.length !== SIGNUP_EMAIL_OTP_LENGTH || busy}
+            onPress={() => {
+              void verify()
+            }}
+            testID="verify-code-submit"
+          />
+        ) : null}
+        {!emailVerified ? (
+          <Button
+            variant="secondary"
+            label={
+              secondsRemaining > 0
+                ? t('auth.resendCountdown', { seconds: secondsRemaining })
+                : t('auth.resendCode')
+            }
+            loading={requestOtp.isPending}
+            disabled={secondsRemaining > 0 || busy}
+            onPress={() => {
+              void resend()
+            }}
+            testID="verify-code-resend"
+          />
+        ) : null}
+        <Button
+          variant="ghost"
+          label={t('auth.changeEmail')}
+          disabled={busy}
+          onPress={changeEmail}
+          testID="verify-code-change-email"
+        />
+      </View>
+    </>
+  )
+
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]}>
       {offline ? (
@@ -161,115 +273,16 @@ export default function VerifyCodeScreen() {
           }}
           testID="verify-code-offline"
         />
-      ) : (
-        <DismissKeyboardView style={[styles.content, isWideWeb && styles.contentWide]}>
-          <View style={styles.header}>
-            <Text variant="title" align="center">
-              {t('auth.verifyCodeTitle')}
-            </Text>
-            <Text variant="body" color="secondary" align="center">
-              {t('auth.verifyCodeBody', { email: activeAttempt.maskedEmail })}
-            </Text>
-          </View>
-          <View style={styles.form}>
-            {emailVerified ? (
-              <Text variant="body" align="center" testID="verify-code-email-verified">
-                {t('auth.emailVerifiedSavingPending')}
-              </Text>
-            ) : null}
-            {!emailVerified ? (
-              <>
-                <AuthTextField
-                  label={t('auth.codeLabel')}
-                  value={code}
-                  onChangeText={(value) =>
-                    setCode(value.replace(/\D/g, '').slice(0, SIGNUP_EMAIL_OTP_LENGTH))
-                  }
-                  keyboardType="number-pad"
-                  textContentType="oneTimeCode"
-                  autoComplete="one-time-code"
-                  maxLength={SIGNUP_EMAIL_OTP_LENGTH}
-                  editable={!busy}
-                  accessibilityLabel={t('auth.codeAccessibilityLabel')}
-                  style={styles.codeInput}
-                  testID="verify-code-input"
-                />
-                {resendSucceeded ? (
-                  <Text variant="bodySmall" color="secondary" testID="verify-code-resend-success">
-                    {t('auth.codeResent')}
-                  </Text>
-                ) : null}
-              </>
-            ) : null}
-            {activeError !== undefined && !offline ? (
-              <Text variant="bodySmall" color="critical" testID="verify-code-error">
-                {t(
-                  activeError === requestOtp.error
-                    ? activeError.code === 'rateLimited'
-                      ? 'auth.emailRateLimited'
-                      : 'auth.resendCodeFailed'
-                    : verificationErrorKey(activeError),
-                )}
-              </Text>
-            ) : null}
-            {entryError !== undefined ? (
-              <View style={styles.entryError}>
-                <Text variant="bodySmall" color="critical" testID="verify-code-entry-error">
-                  {entryError}
-                </Text>
-                <Button
-                  variant="ghost"
-                  label={t('common.retry')}
-                  disabled={busy}
-                  onPress={() => {
-                    void retryEntry()
-                  }}
-                  testID="verify-code-entry-retry"
-                />
-              </View>
-            ) : null}
-            {__DEV__ && entryDiagnostic !== undefined ? (
-              <Text variant="caption" color="secondary" testID="verify-code-debug-diagnostic">
-                {`Debug: ${entryDiagnostic}`}
-              </Text>
-            ) : null}
-            {!emailVerified ? (
-              <Button
-                variant="primary"
-                label={t('auth.verifyCode')}
-                loading={verifyOtp.isPending}
-                disabled={code.length !== SIGNUP_EMAIL_OTP_LENGTH || busy}
-                onPress={() => {
-                  void verify()
-                }}
-                testID="verify-code-submit"
-              />
-            ) : null}
-            {!emailVerified ? (
-              <Button
-                variant="secondary"
-                label={
-                  secondsRemaining > 0
-                    ? t('auth.resendCountdown', { seconds: secondsRemaining })
-                    : t('auth.resendCode')
-                }
-                loading={requestOtp.isPending}
-                disabled={secondsRemaining > 0 || busy}
-                onPress={() => {
-                  void resend()
-                }}
-                testID="verify-code-resend"
-              />
-            ) : null}
-            <Button
-              variant="ghost"
-              label={t('auth.changeEmail')}
-              disabled={busy}
-              onPress={changeEmail}
-              testID="verify-code-change-email"
-            />
+      ) : isWideWeb ? (
+        <DismissKeyboardView style={styles.wideOuter}>
+          <View style={styles.authCard}>
+            <Card>
+              <View style={styles.wideCardInner}>{formContent}</View>
+            </Card>
           </View>
         </DismissKeyboardView>
+      ) : (
+        <DismissKeyboardView style={styles.content}>{formContent}</DismissKeyboardView>
       )}
     </SafeAreaView>
   )
@@ -284,7 +297,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[6],
     paddingVertical: space[6],
   },
-  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
+  wideOuter: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space[6] },
+  authCard: { width: '100%', maxWidth: layout.authMaxWidth },
+  wideCardInner: { gap: space[6] },
   header: { gap: space[3] },
   form: { gap: space[3] },
   entryError: { gap: space[2] },
