@@ -8,6 +8,7 @@ import { makeError, toLocalDate } from '@eltizamati/domain'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { usePaymentsByObligation } from '@/features/home/api/use-payments-by-obligation'
 import { useInsightsByObligation } from '@/features/home/api/use-insights-by-obligation'
+import { useEstimatedBalancesByObligation } from '@/features/home/api/use-estimated-balances-by-obligation'
 import { useActiveUserState } from '@/features/auth/hooks/use-active-user'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 
@@ -17,6 +18,9 @@ jest.mock('@/features/home/api/use-payments-by-obligation', () => ({
 }))
 jest.mock('@/features/home/api/use-insights-by-obligation', () => ({
   useInsightsByObligation: jest.fn(),
+}))
+jest.mock('@/features/home/api/use-estimated-balances-by-obligation', () => ({
+  useEstimatedBalancesByObligation: jest.fn(),
 }))
 jest.mock('@/features/auth/hooks/use-active-user', () => ({ useActiveUserState: jest.fn() }))
 jest.mock('@/features/repositories/hooks/use-repositories', () => ({
@@ -83,6 +87,34 @@ describe('ObligationRow financial rendering', () => {
     expect(queryByTestId('obligation-list-balance')).toBeNull()
     expect(getByTestId('obligation-list-balance-unavailable')).toBeTruthy()
   })
+
+  it('falls back to the supplied estimated balance instead of "not on file"', () => {
+    const loan = new DemoSeedProvider().provide().loan
+    const loanWithNoOfficialBalance = {
+      ...loan,
+      loanDetails: { ...loan.loanDetails, outstandingBalance: undefined },
+    }
+    const estimatedBalance = {
+      value: loan.loanDetails.originalPrincipal.value,
+      provenance: {
+        source: 'estimate' as const,
+        observedAt: '2026-07-01T00:00:00.000Z',
+        recordedAt: '2026-07-01T00:00:00.000Z',
+      },
+    }
+    const { getByTestId, queryByTestId } = render(
+      <ObligationRow
+        obligation={loanWithNoOfficialBalance}
+        payments={[]}
+        insights={[]}
+        asOf={DEMO_DATE}
+        estimatedBalance={estimatedBalance}
+        onPress={jest.fn()}
+      />,
+    )
+    expect(queryByTestId('obligation-list-balance-unavailable')).toBeNull()
+    expect(getByTestId('obligation-list-balance')).toBeTruthy()
+  })
 })
 
 describe('ObligationsTab personal-data states', () => {
@@ -96,6 +128,8 @@ describe('ObligationsTab personal-data states', () => {
       obligationRepository: {},
       paymentRepository: {},
       insightRepository: {},
+      ratePeriodRepository: {},
+      calculationRunRepository: {},
     })
     ;(useActiveUserState as jest.Mock).mockReturnValue({
       status: 'authenticated',
@@ -123,6 +157,7 @@ describe('ObligationsTab personal-data states', () => {
       hasData: true,
       refetch: refetchInsights,
     })
+    ;(useEstimatedBalancesByObligation as jest.Mock).mockReturnValue(new Map())
   })
 
   it('does not convert a failed obligations query into successful empty data', () => {

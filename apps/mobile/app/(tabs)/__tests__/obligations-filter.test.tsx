@@ -8,6 +8,8 @@ jest.mock('@/features/repositories/hooks/use-repositories', () => ({
     obligationRepository: {},
     paymentRepository: {},
     insightRepository: {},
+    ratePeriodRepository: {},
+    calculationRunRepository: {},
   }),
 }))
 jest.mock('@/features/auth/hooks/use-active-user', () => ({
@@ -52,6 +54,9 @@ jest.mock('@/features/home/api/use-insights-by-obligation', () => ({
     hasData: true,
     refetch: jest.fn(),
   }),
+}))
+jest.mock('@/features/home/api/use-estimated-balances-by-obligation', () => ({
+  useEstimatedBalancesByObligation: () => new Map(),
 }))
 
 describe('ObligationsTab — filter chips', () => {

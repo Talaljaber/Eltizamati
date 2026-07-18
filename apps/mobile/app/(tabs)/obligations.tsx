@@ -35,6 +35,7 @@ import {
 import { useObligations } from '@/features/home/api/use-obligations'
 import { usePaymentsByObligation } from '@/features/home/api/use-payments-by-obligation'
 import { useInsightsByObligation } from '@/features/home/api/use-insights-by-obligation'
+import { useEstimatedBalancesByObligation } from '@/features/home/api/use-estimated-balances-by-obligation'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUserState } from '@/features/auth/hooks/use-active-user'
 import { deriveObligationStatus, extractOfficialBalance, makeError } from '@eltizamati/domain'
@@ -46,6 +47,8 @@ import type {
   Id,
   ObligationKind,
   LocalDate,
+  Money,
+  Sourced,
 } from '@eltizamati/domain'
 import { calculationAsOfForObligations } from '@/services/calculation-as-of'
 import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
@@ -111,6 +114,14 @@ export default function ObligationsTab() {
     return data
   }, [data, filter])
   const asOf = calculationAsOfForObligations(isDemoMode ? 'demo' : 'personal', personalAsOf)
+
+  const estimatedBalances = useEstimatedBalancesByObligation(
+    repos.ratePeriodRepository,
+    repos.calculationRunRepository,
+    data,
+    activeUser,
+    asOf,
+  )
 
   const hasCompletePaymentData =
     data !== undefined && data.every((obligation) => paymentsByObligation.has(obligation.id))
@@ -236,6 +247,7 @@ export default function ObligationsTab() {
               payments={payments}
               insights={insightsByObligation.get(item.id) ?? []}
               asOf={asOf}
+              estimatedBalance={estimatedBalances.get(item.id)}
               onPress={() => {
                 void router.push(`/obligation/${item.id}`)
               }}
@@ -347,12 +359,18 @@ export function ObligationRow({
   payments,
   insights,
   asOf,
+  estimatedBalance,
   onPress,
 }: {
   obligation: Obligation
   payments: readonly Payment[]
   insights: readonly Insight[]
   asOf: LocalDate
+  /** Fallback for conventionalLoan obligations with no official balance on
+   * file — the same variableProjection estimate the Loan Overview hero
+   * shows, so this row doesn't say "not on file" when the detail page
+   * would show a real (estimated) figure. */
+  estimatedBalance?: Sourced<Money>
   onPress: () => void
 }) {
   const { t } = useTranslation()
@@ -363,7 +381,7 @@ export function ObligationRow({
     insights,
     today: asOf,
   })
-  const balance = extractOfficialBalance(obligation)
+  const balance = extractOfficialBalance(obligation) ?? estimatedBalance
 
   const leading = (
     <View style={[styles.iconBox, { backgroundColor: theme.bgSubtle }]}>
