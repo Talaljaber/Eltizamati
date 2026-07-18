@@ -18,7 +18,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.eltizamati.app"
+      "package": "com.eltizamati.app",
+      "allowBackup": false
     },
     "web": {
       "bundler": "metro",
