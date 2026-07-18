@@ -11,6 +11,12 @@ export interface ScreenProps {
   /** While true, renders `skeleton` instead of `children` (loading state — design-system.md §2). */
   readonly loading?: boolean
   readonly skeleton?: ReactNode
+  /**
+   * Vertical gap between direct children, from the spacing scale. Opt-in
+   * (undefined = no gap) so existing screens that manage their own spacing
+   * are unaffected; new/redesigned screens pass a scale index directly.
+   */
+  readonly gap?: keyof typeof space
   readonly testID?: string
 }
 
@@ -23,10 +29,12 @@ export function Screen({
   scroll = true,
   loading = false,
   skeleton,
+  gap,
   testID,
 }: ScreenProps) {
   const theme = useTheme()
   const content = loading ? (skeleton ?? children) : children
+  const gutterStyle = [styles.gutter, gap !== undefined ? { gap: space[gap] } : undefined]
 
   return (
     <SafeAreaView
@@ -35,11 +43,11 @@ export function Screen({
       testID={testID}
     >
       {scroll ? (
-        <ScrollView contentContainerStyle={styles.gutter} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={gutterStyle} showsVerticalScrollIndicator={false}>
           {content}
         </ScrollView>
       ) : (
-        <View style={styles.gutter}>{content}</View>
+        <View style={gutterStyle}>{content}</View>
       )}
     </SafeAreaView>
   )

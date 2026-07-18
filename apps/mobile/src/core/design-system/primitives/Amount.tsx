@@ -52,13 +52,16 @@ export function Amount({
   const body = (
     <Text
       variant={variant}
-      color={effectivePrecision === 'estimate' ? 'secondary' : 'primary'}
+      // The figure itself stays full-contrast even when estimated — an
+      // estimate is a labeled fact, not a lesser one; the "≈" prefix plus the
+      // provenance suffix below carry the distinction (never dim the number).
+      color="primary"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
     >
       {formatted}
       {effectivePrecision === 'estimate' ? (
-        <Text variant="caption" color="secondary">
+        <Text variant="caption" color="estimate">
           {' '}
           {provenanceLabel}
         </Text>

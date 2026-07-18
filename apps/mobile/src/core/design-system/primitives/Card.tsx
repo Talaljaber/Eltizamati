@@ -15,6 +15,12 @@ export interface CardProps {
    * This is the shared card contract — feature code must not hand-roll card styles.
    */
   readonly surface?: 'elevated' | 'flat'
+  /**
+   * `default` (standard content padding) or `none` — for a card used purely
+   * as a grouping surface around children that manage their own padding
+   * (e.g. a `NavGroup` of `ListRow`s, which already pad themselves).
+   */
+  readonly padding?: 'default' | 'none'
   readonly testID?: string
 }
 
@@ -24,12 +30,14 @@ export function Card({
   onPress,
   accessibilityLabel,
   surface = 'elevated',
+  padding = 'default',
   testID,
 }: CardProps) {
   const theme = useTheme()
   const surfaceStyle = [
     styles.surface,
     { backgroundColor: theme.bgElevated, borderColor: theme.border },
+    padding === 'none' ? styles.noPadding : undefined,
     surface === 'elevated' ? resolveElevation('card') : undefined,
   ]
 
@@ -59,6 +67,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     padding: space[4],
+  },
+  noPadding: {
+    padding: 0,
   },
   pressed: {
     opacity: 0.85,

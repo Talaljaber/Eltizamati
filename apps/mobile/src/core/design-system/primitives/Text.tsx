@@ -23,6 +23,7 @@ export type TextColor =
   | 'positive'
   | 'caution'
   | 'understanding'
+  | 'estimate'
   | 'onBrand'
 
 export interface TextPropsDS extends Omit<RNTextProps, 'style'> {
@@ -55,6 +56,7 @@ export function Text({
     positive: theme.positive,
     caution: theme.caution,
     understanding: theme.understanding,
+    estimate: theme.estimate,
     onBrand: theme.textOnBrand,
   }
 
