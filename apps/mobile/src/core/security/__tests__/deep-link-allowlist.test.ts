@@ -4,6 +4,9 @@ describe('isAllowedDeepLinkPath — allowed routes', () => {
   it.each([
     '',
     '/',
+    'obligations',
+    'learn',
+    'loans',
     '(tabs)',
     '(tabs)/obligations',
     '(tabs)/learn',
@@ -48,7 +51,6 @@ describe('isAllowedDeepLinkPath — rejected routes (fuzz-style malformed input)
     'javascript:alert(1)',
     'admin',
     'obligation',
-    'learn/',
     `obligation/${'a'.repeat(200)}`,
   ])('rejects %s', (path) => {
     expect(isAllowedDeepLinkPath(path)).toBe(false)

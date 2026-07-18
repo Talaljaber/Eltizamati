@@ -22,8 +22,7 @@ const ID_SEGMENT = '[A-Za-z0-9_-]{1,128}'
 
 const ALLOWED_ROUTE_PATTERNS: readonly RegExp[] = [
   /^\/?$/,
-  /^\(tabs\)\/?$/,
-  /^\(tabs\)\/(learn|loans|obligations)\/?$/,
+  /^(learn|loans|obligations)\/?$/,
   /^\+not-found\/?$/,
   /^auth\/(callback|reset|sign-in|sign-up|update-password|verify-code)\/?$/,
   /^connect-mock(\/consent)?\/?$/,
@@ -43,11 +42,14 @@ const ALLOWED_ROUTE_PATTERNS: readonly RegExp[] = [
 ]
 
 function normalizePath(path: string): string {
-  // Strip a leading scheme (`eltizamati://...`), leading slashes, and any
-  // query string or fragment — only the route path itself is checked here.
+  // Strip a leading scheme (`eltizamati://...`), leading slashes, any
+  // query string or fragment, and any route-group segments (`(tabs)/...`) —
+  // Expo Router's actual resolved URL never includes a group's name, so a
+  // path is normalized the same way before matching.
   const withoutScheme = path.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '')
   const withoutQuery = withoutScheme.split(/[?#]/)[0] ?? ''
-  return withoutQuery.replace(/^\/+/, '')
+  const withoutGroups = withoutQuery.replace(/\([^/]+\)\/?/g, '')
+  return withoutGroups.replace(/^\/+/, '')
 }
 
 export function isAllowedDeepLinkPath(path: string): boolean {
