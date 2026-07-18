@@ -22,6 +22,7 @@
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
+    "@react-navigation/bottom-tabs": "^7.18.8",
     "@react-navigation/native": "^7.0.14",
     "@sentry/react-native": "~7.2.0",
     "@supabase/supabase-js": "^2.45.4",

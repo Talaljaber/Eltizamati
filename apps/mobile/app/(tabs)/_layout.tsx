@@ -1,24 +1,41 @@
 import { Tabs, Link } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Pressable } from 'react-native'
+import { I18nManager, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { useTheme } from '@/core/design-system'
+import { useTheme, useResponsiveLayout } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
+import { AppSidebar } from '@/features/navigation/components/AppSidebar'
 
 export default function TabLayout() {
   const { t } = useTranslation()
   const theme = useTheme()
+  const { isWideWeb } = useResponsiveLayout()
+
+  // On wide web, primary nav moves into a persistent AppSidebar and the tall
+  // brand header shrinks to a slim, light top bar — native and narrow web
+  // are unaffected (bottom tab bar + teal header, exactly as before).
+  const headerStyle = isWideWeb
+    ? { backgroundColor: theme.bgElevated, borderBottomWidth: 1, borderBottomColor: theme.border }
+    : { backgroundColor: theme.brand }
+  const headerTitleStyle = isWideWeb
+    ? { color: theme.textPrimary, fontWeight: '600' as const, fontSize: 18 }
+    : { color: theme.textOnBrand, fontWeight: '600' as const, fontSize: 18 }
+  const headerTintColor = isWideWeb ? theme.textPrimary : theme.textOnBrand
 
   return (
     <RequireRepositories>
       <Tabs
+        tabBar={isWideWeb ? (props) => <AppSidebar {...props} /> : undefined}
         screenOptions={{
           headerShown: true,
-          headerStyle: { backgroundColor: theme.brand },
-          headerTitleStyle: { color: theme.textOnBrand, fontWeight: '600', fontSize: 18 },
-          headerTintColor: theme.textOnBrand,
+          headerStyle,
+          headerTitleStyle,
+          headerTintColor,
           tabBarActiveTintColor: theme.brand,
           tabBarInactiveTintColor: theme.textTertiary,
+          ...(isWideWeb
+            ? { tabBarPosition: I18nManager.isRTL ? 'right' : ('left' as const) }
+            : undefined),
         }}
       >
         <Tabs.Screen
@@ -36,7 +53,7 @@ export default function TabLayout() {
                   hitSlop={8}
                   style={{ marginHorizontal: 16 }}
                 >
-                  <Ionicons name="person-circle-outline" size={27} color={theme.textOnBrand} />
+                  <Ionicons name="person-circle-outline" size={27} color={headerTintColor} />
                 </Pressable>
               </Link>
             ),
@@ -57,7 +74,7 @@ export default function TabLayout() {
                   hitSlop={8}
                   style={{ marginHorizontal: 16 }}
                 >
-                  <Ionicons name="add" size={28} color={theme.textOnBrand} />
+                  <Ionicons name="add" size={28} color={headerTintColor} />
                 </Pressable>
               </Link>
             ),
@@ -78,7 +95,7 @@ export default function TabLayout() {
                   hitSlop={8}
                   style={{ marginHorizontal: 16 }}
                 >
-                  <Ionicons name="add" size={28} color={theme.textOnBrand} />
+                  <Ionicons name="add" size={28} color={headerTintColor} />
                 </Pressable>
               </Link>
             ),
