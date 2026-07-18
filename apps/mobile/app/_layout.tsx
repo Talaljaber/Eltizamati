@@ -6,8 +6,15 @@ import { AppProviders } from '../src/providers'
 import { StartupCoordinator } from '../src/features/startup/components/StartupCoordinator'
 import '../src/i18n' // Initialize i18n
 import { useNotificationResponse } from '../src/features/notifications/hooks/use-notification-response'
+import { useDeepLinkGuard } from '../src/core/security/use-deep-link-guard'
 import { useTheme } from '../src/core/design-system'
 import { isExpoGo } from '../src/core/config/runtime-environment'
+import * as Sentry from '@sentry/react-native'
+import { initSentry } from '../src/core/observability/sentry'
+
+// No-op unless both a release build and EXPO_PUBLIC_SENTRY_DSN are present
+// (ADR-0015) — safe to call unconditionally at module scope.
+initSentry()
 
 // Keep the native splash up past its default auto-hide point — StartupCoordinator
 // decides (asynchronously, via AsyncStorage) whether to show onboarding or the
@@ -28,13 +35,19 @@ function NotificationResponseHandler() {
   return null
 }
 
-export default function RootLayout() {
+function DeepLinkGuardHandler() {
+  useDeepLinkGuard()
+  return null
+}
+
+function RootLayout() {
   const { t } = useTranslation()
   const theme = useTheme()
   return (
     <AppProviders>
       <StartupCoordinator>
         <NotificationResponseHandler />
+        <DeepLinkGuardHandler />
         <Stack
           initialRouteName="auth"
           screenOptions={{
@@ -59,3 +72,7 @@ export default function RootLayout() {
     </AppProviders>
   )
 }
+
+// Sentry.wrap adds the root error boundary + touch-event breadcrumbs; it only
+// reports anywhere once initSentry() above has actually called Sentry.init.
+export default Sentry.wrap(RootLayout)
