@@ -414,6 +414,7 @@ export function SummaryCard({ aggregates }: { aggregates: ReturnType<typeof useH
 
 function InsightsPreview({ insights }: { insights: readonly Insight[] }) {
   const { t } = useTranslation()
+  const router = useRouter()
 
   if (insights.length === 0) {
     return (
@@ -435,9 +436,15 @@ function InsightsPreview({ insights }: { insights: readonly Insight[] }) {
       <View style={styles.insightsHeader}>
         <Text variant="heading">{t('home.insightsTitle')}</Text>
         {insights.length > 3 && (
-          <Text variant="bodySmall" color="brand">
-            {t('home.viewAll')}
-          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('home.viewAll')}
+            onPress={() => router.push('/insights')}
+          >
+            <Text variant="bodySmall" color="brand">
+              {t('home.viewAll')}
+            </Text>
+          </Pressable>
         )}
       </View>
       <View style={styles.insightsList}>
@@ -509,7 +516,9 @@ function CommitmentBreakdown({
   return (
     <Card>
       <View style={styles.breakdownHeader}>
-        <Text variant="heading">{t('home.commitmentBreakdownTitle')}</Text>
+        <View style={styles.breakdownTitle}>
+          <Text variant="heading">{t('home.commitmentBreakdownTitle')}</Text>
+        </View>
         <Amount
           testID="home-breakdown-total"
           variant="amountMd"
@@ -643,7 +652,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: space[2],
     marginBottom: space[4],
+  },
+  breakdownTitle: {
+    flex: 1,
   },
   breakdownBar: {
     flexDirection: 'row',
