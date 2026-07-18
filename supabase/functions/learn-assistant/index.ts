@@ -61,60 +61,72 @@ Deno.serve(async (request) => {
   if (!apiKey) return Response.json(unavailable(), { status: 503, headers: cors })
 
   const instructions = `You are Eltizamati's bilingual financial education assistant for Jordan. Explain general financing concepts in ${body.language}. You are not a financial advisor. Do not claim eligibility, approval, the best bank, guaranteed savings, or current bank terms. Do not invent rates, fees, institutions, legal rights, product facts, or citations. If a question needs institution-specific facts, say that verified catalogue data is unavailable and suggest questions for the institution. Return JSON only matching the requested schema.`
-  // OpenRouter is OpenAI-chat-completions-compatible, not the newer OpenAI
-  // Responses API the previous OpenAI-direct integration used — different
-  // request shape (messages[], response_format.json_schema) and response
-  // shape (choices[0].message.content, not output_text).
-  const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'X-Title': 'Eltizamati',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 500,
-      messages: [
-        { role: 'system', content: instructions },
-        { role: 'user', content: body.question },
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'learning_assistant_response',
-          strict: true,
-          schema: {
-            type: 'object',
-            additionalProperties: false,
-            required: [
-              'answer',
-              'comparison',
-              'assumptions',
-              'unknowns',
-              'questionsToAskTheBank',
-              'sourceIds',
-              'disclaimer',
-              'status',
-            ],
-            properties: {
-              answer: { type: 'string' },
-              comparison: { type: 'null' },
-              assumptions: { type: 'array', items: { type: 'string' } },
-              unknowns: { type: 'array', items: { type: 'string' } },
-              questionsToAskTheBank: { type: 'array', items: { type: 'string' } },
-              sourceIds: { type: 'array', items: { type: 'string' } },
-              disclaimer: { type: 'string' },
-              status: {
-                type: 'string',
-                enum: ['answered', 'insufficient-verified-data', 'needs-user-input', 'refused'],
-              },
+  const requestBody = {
+    model,
+    max_tokens: 500,
+    messages: [
+      { role: 'system', content: instructions },
+      { role: 'user', content: body.question },
+    ],
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
+        name: 'learning_assistant_response',
+        strict: true,
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          required: [
+            'answer',
+            'comparison',
+            'assumptions',
+            'unknowns',
+            'questionsToAskTheBank',
+            'sourceIds',
+            'disclaimer',
+            'status',
+          ],
+          properties: {
+            answer: { type: 'string' },
+            comparison: { type: 'null' },
+            assumptions: { type: 'array', items: { type: 'string' } },
+            unknowns: { type: 'array', items: { type: 'string' } },
+            questionsToAskTheBank: { type: 'array', items: { type: 'string' } },
+            sourceIds: { type: 'array', items: { type: 'string' } },
+            disclaimer: { type: 'string' },
+            status: {
+              type: 'string',
+              enum: ['answered', 'insufficient-verified-data', 'needs-user-input', 'refused'],
             },
           },
         },
       },
-    }),
-  })
+    },
+  }
+  // OpenRouter is OpenAI-chat-completions-compatible, not the newer OpenAI
+  // Responses API the previous OpenAI-direct integration used — different
+  // request shape (messages[], response_format.json_schema) and response
+  // shape (choices[0].message.content, not output_text).
+  async function callOpenRouter(): Promise<Response> {
+    return fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'X-Title': 'Eltizamati',
+      },
+      body: JSON.stringify(requestBody),
+    })
+  }
+
+  let upstream = await callOpenRouter()
+  if (upstream.status === 429) {
+    // Free-tier upstream providers are occasionally saturated for a couple
+    // of seconds (observed retry_after ~2s) — one short retry clears most
+    // of these without the user needing to press "Try again" themselves.
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    upstream = await callOpenRouter()
+  }
   if (!upstream.ok) {
     // Logged server-side only (visible via `supabase functions logs
     // learn-assistant` / the dashboard) — never forwarded to the client,
