@@ -392,7 +392,7 @@ export function ObligationRow({
 
   return (
     <ListRow leading={leading} trailing={trailing} onPress={onPress}>
-      <Text variant="heading" numberOfLines={2}>
+      <Text variant="heading" numberOfLines={1}>
         {obligation.institution.name}
       </Text>
       <Text variant="bodySmall" color="secondary">
