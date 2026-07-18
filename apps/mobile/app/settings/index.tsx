@@ -202,7 +202,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <Screen>
+    <Screen maxWidth="readable">
       <Text variant="title">{t('settings.title')}</Text>
 
       <View style={styles.section}>

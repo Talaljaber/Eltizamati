@@ -34,7 +34,7 @@ export default function MockConnectScreen() {
   }
 
   return (
-    <Screen>
+    <Screen maxWidth="readable">
       <Stack.Screen options={{ title: t('mockConnect.title') }} />
       <View style={{ gap: space[4] }}>
         <Card>

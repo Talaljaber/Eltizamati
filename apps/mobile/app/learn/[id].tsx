@@ -18,7 +18,7 @@ export default function LearnTopicScreen() {
 
   if (!topic) {
     return (
-      <Screen>
+      <Screen maxWidth="readable">
         <Stack.Screen options={{ title: t('learn.title') }} />
         <View style={styles.notFound}>
           <Text variant="heading" align="center">
@@ -38,7 +38,7 @@ export default function LearnTopicScreen() {
   )
 
   return (
-    <Screen gap={5}>
+    <Screen gap={5} maxWidth="readable">
       <Stack.Screen options={{ title: t(`learnTopics.${topic.id}.title`) }} />
       <Text variant="title">{t(`learnTopics.${topic.id}.title`)}</Text>
       <Text variant="body" color="secondary">

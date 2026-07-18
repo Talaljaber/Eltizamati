@@ -2,7 +2,14 @@ import { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Amount, ExplainLink, InlineState, space } from '@/core/design-system'
+import {
+  Amount,
+  ExplainLink,
+  InlineState,
+  space,
+  layout,
+  useResponsiveLayout,
+} from '@/core/design-system'
 import { useAmortizationScheduleViewModel } from '@/features/schedule/hooks/use-amortization-schedule-view-model'
 import { ScheduleList } from '@/features/schedule/components/ScheduleList'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
@@ -15,6 +22,7 @@ export default function AmortizationScheduleScreen() {
   const { t } = useTranslation()
   const viewModel = useAmortizationScheduleViewModel(id as Id<'obligation'>)
   const [explainVisible, setExplainVisible] = useState(false)
+  const { isWideWeb } = useResponsiveLayout()
 
   function renderEstimatedAmount(amount: string) {
     const run = viewModel.run
@@ -40,7 +48,7 @@ export default function AmortizationScheduleScreen() {
             ) : null,
         }}
       />
-      <View style={styles.root}>
+      <View style={[styles.root, isWideWeb && styles.rootWide]}>
         {viewModel.status === 'loading' && (
           <View style={styles.stateContainer}>
             <InlineState kind="loading" message={t('common.loading')} />
@@ -85,6 +93,11 @@ export default function AmortizationScheduleScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  rootWide: {
+    width: '100%',
+    maxWidth: layout.contentMaxWidth,
+    alignSelf: 'center',
   },
   stateContainer: {
     padding: space[4],

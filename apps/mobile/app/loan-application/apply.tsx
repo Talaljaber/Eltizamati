@@ -79,7 +79,7 @@ function ApplyForLoanInner() {
   }
 
   return (
-    <Screen>
+    <Screen maxWidth="readable">
       <Stack.Screen options={{ title: t('loanApplication.applyTitle') }} />
       <View style={styles.intro}>
         <Text variant="bodySmall" color="secondary">

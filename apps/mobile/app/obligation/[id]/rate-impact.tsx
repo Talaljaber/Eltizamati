@@ -2,7 +2,17 @@ import { useState } from 'react'
 import { View, StyleSheet, ScrollView } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, Card, FieldRow, Amount, ExplainLink, InlineState } from '@/core/design-system'
+import {
+  Text,
+  space,
+  layout,
+  useResponsiveLayout,
+  Card,
+  FieldRow,
+  Amount,
+  ExplainLink,
+  InlineState,
+} from '@/core/design-system'
 import { useRateImpactViewModel } from '@/features/rate-impact/hooks/use-rate-impact-view-model'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import { Money, engineEstimate, type Id } from '@eltizamati/domain'
@@ -14,11 +24,12 @@ export default function RateImpactScreen() {
   const { t } = useTranslation()
   const viewModel = useRateImpactViewModel(id as Id<'obligation'>)
   const [explainVisible, setExplainVisible] = useState(false)
+  const { isWideWeb } = useResponsiveLayout()
 
   return (
     <>
       <Stack.Screen options={{ title: t('rateImpact.title', 'Rate Impact') }} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
         {viewModel.status === 'loading' && (
           <InlineState kind="loading" message={t('common.loading')} />
         )}
@@ -119,6 +130,11 @@ export default function RateImpactScreen() {
 const styles = StyleSheet.create({
   scroll: {
     padding: space[4],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.readableMaxWidth,
+    alignSelf: 'center',
   },
   sectionTitle: {
     marginBottom: space[4],

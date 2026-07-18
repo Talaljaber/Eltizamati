@@ -10,7 +10,16 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useRouter, Stack } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { Text, Button, ListRow, NavGroup, space, useTheme } from '@/core/design-system'
+import {
+  Text,
+  Button,
+  ListRow,
+  NavGroup,
+  space,
+  useTheme,
+  layout,
+  useResponsiveLayout,
+} from '@/core/design-system'
 import { logger } from '@/core/logging/logger'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
@@ -59,6 +68,7 @@ function AddObligationInner() {
   const repos = useRepositories()
   const activeUser = useActiveUser()
   const queryClient = useQueryClient()
+  const { isWideWeb } = useResponsiveLayout()
 
   const [kind, setKind] = useState<AddableKind | null>(null)
   const [loanState, setLoanState] = useState<LoanFormState>(emptyLoanFormState)
@@ -204,7 +214,7 @@ function AddObligationInner() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
     >
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         automaticallyAdjustKeyboardInsets
@@ -296,6 +306,11 @@ const styles = StyleSheet.create({
     padding: space[4],
     gap: space[4],
     paddingBottom: space[10],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.readableMaxWidth,
+    alignSelf: 'center',
   },
   pickerGroup: {
     gap: space[3],

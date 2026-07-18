@@ -11,6 +11,8 @@ import {
   Text,
   TextField,
   space,
+  layout,
+  useResponsiveLayout,
 } from '@/core/design-system'
 import { useCardPayoffSimulator } from '@/features/card-simulator/hooks/use-card-payoff-simulator'
 import {
@@ -23,6 +25,7 @@ export default function CardSimulatorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation()
   const vm = useCardPayoffSimulator(id as Id<'obligation'>)
+  const { isWideWeb } = useResponsiveLayout()
 
   const snapshot =
     vm.run?.outcome.kind === 'result' ? snapshotRecord(vm.run.outcome.resultSnapshot) : undefined
@@ -43,7 +46,7 @@ export default function CardSimulatorScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, isWideWeb && styles.contentWide]}>
       <Stack.Screen options={{ title: t('cardSimulator.title') }} />
       {vm.loading && <InlineState kind="loading" message={t('common.loading')} />}
       {vm.loadError && <InlineState kind="error" message={t('cardSimulator.loadError')} />}
@@ -118,5 +121,6 @@ export default function CardSimulatorScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: space[4], gap: space[4], paddingBottom: space[8] },
+  contentWide: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center' },
   results: { gap: space[4] },
 })

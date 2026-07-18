@@ -3,7 +3,15 @@ import { Alert, View, StyleSheet, ScrollView } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Text, Button, TextField, SkeletonCard, space } from '@/core/design-system'
+import {
+  Text,
+  Button,
+  TextField,
+  SkeletonCard,
+  space,
+  layout,
+  useResponsiveLayout,
+} from '@/core/design-system'
 import { DatePickerField } from '@/features/obligation-form/components/DatePickerField'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
@@ -30,6 +38,7 @@ function LogPaymentInner() {
   const queryClient = useQueryClient()
   const { id } = useLocalSearchParams<{ id: string }>()
   const obligationId = id as Id<'obligation'>
+  const { isWideWeb } = useResponsiveLayout()
 
   const { data: obligation, isLoading } = useQuery({
     queryKey: ['obligation', activeUser ?? '', obligationId],
@@ -97,7 +106,7 @@ function LogPaymentInner() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll}>
+    <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
       <Stack.Screen options={{ title: t('obligationForm.logPaymentTitle') }} />
       <DatePickerField label={t('obligationForm.paymentDate')} value={date} onChange={setDate} />
       <TextField
@@ -135,6 +144,11 @@ const styles = StyleSheet.create({
     padding: space[4],
     gap: space[4],
     paddingBottom: space[8],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.readableMaxWidth,
+    alignSelf: 'center',
   },
   loading: {
     flex: 1,

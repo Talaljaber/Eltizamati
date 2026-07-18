@@ -33,7 +33,7 @@ export default function MockConsentScreen() {
   }
 
   return (
-    <Screen>
+    <Screen maxWidth="readable">
       <Stack.Screen options={{ title: t('mockConnect.consentTitle') }} />
       <View style={{ gap: space[4] }}>
         <Text variant="title">{t('mockConnect.consentTitle')}</Text>

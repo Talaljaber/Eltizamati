@@ -10,7 +10,7 @@ export default function LegalDocScreen() {
   const { t } = useTranslation()
 
   return (
-    <Screen>
+    <Screen maxWidth="readable">
       <Stack.Screen options={{ title: t('legalDoc.title') }} />
       <Text variant="title">{t('legalDoc.title')}</Text>
       <Text variant="bodySmall" color="secondary">

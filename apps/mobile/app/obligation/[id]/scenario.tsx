@@ -12,6 +12,8 @@ import {
   Text,
   TextField,
   space,
+  layout,
+  useResponsiveLayout,
 } from '@/core/design-system'
 import { useScenarioSimulator } from '@/features/scenario/hooks/use-scenario-simulator'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
@@ -29,11 +31,12 @@ export default function ScenarioScreen() {
   const { t } = useTranslation()
   const viewModel = useScenarioSimulator(id as Id<'obligation'>)
   const [explainVisible, setExplainVisible] = useState(false)
+  const { isWideWeb } = useResponsiveLayout()
 
   return (
     <>
       <Stack.Screen options={{ title: t('scenario.title', 'Scenario Simulator') }} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
         <Card>
           <View style={styles.sectionTitle}>
             <Text variant="heading">
@@ -211,6 +214,11 @@ export default function ScenarioScreen() {
 const styles = StyleSheet.create({
   scroll: {
     padding: space[4],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.readableMaxWidth,
+    alignSelf: 'center',
   },
   sectionTitle: {
     marginBottom: space[4],

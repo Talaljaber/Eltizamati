@@ -1,7 +1,7 @@
 import { View, StyleSheet, ScrollView } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { Stack } from 'expo-router'
-import { Text, Card, ListRow, space } from '@/core/design-system'
+import { Text, Card, ListRow, space, layout, useResponsiveLayout } from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useDataStatusViewModel } from '@/features/data-status/hooks/use-data-status-view-model'
 
@@ -16,6 +16,7 @@ export default function DataStatusScreen() {
 function DataStatusInner() {
   const { t } = useTranslation()
   const viewModel = useDataStatusViewModel()
+  const { isWideWeb } = useResponsiveLayout()
 
   const activeLabel =
     viewModel.activeSource === 'demo-seed'
@@ -23,7 +24,7 @@ function DataStatusInner() {
       : t('dataStatus.providerManual')
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll}>
+    <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
       <Stack.Screen options={{ title: t('dataStatus.title') }} />
 
       <Card>
@@ -97,6 +98,11 @@ const styles = StyleSheet.create({
     padding: space[4],
     gap: space[4],
     paddingBottom: space[8],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.readableMaxWidth,
+    alignSelf: 'center',
   },
   row: {
     flexDirection: 'row',

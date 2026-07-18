@@ -28,7 +28,7 @@ export default function GlossaryScreen() {
       : sortedTerms.filter((entry) => entry.label.toLowerCase().includes(normalizedQuery))
 
   return (
-    <Screen gap={5}>
+    <Screen gap={5} maxWidth="content">
       <Stack.Screen options={{ title: t('learn.glossaryTitle') }} />
       <TextField
         label={t('learn.searchLabel')}

@@ -47,7 +47,7 @@ export default function LearnCompareScreen() {
   })
 
   return (
-    <Screen gap={5}>
+    <Screen gap={5} maxWidth="content">
       <Stack.Screen options={{ title: t('learn.compareTitle') }} />
       <Text variant="title">{t('learn.compareTitle')}</Text>
       <Text variant="body" color="secondary">

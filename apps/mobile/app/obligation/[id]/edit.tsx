@@ -3,7 +3,14 @@ import { View, StyleSheet, ScrollView } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Text, Button, SkeletonCard, space } from '@/core/design-system'
+import {
+  Text,
+  Button,
+  SkeletonCard,
+  space,
+  layout,
+  useResponsiveLayout,
+} from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
@@ -94,6 +101,7 @@ function EditObligationInner() {
   const queryClient = useQueryClient()
   const { id } = useLocalSearchParams<{ id: string }>()
   const obligationId = id as Id<'obligation'>
+  const { isWideWeb } = useResponsiveLayout()
 
   const { data: obligation, isLoading } = useQuery({
     queryKey: ['obligation', activeUser ?? '', obligationId],
@@ -215,7 +223,7 @@ function EditObligationInner() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll}>
+    <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
       <Stack.Screen options={{ title: t('obligationForm.editTitle') }} />
 
       {obligation.kind === 'conventionalLoan' && (
@@ -266,6 +274,11 @@ const styles = StyleSheet.create({
     padding: space[4],
     gap: space[4],
     paddingBottom: space[8],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.readableMaxWidth,
+    alignSelf: 'center',
   },
   loading: {
     flex: 1,

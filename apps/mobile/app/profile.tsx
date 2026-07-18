@@ -28,7 +28,7 @@ function ProfileContent() {
 
   if (activeUser.status === 'demo') {
     return (
-      <Screen>
+      <Screen maxWidth="readable">
         <View style={styles.section}>
           <Text variant="title">{t('profile.title')}</Text>
           <Text variant="body" color="secondary">
@@ -51,7 +51,7 @@ function ProfileContent() {
 
   if (activeUser.status !== 'authenticated') {
     return (
-      <Screen loading>
+      <Screen loading maxWidth="readable">
         <Text variant="body">{t('common.loading')}</Text>
       </Screen>
     )
@@ -105,7 +105,7 @@ function PersonalProfile({ userId }: { readonly userId: Id<'user'> }) {
   }
 
   return (
-    <Screen loading={profileQuery.isLoading}>
+    <Screen loading={profileQuery.isLoading} maxWidth="readable">
       <View style={styles.section}>
         <Text variant="title">{t('profile.personalDetails')}</Text>
         <TextField

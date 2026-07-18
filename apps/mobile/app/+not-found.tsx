@@ -9,7 +9,7 @@ export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t('navigation.notFound') }} />
-      <Screen testID="not-found-screen">
+      <Screen testID="not-found-screen" maxWidth="readable">
         <Text variant="title" align="center">
           {t('errors.screenNotFound.title')}
         </Text>

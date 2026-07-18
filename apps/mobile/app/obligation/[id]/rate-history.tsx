@@ -1,7 +1,15 @@
 import { View, StyleSheet, ScrollView } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, TimelineItem, Card, InlineState } from '@/core/design-system'
+import {
+  Text,
+  space,
+  layout,
+  useResponsiveLayout,
+  TimelineItem,
+  Card,
+  InlineState,
+} from '@/core/design-system'
 import { useRateHistoryViewModel } from '@/features/rate-history/hooks/use-rate-history-view-model'
 import type { Id } from '@eltizamati/domain'
 
@@ -9,11 +17,12 @@ export default function RateHistoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation()
   const viewModel = useRateHistoryViewModel(id as Id<'obligation'>)
+  const { isWideWeb } = useResponsiveLayout()
 
   return (
     <>
       <Stack.Screen options={{ title: t('rateHistory.title') }} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
         {viewModel.status === 'loading' && (
           <InlineState kind="loading" message={t('common.loading')} />
         )}
@@ -70,6 +79,11 @@ export default function RateHistoryScreen() {
 const styles = StyleSheet.create({
   scroll: {
     padding: space[4],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.readableMaxWidth,
+    alignSelf: 'center',
   },
   periodContent: {
     paddingStart: space[3],

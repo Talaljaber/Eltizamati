@@ -3,7 +3,15 @@ import { View, StyleSheet, ScrollView, Pressable } from 'react-native'
 import { Stack, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
-import { Text, space, InsightBanner, SectionHeader, Button } from '@/core/design-system'
+import {
+  Text,
+  space,
+  layout,
+  useResponsiveLayout,
+  InsightBanner,
+  SectionHeader,
+  Button,
+} from '@/core/design-system'
 import { useInsightsViewModel } from '@/features/insights/hooks/use-insights-view-model'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
@@ -24,6 +32,7 @@ export default function InsightsScreen() {
     activeUser ?? ('' as Id<'user'>),
   )
   const [expandedId, setExpandedId] = useState<string | undefined>(undefined)
+  const { isWideWeb } = useResponsiveLayout()
 
   const nicknameFor = (obligationId: Id<'obligation'> | undefined): string | undefined =>
     obligations?.find((o) => o.id === obligationId)?.nickname
@@ -73,7 +82,7 @@ export default function InsightsScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t('insights.title') }} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
         {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
         {viewModel.status === 'error' && (
           <Text variant="body" color="critical">
@@ -151,6 +160,11 @@ export default function InsightsScreen() {
 const styles = StyleSheet.create({
   scroll: {
     padding: space[4],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.contentMaxWidth,
+    alignSelf: 'center',
   },
   empty: {
     marginTop: space[8],

@@ -2,7 +2,15 @@ import { View, StyleSheet, ScrollView } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { Stack } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Text, Card, ListRow, EmptyState, space } from '@/core/design-system'
+import {
+  Text,
+  Card,
+  ListRow,
+  EmptyState,
+  space,
+  layout,
+  useResponsiveLayout,
+} from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
@@ -19,6 +27,7 @@ function AcknowledgmentsInner() {
   const { t } = useTranslation()
   const repos = useRepositories()
   const activeUser = useActiveUser()
+  const { isWideWeb } = useResponsiveLayout()
 
   const { data: records, isLoading } = useQuery({
     queryKey: ['consentRecords', activeUser],
@@ -32,7 +41,7 @@ function AcknowledgmentsInner() {
   })
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll}>
+    <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
       <Stack.Screen options={{ title: t('settings.acknowledgmentsTitle') }} />
       {isLoading ? (
         <Text variant="body">{t('common.loading')}</Text>
@@ -69,6 +78,11 @@ const styles = StyleSheet.create({
     padding: space[4],
     gap: space[4],
     paddingBottom: space[8],
+  },
+  scrollWide: {
+    width: '100%',
+    maxWidth: layout.readableMaxWidth,
+    alignSelf: 'center',
   },
   metaRow: {
     flexDirection: 'row',
