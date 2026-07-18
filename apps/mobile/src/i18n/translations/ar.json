@@ -413,6 +413,8 @@
     "pickKind": "ما الذي تريد إضافته؟",
     "nickname": "الاسم المختصر",
     "institutionName": "الجهة",
+    "selectInstitution": "اختر الجهة",
+    "searchInstitution": "ابحث عن الجهات",
     "openedDate": "تاريخ الفتح",
     "selectDate": "اختر التاريخ",
     "originalPrincipal": "المبلغ الأصلي",
@@ -440,7 +442,7 @@
     "save": "حفظ",
     "errors": {
       "nickname": "أدخل اسمًا مختصرًا لهذا الالتزام.",
-      "institutionName": "أدخل اسم الجهة.",
+      "institutionName": "اختر الجهة.",
       "date": "أدخل تاريخًا صحيحًا (YYYY-MM-DD).",
       "amount": "أدخل مبلغًا صحيحًا.",
       "percent": "أدخل نسبة مئوية صحيحة.",

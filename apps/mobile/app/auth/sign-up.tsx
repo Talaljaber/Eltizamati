@@ -12,11 +12,11 @@ import {
   layout,
   useTheme,
   useResponsiveLayout,
+  PickerSheetField,
 } from '@/core/design-system'
 import { useSignUpMutation } from '@/features/auth/api/use-auth-mutations'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
-import { PickerSheetField } from '@/features/auth/components/PickerSheetField'
 import { COUNTRY_CODES, type CountryCode } from '@/features/auth/data/country-codes'
 import { JORDAN_BANKS, type JordanBank } from '@/features/auth/data/jordan-banks'
 import { useAuthService } from '@/features/auth/hooks/use-auth-service'

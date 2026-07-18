@@ -10,11 +10,19 @@ import { View, StyleSheet, Pressable } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter, Stack } from 'expo-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { Text, Button, Screen, TextField, space, radius, useTheme } from '@/core/design-system'
+import {
+  Text,
+  Button,
+  Screen,
+  TextField,
+  space,
+  radius,
+  useTheme,
+  PickerSheetField,
+} from '@/core/design-system'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
-import { PickerSheetField } from '@/features/auth/components/PickerSheetField'
 import { JORDAN_BANKS, type JordanBank } from '@/features/auth/data/jordan-banks'
 import type { LoanPurpose } from '@eltizamati/domain'
 

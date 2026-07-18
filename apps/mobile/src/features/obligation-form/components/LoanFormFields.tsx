@@ -4,6 +4,7 @@ import { Text, Button, TextField, space } from '@/core/design-system'
 import type { RateType } from '@eltizamati/domain'
 import { RATE_TYPES, type LoanFormState } from '../types'
 import { DatePickerField } from './DatePickerField'
+import { InstitutionPickerField } from './InstitutionPickerField'
 
 export interface LoanFormFieldsProps {
   readonly state: LoanFormState
@@ -21,10 +22,9 @@ export function LoanFormFields({ state, onChange, showInitialRate }: LoanFormFie
         value={state.nickname}
         onChangeText={(nickname) => onChange({ nickname })}
       />
-      <TextField
-        label={t('obligationForm.institutionName')}
+      <InstitutionPickerField
         value={state.institutionName}
-        onChangeText={(institutionName) => onChange({ institutionName })}
+        onChange={(institutionName) => onChange({ institutionName })}
       />
       <DatePickerField
         label={t('obligationForm.openedDate')}

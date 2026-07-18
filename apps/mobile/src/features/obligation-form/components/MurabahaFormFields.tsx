@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { TextField, space } from '@/core/design-system'
 import type { MurabahaFormState } from '../types'
 import { DatePickerField } from './DatePickerField'
+import { InstitutionPickerField } from './InstitutionPickerField'
 
 export interface MurabahaFormFieldsProps {
   readonly state: MurabahaFormState
@@ -19,10 +20,9 @@ export function MurabahaFormFields({ state, onChange }: MurabahaFormFieldsProps)
         value={state.nickname}
         onChangeText={(nickname) => onChange({ nickname })}
       />
-      <TextField
-        label={t('obligationForm.institutionName')}
+      <InstitutionPickerField
         value={state.institutionName}
-        onChangeText={(institutionName) => onChange({ institutionName })}
+        onChange={(institutionName) => onChange({ institutionName })}
       />
       <DatePickerField
         label={t('obligationForm.openedDate')}

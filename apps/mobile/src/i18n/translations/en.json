@@ -413,6 +413,8 @@
     "pickKind": "What would you like to add?",
     "nickname": "Nickname",
     "institutionName": "Institution",
+    "selectInstitution": "Select institution",
+    "searchInstitution": "Search institutions",
     "openedDate": "Opened Date",
     "selectDate": "Select date",
     "originalPrincipal": "Original Principal",
@@ -440,7 +442,7 @@
     "save": "Save",
     "errors": {
       "nickname": "Enter a nickname for this obligation.",
-      "institutionName": "Enter the institution name.",
+      "institutionName": "Select an institution.",
       "date": "Enter a valid date (YYYY-MM-DD).",
       "amount": "Enter a valid amount.",
       "percent": "Enter a valid percentage.",

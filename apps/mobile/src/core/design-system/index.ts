@@ -59,6 +59,8 @@ export { SectionHeader } from './primitives/SectionHeader'
 export type { SectionHeaderProps } from './primitives/SectionHeader'
 export { TextField } from './primitives/TextField'
 export type { TextFieldProps } from './primitives/TextField'
+export { PickerSheetField } from './primitives/PickerSheetField'
+export type { PickerSheetFieldProps } from './primitives/PickerSheetField'
 // Polish-pass primitives
 export { HeroAmount } from './primitives/HeroAmount'
 export type { HeroAmountProps, HeroAmountSupportingMetric } from './primitives/HeroAmount'

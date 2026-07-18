@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { Sheet, Text, ListRow, minTouchTarget, radius, space, useTheme } from '@/core/design-system'
+import { Sheet } from './Sheet'
+import { Text } from './Text'
+import { ListRow } from './ListRow'
+import { minTouchTarget, radius, space } from '../tokens'
+import { useTheme } from '../use-theme'
 
 export interface PickerSheetFieldProps<T> {
   readonly label: string
@@ -23,9 +27,9 @@ export interface PickerSheetFieldProps<T> {
 
 /**
  * Shared "tap a field, search a short list in a bottom sheet, pick one" —
- * used for sign-up's bank picker and country-dial-code picker (FR-AUTH: no
- * free-typed bank name, no hand-typed country code). Generic over item type
- * so both pickers share one implementation.
+ * used for sign-up's bank/country-dial-code pickers and for obligation-form's
+ * institution picker (no free-typed institution name — a fixed list only).
+ * Generic over item type so every picker shares one implementation.
  */
 export function PickerSheetField<T>({
   label,
@@ -85,7 +89,9 @@ export function PickerSheetField<T>({
       </Pressable>
 
       <Sheet visible={visible} onClose={() => setVisible(false)} title={label}>
-        <View style={[styles.searchRow, { borderColor: theme.border, backgroundColor: theme.bgElevated }]}>
+        <View
+          style={[styles.searchRow, { borderColor: theme.border, backgroundColor: theme.bgElevated }]}
+        >
           <Ionicons name="search-outline" size={16} color={theme.textTertiary} />
           <TextInput
             value={query}
