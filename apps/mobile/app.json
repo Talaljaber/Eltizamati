@@ -8,7 +8,9 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "eltizamati",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.eltizamati.app"
@@ -39,7 +41,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#0F6E64"
         }
-      ]
+      ],
+      "@sentry/react-native"
     ]
   }
 }

@@ -34,6 +34,19 @@ jest.mock('react-i18next', () => ({
   }),
 }))
 
+// Mock Sentry — real device/network behavior is exercised in preview/production
+// builds only (ADR-0015); unit tests just assert the app calls the right
+// Sentry functions with the right (sanitized) arguments.
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  captureMessage: jest.fn(),
+  captureException: jest.fn(),
+  addBreadcrumb: jest.fn(),
+  setUser: jest.fn(),
+  wrap: (component) => component,
+  ReactNativeTracing: jest.fn(),
+}))
+
 // Mock @expo/vector-icons so icons render synchronously in tests.
 // The real Icon async-loads its font glyph and setState()s after render,
 // which triggers act(...) warnings and leaks a timer past teardown. Icons are
