@@ -168,7 +168,16 @@ Deno.serve(async (request) => {
       { status: 502, headers: cors },
     )
   }
-  if (!parsed.sourceIds.every((id) => body.comparison?.sourceIds.includes(id) ?? false))
+  if (!parsed.sourceIds.every((id) => body.comparison?.sourceIds.includes(id) ?? false)) {
+    // Grounding guard: the model cited a source id that wasn't part of the
+    // request's retrieved sourceIds (or cited any id at all when there was
+    // no comparison context, since body.comparison is then null). Log what
+    // it actually cited so an over-eager model is visible, not just a 502.
+    console.error('learn-assistant: rejected ungrounded sourceIds', {
+      citedSourceIds: parsed.sourceIds,
+      allowedSourceIds: body.comparison?.sourceIds ?? [],
+    })
     return Response.json(unavailable(), { status: 502, headers: cors })
+  }
   return Response.json(parsed, { headers: cors })
 })
