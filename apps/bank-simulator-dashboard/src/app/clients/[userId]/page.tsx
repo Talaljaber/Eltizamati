@@ -5,6 +5,11 @@ import { listAllowlistedObligations } from '@/server/repositories/obligation-rep
 import { listAllowlistedPayments } from '@/server/repositories/payment-repository'
 import { listAllowlistedInsights } from '@/server/repositories/insight-repository'
 import { listAllowlistedCalculationRuns } from '@/server/repositories/calculation-run-repository'
+import {
+  listAllowlistedScheduleProposals,
+  type ScheduleProposalRow,
+} from '@/server/repositories/schedule-proposal-repository'
+import { decideScheduleProposalAction } from './schedule-proposal-actions'
 import { maskClientName } from '@/server/masking'
 import { formatMoney } from '@/format/money'
 import { SourcedMoneyValue, SourcedRateValue } from '@/components/sourced-amount'
@@ -18,6 +23,8 @@ import type {
   MurabahaFinancing,
   Obligation,
 } from '@eltizamati/domain'
+import { localDateFromDate } from '@eltizamati/domain'
+import { resolveFormula } from '@eltizamati/finance-engine'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,14 +47,22 @@ export default async function ClientDetailPage({
     )
   }
 
-  const [profilesResult, obligationsResult, insightsResult, calcRunsResult] = await Promise.all([
-    listAllowlistedProfiles(),
-    listAllowlistedObligations(),
-    listAllowlistedInsights(),
-    listAllowlistedCalculationRuns(),
-  ])
+  const [profilesResult, obligationsResult, insightsResult, calcRunsResult, proposalsResult] =
+    await Promise.all([
+      listAllowlistedProfiles(),
+      listAllowlistedObligations(),
+      listAllowlistedInsights(),
+      listAllowlistedCalculationRuns(),
+      listAllowlistedScheduleProposals(),
+    ])
 
-  if (!profilesResult.ok || !obligationsResult.ok || !insightsResult.ok || !calcRunsResult.ok) {
+  if (
+    !profilesResult.ok ||
+    !obligationsResult.ok ||
+    !insightsResult.ok ||
+    !calcRunsResult.ok ||
+    !proposalsResult.ok
+  ) {
     return (
       <div>
         <h1 className="page-title">Client detail</h1>
@@ -62,6 +77,7 @@ export default async function ClientDetailPage({
   const obligations = obligationsResult.value.filter((o) => o.userId === userId)
   const insights = insightsResult.value.filter((i) => i.userId === userId)
   const calcRuns = calcRunsResult.value.filter((r) => r.userId === userId)
+  const proposals = proposalsResult.value.filter((proposal) => proposal.user_id === userId)
 
   const paymentsResult = await listAllowlistedPayments(obligationsResult.value)
   const payments = paymentsResult.ok ? paymentsResult.value.filter((p) => p.userId === userId) : []
@@ -113,7 +129,11 @@ export default async function ClientDetailPage({
         <div className="card">No obligations on file for this client.</div>
       ) : (
         obligations.map((obligation) => (
-          <ObligationCard key={obligation.id} obligation={obligation} />
+          <ObligationCard
+            key={obligation.id}
+            obligation={obligation}
+            proposals={proposals.filter((proposal) => proposal.obligation_id === obligation.id)}
+          />
         ))
       )}
 
@@ -211,7 +231,13 @@ export default async function ClientDetailPage({
   )
 }
 
-function ObligationCard({ obligation }: { obligation: Obligation }) {
+function ObligationCard({
+  obligation,
+  proposals,
+}: {
+  obligation: Obligation
+  proposals: readonly ScheduleProposalRow[]
+}) {
   return (
     <div className="card" style={{ marginBlockEnd: 'var(--space-4)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -223,7 +249,9 @@ function ObligationCard({ obligation }: { obligation: Obligation }) {
       </div>
       <div style={{ marginBlockStart: 8 }}>
         <ProvenanceBadge source={obligation.provenance.source} />
-        {obligation.kind === 'conventionalLoan' ? <LoanFields loan={obligation} /> : null}
+        {obligation.kind === 'conventionalLoan' ? (
+          <LoanFields loan={obligation} proposals={proposals} />
+        ) : null}
         {obligation.kind === 'murabaha' ? <MurabahaFields murabaha={obligation} /> : null}
         {obligation.kind === 'creditCard' ? <CardFields card={obligation} /> : null}
       </div>
@@ -240,7 +268,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function LoanFields({ loan }: { loan: ConventionalLoan }) {
+function LoanFields({
+  loan,
+  proposals,
+}: {
+  loan: ConventionalLoan
+  proposals: readonly ScheduleProposalRow[]
+}) {
   const { loanDetails } = loan
   const activeRate = [...loanDetails.ratePeriods]
     .filter((p) => p.supersededBy === undefined)
@@ -299,8 +333,209 @@ function LoanFields({ loan }: { loan: ConventionalLoan }) {
           </table>
         </TableScroll>
       </details>
+      <ScheduleAgreement loan={loan} proposals={proposals} />
     </div>
   )
+}
+
+interface SnapshotRow {
+  readonly period: number
+  readonly date?: string
+  readonly payment: string | number
+  readonly principal?: string | number
+  readonly cost?: string | number
+  readonly closingBalance?: string | number
+  readonly finalBalloonAmount?: string | number
+}
+
+function snapshotRows(value: unknown): readonly SnapshotRow[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((row): row is SnapshotRow => {
+    if (typeof row !== 'object' || row === null) return false
+    const candidate = row as Record<string, unknown>
+    return (
+      typeof candidate.period === 'number' &&
+      (typeof candidate.payment === 'string' || typeof candidate.payment === 'number')
+    )
+  })
+}
+
+function ScheduleAgreement({
+  loan,
+  proposals,
+}: {
+  loan: ConventionalLoan
+  proposals: readonly ScheduleProposalRow[]
+}) {
+  const pending = proposals.find((proposal) => proposal.status === 'pending')
+  const approved = proposals.find((proposal) => proposal.status === 'approved')
+  const agreedRows =
+    approved === undefined
+      ? calculateCurrentAgreedRows(loan)
+      : snapshotRows(approved.schedule_snapshot)
+
+  return (
+    <div
+      style={{
+        marginBlockStart: 16,
+        borderBlockStart: '1px solid var(--color-border)',
+        paddingBlockStart: 12,
+      }}
+    >
+      <h4 style={{ margin: '0 0 8px', fontSize: 14 }}>Agreed payment schedule</h4>
+      {approved === undefined ? (
+        <>
+          <p style={{ fontSize: 13 }}>
+            Current contractual terms: {formatMoney(loan.loanDetails.installment.value)} per
+            installment, maturity {loan.loanDetails.maturityDate}. The rows below preserve the
+            unchanged agreed installment and show any projected final balloon clearly.
+          </p>
+          <ScheduleSnapshotTable rows={agreedRows} currency={loan.currency} />
+        </>
+      ) : (
+        <>
+          <p style={{ fontSize: 13 }}>
+            Bank-approved {approved.proposal_kind} proposal · accepted{' '}
+            {approved.decided_at?.slice(0, 10)}. This frozen snapshot is the current agreement.
+          </p>
+          <ScheduleSnapshotTable rows={agreedRows} currency={approved.currency} />
+        </>
+      )}
+
+      {pending !== undefined ? (
+        <div
+          className="card"
+          style={{ marginBlockStart: 12, background: 'var(--color-surface-subtle)' }}
+        >
+          <h4 style={{ marginBlockStart: 0 }}>Pending customer proposal</h4>
+          <p style={{ fontSize: 13 }}>
+            {pending.proposal_kind} · proposed installment {pending.proposed_installment}{' '}
+            {pending.currency}
+            {' · '}final balloon {pending.final_balloon} {pending.currency}. The agreed schedule
+            remains unchanged until approval.
+          </p>
+          <ScheduleSnapshotTable
+            rows={snapshotRows(pending.schedule_snapshot)}
+            currency={pending.currency}
+          />
+          <form action={decideScheduleProposalAction} style={{ marginBlockStart: 12 }}>
+            <input type="hidden" name="proposalId" value={pending.id} />
+            <label style={{ display: 'block', fontSize: 13, marginBlockEnd: 8 }}>
+              Rejection reason
+              <input
+                name="decisionReason"
+                className="input"
+                style={{ display: 'block', width: '100%', marginBlockStart: 4 }}
+              />
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="button button--primary" name="decision" value="approve">
+                Accept as agreed schedule
+              </button>
+              <button className="button" name="decision" value="reject">
+                Reject proposal
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {proposals.some(
+        (proposal) => proposal.status === 'rejected' || proposal.status === 'superseded',
+      ) ? (
+        <details style={{ marginBlockStart: 8 }}>
+          <summary style={{ cursor: 'pointer', fontSize: 12 }}>Proposal history</summary>
+          <ul>
+            {proposals
+              .filter(
+                (proposal) => proposal.status === 'rejected' || proposal.status === 'superseded',
+              )
+              .map((proposal) => (
+                <li key={proposal.id}>
+                  {proposal.created_at.slice(0, 10)} · {proposal.proposal_kind} · {proposal.status}
+                  {proposal.decision_reason === null ? '' : ` · ${proposal.decision_reason}`}
+                </li>
+              ))}
+          </ul>
+        </details>
+      ) : null}
+    </div>
+  )
+}
+
+function ScheduleSnapshotTable({
+  rows,
+  currency,
+}: {
+  rows: readonly SnapshotRow[]
+  currency: string
+}) {
+  if (rows.length === 0) return <p style={{ fontSize: 13 }}>No row snapshot is available.</p>
+  return (
+    <TableScroll>
+      <table className="table">
+        <thead>
+          <tr>
+            <Th>Period</Th>
+            <Th>Date</Th>
+            <Th>Payment</Th>
+            <Th>Principal</Th>
+            <Th>Interest</Th>
+            <Th>Closing balance</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.period}>
+              <Td>
+                {row.period}
+                {row.finalBalloonAmount === undefined
+                  ? ''
+                  : ` · final balloon ${row.finalBalloonAmount} ${currency}`}
+              </Td>
+              <Td>{row.date ?? '—'}</Td>
+              <Td className="figure">
+                {row.payment} {currency}
+              </Td>
+              <Td className="figure">{row.principal ?? '—'}</Td>
+              <Td className="figure">{row.cost ?? '—'}</Td>
+              <Td className="figure">{row.closingBalance ?? '—'}</Td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </TableScroll>
+  )
+}
+
+function calculateCurrentAgreedRows(loan: ConventionalLoan): readonly SnapshotRow[] {
+  const formula = resolveFormula('variableProjection', 1)
+  if (!formula.ok) return []
+  const outcome = formula.value.execute({
+    principal: loan.loanDetails.originalPrincipal.value,
+    ratePeriods: loan.loanDetails.ratePeriods,
+    termMonths: loan.loanDetails.termMonths.value,
+    startDate: loan.loanDetails.startDate,
+    installment: loan.loanDetails.installment.value,
+    installmentPolicy: { kind: 'unchanged' },
+    asOf: localDateFromDate(new Date()),
+  })
+  if (outcome.kind === 'refused') return []
+
+  const futureRows = outcome.value.schedule.filter((entry) => entry.date > outcome.value.asOf)
+  const balloon =
+    loan.loanDetails.contractualBalloon?.value ?? outcome.value.projectedResidualAtMaturity
+  return futureRows.map((entry, index) => ({
+    period: entry.period,
+    date: entry.date,
+    payment: entry.payment.toStorageString(),
+    principal: entry.principal.toStorageString(),
+    cost: entry.cost.toStorageString(),
+    closingBalance: entry.closingBalance.toStorageString(),
+    ...(index === futureRows.length - 1 && balloon.isPositive()
+      ? { finalBalloonAmount: balloon.toStorageString() }
+      : {}),
+  }))
 }
 
 function MurabahaFields({ murabaha }: { murabaha: MurabahaFinancing }) {
