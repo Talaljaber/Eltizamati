@@ -1,8 +1,18 @@
 import { useState } from 'react'
-import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, ScrollView } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, radius, useTheme, Card, FieldRow, Amount } from '@/core/design-system'
+import {
+  Amount,
+  Card,
+  ExplainLink,
+  FieldRow,
+  HeroAmount,
+  InlineState,
+  Text,
+  TextField,
+  space,
+} from '@/core/design-system'
 import { useScenarioSimulator } from '@/features/scenario/hooks/use-scenario-simulator'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import {
@@ -17,7 +27,6 @@ const SCENARIO_FORMULA_ID = 'extraPaymentScenario'
 export default function ScenarioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation()
-  const theme = useTheme()
   const viewModel = useScenarioSimulator(id as Id<'obligation'>)
   const [explainVisible, setExplainVisible] = useState(false)
 
@@ -32,54 +41,38 @@ export default function ScenarioScreen() {
             </Text>
           </View>
 
-          <Text variant="bodySmall" color="secondary">
-            {t('scenario.extraMonthlyLabel')}
-          </Text>
-          <TextInput
+          <TextField
+            label={t('scenario.extraMonthlyLabel')}
             value={String(viewModel.draftExtraMonthly)}
             onChangeText={(text) => {
               const parsed = Number(text.replace(/[^0-9.]/g, ''))
               viewModel.setDraftExtraMonthly(Number.isFinite(parsed) ? parsed : 0)
             }}
-            keyboardType="numeric"
-            style={[
-              styles.input,
-              { borderColor: theme.border, color: theme.textPrimary, backgroundColor: theme.bg },
-            ]}
+            keyboardType="decimal-pad"
             testID="scenario-extra-monthly-input"
           />
-          <Text variant="bodySmall" color="secondary">
-            {t('scenario.oneTimeLabel', 'One-time extra payment')}
-          </Text>
-          <TextInput
+          <TextField
+            label={t('scenario.oneTimeLabel', 'One-time extra payment')}
             value={String(viewModel.oneTimeAmount)}
             onChangeText={(text) => {
               const parsed = Number(text.replace(/[^0-9.]/g, ''))
               viewModel.setOneTimeAmount(Number.isFinite(parsed) ? parsed : 0)
             }}
-            keyboardType="numeric"
-            style={[
-              styles.input,
-              { borderColor: theme.border, color: theme.textPrimary, backgroundColor: theme.bg },
-            ]}
+            keyboardType="decimal-pad"
             testID="scenario-one-time-input"
           />
 
-          {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
+          {viewModel.status === 'loading' && (
+            <InlineState kind="loading" message={t('common.loading')} />
+          )}
           {viewModel.status === 'error' && (
-            <Text variant="body" color="critical">
-              {t('scenario.error')}
-            </Text>
+            <InlineState kind="error" message={t('scenario.error')} />
           )}
           {viewModel.status === 'unsupported' && (
-            <Text variant="body" color="secondary">
-              {t('scenario.unsupported')}
-            </Text>
+            <InlineState kind="unsupported" message={t('scenario.unsupported')} />
           )}
           {viewModel.status === 'refused' && (
-            <Text variant="body" color="critical">
-              {t('error.calculationRefused')}
-            </Text>
+            <InlineState kind="refused" message={t('error.calculationRefused')} />
           )}
 
           {viewModel.status === 'success' &&
@@ -94,9 +87,33 @@ export default function ScenarioScreen() {
                   const scenarioPayoffPeriod = snapshotNumber(snapshot.scenarioPayoffPeriod)
                   const baseResidual = snapshotMoneyAmount(snapshot.baseResidualAtMaturity)
                   const scenarioResidual = snapshotMoneyAmount(snapshot.scenarioResidualAtMaturity)
+                  const run = viewModel.run
 
                   return (
                     <>
+                      {costSaved !== undefined ? (
+                        <HeroAmount
+                          label={t('scenario.costSaved')}
+                          money={Money.of(costSaved, 'JOD')}
+                          provenance={
+                            engineEstimate(Money.of(costSaved, 'JOD'), run.id, run.calculatedAt)
+                              .provenance
+                          }
+                          precision="estimate"
+                          onExplain={() => setExplainVisible(true)}
+                          supporting={
+                            monthsSaved !== undefined
+                              ? [
+                                  {
+                                    label: t('scenario.monthsSaved'),
+                                    value: <Text variant="amountSm">{monthsSaved}</Text>,
+                                  },
+                                ]
+                              : undefined
+                          }
+                        />
+                      ) : null}
+
                       <View style={styles.comparisonRow}>
                         <View style={styles.comparisonColumn}>
                           <Text variant="bodySmall" color="secondary" align="center">
@@ -119,12 +136,11 @@ export default function ScenarioScreen() {
                                   provenance={
                                     engineEstimate(
                                       Money.of(baseResidual, 'JOD'),
-                                      viewModel.run.id,
-                                      viewModel.run.calculatedAt,
+                                      run.id,
+                                      run.calculatedAt,
                                     ).provenance
                                   }
                                   precision="estimate"
-                                  onPress={() => setExplainVisible(true)}
                                 />
                               ) : (
                                 t('common.unknown')
@@ -153,12 +169,11 @@ export default function ScenarioScreen() {
                                   provenance={
                                     engineEstimate(
                                       Money.of(scenarioResidual, 'JOD'),
-                                      viewModel.run.id,
-                                      viewModel.run.calculatedAt,
+                                      run.id,
+                                      run.calculatedAt,
                                     ).provenance
                                   }
                                   precision="estimate"
-                                  onPress={() => setExplainVisible(true)}
                                 />
                               ) : (
                                 t('common.unknown')
@@ -168,48 +183,13 @@ export default function ScenarioScreen() {
                         </View>
                       </View>
 
-                      <FieldRow
-                        label={t('scenario.monthsSaved')}
-                        value={
-                          monthsSaved !== undefined ? String(monthsSaved) : t('common.unknown')
-                        }
-                      />
-                      <FieldRow
-                        label={t('scenario.costSaved')}
-                        value={
-                          costSaved !== undefined ? (
-                            <Amount
-                              money={Money.of(costSaved, 'JOD')}
-                              provenance={
-                                engineEstimate(
-                                  Money.of(costSaved, 'JOD'),
-                                  viewModel.run.id,
-                                  viewModel.run.calculatedAt,
-                                ).provenance
-                              }
-                              precision="estimate"
-                              onPress={() => setExplainVisible(true)}
-                            />
-                          ) : (
-                            t('common.unknown')
-                          )
-                        }
-                      />
-
-                      {viewModel.perfMs !== undefined && (
+                      {__DEV__ && viewModel.perfMs !== undefined && (
                         <Text variant="bodySmall" color="secondary" testID="scenario-perf">
                           {t('scenario.perfLabel', { ms: Math.round(viewModel.perfMs) })}
                         </Text>
                       )}
 
-                      <TouchableOpacity
-                        onPress={() => setExplainVisible(true)}
-                        style={styles.explainLink}
-                      >
-                        <Text variant="bodySmall" color="primary">
-                          {t('common.explain')}
-                        </Text>
-                      </TouchableOpacity>
+                      <ExplainLink onPress={() => setExplainVisible(true)} />
                     </>
                   )
                 })()}
@@ -235,24 +215,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: space[4],
   },
-  input: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: space[3],
-    paddingVertical: space[2],
-    marginBottom: space[4],
-    marginTop: space[1],
-  },
   comparisonRow: {
     flexDirection: 'row',
     gap: space[4],
+    marginTop: space[4],
     marginBottom: space[4],
   },
   comparisonColumn: {
     flex: 1,
     gap: space[1],
-  },
-  explainLink: {
-    marginTop: space[3],
   },
 })

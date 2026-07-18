@@ -1,31 +1,39 @@
 import { View, StyleSheet, ScrollView } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, Card } from '@/core/design-system'
+import { Text, space, radius, useTheme, NavGroup, ListRow } from '@/core/design-system'
 import { useBankQuestionsViewModel } from '@/features/bank-questions/hooks/use-bank-questions-view-model'
 import type { Id } from '@eltizamati/domain'
 
 export default function BankQuestionsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation()
+  const theme = useTheme()
   const viewModel = useBankQuestionsViewModel(id as Id<'obligation'>)
 
   return (
     <>
       <Stack.Screen options={{ title: t('bankQuestions.title', 'Bank Questions') }} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Card>
-          <View style={styles.header}>
-            <Text variant="heading">{t('bankQuestions.header', 'Questions to ask your bank')}</Text>
-          </View>
+        <View style={styles.header}>
+          <Text variant="heading">{t('bankQuestions.header', 'Questions to ask your bank')}</Text>
+        </View>
+        <NavGroup>
           {viewModel.questions.map((q, idx) => (
-            <View key={q.id} style={styles.questionItem}>
-              <Text variant="body">
-                {idx + 1}. {q.text}
-              </Text>
-            </View>
+            <ListRow
+              key={q.id}
+              leading={
+                <View style={[styles.indexBadge, { backgroundColor: theme.bgSubtle }]}>
+                  <Text variant="caption" color="secondary">
+                    {idx + 1}
+                  </Text>
+                </View>
+              }
+            >
+              <Text variant="body">{q.text}</Text>
+            </ListRow>
           ))}
-        </Card>
+        </NavGroup>
       </ScrollView>
     </>
   )
@@ -38,7 +46,11 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: space[4],
   },
-  questionItem: {
-    marginBottom: space[3],
+  indexBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 })

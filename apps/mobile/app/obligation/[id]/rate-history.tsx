@@ -1,7 +1,7 @@
 import { View, StyleSheet, ScrollView } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, TimelineItem, Card } from '@/core/design-system'
+import { Text, space, TimelineItem, Card, InlineState } from '@/core/design-system'
 import { useRateHistoryViewModel } from '@/features/rate-history/hooks/use-rate-history-view-model'
 import type { Id } from '@eltizamati/domain'
 
@@ -14,17 +14,15 @@ export default function RateHistoryScreen() {
     <>
       <Stack.Screen options={{ title: t('rateHistory.title') }} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
+        {viewModel.status === 'loading' && (
+          <InlineState kind="loading" message={t('common.loading')} />
+        )}
         {viewModel.status === 'error' && (
-          <Text variant="body" color="critical">
-            {t('rateHistory.error')}
-          </Text>
+          <InlineState kind="error" message={t('rateHistory.error')} />
         )}
 
         {viewModel.status === 'success' && viewModel.periods.length === 0 && (
-          <Text variant="body" color="secondary">
-            {t('rateHistory.empty')}
-          </Text>
+          <InlineState kind="empty" message={t('rateHistory.empty')} />
         )}
 
         {viewModel.status === 'success' && viewModel.periods.length > 0 && (

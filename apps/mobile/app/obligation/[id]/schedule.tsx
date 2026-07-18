@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, Card, FieldRow, Amount } from '@/core/design-system'
+import { Amount, ExplainLink, InlineState, space } from '@/core/design-system'
 import { useAmortizationScheduleViewModel } from '@/features/schedule/hooks/use-amortization-schedule-view-model'
+import { ScheduleList } from '@/features/schedule/components/ScheduleList'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import { Money, engineEstimate, type Id } from '@eltizamati/domain'
 
@@ -24,7 +25,6 @@ export default function AmortizationScheduleScreen() {
         money={money}
         provenance={engineEstimate(money, run.id, run.calculatedAt).provenance}
         precision="estimate"
-        onPress={() => setExplainVisible(true)}
       />
     )
   }
@@ -36,94 +36,41 @@ export default function AmortizationScheduleScreen() {
           title: t('schedule.title', 'Schedule'),
           headerRight: () =>
             viewModel.status === 'success' ? (
-              <TouchableOpacity onPress={() => setExplainVisible(true)}>
-                <Text variant="bodySmall" color="primary">
-                  {t('common.explain')}
-                </Text>
-              </TouchableOpacity>
+              <ExplainLink onPress={() => setExplainVisible(true)} />
             ) : null,
         }}
       />
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
+      <View style={styles.root}>
+        {viewModel.status === 'loading' && (
+          <View style={styles.stateContainer}>
+            <InlineState kind="loading" message={t('common.loading')} />
+          </View>
+        )}
         {viewModel.status === 'error' && (
-          <Text variant="body" color="critical">
-            {t('schedule.error')}
-          </Text>
+          <View style={styles.stateContainer}>
+            <InlineState kind="error" message={t('schedule.error')} />
+          </View>
         )}
         {viewModel.status === 'unsupported' && (
-          <Text variant="body" color="secondary">
-            {t('schedule.unsupported')}
-          </Text>
+          <View style={styles.stateContainer}>
+            <InlineState kind="unsupported" message={t('schedule.unsupported')} />
+          </View>
         )}
         {viewModel.status === 'refused' && (
-          <Text variant="body" color="critical">
-            {t('error.calculationRefused')}
-          </Text>
+          <View style={styles.stateContainer}>
+            <InlineState kind="refused" message={t('error.calculationRefused')} />
+          </View>
         )}
-
         {viewModel.status === 'success' && viewModel.schedule.length === 0 && (
-          <Text variant="body" color="secondary">
-            {t('schedule.empty')}
-          </Text>
+          <View style={styles.stateContainer}>
+            <InlineState kind="empty" message={t('schedule.empty')} />
+          </View>
         )}
 
         {viewModel.status === 'success' && viewModel.schedule.length > 0 && (
-          <Card>
-            {viewModel.schedule.map((entry) => (
-              <View key={entry.period} style={styles.entry}>
-                <View style={styles.entryTitle}>
-                  <Text variant="heading">
-                    {t('schedule.period')} {entry.period}
-                  </Text>
-                </View>
-                {viewModel.run && (
-                  <>
-                    <FieldRow
-                      label={t('schedule.installment')}
-                      value={renderEstimatedAmount(entry.payment)}
-                    />
-                    <FieldRow
-                      label={t('schedule.principalPortion')}
-                      value={renderEstimatedAmount(entry.principal)}
-                    />
-                    <FieldRow
-                      label={t('schedule.interestPortion')}
-                      value={
-                        <View style={styles.interestValue}>
-                          {renderEstimatedAmount(entry.cost)}
-                          {entry.costPercentChangeFromPrevious !== undefined && (
-                            <Text
-                              variant="bodySmall"
-                              color={
-                                entry.costPercentChangeFromPrevious > 0 ? 'critical' : 'positive'
-                              }
-                            >
-                              {entry.costPercentChangeFromPrevious > 0
-                                ? t('schedule.costIncreaseBadge', {
-                                    percent: entry.costPercentChangeFromPrevious.toFixed(1),
-                                  })
-                                : t('schedule.costDecreaseBadge', {
-                                    percent: Math.abs(entry.costPercentChangeFromPrevious).toFixed(
-                                      1,
-                                    ),
-                                  })}
-                            </Text>
-                          )}
-                        </View>
-                      }
-                    />
-                    <FieldRow
-                      label={t('schedule.endingBalance')}
-                      value={renderEstimatedAmount(entry.closingBalance)}
-                    />
-                  </>
-                )}
-              </View>
-            ))}
-          </Card>
+          <ScheduleList schedule={viewModel.schedule} renderAmount={renderEstimatedAmount} />
         )}
-      </ScrollView>
+      </View>
 
       <ExplainSheet
         visible={explainVisible}
@@ -136,17 +83,10 @@ export default function AmortizationScheduleScreen() {
 }
 
 const styles = StyleSheet.create({
-  scroll: {
+  root: {
+    flex: 1,
+  },
+  stateContainer: {
     padding: space[4],
-  },
-  entry: {
-    marginBottom: space[4],
-  },
-  entryTitle: {
-    marginBottom: space[2],
-  },
-  interestValue: {
-    alignItems: 'flex-end',
-    gap: space[1],
   },
 })

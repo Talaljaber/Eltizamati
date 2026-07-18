@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, ScrollView } from 'react-native'
 import { useLocalSearchParams, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text, space, Card, FieldRow, Amount } from '@/core/design-system'
+import { Text, space, Card, FieldRow, Amount, ExplainLink, InlineState } from '@/core/design-system'
 import { useRateImpactViewModel } from '@/features/rate-impact/hooks/use-rate-impact-view-model'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import { Money, engineEstimate, type Id } from '@eltizamati/domain'
@@ -19,21 +19,17 @@ export default function RateImpactScreen() {
     <>
       <Stack.Screen options={{ title: t('rateImpact.title', 'Rate Impact') }} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        {viewModel.status === 'loading' && <Text variant="body">{t('common.loading')}</Text>}
+        {viewModel.status === 'loading' && (
+          <InlineState kind="loading" message={t('common.loading')} />
+        )}
         {viewModel.status === 'error' && (
-          <Text variant="body" color="critical">
-            {t('rateImpact.error')}
-          </Text>
+          <InlineState kind="error" message={t('rateImpact.error')} />
         )}
         {viewModel.status === 'unsupported' && (
-          <Text variant="body" color="secondary">
-            {t('rateImpact.unsupported')}
-          </Text>
+          <InlineState kind="unsupported" message={t('rateImpact.unsupported')} />
         )}
         {viewModel.status === 'refused' && (
-          <Text variant="body" color="critical">
-            {t('error.calculationRefused')}
-          </Text>
+          <InlineState kind="refused" message={t('error.calculationRefused')} />
         )}
 
         {viewModel.status === 'success' && (
@@ -80,11 +76,7 @@ export default function RateImpactScreen() {
                       : t('rateImpact.confidenceEstimated')}
                   </Text>
                   {viewModel.residualCalculationRunId !== undefined && (
-                    <TouchableOpacity onPress={() => setExplainVisible(true)}>
-                      <Text variant="bodySmall" color="primary">
-                        {t('common.explain')}
-                      </Text>
-                    </TouchableOpacity>
+                    <ExplainLink onPress={() => setExplainVisible(true)} />
                   )}
                 </View>
 

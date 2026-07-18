@@ -2,7 +2,16 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { Stack, useLocalSearchParams } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { Money, engineEstimate, type CanonicalJsonValue, type Id } from '@eltizamati/domain'
-import { Amount, Button, Card, FieldRow, Text, TextField, space } from '@/core/design-system'
+import {
+  Amount,
+  Button,
+  Card,
+  FieldRow,
+  InlineState,
+  Text,
+  TextField,
+  space,
+} from '@/core/design-system'
 import { useCardPayoffSimulator } from '@/features/card-simulator/hooks/use-card-payoff-simulator'
 import {
   snapshotMoneyAmount,
@@ -36,8 +45,8 @@ export default function CardSimulatorScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Stack.Screen options={{ title: t('cardSimulator.title') }} />
-      {vm.loading && <Text variant="body">{t('common.loading')}</Text>}
-      {vm.loadError && <Text color="critical">{t('cardSimulator.loadError')}</Text>}
+      {vm.loading && <InlineState kind="loading" message={t('common.loading')} />}
+      {vm.loadError && <InlineState kind="error" message={t('cardSimulator.loadError')} />}
       {vm.obligation?.kind === 'creditCard' && (
         <>
           <Card>
@@ -59,12 +68,12 @@ export default function CardSimulatorScreen() {
           </Card>
 
           {vm.status === 'refused' && (
-            <Text color="critical">{t('cardSimulator.missingData')}</Text>
+            <InlineState kind="refused" message={t('cardSimulator.missingData')} />
           )}
           {vm.status === 'invalid' && (
-            <Text color="critical">{t('cardSimulator.invalidPayment')}</Text>
+            <InlineState kind="error" message={t('cardSimulator.invalidPayment')} />
           )}
-          {vm.status === 'error' && <Text color="critical">{t('cardSimulator.error')}</Text>}
+          {vm.status === 'error' && <InlineState kind="error" message={t('cardSimulator.error')} />}
           {vm.status === 'success' && snapshot !== undefined && (
             <View style={styles.results}>
               <Card>
