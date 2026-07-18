@@ -95,7 +95,9 @@ export function computeImpactPreview(inputs: ImpactPreviewInputs): ImpactPreview
     }
   }
 
-  const activeRatePeriods = loanDetails.ratePeriods.filter((p) => p.supersededBy === undefined)
+  const activeRatePeriods = loanDetails.ratePeriods.filter(
+    (period) => period.supersededBy === undefined && period.effectiveFrom < effectiveDate,
+  )
   if (activeRatePeriods.length === 0) {
     return {
       kind: 'unavailable',

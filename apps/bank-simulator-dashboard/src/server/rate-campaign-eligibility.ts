@@ -16,6 +16,7 @@
 import {
   isConventionalLoan,
   type ConventionalLoan,
+  type LocalDate,
   type Obligation,
   type Rate,
 } from '@eltizamati/domain'
@@ -57,8 +58,11 @@ export interface EligibilityResult {
   readonly excluded: readonly ExcludedObligation[]
 }
 
-function currentActiveRate(loan: ConventionalLoan): Rate | undefined {
-  const active = loan.loanDetails.ratePeriods.filter((p) => p.supersededBy === undefined)
+function currentActiveRate(loan: ConventionalLoan, asOf?: LocalDate): Rate | undefined {
+  const active = loan.loanDetails.ratePeriods.filter(
+    (period) =>
+      period.supersededBy === undefined && (asOf === undefined || period.effectiveFrom <= asOf),
+  )
   if (active.length === 0) return undefined
   const latest = [...active].sort((a, b) => (a.effectiveFrom < b.effectiveFrom ? 1 : -1))[0]
   return latest?.annualRate
@@ -73,6 +77,7 @@ function currentActiveRate(loan: ConventionalLoan): Rate | undefined {
 export function evaluateRateCampaignEligibility(
   obligations: readonly Obligation[],
   institution: string | undefined,
+  asOf?: LocalDate,
 ): EligibilityResult {
   const eligible: EligibleLoan[] = []
   const excluded: ExcludedObligation[] = []
@@ -138,7 +143,7 @@ export function evaluateRateCampaignEligibility(
       continue
     }
 
-    const currentRate = currentActiveRate(obligation)
+    const currentRate = currentActiveRate(obligation, asOf)
     if (currentRate === undefined) {
       excluded.push({
         obligationId: obligation.id,

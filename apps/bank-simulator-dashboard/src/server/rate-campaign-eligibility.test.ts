@@ -222,7 +222,7 @@ describe('evaluateRateCampaignEligibility', () => {
     expect(reasons['loan-no-rate']).toBe('missingCurrentRate')
   })
 
-  it('picks the latest active (non-superseded) rate period as the current rate', () => {
+  it('picks the latest non-corrected period effective by the campaign date', () => {
     const loan = makeLoan({
       id: 'loan-1',
       rateType: 'variable',
@@ -234,7 +234,6 @@ describe('evaluateRateCampaignEligibility', () => {
           obligationId: 'loan-1',
           annualRate: '0.075',
           effectiveFrom: '2020-01-01',
-          supersededBy: 'rp-new',
         }),
         ratePeriod({
           id: 'rp-new',
@@ -245,9 +244,36 @@ describe('evaluateRateCampaignEligibility', () => {
       ],
     })
 
-    const result = evaluateRateCampaignEligibility([loan], INSTITUTION)
+    const result = evaluateRateCampaignEligibility([loan], INSTITUTION, toLocalDate('2026-01-01'))
 
     expect(result.eligible[0]?.currentRate.toStorageString()).toBe('0.0925')
+  })
+
+  it('does not treat a future published period as the current rate', () => {
+    const loan = makeLoan({
+      id: 'loan-1',
+      rateType: 'variable',
+      institution: INSTITUTION,
+      outstandingBalance: 1000,
+      ratePeriods: [
+        ratePeriod({
+          id: 'rp-current',
+          obligationId: 'loan-1',
+          annualRate: '0.075',
+          effectiveFrom: '2026-01-01',
+        }),
+        ratePeriod({
+          id: 'rp-future',
+          obligationId: 'loan-1',
+          annualRate: '0.11',
+          effectiveFrom: '2027-01-01',
+        }),
+      ],
+    })
+
+    const result = evaluateRateCampaignEligibility([loan], INSTITUTION, toLocalDate('2026-07-01'))
+
+    expect(result.eligible[0]?.currentRate.toStorageString()).toBe('0.075')
   })
 
   it('institution=undefined includes eligible loans from every institution ("apply to all banks")', () => {
@@ -301,8 +327,6 @@ describe('evaluateRateCampaignEligibility', () => {
       'loan-bank-b',
     ])
     expect(result.excluded.some((x) => x.reason === 'institutionMismatch')).toBe(false)
-    expect(
-      result.excluded.find((x) => x.obligationId === 'loan-fixed-a')?.reason,
-    ).toBe('fixedRate')
+    expect(result.excluded.find((x) => x.obligationId === 'loan-fixed-a')?.reason).toBe('fixedRate')
   })
 })

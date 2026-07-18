@@ -83,6 +83,9 @@ interface CalculationOutcomeSummary {
 export async function publishCampaign(
   request: PublishCampaignRequest,
 ): Promise<{ ok: true; value: PublishCampaignSummary } | { ok: false; reason: string }> {
+  // A rate publication never changes a contractual installment. Keep this
+  // server-side so crafted dashboard form data cannot choose another policy.
+  const servicingPolicy: ServicingPolicy = 'unchanged'
   const obligationsResult = await listAllowlistedObligations()
   if (!obligationsResult.ok) {
     return { ok: false, reason: 'Could not load allowlisted obligations.' }
@@ -91,6 +94,7 @@ export async function publishCampaign(
   const eligibility = evaluateRateCampaignEligibility(
     obligationsResult.value,
     request.institutionName,
+    request.effectiveDate,
   )
 
   // Defense in depth (docs/dashboard.md §8 step 1): every eligible loan
@@ -114,7 +118,7 @@ export async function publishCampaign(
     oldAnnualRateDecimal: undefined,
     newAnnualRateDecimal: request.newAnnualRate.toStorageString(),
     effectiveDate: request.effectiveDate,
-    installmentPolicy: request.servicingPolicy,
+    installmentPolicy: servicingPolicy,
     emailNotificationEnabled: request.emailNotificationEnabled,
     targetObligationIds: revalidatedEligible.map((t) => t.obligation.id),
   })
@@ -141,12 +145,41 @@ export async function publishCampaign(
     })),
   )
 
+  // Publishing changes rate history in the database. Reload before running
+  // projections so persisted calculation snapshots include the newly
+  // published period rather than the pre-publish eligibility objects.
+  const refreshedResult = await listAllowlistedObligations()
+  const refreshedById = new Map(
+    refreshedResult.ok
+      ? refreshedResult.value
+          .filter(
+            (obligation): obligation is ConventionalLoan => obligation.kind === 'conventionalLoan',
+          )
+          .map((obligation) => [obligation.id, obligation] as const)
+      : [],
+  )
+
   let calculationsPersisted = 0
   let insightsRaised = 0
   let emailsQueued = 0
 
   for (const target of revalidatedEligible) {
-    const persisted = await runAndPersistCalculations(target, request)
+    const refreshedObligation = refreshedById.get(target.obligation.id)
+    const persisted =
+      refreshedObligation === undefined
+        ? emptyCalculationOutcome()
+        : await runAndPersistCalculations(
+            { ...target, obligation: refreshedObligation },
+            { ...request, servicingPolicy },
+          )
+
+    if (refreshedObligation === undefined) {
+      await recordActivity(
+        'operation_failed',
+        'Published rate, but could not reload the loan for calculation',
+        campaignId,
+      )
+    }
 
     calculationsPersisted += persisted.calculationCount
     insightsRaised += persisted.insightCount
@@ -194,15 +227,19 @@ export async function publishCampaign(
   }
 }
 
-async function runAndPersistCalculations(
-  target: EligibleLoan,
-  request: PublishCampaignRequest,
-): Promise<CalculationOutcomeSummary> {
-  const empty: CalculationOutcomeSummary = {
+function emptyCalculationOutcome(): CalculationOutcomeSummary {
+  return {
     calculationCount: 0,
     insightCount: 0,
     projectedResidualAtMaturity: undefined,
   }
+}
+
+async function runAndPersistCalculations(
+  target: EligibleLoan,
+  request: PublishCampaignRequest,
+): Promise<CalculationOutcomeSummary> {
+  const empty = emptyCalculationOutcome()
 
   if (request.servicingPolicy === 'unknownTreatment') {
     await recordActivity(

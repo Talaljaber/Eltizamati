@@ -129,6 +129,46 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['loan_applications']['Insert']>
         Relationships: []
       }
+      loan_schedule_proposals: {
+        Row: {
+          as_of: string
+          created_at: string
+          currency: string
+          decided_at: string | null
+          decision_reason: string | null
+          final_balloon: number
+          id: string
+          obligation_id: string
+          projected_remaining_payable: number
+          proposal_kind: string
+          proposed_installment: number
+          rate_history_snapshot: Json
+          schedule_snapshot: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          as_of: string
+          currency: string
+          final_balloon?: number
+          id?: string
+          obligation_id: string
+          projected_remaining_payable: number
+          proposal_kind: string
+          proposed_installment: number
+          rate_history_snapshot: Json
+          schedule_snapshot: Json
+          user_id: string
+        }
+        Update: Partial<Database['public']['Tables']['loan_schedule_proposals']['Insert']> & {
+          status?: string
+          decision_reason?: string | null
+          decided_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       loan_details: {
         Row: {
           obligation_id: string
@@ -521,6 +561,14 @@ export interface Database {
           p_decision_reason: string | null
         }
         Returns: Database['public']['Tables']['loan_applications']['Row']
+      }
+      demo_decide_schedule_proposal: {
+        Args: {
+          p_proposal_id: string
+          p_decision: string
+          p_reason?: string | null
+        }
+        Returns: Database['public']['Tables']['loan_schedule_proposals']['Row']
       }
     }
     Enums: Record<string, never>

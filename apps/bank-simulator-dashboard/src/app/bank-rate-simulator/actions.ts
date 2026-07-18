@@ -9,7 +9,6 @@ import {
   publishCampaign,
   type PublishCampaignRequest,
 } from '@/server/rate-campaign-publish-service'
-import type { ServicingPolicy } from '@/server/impact-preview-service'
 import { ALL_INSTITUTIONS } from '@/server/rate-campaign-constants'
 
 function requiredString(formData: FormData, key: string): string {
@@ -27,13 +26,13 @@ export async function publishCampaignAction(formData: FormData): Promise<void> {
   const institutionInput = requiredString(formData, 'institution')
   const newAnnualRateInput = requiredString(formData, 'newAnnualRate')
   const effectiveDateInput = requiredString(formData, 'effectiveDate')
-  const servicingPolicy = requiredString(formData, 'servicingPolicy') as ServicingPolicy
   const campaignNameInput = requiredString(formData, 'campaignName')
   const emailNotificationEnabled = formData.get('emailNotificationEnabled') === 'on'
   const reason = formData.get('reason')
   const sourceNote = formData.get('sourceNote')
 
   const today = localDateFromDate(new Date())
+  const effectiveDate = toLocalDate(effectiveDateInput)
   const applyToAll = institutionInput === ALL_INSTITUTIONS
 
   const obligationsResult = await listAllowlistedObligations()
@@ -44,6 +43,7 @@ export async function publishCampaignAction(formData: FormData): Promise<void> {
   const eligibility = evaluateRateCampaignEligibility(
     obligationsResult.value,
     applyToAll ? undefined : institutionInput,
+    effectiveDate,
   )
   const recipientEmailByUserId = emailNotificationEnabled
     ? await getUserEmailsByUserId(eligibility.eligible.map((t) => t.obligation.userId))
@@ -53,8 +53,8 @@ export async function publishCampaignAction(formData: FormData): Promise<void> {
     reason: typeof reason === 'string' && reason.length > 0 ? reason : undefined,
     sourceNote: typeof sourceNote === 'string' && sourceNote.length > 0 ? sourceNote : undefined,
     newAnnualRate: Rate.fromPercent(newAnnualRateInput),
-    effectiveDate: toLocalDate(effectiveDateInput),
-    servicingPolicy,
+    effectiveDate,
+    servicingPolicy: 'unchanged',
     emailNotificationEnabled,
     recipientEmailByUserId,
     asOf: today,
@@ -101,5 +101,7 @@ export async function publishCampaignAction(formData: FormData): Promise<void> {
   if (successCount === 0) {
     redirect('/bank-rate-simulator?publishError=allInstitutionsFailed')
   }
-  redirect(lastCampaignId !== undefined ? `/activity-log?campaignId=${lastCampaignId}` : '/activity-log')
+  redirect(
+    lastCampaignId !== undefined ? `/activity-log?campaignId=${lastCampaignId}` : '/activity-log',
+  )
 }

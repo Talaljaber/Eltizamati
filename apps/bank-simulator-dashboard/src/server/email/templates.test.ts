@@ -4,6 +4,7 @@ import {
   renderLoanApprovedEmail,
   renderLoanRejectedEmail,
   renderRateChangeEmail,
+  renderScheduleProposalDecisionEmail,
 } from './templates'
 
 const params = {
@@ -78,5 +79,33 @@ describe('loan decision emails', () => {
     })
     expect(email.text).toContain('Insufficient supporting information')
     expect(email.text).toContain('هاكاثون')
+  })
+})
+
+describe('schedule proposal decision emails', () => {
+  it('says approval creates the new agreed schedule and names the final payment', () => {
+    const email = renderScheduleProposalDecisionEmail('en', {
+      obligationNickname: 'Home loan',
+      decision: 'approved',
+      proposedInstallment: '475.000',
+      finalBalloon: '125.000',
+      currency: 'JOD',
+      reason: undefined,
+    })
+    expect(email.text).toContain('new agreed schedule')
+    expect(email.text).toContain('125.000 JOD')
+  })
+
+  it('says rejection leaves the existing agreement unchanged and includes the reason', () => {
+    const email = renderScheduleProposalDecisionEmail('en', {
+      obligationNickname: 'Home loan',
+      decision: 'rejected',
+      proposedInstallment: '475.000',
+      finalBalloon: '125.000',
+      currency: 'JOD',
+      reason: 'Unsupported term',
+    })
+    expect(email.text).toContain('has not changed')
+    expect(email.text).toContain('Unsupported term')
   })
 })

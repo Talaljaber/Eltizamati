@@ -77,14 +77,17 @@ export default async function BankRateSimulatorPage({
   const institution = str(resolved, 'institution')
   const newAnnualRate = parseRate(str(resolved, 'newAnnualRate'))
   const effectiveDate = parseDate(str(resolved, 'effectiveDate')) ?? today
-  const servicingPolicy =
-    (str(resolved, 'servicingPolicy') as ServicingPolicy | undefined) ?? 'unchanged'
+  const servicingPolicy: ServicingPolicy = 'unchanged'
 
   const hasSubmitted = institution !== undefined && newAnnualRate !== undefined
   const applyToAll = institution === ALL_INSTITUTIONS
 
   const eligibility = hasSubmitted
-    ? evaluateRateCampaignEligibility(obligations, applyToAll ? undefined : institution)
+    ? evaluateRateCampaignEligibility(
+        obligations,
+        applyToAll ? undefined : institution,
+        effectiveDate,
+      )
     : undefined
 
   const eligibleInstitutionCount = eligibility
@@ -148,22 +151,9 @@ export default async function BankRateSimulatorPage({
               style={{ padding: 4, borderRadius: 4, border: '1px solid var(--color-border)' }}
             />
           </label>
-          <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
-            {t(locale, 'bankRateSimulator.installmentPolicy')}
-            <select
-              name="servicingPolicy"
-              defaultValue={servicingPolicy}
-              style={{ padding: 4, borderRadius: 4, border: '1px solid var(--color-border)' }}
-            >
-              <option value="unchanged">{t(locale, 'bankRateSimulator.policyUnchanged')}</option>
-              <option value="recalculated">
-                {t(locale, 'bankRateSimulator.policyRecalculated')}
-              </option>
-              <option value="unknownTreatment">
-                {t(locale, 'bankRateSimulator.policyUnknown')}
-              </option>
-            </select>
-          </label>
+          <p style={{ margin: 0, fontSize: 12, maxInlineSize: 220 }}>
+            {t(locale, 'bankRateSimulator.policyUnchanged')}
+          </p>
           <button type="submit" className="button-primary">
             {t(locale, 'bankRateSimulator.previewCampaign')}
           </button>
@@ -200,7 +190,6 @@ export default async function BankRateSimulatorPage({
                 value={str(resolved, 'newAnnualRate') ?? ''}
               />
               <input type="hidden" name="effectiveDate" value={effectiveDate} />
-              <input type="hidden" name="servicingPolicy" value={servicingPolicy} />
               <div
                 style={{
                   display: 'flex',

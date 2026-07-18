@@ -38,10 +38,12 @@ import {
   renderLoanApprovedEmail,
   renderLoanRejectedEmail,
   renderRateChangeEmail,
+  renderScheduleProposalDecisionEmail,
   type LoanApprovedEmailParams,
   type LoanRejectedEmailParams,
   type RateChangeEmailParams,
   type RenderedEmail,
+  type ScheduleProposalDecisionEmailParams,
 } from './templates'
 
 export type EmailMode = 'disabled' | 'dev-sink' | 'gmail'
@@ -251,5 +253,22 @@ export async function sendLoanRejectedEmail(
     templateId: `loan-rejected-${input.locale}`,
     idempotencyKey: input.idempotencyKey,
     render: () => renderLoanRejectedEmail(input.locale, input.params),
+  })
+}
+
+export async function sendScheduleProposalDecisionEmail(
+  input: SendLoanDecisionEmailInput & {
+    readonly proposalId: string
+    readonly params: ScheduleProposalDecisionEmailParams
+  },
+): Promise<SendEmailResult> {
+  return deliverEmail({
+    campaignId: undefined,
+    userId: input.userId,
+    recipientEmail: input.recipientEmail,
+    locale: input.locale,
+    templateId: `schedule-proposal-${input.params.decision}-${input.locale}`,
+    idempotencyKey: input.idempotencyKey,
+    render: () => renderScheduleProposalDecisionEmail(input.locale, input.params),
   })
 }

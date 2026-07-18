@@ -70,6 +70,69 @@ export interface LoanRejectedEmailParams {
   readonly reason: string
 }
 
+export interface ScheduleProposalDecisionEmailParams {
+  readonly obligationNickname: string
+  readonly decision: 'approved' | 'rejected'
+  readonly proposedInstallment: string
+  readonly finalBalloon: string
+  readonly currency: string
+  readonly reason: string | undefined
+}
+
+export function renderScheduleProposalDecisionEmail(
+  locale: 'en' | 'ar',
+  params: ScheduleProposalDecisionEmailParams,
+): RenderedEmail {
+  const approved = params.decision === 'approved'
+  if (locale === 'ar') {
+    const lines = approved
+      ? [
+          `وافق البنك على جدول السداد المقترح الخاص بـ ${params.obligationNickname}.`,
+          `أصبح القسط المقترح ${params.proposedInstallment} ${params.currency} والدفعة الأخيرة الموضحة ${params.finalBalloon} ${params.currency} هو جدول السداد المتفق عليه الجديد.`,
+        ]
+      : [
+          `لم يوافق البنك على جدول السداد المقترح الخاص بـ ${params.obligationNickname}.`,
+          'لم يتغير جدول السداد المتفق عليه الحالي.',
+          ...(params.reason === undefined ? [] : [`السبب: ${params.reason}`]),
+        ]
+    return {
+      subject: approved ? 'تمت الموافقة على جدول السداد المقترح' : 'تحديث حول جدول السداد المقترح',
+      text: [
+        'تحديث من محاكي البنك في Eltizamati (تجريبي)',
+        '',
+        ...lines,
+        '',
+        'افتح تطبيق Eltizamati لمراجعة التفاصيل.',
+        '',
+        'هذه محاكاة وليست إشعاراً رسمياً من بنكك.',
+      ].join('\n'),
+    }
+  }
+
+  const lines = approved
+    ? [
+        `The bank approved the proposed payment schedule for ${params.obligationNickname}.`,
+        `The proposal with an installment of ${params.proposedInstallment} ${params.currency} and a clearly shown final payment of ${params.finalBalloon} ${params.currency} is now your new agreed schedule.`,
+      ]
+    : [
+        `The bank did not approve the proposed payment schedule for ${params.obligationNickname}.`,
+        'Your current agreed schedule has not changed.',
+        ...(params.reason === undefined ? [] : [`Reason: ${params.reason}`]),
+      ]
+  return {
+    subject: approved ? 'Your proposed schedule was approved' : 'Update on your proposed schedule',
+    text: [
+      'Eltizamati Bank Simulator update (demo)',
+      '',
+      ...lines,
+      '',
+      'Open Eltizamati to review the details.',
+      '',
+      'This is a simulation and not an official notification from your bank.',
+    ].join('\n'),
+  }
+}
+
 export function renderLoanApprovedEmail(
   locale: 'en' | 'ar',
   params: LoanApprovedEmailParams,
