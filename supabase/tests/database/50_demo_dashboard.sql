@@ -9,7 +9,7 @@
 -- dashboard's own service-role client will call them in production.
 
 begin;
-select plan(18);
+select plan(21);
 
 insert into auth.users (id, email) values
   ('c0000000-0000-0000-0000-00000000000c', 'demo-user-c@eltizamati.test');
@@ -101,10 +101,20 @@ select is(
   'demo', 'the newly appended rate period is marked demo provenance, never official'
 );
 
-select isnt(
+select is(
   (select superseded_by from public.rate_periods where id = 'f0000000-0000-0000-0000-000000000001'),
   null,
-  'the ORIGINAL rate period is marked superseded by the newly appended one (20260716020000 fix — only one period is ever truly active)'
+  'the original historical period remains in the chronological rate sequence'
+);
+
+select is(
+  (
+    select count(*)::int from public.rate_periods
+    where obligation_id = 'e0000000-0000-0000-0000-000000000001'
+      and superseded_by is null
+  ),
+  2,
+  'both genuine repricing periods remain usable; superseded_by is reserved for corrections'
 );
 
 select is(
@@ -156,6 +166,16 @@ select is(
   1, 'the closed loan''s rate history is untouched by the rolled-back attempt'
 );
 
+select throws_ok(
+  $$select public.demo_publish_rate_campaign(
+    'a1000000-0000-0000-0000-000000000003', 'Invalid policy', 'Test Bank', null, null,
+    0.075, 0.0925, '2026-08-01', 'recalculated', false,
+    array['e0000000-0000-0000-0000-000000000001']::uuid[]
+  )$$,
+  '22023', null,
+  'demo_publish_rate_campaign rejects an installment-recalculation policy'
+);
+
 -- ─── demo_email_outbox idempotency ─────────────────────────────────────────
 
 select lives_ok(
@@ -176,6 +196,18 @@ select throws_ok(
 select is(
   (select count(*)::int from pg_policies where schemaname = 'public' and tablename = 'demo_rate_campaigns'),
   0, 'demo_rate_campaigns has zero RLS policies — no authenticated/anon access path exists'
+);
+
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"c0000000-0000-0000-0000-00000000000c","role":"authenticated"}';
+select throws_ok(
+  $$select public.demo_publish_rate_campaign(
+    'a1000000-0000-0000-0000-000000000099', 'Forbidden', 'Test Bank', null, null,
+    0.075, 0.0925, '2026-08-01', 'unchanged', false,
+    array['e0000000-0000-0000-0000-000000000001']::uuid[]
+  )$$,
+  '42501', null,
+  'demo_publish_rate_campaign is not executable by an authenticated borrower'
 );
 
 select * from finish();
