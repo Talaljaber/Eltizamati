@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import i18n from 'i18next'
 import type { LanguageDetectorAsyncModule } from 'i18next'
 import { initReactI18next } from 'react-i18next'
@@ -6,6 +5,7 @@ import { I18nManager } from 'react-native'
 import * as Updates from 'expo-updates'
 import { getLocales } from 'expo-localization'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { logger } from '@/core/logging/logger'
 
 import en from './translations/en.json'
 import ar from './translations/ar.json'
@@ -31,7 +31,9 @@ const languageDetector: LanguageDetectorAsyncModule = {
   },
   init: () => undefined,
   cacheUserLanguage: (lng) => {
-    AsyncStorage.setItem(LANGUAGE_KEY, lng).catch(console.error)
+    AsyncStorage.setItem(LANGUAGE_KEY, lng).catch(() =>
+      logger.warn({ stage: 'i18nCacheLanguage', code: 'storageWriteFailed' }),
+    )
   },
 }
 
@@ -52,7 +54,7 @@ export const i18nInitialization: Promise<void> = i18n
 
 // Keep the module import safe for callers that do not mount startup, while the
 // original exported promise remains rejectable for StartupCoordinator.
-void i18nInitialization.catch(console.error)
+void i18nInitialization.catch(() => logger.error({ stage: 'i18nInit', code: 'initFailed' }))
 
 /**
  * Change language and automatically enforce RTL alignment.
@@ -69,8 +71,8 @@ export async function changeLanguage(lang: 'en' | 'ar') {
     // For development, we might just warn or reload
     try {
       await Updates.reloadAsync()
-    } catch (e) {
-      console.warn('Cannot reload automatically in this environment. Please restart the app.', e)
+    } catch {
+      logger.warn({ stage: 'i18nChangeLanguage', code: 'reloadUnavailable' })
     }
   }
 }

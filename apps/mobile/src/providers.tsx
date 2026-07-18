@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { DomainInvariantError } from '@eltizamati/domain'
+import { logger } from './core/logging/logger'
 import { createDemoRepositories } from './services/repositories/demo'
 import type { RepositoryRegistry } from './services/composition-root'
 import { ImportService } from './services/import-service'
@@ -97,13 +98,10 @@ function AppRuntimeProviders({ children }: { children: ReactNode }) {
     if (repos === null) return
     const waiters = commitWaitersRef.current
     commitWaitersRef.current = []
-    if (__DEV__ && process.env.NODE_ENV !== 'test') {
-      // eslint-disable-next-line no-console -- Temporary development-only boot diagnostic; contains only waiter count.
-      console.info('[personal-entry-debug] Repository boot', {
-        stage: 'provider_committed',
-        waiterCount: waiters.length,
-      })
-    }
+    logger.debug({
+      stage: 'repositoryBoot:provider_committed',
+      safeMetadata: { waiterCount: waiters.length },
+    })
     for (const resolve of waiters) resolve()
   }, [repos])
 
@@ -143,23 +141,14 @@ function AppRuntimeProviders({ children }: { children: ReactNode }) {
     if (personalBootPromiseRef.current !== undefined) return personalBootPromiseRef.current
     personalBootPromiseRef.current = (async () => {
       try {
-        if (__DEV__ && process.env.NODE_ENV !== 'test') {
-          // eslint-disable-next-line no-console -- Temporary development-only boot diagnostic; contains no client data.
-          console.info('[personal-entry-debug] Repository boot', { stage: 'resolve_started' })
-        }
+        logger.debug({ stage: 'repositoryBoot:resolve_started' })
         const result = getPersonalRepositories()
         if (!result.ok) throw result.error
         const committed = awaitReposCommitted()
         setRepos(result.value as RepositoryRegistry)
-        if (__DEV__ && process.env.NODE_ENV !== 'test') {
-          // eslint-disable-next-line no-console -- Temporary development-only boot diagnostic; contains no client data.
-          console.info('[personal-entry-debug] Repository boot', { stage: 'commit_wait_started' })
-        }
+        logger.debug({ stage: 'repositoryBoot:commit_wait_started' })
         await committed
-        if (__DEV__ && process.env.NODE_ENV !== 'test') {
-          // eslint-disable-next-line no-console -- Temporary development-only boot diagnostic; contains no client data.
-          console.info('[personal-entry-debug] Repository boot', { stage: 'commit_observed' })
-        }
+        logger.debug({ stage: 'repositoryBoot:commit_observed' })
         bootedPersonalRef.current = true
       } finally {
         personalBootPromiseRef.current = undefined

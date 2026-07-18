@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { err, makeError, ok, type AppError, type Result } from '@eltizamati/domain'
+import { logger } from '@/core/logging/logger'
 import type { AppAuthSession } from '@/services/auth/auth-service'
 import type { ProfileProvisioningDetails } from '@/features/auth/services/ensure-authenticated-user-profile'
 import {
@@ -32,9 +33,7 @@ function asAppError(cause: unknown): AppError {
 }
 
 function logEntryNavigation(stage: string): void {
-  if (!__DEV__ || process.env.NODE_ENV === 'test') return
-  // eslint-disable-next-line no-console -- Temporary development-only routing diagnostics; stage names contain no client data.
-  console.info('[personal-entry-debug] Navigation', { stage })
+  logger.debug({ stage: `personalEntry:navigation:${stage}` })
 }
 
 export function useEntryCompletion(): EntryCompletion {

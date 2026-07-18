@@ -15,6 +15,7 @@ import {
   type UserProfile,
   type UserProfileRepository,
 } from '@eltizamati/domain'
+import { logger } from '../../../core/logging/logger'
 import type { Database } from '../../../core/supabase/database.types'
 import { toSupabaseAppError } from '../../../core/supabase/supabase-error'
 import {
@@ -27,13 +28,10 @@ function logProfileProviderError(
   stage: 'read' | 'save' | 'create',
   error: { readonly code?: string; readonly message: string; readonly status?: number },
 ): void {
-  if (!__DEV__ || process.env.NODE_ENV === 'test') return
-  // eslint-disable-next-line no-console -- Temporary development-only provider diagnostics; no request rows, credentials, or tokens are logged.
-  console.error('[signup-profile-debug] Supabase profile request failed', {
-    stage,
-    providerCode: error.code ?? 'unknown',
-    httpStatus: error.status ?? 'unknown',
-    providerMessage: error.message,
+  logger.error({
+    stage: `supabaseProfile:${stage}`,
+    code: error.code ?? 'unknown',
+    safeMetadata: { httpStatus: error.status ?? 0, providerMessage: error.message },
   })
 }
 

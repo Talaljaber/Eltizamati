@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { useRouter, Stack } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text, Button, ListRow, NavGroup, space, useTheme } from '@/core/design-system'
+import { logger } from '@/core/logging/logger'
 import { RequireRepositories } from '@/features/repositories/components/RequireRepositories'
 import { useRepositories } from '@/features/repositories/hooks/use-repositories'
 import { useActiveUser } from '@/features/auth/hooks/use-active-user'
@@ -68,20 +69,24 @@ function AddObligationInner() {
 
   function reportSaveFailure(
     stage: AddableKind,
-    failure: { readonly code: string; readonly safeMetadata?: Record<string, unknown> },
+    failure: {
+      readonly code: string
+      readonly safeMetadata?: Record<string, string | number | boolean>
+    },
   ): void {
-    if (__DEV__ && process.env.NODE_ENV !== 'test') {
-      const safeDiagnostic = { stage, code: failure.code, safeMetadata: failure.safeMetadata }
-      // eslint-disable-next-line no-console -- Development-only obligation diagnostics; form values, user identity, credentials, and tokens are excluded.
-      console.error('[obligation-create-debug] Save failed', safeDiagnostic)
-    }
+    logger.error({
+      stage: `obligationCreate:${stage}`,
+      code: failure.code,
+      safeMetadata: failure.safeMetadata,
+    })
   }
 
   function reportValidationFailure(stage: AddableKind, validationKey: string): void {
-    if (__DEV__ && process.env.NODE_ENV !== 'test') {
-      // eslint-disable-next-line no-console -- Development-only validation diagnostics contain field category only, never entered values.
-      console.info('[obligation-create-debug] Validation failed', { stage, validationKey })
-    }
+    logger.debug({
+      stage: `obligationCreate:${stage}`,
+      code: 'validationFailed',
+      safeMetadata: { validationKey },
+    })
   }
 
   async function handleSave() {

@@ -9,6 +9,7 @@ import {
   type ConsentRecord,
   type ConsentRepository,
 } from '@eltizamati/domain'
+import { logger } from '../../../core/logging/logger'
 import type { Database } from '../../../core/supabase/database.types'
 import { consentDomainToRow, consentRowToDomain } from './mappers/consent-mapper'
 
@@ -20,13 +21,10 @@ function logConsentProviderError(
   stage: 'status' | 'acknowledge',
   error: { readonly code: string; readonly message: string; readonly status?: number },
 ): void {
-  if (!__DEV__ || process.env.NODE_ENV === 'test') return
-  // eslint-disable-next-line no-console -- Temporary development-only provider diagnostics; no consent rows, identity, credentials, or tokens are logged.
-  console.error('[personal-consent-debug] Supabase consent request failed', {
-    stage,
-    providerCode: error.code,
-    httpStatus: error.status ?? 'unknown',
-    providerMessage: error.message,
+  logger.error({
+    stage: `supabaseConsent:${stage}`,
+    code: error.code,
+    safeMetadata: { httpStatus: error.status ?? 0, providerMessage: error.message },
   })
 }
 

@@ -1,4 +1,5 @@
 import { brandId, ok, type AppError, type Result } from '@eltizamati/domain'
+import { logger, type SafeMetadata } from '@/core/logging/logger'
 import type { AppAuthSession } from '@/services/auth/auth-service'
 import type { RepositoryRegistry } from '@/services/composition-root'
 import { setDataMode, setOnboardingComplete } from '@/features/demo/stores/demo-mode-store'
@@ -22,10 +23,9 @@ export interface PreparePersonalEntryDependencies {
   readonly profileDetails?: ProfileProvisioningDetails
 }
 
-function logPersonalEntry(stage: string, metadata?: Record<string, unknown>): void {
-  if (!__DEV__ || process.env.NODE_ENV === 'test') return
-  // eslint-disable-next-line no-console -- Temporary development-only entry diagnostics; no client identity, financial data, or credentials are logged.
-  console.info('[personal-entry-debug] Entry preparation', { stage, ...metadata })
+function logPersonalEntry(stage: string, safeMetadata?: SafeMetadata): void {
+  const level = stage.endsWith('_failed') ? 'warn' : 'debug'
+  logger[level]({ stage: `personalEntry:${stage}`, safeMetadata })
 }
 
 export async function preparePersonalEntry({

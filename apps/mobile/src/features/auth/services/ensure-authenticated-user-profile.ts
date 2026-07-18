@@ -7,14 +7,13 @@ import {
   type UserProfile,
   type UserProfileRepository,
 } from '@eltizamati/domain'
+import { logger, type SafeMetadata } from '@/core/logging/logger'
 import type { AppAuthSession } from '@/services/auth/auth-service'
 
 const inFlightByUser = new Map<string, Promise<Result<UserProfile, AppError>>>()
 
-function logProvisioning(stage: string, metadata?: Record<string, unknown>): void {
-  if (!__DEV__ || process.env.NODE_ENV === 'test') return
-  // eslint-disable-next-line no-console -- Temporary development-only signup diagnostics; metadata excludes client identity and profile values.
-  console.info('[signup-profile-debug] Profile provisioning', { stage, ...metadata })
+function logProvisioning(stage: string, safeMetadata?: SafeMetadata): void {
+  logger.debug({ stage: `profileProvisioning:${stage}`, safeMetadata })
 }
 
 export type ProfileProvisioningDetails = Pick<
@@ -41,8 +40,9 @@ export function ensureAuthenticatedUserProfile(
       return readResult
     }
     if (readResult.error.code !== 'notFound') {
-      logProvisioning('read_failed', {
-        appErrorCode: readResult.error.code,
+      logger.error({
+        stage: 'profileProvisioning:read_failed',
+        code: readResult.error.code,
         safeMetadata: readResult.error.safeMetadata,
       })
       return readResult
@@ -64,8 +64,9 @@ export function ensureAuthenticatedUserProfile(
       ...details,
     })
     if (!createResult.ok) {
-      logProvisioning('create_failed', {
-        appErrorCode: createResult.error.code,
+      logger.error({
+        stage: 'profileProvisioning:create_failed',
+        code: createResult.error.code,
         safeMetadata: createResult.error.safeMetadata,
       })
       return err(
