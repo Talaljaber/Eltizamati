@@ -54,7 +54,7 @@ export default function LearnScreen() {
   }, [filteredTopics])
 
   return (
-    <Screen gap={6}>
+    <Screen gap={6} maxWidth="content">
       <Text variant="title">{t('learn.guideTitle')}</Text>
       <Text variant="body" color="secondary">
         {t('learn.guideBody')}
