@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
+import { Children, type ReactNode } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { space } from '../tokens'
+import { layout, space } from '../tokens'
 import { useResponsiveLayout } from '../use-responsive-layout'
 
 export interface ResponsiveGridProps {
@@ -27,18 +27,23 @@ export function ResponsiveGrid({ children, minColumnWidth = 320, testID }: Respo
     )
   }
 
-  const columns = Math.max(1, Math.floor(width / minColumnWidth))
+  // `width` is the full browser viewport, but wide-web content actually renders
+  // inside the sidebar-adjacent, contentMaxWidth-capped column (PageContent) —
+  // sizing columns off the raw viewport left a handful of cards pinned narrow
+  // in the top-left with the rest of the screen blank. Cap at contentMaxWidth,
+  // and never plan more columns than there are children to fill them.
+  const effectiveWidth = Math.min(width, layout.contentMaxWidth)
+  const childCount = Children.count(children)
+  const columns = Math.min(Math.max(1, Math.floor(effectiveWidth / minColumnWidth)), childCount)
   const itemWidthPercent = 100 / columns
 
   return (
     <View style={styles.grid} testID={testID}>
-      {Array.isArray(children)
-        ? children.map((child, index) => (
-            <View key={index} style={{ width: `${itemWidthPercent}%` }}>
-              <View style={styles.cell}>{child}</View>
-            </View>
-          ))
-        : children}
+      {Children.map(children, (child, index) => (
+        <View key={index} style={{ width: `${itemWidthPercent}%` }}>
+          <View style={styles.cell}>{child}</View>
+        </View>
+      ))}
     </View>
   )
 }
