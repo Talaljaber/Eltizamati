@@ -3,7 +3,7 @@ import { RefreshControl } from 'react-native'
 import { fireEvent, render, waitFor, within } from '@testing-library/react-native'
 import { DemoSeedProvider } from '@/services/demo-seed-provider'
 import ObligationsTab, { ObligationRow } from '../obligations'
-import { DEMO_DATE, aCard } from '@eltizamati/demo-data'
+import { DEMO_DATE, aCard, aMurabaha } from '@eltizamati/demo-data'
 import { makeError, toLocalDate } from '@eltizamati/domain'
 import { useObligations } from '@/features/home/api/use-obligations'
 import { usePaymentsByObligation } from '@/features/home/api/use-payments-by-obligation'
@@ -67,6 +67,21 @@ describe('ObligationRow financial rendering', () => {
 
     const after = render(<ObligationRow {...props} asOf={toLocalDate('2026-07-17')} />)
     expect(after.getByText('status.overdue')).toBeTruthy()
+  })
+
+  it('renders a placeholder instead of omitting the balance slot when none is on file', () => {
+    const obligation = aMurabaha()
+    const { getByTestId, queryByTestId } = render(
+      <ObligationRow
+        obligation={obligation}
+        payments={[]}
+        insights={[]}
+        asOf={DEMO_DATE}
+        onPress={jest.fn()}
+      />,
+    )
+    expect(queryByTestId('obligation-list-balance')).toBeNull()
+    expect(getByTestId('obligation-list-balance-unavailable')).toBeTruthy()
   })
 })
 

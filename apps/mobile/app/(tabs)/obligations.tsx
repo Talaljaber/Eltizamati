@@ -373,7 +373,7 @@ export function ObligationRow({
 
   const trailing = (
     <View style={styles.trailingCol}>
-      {balance !== undefined && (
+      {balance !== undefined ? (
         <Amount
           testID="obligation-list-balance"
           variant="amountSm"
@@ -381,6 +381,10 @@ export function ObligationRow({
           provenance={balance.provenance}
           precision={balance.provenance.source === 'estimate' ? 'estimate' : 'official'}
         />
+      ) : (
+        <Text variant="amountSm" color="tertiary" testID="obligation-list-balance-unavailable">
+          {t('obligations.balanceUnavailable')}
+        </Text>
       )}
       <StatusChip status={status} />
     </View>
