@@ -2,7 +2,6 @@ import {
   isOk,
   isErr,
   brandId,
-  type ConventionalLoan,
   type MurabahaFinancing,
 } from '@eltizamati/domain'
 import { ObligationService } from '../obligation-service'
@@ -97,41 +96,6 @@ describe('ObligationService — loans', () => {
       expect(updated.value.nickname).toBe('Renamed Loan')
       expect(updated.value.loanDetails.ratePeriods).toEqual(created.value.loanDetails.ratePeriods)
     }
-  })
-
-  it('logRateChange appends a new period and rejects a duplicate effectiveFrom date', async () => {
-    const service = makeService()
-    const repos = createDemoRepositories()
-
-    const created = await service.createLoan(
-      userId,
-      {
-        nickname: 'My Loan',
-        institutionName: 'Test Bank',
-        openedDate: '2024-01-01' as never,
-        originalPrincipal: '10000',
-        installment: '300',
-        rateType: 'fixed',
-        termMonths: 36,
-        startDate: '2024-01-01' as never,
-        maturityDate: '2027-01-01' as never,
-      },
-      '5.5',
-      repos,
-    )
-    expect(isOk(created)).toBe(true)
-    if (!isOk(created)) return
-    const loan = created.value as ConventionalLoan
-
-    const change = await service.logRateChange(loan, '2024-06-01' as never, '6.25', repos)
-    expect(isOk(change)).toBe(true)
-
-    const history = await repos.ratePeriodRepository.historyFor(loan.id)
-    expect(isOk(history)).toBe(true)
-    if (isOk(history)) expect(history.value).toHaveLength(2)
-
-    const duplicate = await service.logRateChange(loan, '2024-01-01' as never, '7', repos)
-    expect(isErr(duplicate)).toBe(true)
   })
 
   it('logPayment records a payment with userEntered provenance and no allocation', async () => {

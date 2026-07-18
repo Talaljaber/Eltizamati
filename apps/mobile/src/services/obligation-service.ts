@@ -359,29 +359,4 @@ export class ObligationService {
     }
     return repos.paymentRepository.log(payment)
   }
-
-  async logRateChange(
-    obligation: ConventionalLoan,
-    effectiveFrom: LocalDate,
-    annualRatePercent: string,
-    repos: Repositories,
-  ): Promise<Result<RatePeriod, AppError>> {
-    const now = new Date().toISOString()
-    const historyResult = await repos.ratePeriodRepository.historyFor(obligation.id)
-    if (isErr(historyResult)) return historyResult
-
-    const newPeriod: RatePeriod = {
-      id: brandId<'ratePeriod'>(generateUuid()),
-      obligationId: obligation.id,
-      annualRate: Rate.fromPercent(annualRatePercent),
-      effectiveFrom,
-      provenance: nowProvenance(now),
-      createdAt: now,
-    }
-
-    const validation = validateRatePeriods([...historyResult.value, newPeriod])
-    if (isErr(validation)) return validation
-
-    return repos.ratePeriodRepository.append(newPeriod)
-  }
 }
