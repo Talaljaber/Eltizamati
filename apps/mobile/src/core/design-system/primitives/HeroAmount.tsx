@@ -75,13 +75,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space[3],
   },
+  // Wraps instead of overflowing: two long-labelled metrics that don't fit on
+  // one line stack onto the next rather than clipping off both screen edges.
   supportingRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: space[6],
+    alignSelf: 'stretch',
+    columnGap: space[5],
+    rowGap: space[3],
     marginTop: space[3],
   },
   supportingItem: {
+    flexShrink: 1,
+    maxWidth: '100%',
     alignItems: 'center',
     gap: space[1],
   },

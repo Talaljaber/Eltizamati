@@ -404,7 +404,13 @@ export function ObligationRow({
           {t('obligations.balanceUnavailable')}
         </Text>
       )}
-      <StatusChip status={status} />
+      {/* Wrapper neutralizes StatusChip's own `alignSelf: 'flex-start'`, which
+       * would otherwise pin the badge to the left edge of this flex-end column
+       * (as wide as the amount) — leaving it visibly misaligned under the
+       * right-aligned figure, and shifting row-to-row as amount widths vary. */}
+      <View style={styles.trailingChip}>
+        <StatusChip status={status} />
+      </View>
     </View>
   )
 
@@ -481,5 +487,11 @@ const styles = StyleSheet.create({
   trailingCol: {
     alignItems: 'flex-end',
     gap: space[1],
+  },
+  // Shrinks to the chip's own width so its internal `alignSelf: 'flex-start'`
+  // resolves flush within the wrapper, keeping the badge right-aligned under
+  // the amount regardless of the amount's width.
+  trailingChip: {
+    alignSelf: 'flex-end',
   },
 })
