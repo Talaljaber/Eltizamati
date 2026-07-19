@@ -99,6 +99,25 @@ describe('AuthBoundaryCoordinator', () => {
     })
   })
 
+  it('does not navigate on a cold start with no session (StartupCoordinator owns that routing)', async () => {
+    mockGetAuthService.mockReturnValue(
+      ok({
+        currentSession: jest.fn().mockResolvedValue(ok(undefined)),
+        onAuthStateChange: jest.fn(() => jest.fn()),
+      }),
+    )
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuthBoundaryCoordinator resetRuntime={mockResetRuntime} />
+      </QueryClientProvider>,
+    )
+
+    // Local cleanup still runs (stale personal state is purged)...
+    await waitFor(() => expect(mockClearDataMode).toHaveBeenCalledTimes(1))
+    // ...but the redundant navigation that caused the double sign-in render does not.
+    expect(mockReplace).not.toHaveBeenCalled()
+  })
+
   it('cleans the old boundary when the listener reports a different authenticated user', async () => {
     queryClient.setQueryData(['payments', 'user-a', 'obligation-a'], [{ owner: 'user-a' }])
     render(

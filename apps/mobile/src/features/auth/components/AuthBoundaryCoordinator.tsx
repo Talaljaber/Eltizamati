@@ -22,32 +22,46 @@ export function AuthBoundaryCoordinator({ resetRuntime }: { readonly resetRuntim
   const router = useRouter()
   const lastUserId = useRef<string | undefined>(undefined)
   const cleanupInFlight = useRef<Promise<void> | undefined>(undefined)
+  const hasReconciled = useRef(false)
 
-  const cleanup = useCallback(async () => {
-    if (cleanupInFlight.current !== undefined) return cleanupInFlight.current
-    cleanupInFlight.current = (async () => {
-      await runLocalUserBoundaryCleanup({
-        cancelQueries: async () => queryClient.cancelQueries(),
-        clearQueryCache: () => queryClient.clear(),
-        resetRuntime,
-        clearTrustState: clearDataMode,
-        clearLocalConsent,
-        cancelReminder: cancelLocalReminder,
-        clearNotificationResponse: clearLastNotificationResponse,
+  const cleanup = useCallback(
+    async ({ navigate }: { navigate: boolean }) => {
+      if (cleanupInFlight.current !== undefined) return cleanupInFlight.current
+      cleanupInFlight.current = (async () => {
+        await runLocalUserBoundaryCleanup({
+          cancelQueries: async () => queryClient.cancelQueries(),
+          clearQueryCache: () => queryClient.clear(),
+          resetRuntime,
+          clearTrustState: clearDataMode,
+          clearLocalConsent,
+          cancelReminder: cancelLocalReminder,
+          clearNotificationResponse: clearLastNotificationResponse,
+        })
+        lastUserId.current = undefined
+        // On a cold start with no session, StartupCoordinator already routes to
+        // sign-in (it mounts as the Stack's initial route). Navigating here as
+        // well replaces onto that same screen, visibly rendering sign-in twice.
+        // Only navigate for a genuine mid-session termination.
+        if (navigate) router.replace('/auth/sign-in')
+      })().finally(() => {
+        cleanupInFlight.current = undefined
       })
-      lastUserId.current = undefined
-      router.replace('/auth/sign-in')
-    })().finally(() => {
-      cleanupInFlight.current = undefined
-    })
-    return cleanupInFlight.current
-  }, [queryClient, resetRuntime, router])
+      return cleanupInFlight.current
+    },
+    [queryClient, resetRuntime, router],
+  )
 
   useEffect(() => {
     let active = true
     let unsubscribe: (() => void) | undefined
 
     async function reconcile(): Promise<void> {
+      // The first reconcile is the cold-start check: StartupCoordinator owns
+      // routing then, so a lost/absent session must clean local state without
+      // navigating. Every later reconcile (auth-state event, boundary change)
+      // is a real mid-session transition that should route to sign-in.
+      const isInitialReconcile = !hasReconciled.current
+      hasReconciled.current = true
       unsubscribe?.()
       unsubscribe = undefined
       const mode = await getDataMode()
@@ -58,22 +72,22 @@ export function AuthBoundaryCoordinator({ resetRuntime }: { readonly resetRuntim
       const sessionResult = await service.currentSession()
       if (!active) return
       if (!sessionResult.ok) {
-        await cleanup()
+        await cleanup({ navigate: !isInitialReconcile })
         return
       }
       if (sessionResult.value === undefined) {
-        await cleanup()
+        await cleanup({ navigate: !isInitialReconcile })
         return
       }
       lastUserId.current = sessionResult.value.user.id
       unsubscribe = service.onAuthStateChange((_event, session) => {
         if (!active) return
         if (session?.user.id === undefined) {
-          void cleanup().catch(() => undefined)
+          void cleanup({ navigate: true }).catch(() => undefined)
           return
         }
         if (lastUserId.current !== undefined && lastUserId.current !== session.user.id) {
-          void cleanup().catch(() => undefined)
+          void cleanup({ navigate: true }).catch(() => undefined)
           return
         }
         lastUserId.current = session.user.id
