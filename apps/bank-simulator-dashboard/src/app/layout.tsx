@@ -13,8 +13,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale()
 
   return (
-    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-      <body>
+    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <DemoBanner locale={locale} />
         <div className="app-shell">
           <AppNav locale={locale} />
