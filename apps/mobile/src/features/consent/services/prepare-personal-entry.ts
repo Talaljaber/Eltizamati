@@ -7,6 +7,9 @@ import { notifyAuthBoundaryChanged } from '@/features/auth/services/auth-boundar
 import { ensureAuthenticatedUserProfile } from '@/features/auth/services/ensure-authenticated-user-profile'
 import type { ProfileProvisioningDetails } from '@/features/auth/services/ensure-authenticated-user-profile'
 import {
+  CURRENT_CONSENT_DOC_TYPE,
+  CURRENT_CONSENT_VERSION,
+  acknowledgeLocalConsent,
   ensurePersonalConsent,
   isCurrentLocalConsent,
   readLocalConsent,
@@ -55,28 +58,46 @@ export async function preparePersonalEntry({
   }
   logPersonalEntry('profile_ready')
 
+  const userId = brandId<'user'>(session.user.id)
+
   logPersonalEntry('local_consent_read_started')
   const localResult = await readLocalConsent()
   if (!localResult.ok) {
     logPersonalEntry('local_consent_read_failed', { appErrorCode: localResult.error.code })
     return localResult
   }
-  if (!isCurrentLocalConsent(localResult.value)) {
-    logPersonalEntry('local_consent_required')
-    return ok('consentRequired')
-  }
-  logPersonalEntry('local_consent_ready')
 
-  logPersonalEntry('server_consent_started')
-  const consentResult = await ensurePersonalConsent(
-    brandId<'user'>(session.user.id),
-    repositories.consentRepository,
-  )
-  if (!consentResult.ok) {
-    logPersonalEntry('server_consent_failed', { appErrorCode: consentResult.error.code })
-    return consentResult
+  if (isCurrentLocalConsent(localResult.value)) {
+    logPersonalEntry('local_consent_ready')
+    logPersonalEntry('server_consent_started')
+    const consentResult = await ensurePersonalConsent(userId, repositories.consentRepository)
+    if (!consentResult.ok) {
+      logPersonalEntry('server_consent_failed', { appErrorCode: consentResult.error.code })
+      return consentResult
+    }
+    logPersonalEntry('server_consent_ready')
+  } else {
+    // Consent is account-scoped, not device-scoped: if this account already
+    // acknowledged the current policy (at sign-up, or on another device), a
+    // missing local flag must NOT force the consent screen again on sign-in.
+    logPersonalEntry('local_consent_missing_checking_server')
+    const statusResult = await repositories.consentRepository.status(userId)
+    if (!statusResult.ok) {
+      logPersonalEntry('server_consent_status_failed', { appErrorCode: statusResult.error.code })
+      return statusResult
+    }
+    const hasServerConsent = statusResult.value.some(
+      (record) =>
+        record.docType === CURRENT_CONSENT_DOC_TYPE && record.version === CURRENT_CONSENT_VERSION,
+    )
+    if (!hasServerConsent) {
+      logPersonalEntry('local_consent_required')
+      return ok('consentRequired')
+    }
+    // Re-seed the local flag so subsequent cold starts are fast and offline-safe.
+    await acknowledgeLocalConsent(locale)
+    logPersonalEntry('server_consent_ready')
   }
-  logPersonalEntry('server_consent_ready')
 
   // Resolves only after RepositoriesProvider has committed the registry.
   logPersonalEntry('repository_boot_started')
