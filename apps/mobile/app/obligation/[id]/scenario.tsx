@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import {
   Amount,
   Card,
-  ExplainLink,
   FieldRow,
   HeroAmount,
   InlineState,
@@ -16,6 +15,7 @@ import {
   useResponsiveLayout,
 } from '@/core/design-system'
 import { useScenarioSimulator } from '@/features/scenario/hooks/use-scenario-simulator'
+import { useMurabahaScheduleViewModel } from '@/features/schedule/hooks/use-murabaha-schedule-view-model'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import {
   snapshotRecord,
@@ -30,8 +30,30 @@ export default function ScenarioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation()
   const viewModel = useScenarioSimulator(id as Id<'obligation'>)
+  const murabahaViewModel = useMurabahaScheduleViewModel(id as Id<'obligation'>)
   const [explainVisible, setExplainVisible] = useState(false)
   const { isWideWeb } = useResponsiveLayout()
+
+  // A Murabaha's profit is fixed at signing (BR-CALC-020) — an extra-payment
+  // simulation cannot change the outcome, so we explain that plainly instead of
+  // showing what-if inputs and a generic "not available" message.
+  if (murabahaViewModel.status === 'success') {
+    return (
+      <>
+        <Stack.Screen options={{ title: t('scenario.title', 'Scenario Simulator') }} />
+        <ScrollView contentContainerStyle={[styles.scroll, isWideWeb && styles.scrollWide]}>
+          <Card>
+            <View style={styles.sectionTitle}>
+              <Text variant="heading">{t('scenario.murabahaFixedTitle')}</Text>
+            </View>
+            <Text variant="body" color="secondary">
+              {t('scenario.murabahaFixedBody')}
+            </Text>
+          </Card>
+        </ScrollView>
+      </>
+    )
+  }
 
   return (
     <>
@@ -191,8 +213,6 @@ export default function ScenarioScreen() {
                           {t('scenario.perfLabel', { ms: Math.round(viewModel.perfMs) })}
                         </Text>
                       )}
-
-                      <ExplainLink onPress={() => setExplainVisible(true)} />
                     </>
                   )
                 })()}

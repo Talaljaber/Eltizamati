@@ -31,7 +31,11 @@ export function ExplainSheet({ visible, onClose, obligationId, formulaId }: Expl
       if (!res.ok) throw res.error
       return res.value ?? null
     },
-    enabled: obligationId !== undefined && formulaId !== undefined,
+    // Only read once the sheet is actually opened. If this query were enabled
+    // on mount it would run before the detail screen has persisted its
+    // calculation run, cache a "not found", and never refetch on open —
+    // surfacing "Calculation record not found." for a run that does exist.
+    enabled: visible && obligationId !== undefined && formulaId !== undefined,
   })
 
   return (

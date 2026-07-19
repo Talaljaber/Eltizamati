@@ -14,7 +14,9 @@ import {
   useResponsiveLayout,
 } from '@/core/design-system'
 import { useAmortizationScheduleViewModel } from '@/features/schedule/hooks/use-amortization-schedule-view-model'
+import { useMurabahaScheduleViewModel } from '@/features/schedule/hooks/use-murabaha-schedule-view-model'
 import { ScheduleList } from '@/features/schedule/components/ScheduleList'
+import { MurabahaScheduleList } from '@/features/schedule/components/MurabahaScheduleList'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 import { Money, engineEstimate, type Id } from '@eltizamati/domain'
 
@@ -24,6 +26,7 @@ export default function AmortizationScheduleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation()
   const viewModel = useAmortizationScheduleViewModel(id as Id<'obligation'>)
+  const murabahaViewModel = useMurabahaScheduleViewModel(id as Id<'obligation'>)
   const [explainVisible, setExplainVisible] = useState(false)
   const { isWideWeb } = useResponsiveLayout()
 
@@ -61,6 +64,25 @@ export default function AmortizationScheduleScreen() {
         }}
       />
       <View style={[styles.root, isWideWeb && styles.rootWide]}>
+        {/* Murabaha has its own fixed-installment schedule; when it applies it
+         * takes precedence over the conventional amortization flow (which
+         * reports 'unsupported' for this kind). */}
+        {murabahaViewModel.status === 'loading' && (
+          <View style={styles.stateContainer}>
+            <InlineState kind="loading" message={t('common.loading')} />
+          </View>
+        )}
+        {murabahaViewModel.status === 'error' && (
+          <View style={styles.stateContainer}>
+            <InlineState kind="error" message={t('schedule.error')} />
+          </View>
+        )}
+        {murabahaViewModel.status === 'success' && (
+          <MurabahaScheduleList viewModel={murabahaViewModel} />
+        )}
+
+        {murabahaViewModel.status === 'notApplicable' && (
+          <>
         {viewModel.status === 'loading' && (
           <View style={styles.stateContainer}>
             <InlineState kind="loading" message={t('common.loading')} />
@@ -121,6 +143,8 @@ export default function AmortizationScheduleScreen() {
               </Card>
             </View>
             <ScheduleList schedule={viewModel.schedule} renderAmount={renderEstimatedAmount} />
+          </>
+        )}
           </>
         )}
       </View>
