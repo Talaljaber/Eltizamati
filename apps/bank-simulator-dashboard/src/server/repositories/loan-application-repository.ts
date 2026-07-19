@@ -1,12 +1,11 @@
 /**
- * Loan-application reads/decisions for the dashboard review queue. Reads are
- * allowlist-gated (every query filters to `assertAllowlistConfigured()`'s
- * user-id list, like every other dashboard read). The approve/reject write
- * goes through the `demo_decide_loan_application` SECURITY DEFINER RPC — this
- * module never issues a raw UPDATE that transitions an application's status.
+ * Loan-application reads/decisions for the dashboard review queue. Reads span
+ * all personal accounts (the demo allowlist has been removed). The
+ * approve/reject write goes through the `demo_decide_loan_application`
+ * SECURITY DEFINER RPC — this module never issues a raw UPDATE that
+ * transitions an application's status.
  */
 import { err, ok, makeError, type AppError, type Result } from '@eltizamati/domain'
-import { assertAllowlistConfigured } from '../allowlist'
 import { getServiceRoleSupabaseClient } from '../supabase/client'
 
 export interface LoanApplicationRow {
@@ -68,15 +67,12 @@ function toDomain(row: DbRow): LoanApplicationRow {
 export async function listAllowlistedLoanApplications(): Promise<
   Result<readonly LoanApplicationRow[], AppError>
 > {
-  const allowedUserIds = assertAllowlistConfigured()
-
   const clientResult = getServiceRoleSupabaseClient()
   if (!clientResult.ok) return clientResult
 
   const { data, error } = await clientResult.value
     .from('loan_applications')
     .select('*')
-    .in('user_id', allowedUserIds)
     .order('created_at', { ascending: false })
 
   if (error !== null) {

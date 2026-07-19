@@ -48,7 +48,7 @@ const en = {
   'bankRateSimulator.reason': 'Reason',
   'bankRateSimulator.sourceNote': 'Source note',
   'bankRateSimulator.sendEmail':
-    'Send email notifications (subject to the recipient allowlist and current email mode)',
+    "Send email notifications (only to recipients who consented, and subject to the current email mode)",
   'bankRateSimulator.publishButton': 'Publish campaign',
   'bankRateSimulator.excludedObligations': 'Excluded obligations',
 
@@ -77,10 +77,10 @@ const en = {
   'clientSummary.updated': 'Updated',
   'clientSummary.backToClients': '← Back to clients',
 
-  'warning.notAllowlisted': 'This client is not on the demo allowlist.',
+  'warning.notAllowlisted': 'This client could not be found.',
   'warning.couldNotLoadData':
-    'Could not load allowlisted data. Check Demo Settings for configuration state.',
-  'warning.noProfile': 'No profile row exists for this allowlisted user id.',
+    'Could not load client data. Check Demo Settings for configuration state.',
+  'warning.noProfile': 'No profile row exists for this user id.',
   'warning.impactUnavailable': 'Impact unavailable because the required contract inputs are missing.',
 
   'demo.badge': 'Demo',
@@ -122,7 +122,7 @@ const ar: Record<keyof typeof en, string> = {
   'bankRateSimulator.reason': 'السبب',
   'bankRateSimulator.sourceNote': 'ملاحظة المصدر',
   'bankRateSimulator.sendEmail':
-    'إرسال إشعارات بالبريد الإلكتروني (وفقًا لقائمة المستلمين المسموح بها ووضع البريد الحالي)',
+    'إرسال إشعارات بالبريد الإلكتروني (فقط للمستلمين الذين وافقوا، ووفقًا لوضع البريد الحالي)',
   'bankRateSimulator.publishButton': 'نشر الحملة',
   'bankRateSimulator.excludedObligations': 'الالتزامات المستبعدة',
 
@@ -151,10 +151,10 @@ const ar: Record<keyof typeof en, string> = {
   'clientSummary.updated': 'آخر تحديث',
   'clientSummary.backToClients': '→ العودة إلى العملاء',
 
-  'warning.notAllowlisted': 'هذا العميل غير مدرج في قائمة السماح التجريبية.',
+  'warning.notAllowlisted': 'تعذّر العثور على هذا العميل.',
   'warning.couldNotLoadData':
-    'تعذر تحميل البيانات المسموح بها. تحقق من إعدادات العرض التجريبي لمعرفة حالة التهيئة.',
-  'warning.noProfile': 'لا يوجد سجل ملف شخصي لمعرّف المستخدم هذا المدرج في قائمة السماح.',
+    'تعذر تحميل بيانات العميل. تحقق من إعدادات العرض التجريبي لمعرفة حالة التهيئة.',
+  'warning.noProfile': 'لا يوجد سجل ملف شخصي لمعرّف المستخدم هذا.',
   'warning.impactUnavailable': 'الأثر غير متاح لأن مدخلات العقد المطلوبة غير متوفرة.',
 
   'demo.badge': 'تجريبي',

@@ -1,4 +1,4 @@
-/** Allowlist-gated calculation-run reads (client detail's "calculations" section). */
+/** Calculation-run reads across all accounts (client detail's "calculations" section). */
 import {
   err,
   ok,
@@ -7,7 +7,6 @@ import {
   type CalculationRun,
   type Result,
 } from '@eltizamati/domain'
-import { assertAllowlistConfigured } from '../allowlist'
 import { getServiceRoleSupabaseClient } from '../supabase/client'
 import {
   calculationRunDomainToRow,
@@ -17,15 +16,10 @@ import {
 export async function listAllowlistedCalculationRuns(): Promise<
   Result<readonly CalculationRun[], AppError>
 > {
-  const allowedUserIds = assertAllowlistConfigured()
-
   const clientResult = getServiceRoleSupabaseClient()
   if (!clientResult.ok) return clientResult
 
-  const { data, error } = await clientResult.value
-    .from('calculation_runs')
-    .select('*')
-    .in('user_id', allowedUserIds)
+  const { data, error } = await clientResult.value.from('calculation_runs').select('*')
 
   if (error !== null) {
     return err(

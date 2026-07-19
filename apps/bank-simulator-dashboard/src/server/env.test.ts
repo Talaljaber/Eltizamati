@@ -5,8 +5,6 @@ const validRaw: RawDashboardEnv = {
   nodeEnv: 'development',
   demoDashboardEnabled: 'true',
   demoDashboardAllowRemote: 'false',
-  demoAllowedUserIds: 'user-1, user-2',
-  demoAllowedEmails: 'a@example.com,b@example.com',
   supabaseUrl: 'http://127.0.0.1:54321',
   supabaseSecretKey: 'service-role-secret',
   emailSendingEnabled: 'false',
@@ -24,8 +22,6 @@ describe('loadDashboardEnv', () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.value.environment).toBe('local')
-      expect(result.value.demoAllowedUserIds).toEqual(['user-1', 'user-2'])
-      expect(result.value.demoAllowedEmails).toEqual(['a@example.com', 'b@example.com'])
       expect(result.value.smtpPort).toBe(587)
     }
   })
@@ -68,15 +64,6 @@ describe('loadDashboardEnv', () => {
   it('rejects a missing Supabase secret key', () => {
     const result = loadDashboardEnv({ ...validRaw, supabaseSecretKey: '' })
     expect(result.ok).toBe(false)
-  })
-
-  it('treats an empty allowlist as valid at the env layer (gated separately at query time)', () => {
-    const result = loadDashboardEnv({ ...validRaw, demoAllowedUserIds: '', demoAllowedEmails: '' })
-    expect(result.ok).toBe(true)
-    if (result.ok) {
-      expect(result.value.demoAllowedUserIds).toEqual([])
-      expect(result.value.demoAllowedEmails).toEqual([])
-    }
   })
 
   it('defaults emailSendingEnabled and demoDashboardAllowRemote to false when unset', () => {

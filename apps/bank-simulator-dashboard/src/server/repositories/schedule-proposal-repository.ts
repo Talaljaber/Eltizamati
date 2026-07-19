@@ -1,10 +1,10 @@
 import { err, makeError, ok, type AppError, type Result } from '@eltizamati/domain'
-import { assertAllowlistConfigured } from '../allowlist'
 import { getServiceRoleSupabaseClient } from '../supabase/client'
 import type { Database } from '../supabase/database.types'
 
 export type ScheduleProposalRow = Database['public']['Tables']['loan_schedule_proposals']['Row']
 
+// Reads across all personal accounts (the demo allowlist has been removed).
 export async function listAllowlistedScheduleProposals(): Promise<
   Result<readonly ScheduleProposalRow[], AppError>
 > {
@@ -14,7 +14,6 @@ export async function listAllowlistedScheduleProposals(): Promise<
   const { data, error } = await clientResult.value
     .from('loan_schedule_proposals')
     .select('*')
-    .in('user_id', assertAllowlistConfigured())
     .order('created_at', { ascending: false })
 
   if (error !== null) {

@@ -8,7 +8,6 @@ const KEYS = [
   'SMTP_USER',
   'SMTP_APP_PASSWORD',
   'EMAIL_SENDING_ENABLED',
-  'DEMO_ALLOWED_USER_IDS',
   'DEMO_DASHBOARD_ALLOW_REMOTE',
   'DEMO_DASHBOARD_ENABLED',
 ] as const
@@ -25,7 +24,6 @@ describe('loadDashboardConfigStatus', () => {
     expect(status.supabaseSecretConfigured).toBe(false)
     expect(status.gmailSmtpConfigured).toBe(false)
     expect(status.emailSendingEnabled).toBe(false)
-    expect(status.allowedTestUsersConfigured).toBe(false)
     expect(status.remoteDeploymentAllowed).toBe(false)
     expect(status.demoDashboardEnabled).toBe(false)
     expect(status.environment).toBe('local')

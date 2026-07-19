@@ -1,7 +1,8 @@
 /**
- * Allowlist-gated payment reads. Currency is looked up per-obligation from
- * the caller (mirrors mobile's repository, which resolves currency the same
- * way — payments rows carry no currency column of their own).
+ * Payment reads across all personal accounts (the demo allowlist has been
+ * removed). Currency is looked up per-obligation from the caller (mirrors
+ * mobile's repository, which resolves currency the same way — payments rows
+ * carry no currency column of their own).
  */
 import {
   err,
@@ -12,22 +13,16 @@ import {
   type Payment,
   type Result,
 } from '@eltizamati/domain'
-import { assertAllowlistConfigured } from '../allowlist'
 import { getServiceRoleSupabaseClient } from '../supabase/client'
 import { paymentRowToDomain } from '../mappers/payment-mapper'
 
 export async function listAllowlistedPayments(
   obligations: readonly Obligation[],
 ): Promise<Result<readonly Payment[], AppError>> {
-  const allowedUserIds = assertAllowlistConfigured()
-
   const clientResult = getServiceRoleSupabaseClient()
   if (!clientResult.ok) return clientResult
 
-  const { data, error } = await clientResult.value
-    .from('payments')
-    .select('*')
-    .in('user_id', allowedUserIds)
+  const { data, error } = await clientResult.value.from('payments').select('*')
 
   if (error !== null) {
     return err(

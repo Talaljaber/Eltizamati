@@ -24,7 +24,7 @@ import nodemailer from 'nodemailer'
 // is the only place in the app that makes outbound network connections.
 setDefaultResultOrder('ipv4first')
 import { getDashboardEnv } from '../env'
-import { isEmailOnAllowlistedProfile } from '../repositories/profile-repository'
+import { isRecipientConsented } from '../repositories/profile-repository'
 import { logger } from '../logging/logger'
 import {
   markEmailFailed,
@@ -85,7 +85,7 @@ async function deliverEmail(input: DeliverEmailInput): Promise<SendEmailResult> 
   const recipientHash = hashEmail(input.recipientEmail)
   const recipientMasked = maskEmail(input.recipientEmail)
 
-  if (!(await isEmailOnAllowlistedProfile(input.recipientEmail))) {
+  if (!(await isRecipientConsented(input.userId, input.recipientEmail))) {
     const outbox = await queueEmail({
       campaignId: input.campaignId,
       userId: input.userId,
@@ -95,7 +95,7 @@ async function deliverEmail(input: DeliverEmailInput): Promise<SendEmailResult> 
       templateId: input.templateId,
       status: 'suppressed',
       idempotencyKey: input.idempotencyKey,
-      safeErrorCode: 'recipientNotAllowlisted',
+      safeErrorCode: 'recipientNotConsented',
     })
     return { status: 'suppressed', outboxId: outbox.ok ? outbox.value.id : undefined }
   }

@@ -31,20 +31,11 @@ function parseBoolean(value: string | undefined, fallback: boolean): boolean {
   return truthy.has(value.trim().toLowerCase())
 }
 
-function parseCsvList(value: string | undefined): readonly string[] {
-  if (value === undefined) return []
-  return value
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0)
-}
 
 export interface RawDashboardEnv {
   readonly nodeEnv: string | undefined
   readonly demoDashboardEnabled: string | undefined
   readonly demoDashboardAllowRemote: string | undefined
-  readonly demoAllowedUserIds: string | undefined
-  readonly demoAllowedEmails: string | undefined
   readonly supabaseUrl: string | undefined
   readonly supabaseSecretKey: string | undefined
   readonly emailSendingEnabled: string | undefined
@@ -69,8 +60,6 @@ function readRawEnvFromProcess(): RawDashboardEnv {
     nodeEnv: process.env.NODE_ENV,
     demoDashboardEnabled: process.env.DEMO_DASHBOARD_ENABLED,
     demoDashboardAllowRemote: process.env.DEMO_DASHBOARD_ALLOW_REMOTE,
-    demoAllowedUserIds: process.env.DEMO_ALLOWED_USER_IDS,
-    demoAllowedEmails: process.env.DEMO_ALLOWED_EMAILS,
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseSecretKey: process.env.SUPABASE_SECRET_KEY,
     emailSendingEnabled: process.env.EMAIL_SENDING_ENABLED,
@@ -88,8 +77,6 @@ const dashboardEnvSchema = z
     environment: z.enum(['local', 'demo']),
     demoDashboardEnabled: z.boolean(),
     demoDashboardAllowRemote: z.boolean(),
-    demoAllowedUserIds: z.array(z.string().min(1)),
-    demoAllowedEmails: z.array(z.string().email()),
     supabaseUrl: z.string().url(),
     supabaseSecretKey: z.string().min(1),
     emailSendingEnabled: z.boolean(),
@@ -141,8 +128,6 @@ export function loadDashboardEnv(
     environment: isProduction ? 'demo' : 'local',
     demoDashboardEnabled,
     demoDashboardAllowRemote,
-    demoAllowedUserIds: parseCsvList(raw.demoAllowedUserIds),
-    demoAllowedEmails: parseCsvList(raw.demoAllowedEmails),
     supabaseUrl: raw.supabaseUrl,
     supabaseSecretKey: raw.supabaseSecretKey,
     emailSendingEnabled: parseBoolean(raw.emailSendingEnabled, false),
