@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -9,11 +9,13 @@ import {
   ErrorState,
   Text,
   space,
+  minTouchTarget,
   layout,
   useTheme,
   useResponsiveLayout,
   PickerSheetField,
 } from '@/core/design-system'
+import { acknowledgeLocalConsent } from '@/features/consent/consent-policy'
 import { useSignUpMutation } from '@/features/auth/api/use-auth-mutations'
 import { AuthTextField } from '@/features/auth/components/AuthTextField'
 import { DismissKeyboardView } from '@/features/auth/components/DismissKeyboardView'
@@ -31,7 +33,7 @@ import { normalizeAuthEmail } from '@/services/auth/auth-email'
 const DEFAULT_COUNTRY_ID = 'jo'
 
 export default function SignUpScreen() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const theme = useTheme()
   const router = useRouter()
   const { isWideWeb } = useResponsiveLayout()
@@ -43,6 +45,7 @@ export default function SignUpScreen() {
   const [countryId, setCountryId] = useState(DEFAULT_COUNTRY_ID)
   const [localNumber, setLocalNumber] = useState('')
   const [bankId, setBankId] = useState<string | undefined>(undefined)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [validationError, setValidationError] = useState<string>()
 
   const selectedCountry = COUNTRY_CODES.find((c) => c.id === countryId)
@@ -65,12 +68,24 @@ export default function SignUpScreen() {
             ? 'auth.passwordMismatch'
             : profile === undefined
               ? 'auth.profileValidation'
-              : undefined
+              : !agreedToTerms
+                ? 'auth.mustAgreeToTerms'
+                : undefined
     setValidationError(errorKey)
-    if (errorKey !== undefined || normalizedEmail === undefined || profile === undefined) return
+    if (
+      errorKey !== undefined ||
+      normalizedEmail === undefined ||
+      profile === undefined ||
+      !agreedToTerms
+    )
+      return
     if (!beginOtpOperation('requesting')) return
     try {
       await signUp.mutateAsync({ email: normalizedEmail, password })
+      // Record the agreement now (locally) so the post-verification entry flow
+      // writes the account-scoped consent record and never re-prompts on a
+      // separate consent screen. The affirmative act happened here, at sign-up.
+      await acknowledgeLocalConsent(i18n.language.startsWith('ar') ? 'ar' : 'en')
       startOtpAttempt(normalizedEmail, profile)
       router.push('/auth/verify-code')
     } catch {
@@ -164,6 +179,43 @@ export default function SignUpScreen() {
           textContentType="password"
           testID="sign-up-confirm-password"
         />
+        <Pressable
+          onPress={() => setAgreedToTerms((v) => !v)}
+          style={styles.termsRow}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: agreedToTerms }}
+          accessibilityLabel={t('auth.agreeToTerms')}
+          testID="sign-up-terms-checkbox"
+        >
+          <View
+            style={[
+              styles.checkbox,
+              {
+                borderColor: agreedToTerms ? theme.brand : theme.border,
+                backgroundColor: agreedToTerms ? theme.brand : 'transparent',
+              },
+            ]}
+          >
+            {agreedToTerms ? (
+              <Text variant="caption" color="onBrand" align="center">
+                {'✓'}
+              </Text>
+            ) : null}
+          </View>
+          <View style={styles.termsLabel}>
+            <Text variant="bodySmall" color="secondary">
+              {t('auth.agreeToTerms')}{' '}
+              <Text
+                variant="bodySmall"
+                color="brand"
+                onPress={() => router.push('/legal-doc')}
+                testID="sign-up-terms-link"
+              >
+                {t('auth.agreeToTermsLink')}
+              </Text>
+            </Text>
+          </View>
+        </Pressable>
         {validationError !== undefined ? (
           <Text variant="bodySmall" color="critical" testID="sign-up-validation-error">
             {t(validationError)}
@@ -178,7 +230,7 @@ export default function SignUpScreen() {
           variant="primary"
           label={t('auth.createAccount')}
           loading={signUp.isPending}
-          disabled={signUp.isPending}
+          disabled={signUp.isPending || !agreedToTerms}
           onPress={() => void submit()}
           testID="sign-up-submit"
         />
@@ -215,4 +267,20 @@ const styles = StyleSheet.create({
   form: { gap: space[3] },
   phoneRow: { flexDirection: 'row', gap: space[2], alignItems: 'flex-end' },
   phoneInput: { flex: 1 },
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space[3],
+    minHeight: minTouchTarget,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  termsLabel: { flex: 1 },
 })

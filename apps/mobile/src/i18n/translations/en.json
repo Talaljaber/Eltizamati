@@ -237,6 +237,18 @@
     "agreedFinalBalloon": "Agreed final balloon",
     "projectedFinalBalloon": "Projected final balloon"
   },
+  "murabahaSchedule": {
+    "fixedTitle": "Fixed profit financing",
+    "fixedExplainer": "The total sale price and monthly installments were fixed when you signed. They never change — there is no interest rate to reprice, and paying early does not reduce the agreed profit.",
+    "totalSalePrice": "Total sale price",
+    "fixedInstallment": "Fixed monthly installment",
+    "term": "Term",
+    "termMonths": "{{months}} months",
+    "remainingShort": "Remaining",
+    "projectionNote": "Balances are projected from your fixed agreed installments, assuming each is paid on schedule.",
+    "finalAdjustedTitle": "Final installment adjusts",
+    "finalAdjustedBody": "The last installment differs slightly so the payments clear the exact agreed sale price — no other installment changes."
+  },
   "scheduleProposal": {
     "title": "Recommended Schedule",
     "nonBindingNotice": "This recommended alternative recalculates payments to clear the projected balance by the original maturity date. It is a comparison only and does not change the agreed schedule.",
@@ -272,6 +284,8 @@
     "costSaved": "Cost Saved",
     "error": "Error loading scenario.",
     "unsupported": "The simulator isn't available for this obligation type yet.",
+    "murabahaFixedTitle": "Fixed profit — nothing to simulate",
+    "murabahaFixedBody": "This is a Murabaha: the profit was fixed when you signed the sale, and there is no interest rate that reprices. Paying extra or early does not reduce the agreed profit, so an extra-payment simulation would not change the outcome. To settle early, ask your bank whether they grant a discretionary rebate (ibra').",
     "extraMonthlyLabel": "Extra monthly payment (JOD)",
     "currentLabel": "Current",
     "scenarioLabel": "With extra payment",
@@ -402,6 +416,9 @@
     "passwordRequirements": "Use at least 12 characters for your password.",
     "passwordMismatch": "The passwords do not match.",
     "profileValidation": "Enter your full name, an international phone number such as +962..., and your primary bank.",
+    "agreeToTerms": "I agree to the Terms & Conditions and Privacy Policy, and consent to receive emails and notifications about my loan applications, rate changes, and account updates.",
+    "agreeToTermsLink": "Read the Terms & Conditions",
+    "mustAgreeToTerms": "Please agree to the Terms & Conditions to create your account.",
     "signUpFailed": "We couldn't create the account. Please try again.",
     "emailRateLimited": "Too many codes were requested. Wait before trying again.",
     "verifyCodeTitle": "Verify your email",
@@ -749,24 +766,52 @@
     }
   },
   "legalDoc": {
-    "title": "Privacy Policy",
+    "title": "Terms & Conditions and Privacy Policy",
     "version": "Version {{version}}",
     "sections": {
+      "about": {
+        "heading": "About Eltizamati and these terms",
+        "body": "Eltizamati is a personal tool for tracking your loans, credit cards, and Islamic financing (such as Murabaha) in Jordan, and understanding how rate changes affect what you owe. It is an informational and organizational tool — not a bank, lender, credit bureau, or licensed financial advisor. By creating an account and ticking the agreement box, you confirm you are at least 18 years old and accept these Terms & Conditions and this Privacy Policy. If you do not agree, please do not create an account."
+      },
+      "demoVsPersonal": {
+        "heading": "Demonstration mode vs personal mode",
+        "body": "Demonstration mode uses entirely fictional data to show how the app works; that data is invented, stays on your device for the session, and represents no real account. Personal mode stores the information you enter about your own obligations. These terms govern personal mode; demo mode figures are illustrative only and must never be treated as real financial information."
+      },
       "dataWeStore": {
         "heading": "What data we store",
-        "body": "In demo mode, all data is fictional and lives only on your device for the duration of your session — nothing is sent to any server. In personal mode, your full name, contact phone number, primary bank name, obligations, payments, and rate history are stored in our Supabase database, protected by row-level security so only you can access your own records."
+        "body": "In demo mode, all data is fictional and lives only on your device for the duration of your session — nothing is sent to any server. In personal mode, your full name, contact phone number, email address, primary bank name, obligations, payments, and rate history are stored in our Supabase database, protected by row-level security so only you — and, where you have obligations a participating institution manages, that institution's authorized operators — can access your records. We never sell your data."
       },
       "dataSources": {
         "heading": "Where your numbers come from",
-        "body": "Every figure in this app is labeled by its source: your own manual entry, an official value from your bank, or an estimate we calculated. We never present an estimate as an official figure. Bank and open-banking connections are planned but not yet available — see Data Status in Settings for the current, honest state of every connection."
+        "body": "Every figure in this app is labeled by its source: your own manual entry, an official value from your bank, or an estimate we calculated. We never present an estimate as an official figure, and Murabaha profit is always shown as fixed at signing — never re-priced. Bank and open-banking connections are planned but not yet available — see Data Status in Settings for the current, honest state of every connection."
+      },
+      "communications": {
+        "heading": "Emails and notifications",
+        "body": "By agreeing to these terms you consent to receive emails and in-app or push notifications about matters relevant to your account: the status of your loan applications, published rate changes and how they affect your obligations, recommended or agreed schedule proposals, payment reminders you have configured, security and account updates, and occasional service messages. We only send to the email address on file for your account. You can withdraw this consent at any time from Settings, or by using the unsubscribe option in any email; withdrawing it may mean you no longer receive important updates about your obligations."
+      },
+      "notAdvice": {
+        "heading": "Not financial or Sharia advice",
+        "body": "Eltizamati helps you organize and understand your obligations, but it does not provide financial, legal, tax, or Sharia advice, and nothing in the app is an offer of credit or a recommendation to take, settle, or refinance any obligation. Calculations are estimates based on the information available and may differ from your institution's official figures. Always confirm amounts, profit, and settlement terms directly with your bank or financing provider before acting."
+      },
+      "security": {
+        "heading": "Security and access",
+        "body": "Your account is protected by authenticated sign-in and database row-level security. Keep your password confidential and sign out on shared devices. No online service can guarantee perfect security; if you believe your account has been accessed without authorization, change your password and contact us promptly."
       },
       "yourRights": {
         "heading": "Your rights",
-        "body": "You can review everything you've acknowledged in Settings → Acknowledgments. You can sign out at any time. You can permanently erase your account and all associated data from Settings → Account → Delete Account."
+        "body": "You can review everything you've acknowledged in Settings → Acknowledgments, correct the information you entered, manage your communication preferences, and sign out at any time. You can permanently erase your account and all associated data from Settings → Account → Delete Account."
       },
       "accountDeletion": {
         "heading": "Account deletion",
-        "body": "Deleting your account permanently erases your profile, obligations, payments, rate history, and consent records. This action cannot be undone."
+        "body": "Deleting your account permanently erases your profile, obligations, payments, rate history, communication preferences, and consent records. This action cannot be undone."
+      },
+      "changes": {
+        "heading": "Changes to these terms",
+        "body": "We may update these terms as the app evolves. When we make a material change we will raise the version shown above and ask you to review and accept the updated terms before you continue. Your continued use after accepting a new version means you agree to it."
+      },
+      "contact": {
+        "heading": "Contact",
+        "body": "For any question about these terms, your data, or your communication preferences, contact the Eltizamati team through the support option in Settings. We aim to respond to data and privacy requests promptly."
       }
     }
   },

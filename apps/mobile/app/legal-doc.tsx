@@ -4,7 +4,19 @@ import { Stack } from 'expo-router'
 import { Screen, Text, SectionHeader, space } from '@/core/design-system'
 import { CONSENT_VERSION } from '@/features/auth/api/use-record-consent'
 
-const SECTION_KEYS = ['dataWeStore', 'dataSources', 'yourRights', 'accountDeletion'] as const
+const SECTION_KEYS = [
+  'about',
+  'demoVsPersonal',
+  'dataWeStore',
+  'dataSources',
+  'communications',
+  'notAdvice',
+  'security',
+  'yourRights',
+  'accountDeletion',
+  'changes',
+  'contact',
+] as const
 
 export default function LegalDocScreen() {
   const { t } = useTranslation()

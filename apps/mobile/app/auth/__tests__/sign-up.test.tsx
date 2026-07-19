@@ -45,6 +45,7 @@ function fillValidForm(view: ReturnType<typeof renderScreen>) {
   fireEvent.changeText(view.getByTestId('sign-up-email'), ' User@Example.COM ')
   fireEvent.changeText(view.getByTestId('sign-up-password'), 'strong-password')
   fireEvent.changeText(view.getByTestId('sign-up-confirm-password'), 'strong-password')
+  fireEvent.press(view.getByTestId('sign-up-terms-checkbox'))
 }
 
 describe('password sign up', () => {
@@ -79,6 +80,16 @@ describe('password sign up', () => {
     fireEvent.changeText(view.getByTestId('sign-up-confirm-password'), 'different-password')
     fireEvent.press(view.getByTestId('sign-up-submit'))
     expect(view.getByTestId('sign-up-validation-error')).toBeTruthy()
+    expect(mockAuthService.signUp).not.toHaveBeenCalled()
+  })
+
+  it('blocks account creation until the terms & conditions are agreed to', () => {
+    const view = renderScreen()
+    fillValidForm(view)
+    // Untick the terms checkbox that fillValidForm ticked — the submit control
+    // is then disabled, so no account request can be made.
+    fireEvent.press(view.getByTestId('sign-up-terms-checkbox'))
+    fireEvent.press(view.getByTestId('sign-up-submit'))
     expect(mockAuthService.signUp).not.toHaveBeenCalled()
   })
 
