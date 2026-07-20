@@ -46,6 +46,7 @@ export default function SignUpScreen() {
   const [localNumber, setLocalNumber] = useState('')
   const [bankId, setBankId] = useState<string | undefined>(undefined)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [hasViewedTerms, setHasViewedTerms] = useState(false)
   const [validationError, setValidationError] = useState<string>()
 
   const selectedCountry = COUNTRY_CODES.find((c) => c.id === countryId)
@@ -179,43 +180,51 @@ export default function SignUpScreen() {
           textContentType="password"
           testID="sign-up-confirm-password"
         />
-        <Pressable
-          onPress={() => setAgreedToTerms((v) => !v)}
-          style={styles.termsRow}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: agreedToTerms }}
-          accessibilityLabel={t('auth.agreeToTerms')}
-          testID="sign-up-terms-checkbox"
-        >
-          <View
-            style={[
-              styles.checkbox,
-              {
-                borderColor: agreedToTerms ? theme.brand : theme.border,
-                backgroundColor: agreedToTerms ? theme.brand : 'transparent',
-              },
-            ]}
+        <View style={styles.termsSection}>
+          <Button
+            variant="ghost"
+            label={t('auth.agreeToTermsLink')}
+            onPress={() => {
+              setHasViewedTerms(true)
+              router.push('/legal-doc')
+            }}
+            testID="sign-up-terms-link"
+          />
+          <Pressable
+            onPress={() => hasViewedTerms && setAgreedToTerms((v) => !v)}
+            style={[styles.termsRow, !hasViewedTerms && styles.termsRowDisabled]}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: agreedToTerms, disabled: !hasViewedTerms }}
+            accessibilityLabel={t('auth.agreeToTerms')}
+            testID="sign-up-terms-checkbox"
           >
-            {agreedToTerms ? (
-              <Text variant="caption" color="onBrand" align="center">
-                {'✓'}
+            <View
+              style={[
+                styles.checkbox,
+                {
+                  borderColor: agreedToTerms ? theme.brand : theme.border,
+                  backgroundColor: agreedToTerms ? theme.brand : 'transparent',
+                },
+              ]}
+            >
+              {agreedToTerms ? (
+                <Text variant="caption" color="onBrand" align="center">
+                  {'✓'}
+                </Text>
+              ) : null}
+            </View>
+            <View style={styles.termsLabel}>
+              <Text variant="bodySmall" color="secondary">
+                {t('auth.agreeToTerms')}
               </Text>
-            ) : null}
-          </View>
-          <View style={styles.termsLabel}>
-            <Text variant="bodySmall" color="secondary">
-              {t('auth.agreeToTerms')}{' '}
-              <Text
-                variant="bodySmall"
-                color="brand"
-                onPress={() => router.push('/legal-doc')}
-                testID="sign-up-terms-link"
-              >
-                {t('auth.agreeToTermsLink')}
-              </Text>
+            </View>
+          </Pressable>
+          {!hasViewedTerms ? (
+            <Text variant="caption" color="secondary" testID="sign-up-read-terms-hint">
+              {t('auth.readTermsFirst')}
             </Text>
-          </View>
-        </Pressable>
+          ) : null}
+        </View>
         {validationError !== undefined ? (
           <Text variant="bodySmall" color="critical" testID="sign-up-validation-error">
             {t(validationError)}
@@ -267,12 +276,14 @@ const styles = StyleSheet.create({
   form: { gap: space[3] },
   phoneRow: { flexDirection: 'row', gap: space[2], alignItems: 'flex-end' },
   phoneInput: { flex: 1 },
+  termsSection: { gap: space[1] },
   termsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: space[3],
     minHeight: minTouchTarget,
   },
+  termsRowDisabled: { opacity: 0.5 },
   checkbox: {
     width: 24,
     height: 24,

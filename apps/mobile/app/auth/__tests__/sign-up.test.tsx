@@ -45,6 +45,8 @@ function fillValidForm(view: ReturnType<typeof renderScreen>) {
   fireEvent.changeText(view.getByTestId('sign-up-email'), ' User@Example.COM ')
   fireEvent.changeText(view.getByTestId('sign-up-password'), 'strong-password')
   fireEvent.changeText(view.getByTestId('sign-up-confirm-password'), 'strong-password')
+  // The checkbox only accepts a tap after the terms link has been opened at least once.
+  fireEvent.press(view.getByTestId('sign-up-terms-link'))
   fireEvent.press(view.getByTestId('sign-up-terms-checkbox'))
 }
 

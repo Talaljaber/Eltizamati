@@ -1,7 +1,14 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
-import { err, makeError, ok, type AppError, type Result } from '@eltizamati/domain'
+import {
+  DomainInvariantError,
+  err,
+  makeError,
+  ok,
+  type AppError,
+  type Result,
+} from '@eltizamati/domain'
 import { logger } from '@/core/logging/logger'
 import type { AppAuthSession } from '@/services/auth/auth-service'
 import type { ProfileProvisioningDetails } from '@/features/auth/services/ensure-authenticated-user-profile'
@@ -26,10 +33,24 @@ export interface EntryCompletion {
   ) => Promise<Result<boolean, AppError>>
 }
 
+/**
+ * A raw thrown exception here (as opposed to a typed `Result` error) is
+ * always a bug somewhere upstream, but it must not surface as an opaque
+ * `{"code":"unexpected"}` with no clue what broke — that made a real
+ * `DomainInvariantError` (e.g. an unexpected DB column value) indistinguishable
+ * from a genuine unknown crash in the dev diagnostic and in logs.
+ */
 function asAppError(cause: unknown): AppError {
-  return typeof cause === 'object' && cause !== null && 'code' in cause && 'userMessageKey' in cause
-    ? (cause as AppError)
-    : makeError('unexpected', { cause })
+  if (typeof cause === 'object' && cause !== null && 'code' in cause && 'userMessageKey' in cause) {
+    return cause as AppError
+  }
+  if (cause instanceof DomainInvariantError) {
+    return makeError(cause.code, { safeMetadata: { message: cause.message }, cause })
+  }
+  return makeError('unexpected', {
+    safeMetadata: cause instanceof Error ? { message: cause.message, name: cause.name } : undefined,
+    cause,
+  })
 }
 
 function logEntryNavigation(stage: string): void {

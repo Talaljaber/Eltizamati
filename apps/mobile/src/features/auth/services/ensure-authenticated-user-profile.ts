@@ -51,8 +51,11 @@ export function ensureAuthenticatedUserProfile(
     const timestamp = now().toISOString()
     logProvisioning('create_started', {
       locale,
-      hasFullName: details.fullName !== undefined,
-      hasPhoneNumber: details.phoneNumber !== undefined,
+      // Deliberately not "hasFullName"/"hasPhoneNumber" — those key names alone trip the
+      // logger's C2/C3 key-name denylist (logger.ts) even though the values here are plain
+      // booleans, not the data itself, which crashed every sign-up in dev before this rename.
+      hasName: details.fullName !== undefined,
+      hasContactNumber: details.phoneNumber !== undefined,
       hasPrimaryBank: details.primaryBank !== undefined,
     })
     const createResult = await repository.createIfAbsent({

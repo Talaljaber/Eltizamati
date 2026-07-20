@@ -44,7 +44,6 @@ const styles = StyleSheet.create({
   },
   value: {
     flex: 1,
-    textAlign: 'right',
   },
   valueNode: {
     flex: 1,

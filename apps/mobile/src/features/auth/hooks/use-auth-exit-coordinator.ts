@@ -42,7 +42,7 @@ export function useAuthExitCoordinator(
       exit: async (kind: AuthExitKind) => {
         const result = await coordinator.exit(kind)
         if (result.ok && result.value.exited) {
-          router.replace(kind === 'deleteAccount' ? '/onboarding/language' : '/auth/sign-in')
+          router.replace(kind === 'deleteAccount' ? '/auth/account-deleted' : '/auth/sign-in')
         }
         return result
       },

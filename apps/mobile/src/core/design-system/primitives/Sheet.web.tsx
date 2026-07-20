@@ -1,7 +1,9 @@
 import { createPortal } from 'react-dom'
-import { View, StyleSheet, TouchableWithoutFeedback, type ViewStyle } from 'react-native'
+import { View, StyleSheet, Pressable, TouchableWithoutFeedback, type ViewStyle } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { Ionicons } from '@expo/vector-icons'
 import { Text } from './Text'
-import { space, radius } from '../tokens'
+import { minTouchTarget, space, radius } from '../tokens'
 import { useTheme } from '../use-theme'
 import type { SheetProps } from './Sheet'
 
@@ -33,6 +35,7 @@ const overlayRootStyle = {
  */
 export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const theme = useTheme()
+  const { t } = useTranslation()
 
   if (!visible) return null
 
@@ -46,11 +49,23 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
           <View style={styles.handleContainer}>
             <View style={[styles.handle, { backgroundColor: theme.border }]} />
           </View>
-          {title !== undefined && title !== '' && (
-            <View style={{ marginBottom: 16 }}>
+          <View style={styles.headerRow}>
+            {title !== undefined && title !== '' ? (
               <Text variant="heading">{title}</Text>
-            </View>
-          )}
+            ) : (
+              <View />
+            )}
+            <Pressable
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.cancel')}
+              hitSlop={8}
+              style={styles.closeButton}
+              testID="sheet-close-button"
+            >
+              <Ionicons name="close" size={22} color={theme.textSecondary} />
+            </Pressable>
+          </View>
           <View style={styles.content}>{children}</View>
         </View>
       </View>
@@ -75,7 +90,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     padding: space[4],
-    maxHeight: '90%',
+    maxHeight: '60%',
   },
   handleContainer: {
     alignItems: 'center',
@@ -85,6 +100,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: radius.full,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[4],
+  },
+  closeButton: {
+    minWidth: minTouchTarget,
+    minHeight: minTouchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     paddingBottom: space[8],

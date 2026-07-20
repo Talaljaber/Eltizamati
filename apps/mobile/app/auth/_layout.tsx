@@ -15,6 +15,7 @@ export default function AuthLayout() {
       <Stack.Screen name="reset" />
       <Stack.Screen name="callback" />
       <Stack.Screen name="update-password" />
+      <Stack.Screen name="account-deleted" />
     </Stack>
   )
 }
