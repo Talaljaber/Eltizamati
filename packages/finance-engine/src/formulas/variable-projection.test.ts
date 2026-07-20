@@ -381,6 +381,51 @@ describe('variableProjection.v1 — invariant violation', () => {
   })
 })
 
+describe('variableProjection.v1 — recalculated levels the stale starting installment, not just future rate boundaries', () => {
+  it('re-levels at period 1 when the passed-in installment predates the currently active rate, avoiding a final-period balloon', () => {
+    const startDate = toLocalDate('2026-01-01')
+    const principal = Money.of('100000', 'JOD')
+    const termMonths = 24
+    // Single flat rate period covering the whole walk — no future rate
+    // change will ever trigger the old "relevel on boundary" path.
+    const ratePeriods = [ratePeriod(1, '12', startDate)]
+
+    // Simulates a real installment left over from before a rate increase:
+    // correctly amortizes this principal/term at 6%, but the loan's actual
+    // active rate for this whole walk is 12%.
+    const staleInstallment = computeAmortizationSchedule(
+      principal,
+      Rate.fromPercent('6'),
+      termMonths,
+      startDate,
+      startDate,
+    ).computedInstallment
+    const correctInstallment = computeAmortizationSchedule(
+      principal,
+      Rate.fromPercent('12'),
+      termMonths,
+      startDate,
+      startDate,
+    ).computedInstallment
+
+    const result = computeVariableProjection(
+      principal,
+      ratePeriods,
+      termMonths,
+      startDate,
+      staleInstallment,
+      { kind: 'recalculated' },
+      startDate,
+    )
+
+    expect(result.schedule[0]?.payment.equals(correctInstallment)).toBe(true)
+    expect(result.projectedResidualAtMaturity.isZero()).toBe(true)
+    const finalPayment = result.schedule[result.schedule.length - 1]?.payment as Money
+    // The final period is allowed to absorb rounding, never a multi-period lump sum.
+    expect(finalPayment.isLessThan(correctInstallment.multiplyBy('2'))).toBe(true)
+  })
+})
+
 describe('variableProjection - zero rate and empty explicit entries coverage', () => {
   it('handles zero rate under recalculated policy', () => {
     const startDate = toLocalDate('2026-01-01')

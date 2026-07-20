@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
   Amount,
@@ -26,7 +26,15 @@ import {
 } from '@/features/rate-impact/projection-display'
 import { ScheduleList } from '@/features/schedule/components/ScheduleList'
 import type { AmortizationScheduleRow } from '@/features/schedule/hooks/use-amortization-schedule-view-model'
-import { Money, toLocalDate, type Id, type Provenance } from '@eltizamati/domain'
+import {
+  Money,
+  toLocalDate,
+  type ConventionalLoan,
+  type Id,
+  type LocalDate,
+  type Provenance,
+} from '@eltizamati/domain'
+import type { VariableProjectionResult } from '@eltizamati/finance-engine'
 
 const proposalService = new ScheduleProposalService()
 
@@ -35,6 +43,60 @@ interface ProposalResult {
   readonly projectedRemainingPayable: Money
   readonly residual: Money
   readonly schedule: readonly AmortizationScheduleRow[]
+  readonly payoffPeriod?: number
+}
+
+type RecommendedOptionKind = 'lowerInstallment' | 'sameInstallment'
+
+function buildProposalResult(
+  result: VariableProjectionResult,
+  currency: string,
+  asOf: LocalDate,
+  fallbackInstallment: Money,
+): ProposalResult {
+  let total = Money.zero(currency)
+  let previousCost: number | undefined
+  let remaining = result.schedule
+    .filter((entry) => entry.date > asOf)
+    .map((entry) => {
+      total = total.add(entry.payment)
+      const cost = Number(entry.cost.toStorageString())
+      const change =
+        previousCost === undefined || previousCost === 0
+          ? undefined
+          : ((cost - previousCost) / previousCost) * 100
+      previousCost = cost
+      return {
+        period: entry.period,
+        date: entry.date,
+        payment: entry.payment.toStorageString(),
+        principal: entry.principal.toStorageString(),
+        cost: entry.cost.toStorageString(),
+        closingBalance: entry.closingBalance.toStorageString(),
+        costPercentChangeFromPrevious: change,
+      }
+    })
+  const residual = result.projectedResidualAtMaturity
+  if (residual.isPositive() && remaining.length > 0) {
+    const finalIndex = remaining.length - 1
+    remaining = remaining.map((entry, index) =>
+      index === finalIndex
+        ? {
+            ...entry,
+            finalBalloonAmount: residual.toStorageString(),
+            finalBalloonKind: 'projected' as const,
+          }
+        : entry,
+    )
+  }
+  return {
+    installment:
+      remaining[0] === undefined ? fallbackInstallment : Money.of(remaining[0].payment, currency),
+    projectedRemainingPayable: total.add(residual),
+    residual,
+    schedule: remaining,
+    payoffPeriod: result.payoffPeriod,
+  }
 }
 
 export default function ScheduleProposalScreen() {
@@ -45,10 +107,15 @@ export default function ScheduleProposalScreen() {
   const { t } = useTranslation()
   const repos = useRepositories()
   const activeUser = useActiveUser()
+  const queryClient = useQueryClient()
   const personalAsOf = usePersonalCalculationAsOf()
   const { isWideWeb } = useResponsiveLayout()
   const [installmentDraft, setInstallmentDraft] = useState('')
-  const [proposal, setProposal] = useState<ProposalResult | undefined>()
+  const [customProposal, setCustomProposal] = useState<ProposalResult | undefined>()
+  const [options, setOptions] = useState<
+    { lowerInstallment: ProposalResult; sameInstallment?: ProposalResult } | undefined
+  >()
+  const [selectedOption, setSelectedOption] = useState<RecommendedOptionKind | undefined>()
   const [accepted, setAccepted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | undefined>()
@@ -72,6 +139,26 @@ export default function ScheduleProposalScreen() {
     staleTime: 0,
     refetchOnMount: 'always',
   })
+  const { data: payments } = useQuery({
+    queryKey: ['payments', activeUser ?? '', obligationId],
+    queryFn: async () => {
+      const result = await repos.paymentRepository.listFor(obligationId)
+      if (!result.ok) throw result.error
+      return result.value
+    },
+    enabled: obligation?.kind === 'conventionalLoan',
+  })
+  const { data: existingProposals } = useQuery({
+    queryKey: ['scheduleProposals', activeUser ?? '', obligationId],
+    queryFn: async () => {
+      if (!activeUser) return []
+      const result = await repos.loanScheduleProposalRepository.listFor(activeUser, obligationId)
+      if (!result.ok) throw result.error
+      return result.value
+    },
+    enabled: activeUser !== undefined && obligation?.kind === 'conventionalLoan',
+  })
+  const pendingProposal = existingProposals?.find((candidate) => candidate.status === 'pending')
   const asOf = calculationAsOf(
     typeof repos.reset === 'function' ? 'demo' : 'personal',
     personalAsOf,
@@ -85,7 +172,9 @@ export default function ScheduleProposalScreen() {
   }, [installmentDraft.length, obligation])
 
   useEffect(() => {
-    setProposal(undefined)
+    setCustomProposal(undefined)
+    setOptions(undefined)
+    setSelectedOption(undefined)
     setAccepted(false)
   }, [rateFingerprint])
 
@@ -102,74 +191,76 @@ export default function ScheduleProposalScreen() {
 
   function editInstallment(value: string) {
     setInstallmentDraft(value)
-    setProposal(undefined)
+    setCustomProposal(undefined)
     setAccepted(false)
     setError(undefined)
   }
 
   function calculateProposal() {
     if (obligation?.kind !== 'conventionalLoan' || ratePeriods === undefined) return
-    let installment = obligation.loanDetails.installment.value
+    const loan: ConventionalLoan = obligation
+    const paymentsTotal = (payments ?? []).reduce(
+      (sum, payment) => sum.add(payment.amount),
+      Money.zero(loan.currency),
+    )
+
     if (isCustom) {
+      let installment: Money
       try {
-        installment = Money.of(installmentDraft, obligation.currency)
+        installment = Money.of(installmentDraft, loan.currency)
       } catch {
         setError(t('scheduleProposal.invalidInstallment'))
         return
       }
-    }
-    const result = isCustom
-      ? proposalService.calculate(obligation, ratePeriods, installment, asOf)
-      : proposalService.calculateRecommended(obligation, ratePeriods, asOf)
-    if (!result.ok) {
-      setError(t('scheduleProposal.calculationError'))
+      const result = proposalService.calculate(loan, ratePeriods, installment, asOf, paymentsTotal)
+      if (!result.ok) {
+        setError(t('scheduleProposal.calculationError'))
+        return
+      }
+      setCustomProposal(buildProposalResult(result.value, loan.currency, asOf, installment))
+      setAccepted(false)
+      setError(undefined)
       return
     }
 
-    let total = Money.zero(obligation.currency)
-    let previousCost: number | undefined
-    let remaining = result.value.schedule
-      .filter((entry) => entry.date > asOf)
-      .map((entry) => {
-        total = total.add(entry.payment)
-        const cost = Number(entry.cost.toStorageString())
-        const change =
-          previousCost === undefined || previousCost === 0
-            ? undefined
-            : ((cost - previousCost) / previousCost) * 100
-        previousCost = cost
-        return {
-          period: entry.period,
-          date: entry.date,
-          payment: entry.payment.toStorageString(),
-          principal: entry.principal.toStorageString(),
-          cost: entry.cost.toStorageString(),
-          closingBalance: entry.closingBalance.toStorageString(),
-          costPercentChangeFromPrevious: change,
-        }
-      })
-    const residual = result.value.projectedResidualAtMaturity
-    if (isCustom && residual.isPositive() && remaining.length > 0) {
-      const finalIndex = remaining.length - 1
-      remaining = remaining.map((entry, index) =>
-        index === finalIndex
-          ? {
-              ...entry,
-              finalBalloonAmount: residual.toStorageString(),
-              finalBalloonKind: 'projected' as const,
-            }
-          : entry,
-      )
+    const lowerResult = proposalService.calculateRecommended(loan, ratePeriods, asOf, paymentsTotal)
+    const sameResult = proposalService.calculateSameInstallment(
+      loan,
+      ratePeriods,
+      asOf,
+      paymentsTotal,
+    )
+    if (!lowerResult.ok || !sameResult.ok) {
+      setError(t('scheduleProposal.calculationError'))
+      return
     }
-    setProposal({
-      installment:
-        remaining[0] === undefined
-          ? installment
-          : Money.of(remaining[0].payment, obligation.currency),
-      projectedRemainingPayable: total.add(residual),
-      residual,
-      schedule: remaining,
+    const sameProposal = buildProposalResult(
+      sameResult.value,
+      loan.currency,
+      asOf,
+      loan.loanDetails.installment.value,
+    )
+    // The recommended flow exists to protect the customer from a balloon —
+    // "same installment" is only ever offered here when it genuinely finishes
+    // on time or sooner (e.g. because of logged extra payments) with zero
+    // residual. If the current installment can't clear the balance by
+    // maturity (e.g. after a rate increase with no offsetting payment), that
+    // risk belongs only in the customer's own custom schedule, never in a
+    // system recommendation.
+    const sameIsSafe =
+      !sameProposal.residual.isPositive() &&
+      sameProposal.payoffPeriod !== undefined &&
+      sameProposal.payoffPeriod <= loan.loanDetails.termMonths.value
+    setOptions({
+      lowerInstallment: buildProposalResult(
+        lowerResult.value,
+        loan.currency,
+        asOf,
+        loan.loanDetails.installment.value,
+      ),
+      ...(sameIsSafe ? { sameInstallment: sameProposal } : {}),
     })
+    setSelectedOption(undefined)
     setAccepted(false)
     setError(undefined)
   }
@@ -184,6 +275,12 @@ export default function ScheduleProposalScreen() {
       />
     )
   }
+
+  const proposal = isCustom
+    ? customProposal
+    : selectedOption !== undefined
+      ? options?.[selectedOption]
+      : undefined
 
   async function submitForBankReview() {
     if (
@@ -218,11 +315,37 @@ export default function ScheduleProposalScreen() {
           : { finalBalloonAmount: entry.finalBalloonAmount }),
       })),
     })
-    setSubmitting(false)
     if (!result.ok) {
-      setError(t('scheduleProposal.submitError'))
+      setSubmitting(false)
+      setError(
+        t(
+          result.error.safeMetadata?.reason === 'alreadyPending'
+            ? 'scheduleProposal.alreadyPendingError'
+            : 'scheduleProposal.submitError',
+        ),
+      )
+      void queryClient.invalidateQueries({
+        queryKey: ['scheduleProposals', activeUser ?? '', obligationId],
+      })
       return
     }
+
+    if (obligation.connectionType === 'personal') {
+      const approveResult = await repos.loanScheduleProposalRepository.selfApprove(
+        activeUser,
+        result.value.id,
+      )
+      setSubmitting(false)
+      if (!approveResult.ok) {
+        setError(t('scheduleProposal.submitError'))
+        return
+      }
+      setAccepted(true)
+      setError(undefined)
+      return
+    }
+
+    setSubmitting(false)
     setAccepted(true)
     setError(undefined)
   }
@@ -235,6 +358,37 @@ export default function ScheduleProposalScreen() {
   }
   if (obligation.kind !== 'conventionalLoan') {
     return <InlineState kind="unsupported" message={t('schedule.unsupported')} />
+  }
+
+  const termMonths = obligation.loanDetails.termMonths.value
+  const monthsSooner = (result: ProposalResult): number | undefined =>
+    result.payoffPeriod === undefined ? undefined : termMonths - result.payoffPeriod
+
+  function renderOptionCard(kind: RecommendedOptionKind, result: ProposalResult) {
+    const title =
+      kind === 'lowerInstallment'
+        ? t('scheduleProposal.optionLowerInstallmentTitle')
+        : t('scheduleProposal.optionSameInstallmentTitle')
+    const sooner = monthsSooner(result)
+    const body =
+      kind === 'lowerInstallment'
+        ? t('scheduleProposal.optionLowerInstallmentBody')
+        : t('scheduleProposal.optionSameInstallmentBody', { months: sooner ?? 0 })
+    return (
+      <Card key={kind} surface="flat">
+        <View style={styles.content}>
+          <Text variant="heading">{title}</Text>
+          <Text variant="bodySmall" color="secondary">
+            {body}
+          </Text>
+          <Amount money={result.installment} provenance={proposalProvenance} precision="estimate" />
+          <Button
+            label={t('scheduleProposal.chooseOption')}
+            onPress={() => setSelectedOption(kind)}
+          />
+        </View>
+      </Card>
+    )
   }
 
   const proposalForm = (
@@ -269,6 +423,31 @@ export default function ScheduleProposalScreen() {
           />
         </View>
       </Card>
+
+      {pendingProposal !== undefined && (
+        <InsightBanner
+          severity="attention"
+          title={t('scheduleProposal.pendingExistsTitle')}
+          body={t(
+            obligation.connectionType === 'personal'
+              ? 'scheduleProposal.pendingExistsBodyPersonal'
+              : 'scheduleProposal.pendingExistsBody',
+            {
+              date: pendingProposal.createdAt.slice(0, 10),
+              installment: pendingProposal.proposedInstallment,
+              currency: obligation.currency,
+            },
+          )}
+        />
+      )}
+
+      {!isCustom && options !== undefined && selectedOption === undefined && (
+        <>
+          {renderOptionCard('lowerInstallment', options.lowerInstallment)}
+          {options.sameInstallment !== undefined &&
+            renderOptionCard('sameInstallment', options.sameInstallment)}
+        </>
+      )}
 
       {proposal !== undefined && (
         <Card>
@@ -305,12 +484,20 @@ export default function ScheduleProposalScreen() {
             )}
             {accepted ? (
               <Text variant="bodySmall" color="positive">
-                {t('scheduleProposal.acceptedLocally')}
+                {t(
+                  obligation.connectionType === 'personal'
+                    ? 'scheduleProposal.acceptedPersonally'
+                    : 'scheduleProposal.acceptedLocally',
+                )}
               </Text>
-            ) : (
+            ) : pendingProposal !== undefined ? null : (
               <View style={styles.actions}>
                 <Button
-                  label={t('scheduleProposal.accept')}
+                  label={t(
+                    obligation.connectionType === 'personal'
+                      ? 'scheduleProposal.acceptPersonal'
+                      : 'scheduleProposal.accept',
+                  )}
                   onPress={() => void submitForBankReview()}
                   loading={submitting}
                 />

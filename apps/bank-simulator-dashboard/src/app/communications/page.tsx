@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 const MODE_LABEL: Record<string, string> = {
   disabled: 'Sending disabled — no network call is ever made',
   'dev-sink': 'Development sink — renders and marks sent, no real network call',
-  gmail: 'Gmail SMTP — real sends to allowlisted recipients only',
+  gmail: 'Gmail SMTP — real sends to consenting recipients only',
 }
 
 const STATUS_CLASS: Record<string, string> = {
@@ -56,7 +56,7 @@ export default async function CommunicationsPage() {
 
       {!outboxResult.ok ? (
         <div className="card">
-          <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
+          <p>Could not load data. Check Demo Settings for configuration state.</p>
         </div>
       ) : (
         <div className="card">

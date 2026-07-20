@@ -169,6 +169,20 @@ export function computeVariableProjection(
   let balance = principal
   let payoffPeriod: number | undefined
 
+  // `recalculated` re-levels on every rate *change* it sees mid-schedule, but
+  // that alone can't fix a starting installment that was already stale
+  // before period 1 (e.g. a rate rose while the installment stayed
+  // `unchanged` for a while, and only now is the customer switching to
+  // `recalculated`). Leaving that mismatch until the loan's own single active
+  // rate never triggers another boundary crossing quietly compounds a
+  // shortfall for the whole remaining term, surfacing only as an oversized
+  // final-period absorption — precisely the balloon this policy exists to
+  // avoid. Level to the rate actually active at period 1 up front so the
+  // schedule amortizes correctly from the start.
+  if (policy.kind === 'recalculated') {
+    installment = levelPaymentFor(principal, activeRateFor(1), termMonths)
+  }
+
   for (let period = 1; period <= termMonths; period++) {
     const rate = activeRateFor(period)
     const i = rate.periodicRate(12)

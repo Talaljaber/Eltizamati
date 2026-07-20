@@ -1,9 +1,11 @@
+import Link from 'next/link'
 import { localDateFromDate } from '@eltizamati/domain'
 import { listAllowlistedProfiles } from '@/server/repositories/profile-repository'
 import { listAllowlistedObligations } from '@/server/repositories/obligation-repository'
 import { listAllowlistedInsights } from '@/server/repositories/insight-repository'
 import { listDemoCampaigns } from '@/server/repositories/demo-campaign-repository'
 import { listEmailOutbox } from '@/server/repositories/demo-email-outbox-repository'
+import { listAllowlistedScheduleProposals } from '@/server/repositories/schedule-proposal-repository'
 import { computeOverviewStats, type AggregateFigure } from '@/server/overview-service'
 import { formatMoney } from '@/format/money'
 import { DonutChart } from '@/components/charts/donut-chart'
@@ -34,6 +36,33 @@ function AggregateTile({ label, figure }: { label: string; figure: AggregateFigu
   )
 }
 
+function StatLinkTile({
+  label,
+  value,
+  caption,
+  href,
+}: {
+  label: string
+  value: string | number
+  caption?: string
+  href: string
+}) {
+  return (
+    <Link href={href} className="card" style={{ display: 'block', textDecoration: 'none' }}>
+      <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{label}</div>
+      <div
+        className="figure"
+        style={{ fontSize: 24, fontWeight: 700, marginBlock: 4, color: 'var(--color-text-primary)' }}
+      >
+        {value}
+      </div>
+      {caption !== undefined ? (
+        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{caption}</div>
+      ) : null}
+    </Link>
+  )
+}
+
 function StatTile({
   label,
   value,
@@ -59,14 +88,21 @@ function StatTile({
 export default async function OverviewPage() {
   const today = localDateFromDate(new Date())
 
-  const [profilesResult, obligationsResult, insightsResult, campaignsResult, outboxResult] =
-    await Promise.all([
-      listAllowlistedProfiles(),
-      listAllowlistedObligations(),
-      listAllowlistedInsights(),
-      listDemoCampaigns(),
-      listEmailOutbox(),
-    ])
+  const [
+    profilesResult,
+    obligationsResult,
+    insightsResult,
+    campaignsResult,
+    outboxResult,
+    proposalsResult,
+  ] = await Promise.all([
+    listAllowlistedProfiles(),
+    listAllowlistedObligations(),
+    listAllowlistedInsights(),
+    listDemoCampaigns(),
+    listEmailOutbox(),
+    listAllowlistedScheduleProposals(),
+  ])
 
   if (!profilesResult.ok) return <ErrorState code={profilesResult.error.code} />
   if (!obligationsResult.ok) return <ErrorState code={obligationsResult.error.code} />
@@ -83,6 +119,9 @@ export default async function OverviewPage() {
   const pendingEmailCount = outboxResult.ok
     ? outboxResult.value.filter((row) => row.status === 'queued').length
     : undefined
+  const pendingProposalCount = proposalsResult.ok
+    ? proposalsResult.value.filter((row) => row.status === 'pending').length
+    : undefined
 
   const grid: React.CSSProperties = {
     display: 'grid',
@@ -94,8 +133,8 @@ export default async function OverviewPage() {
     <div>
       <h1 className="page-title">Overview</h1>
       <p className="page-subtitle">
-        Aggregate figures across allowlisted demo clients only. Every total is labeled by data
-        quality; missing values are excluded and counted, never treated as zero.
+        Aggregate figures across every client. Every total is labeled by data quality; missing
+        values are excluded and counted, never treated as zero.
       </p>
 
       <div style={{ ...grid, marginBlockEnd: 'var(--space-6)' }}>
@@ -149,6 +188,12 @@ export default async function OverviewPage() {
       ) : null}
 
       <div style={grid}>
+        <StatLinkTile
+          label="Schedule proposals awaiting review"
+          value={pendingProposalCount ?? '—'}
+          caption={pendingProposalCount === undefined ? 'Could not load' : 'View all →'}
+          href="/schedule-proposals"
+        />
         <StatTile label="Upcoming maturities (90 days)" value={stats.upcomingMaturities.length} />
         <StatTile label="Active residual-risk insights" value={stats.activeResidualRiskInsights} />
         <StatTile
@@ -177,8 +222,7 @@ function ErrorState({ code }: { code: string }) {
       <h1 className="page-title">Overview</h1>
       <div className="card">
         <p>
-          Could not load allowlisted data (code: {code}). Check Demo Settings for configuration
-          state.
+          Could not load data (code: {code}). Check Demo Settings for configuration state.
         </p>
       </div>
     </div>

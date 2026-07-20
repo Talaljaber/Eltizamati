@@ -26,6 +26,7 @@ setDefaultResultOrder('ipv4first')
 import { getDashboardEnv } from '../env'
 import { isRecipientConsented } from '../repositories/profile-repository'
 import { logger } from '../logging/logger'
+import type { DemoActivityEventType } from '../repositories/demo-activity-repository'
 import {
   markEmailFailed,
   markEmailSent,
@@ -68,6 +69,21 @@ export interface SendRateChangeEmailInput {
 export interface SendEmailResult {
   readonly status: EmailOutboxStatus
   readonly outboxId: string | undefined
+}
+
+/**
+ * Shared status -> activity-log event mapping so every call site logs the
+ * same, honest event regardless of which of the four `sendXEmail` wrappers
+ * it went through — the four call sites previously each picked their own ad
+ * hoc binary split (e.g. "suppressed vs. everything else", "sent vs.
+ * everything else"), which let a `sending-disabled` result surface under
+ * whichever bucket a given call site happened to lump it into.
+ */
+export function emailActivityEventType(status: EmailOutboxStatus): DemoActivityEventType {
+  if (status === 'sent') return 'email_sent'
+  if (status === 'suppressed') return 'email_suppressed'
+  if (status === 'failed') return 'operation_failed'
+  return 'email_queued'
 }
 
 interface DeliverEmailInput {

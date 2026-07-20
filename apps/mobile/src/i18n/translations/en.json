@@ -146,6 +146,7 @@
     "allocationUnknown": "Split not available",
     "edit": "Edit",
     "logPayment": "Log Payment",
+    "officialPaymentsNotice": "This loan is connected to your bank — only the bank can log payments on it.",
     "logRateChange": "Try a Different Rate",
     "manage": "Manage",
     "archive": "Archive",
@@ -158,6 +159,8 @@
     "deleteConfirmAction": "Delete"
   },
   "loanDetail": {
+    "remainingToPay": "Remaining to pay",
+    "paidToDate": "Paid to date",
     "currentBalance": "Current balance",
     "heroTitle": "Loan Overview",
     "officialBalance": "Official Balance",
@@ -186,7 +189,8 @@
     "error": "Error loading rate history.",
     "empty": "No rate periods on file.",
     "increaseBadge": "+{{percent}}%",
-    "decreaseBadge": "-{{percent}}%"
+    "decreaseBadge": "-{{percent}}%",
+    "breakdown": "{{benchmark}}% benchmark + {{margin}}% margin"
   },
   "rateImpact": {
     "title": "Rate Impact",
@@ -235,7 +239,12 @@
     "agreedBalloonBadge": "Final balloon",
     "projectedBalloonBadge": "Projected final balloon",
     "agreedFinalBalloon": "Agreed final balloon",
-    "projectedFinalBalloon": "Projected final balloon"
+    "projectedFinalBalloon": "Projected final balloon",
+    "outdatedTitle": "Your agreed schedule is outdated",
+    "outdatedNotice": "A logged payment or a rate change means the agreed schedule no longer matches reality. Review the recommended schedule.",
+    "viewRecommended": "View recommended schedule",
+    "pendingProposalTitle": "A proposal is awaiting review",
+    "pendingProposalBody": "There's nothing to show yet because your current contractual schedule has no installments left, and a proposal you submitted is still pending review. It will appear here once decided."
   },
   "murabahaSchedule": {
     "fixedTitle": "Fixed profit financing",
@@ -261,12 +270,23 @@
     "unresolvedAtMaturity": "Unresolved projected balance at original maturity",
     "notBalloonWarning": "This amount is shown separately for safety. It is not inserted as a last installment, contractual balloon, or confirmed final payment. The bank must confirm its treatment.",
     "accept": "Send to bank for review",
+    "acceptPersonal": "Accept new schedule",
     "reject": "Reject",
     "acceptedLocally": "Sent to the bank for review. Your agreed schedule remains unchanged until the bank approves it.",
+    "acceptedPersonally": "This is now your agreed schedule.",
     "invalidInstallment": "Enter a valid installment greater than zero.",
     "calculationError": "The proposal could not be calculated from the available loan data.",
     "loadError": "The loan or its published rate history could not be loaded.",
-    "submitError": "The proposal could not be sent. You may already have a pending proposal for this loan."
+    "submitError": "The proposal could not be sent. Please try again.",
+    "alreadyPendingError": "You already have a pending proposal for this loan. It must be decided before you can submit another.",
+    "pendingExistsTitle": "A proposal is already pending",
+    "pendingExistsBody": "Submitted {{date}} — proposed installment {{installment}} {{currency}}. The bank must review it before you can submit a new one.",
+    "pendingExistsBodyPersonal": "Submitted {{date}} — proposed installment {{installment}} {{currency}}. It must be decided before you can submit a new one.",
+    "optionLowerInstallmentTitle": "Lower installment, same finish date",
+    "optionLowerInstallmentBody": "Keep the original maturity date with a smaller monthly installment.",
+    "optionSameInstallmentTitle": "Same installment, finish sooner",
+    "optionSameInstallmentBody": "Keep your current installment and finish paying {{months}} months earlier.",
+    "chooseOption": "Choose this option"
   },
   "scheduleGenerator": {
     "title": "Custom Schedule Generator",
@@ -419,6 +439,7 @@
     "agreeToTerms": "I agree to the Terms & Conditions and Privacy Policy, and consent to receive emails and notifications about my loan applications, rate changes, and account updates.",
     "agreeToTermsLink": "Read the Terms & Conditions",
     "mustAgreeToTerms": "Please agree to the Terms & Conditions to create your account.",
+    "readTermsFirst": "Please read the Terms & Conditions before agreeing.",
     "signUpFailed": "We couldn't create the account. Please try again.",
     "emailRateLimited": "Too many codes were requested. Wait before trying again.",
     "verifyCodeTitle": "Verify your email",
@@ -435,7 +456,10 @@
     "codeResent": "A new code was sent. Use the latest email.",
     "emailVerifiedSavingPending": "Your email is verified. We are finishing your account setup.",
     "resendCountdown": "Resend in {{seconds}}s",
-    "changeEmail": "Change signup details"
+    "changeEmail": "Change signup details",
+    "accountDeletedTitle": "We're sad to see you go",
+    "accountDeletedBody": "Your account and all of its data have been permanently deleted. You're welcome back anytime.",
+    "accountDeletedContinue": "Back to sign in"
   },
   "demo": {
     "banner": {
@@ -470,6 +494,7 @@
     "addTitle": "Add Obligation",
     "editTitle": "Edit Obligation",
     "logPaymentTitle": "Log Payment",
+    "officialPaymentsBlocked": "This loan is connected to your bank — only the bank can log payments on it.",
     "logRateTitle": "Log Rate Change",
     "rateWhatIfTitle": "What if the rate changes?",
     "rateWhatIfNotice": "What-if only — this does not change your loan.",

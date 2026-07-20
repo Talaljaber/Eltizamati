@@ -137,7 +137,7 @@ export default function DemoSettingsPage() {
         <h2 style={{ fontSize: 16, marginBlockStart: 0 }}>Other actions</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <ActionButtonPlaceholder
-            label="Send test email to allowlisted address"
+            label="Send test email to a consenting address"
             availableIn="a future pass — requires explicit owner confirmation and a real Gmail configuration"
           />
           <ActionButtonPlaceholder

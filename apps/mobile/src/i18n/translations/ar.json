@@ -146,6 +146,7 @@
     "allocationUnknown": "التقسيم غير متاح",
     "edit": "تعديل",
     "logPayment": "تسجيل دفعة",
+    "officialPaymentsNotice": "هذا القرض مرتبط ببنكك — يمكن للبنك وحده تسجيل الدفعات عليه.",
     "logRateChange": "جرّب سعر فائدة مختلف",
     "manage": "إدارة",
     "archive": "أرشفة",
@@ -158,6 +159,8 @@
     "deleteConfirmAction": "حذف"
   },
   "loanDetail": {
+    "remainingToPay": "المتبقي للسداد",
+    "paidToDate": "المسدد حتى الآن",
     "currentBalance": "الرصيد الحالي",
     "heroTitle": "نظرة عامة على القرض",
     "officialBalance": "الرصيد الرسمي",
@@ -186,7 +189,8 @@
     "error": "تعذّر تحميل سجل الفائدة.",
     "empty": "لا توجد فترات فائدة مسجّلة.",
     "increaseBadge": "+{{percent}}%",
-    "decreaseBadge": "-{{percent}}%"
+    "decreaseBadge": "-{{percent}}%",
+    "breakdown": "{{benchmark}}% مؤشر + {{margin}}% هامش"
   },
   "rateImpact": {
     "title": "أثر تغيّر الفائدة",
@@ -235,7 +239,12 @@
     "agreedBalloonBadge": "دفعة ختامية",
     "projectedBalloonBadge": "دفعة ختامية متوقعة",
     "agreedFinalBalloon": "الدفعة الختامية المتفق عليها",
-    "projectedFinalBalloon": "الدفعة الختامية المتوقعة"
+    "projectedFinalBalloon": "الدفعة الختامية المتوقعة",
+    "outdatedTitle": "جدول السداد المتفق عليه أصبح قديمًا",
+    "outdatedNotice": "أدت دفعة مسجّلة أو تغيّر في معدل الفائدة إلى أن الجدول المتفق عليه لم يعد يعكس الواقع. راجع الجدول الموصى به.",
+    "viewRecommended": "عرض الجدول الموصى به",
+    "pendingProposalTitle": "هناك مقترح قيد المراجعة",
+    "pendingProposalBody": "لا يوجد شيء لعرضه الآن لأن جدولك التعاقدي الحالي لم يتبق فيه أقساط، وهناك مقترح أرسلته لا يزال قيد المراجعة. سيظهر هنا بمجرد البت فيه."
   },
   "murabahaSchedule": {
     "fixedTitle": "تمويل بربح ثابت",
@@ -261,12 +270,23 @@
     "unresolvedAtMaturity": "رصيد تقديري غير محسوم عند تاريخ الاستحقاق الأصلي",
     "notBalloonWarning": "يُعرض هذا المبلغ منفصلاً للحماية. لا يُضاف كقسط أخير أو دفعة ختامية تعاقدية أو دفعة أخيرة مؤكدة. يجب على البنك تأكيد طريقة معالجته.",
     "accept": "إرسال إلى البنك للمراجعة",
+    "acceptPersonal": "قبول الجدول الجديد",
     "reject": "رفض",
     "acceptedLocally": "تم إرساله إلى البنك للمراجعة. يبقى جدولك المتفق عليه دون تغيير حتى يوافق البنك.",
+    "acceptedPersonally": "أصبح هذا هو جدول السداد المتفق عليه الآن.",
     "invalidInstallment": "أدخل قسطاً صالحاً أكبر من صفر.",
     "calculationError": "تعذّر حساب المقترح من بيانات القرض المتاحة.",
     "loadError": "تعذّر تحميل القرض أو سجل الفائدة المنشور.",
-    "submitError": "تعذّر إرسال المقترح. قد يكون لديك مقترح قيد المراجعة لهذا القرض بالفعل."
+    "submitError": "تعذّر إرسال المقترح. حاول مرة أخرى.",
+    "alreadyPendingError": "لديك بالفعل مقترح قيد المراجعة لهذا القرض. يجب البت فيه قبل أن تتمكن من إرسال مقترح جديد.",
+    "pendingExistsTitle": "يوجد مقترح قيد المراجعة بالفعل",
+    "pendingExistsBody": "أُرسل بتاريخ {{date}} — القسط المقترح {{installment}} {{currency}}. يجب أن يراجعه البنك قبل أن تتمكن من إرسال مقترح جديد.",
+    "pendingExistsBodyPersonal": "أُرسل بتاريخ {{date}} — القسط المقترح {{installment}} {{currency}}. يجب البت فيه قبل أن تتمكن من إرسال مقترح جديد.",
+    "optionLowerInstallmentTitle": "قسط أقل، بنفس تاريخ الانتهاء",
+    "optionLowerInstallmentBody": "احتفظ بتاريخ الاستحقاق الأصلي مع قسط شهري أصغر.",
+    "optionSameInstallmentTitle": "نفس القسط، إنهاء أسرع",
+    "optionSameInstallmentBody": "احتفظ بقسطك الحالي وأنهِ السداد قبل {{months}} أشهر من الموعد الأصلي.",
+    "chooseOption": "اختر هذا الخيار"
   },
   "scheduleGenerator": {
     "title": "مولّد جدول سداد مخصص",
@@ -419,6 +439,7 @@
     "agreeToTerms": "أوافق على الشروط والأحكام وسياسة الخصوصية، وأوافق على تلقّي رسائل البريد الإلكتروني والإشعارات المتعلقة بطلبات التمويل الخاصة بي وتغييرات الأسعار وتحديثات الحساب.",
     "agreeToTermsLink": "اقرأ الشروط والأحكام",
     "mustAgreeToTerms": "يرجى الموافقة على الشروط والأحكام لإنشاء حسابك.",
+    "readTermsFirst": "يرجى قراءة الشروط والأحكام قبل الموافقة.",
     "signUpFailed": "تعذّر إنشاء الحساب. يرجى المحاولة مرة أخرى.",
     "emailRateLimited": "تم طلب رموز كثيرة. انتظر قبل المحاولة مرة أخرى.",
     "verifyCodeTitle": "تحقق من بريدك الإلكتروني",
@@ -435,7 +456,10 @@
     "codeResent": "تم إرسال رمز جديد. استخدم أحدث رسالة بريد إلكتروني.",
     "emailVerifiedSavingPending": "تم التحقق من بريدك الإلكتروني. نعمل الآن على إكمال إعداد حسابك.",
     "resendCountdown": "إعادة الإرسال خلال {{seconds}} ث",
-    "changeEmail": "تغيير بيانات التسجيل"
+    "changeEmail": "تغيير بيانات التسجيل",
+    "accountDeletedTitle": "يؤسفنا رحيلك",
+    "accountDeletedBody": "تم حذف حسابك وكل بياناته نهائيًا. نرحّب بعودتك في أي وقت.",
+    "accountDeletedContinue": "العودة لتسجيل الدخول"
   },
   "demo": {
     "banner": {
@@ -470,6 +494,7 @@
     "addTitle": "إضافة التزام",
     "editTitle": "تعديل الالتزام",
     "logPaymentTitle": "تسجيل دفعة",
+    "officialPaymentsBlocked": "هذا القرض مرتبط ببنكك — يمكن للبنك وحده تسجيل الدفعات عليه.",
     "logRateTitle": "تسجيل تغيير الفائدة",
     "rateWhatIfTitle": "ماذا لو تغيّر سعر الفائدة؟",
     "rateWhatIfNotice": "هذه محاكاة فقط — لا تغيّر قرضك.",

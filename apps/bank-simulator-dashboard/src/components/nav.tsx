@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/', key: 'nav.overview' },
   { href: '/clients', key: 'nav.clients' },
   { href: '/portfolio', key: 'nav.portfolio' },
+  { href: '/schedule-proposals', key: 'nav.scheduleProposals' },
   { href: '/bank-rate-simulator', key: 'nav.bankRateSimulator' },
   { href: '/benchmark-simulator', key: 'nav.benchmarkSimulator' },
   { href: '/loan-applications', key: 'nav.loanApplications' },

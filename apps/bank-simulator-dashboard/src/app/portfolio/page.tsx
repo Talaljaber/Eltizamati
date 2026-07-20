@@ -188,7 +188,7 @@ export default async function PortfolioPage() {
       <div>
         <h1 className="page-title">Portfolio</h1>
         <div className="card">
-          <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
+          <p>Could not load data. Check Demo Settings for configuration state.</p>
         </div>
       </div>
     )
@@ -207,8 +207,8 @@ export default async function PortfolioPage() {
     <div>
       <h1 className="page-title">Portfolio</h1>
       <p className="page-subtitle">
-        Distributions across allowlisted demo clients&apos; obligations. Every chart has a table
-        view beside it — the chart is a read, never the only record of the numbers.
+        Distributions across every client&apos;s obligations. Every chart has a table view beside
+        it — the chart is a read, never the only record of the numbers.
       </p>
 
       <ChartCard
@@ -290,7 +290,7 @@ export default async function PortfolioPage() {
 
       <ChartCard
         title="Active insights by severity"
-        summary="Unread insights raised across allowlisted clients, by severity."
+        summary="Unread insights raised across clients, by severity."
         chart={
           <BarChart
             ariaLabel="Active insight count by severity"

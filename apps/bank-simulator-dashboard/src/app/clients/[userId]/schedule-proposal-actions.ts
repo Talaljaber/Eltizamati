@@ -8,7 +8,7 @@ import {
   decideScheduleProposal,
   listAllowlistedScheduleProposals,
 } from '@/server/repositories/schedule-proposal-repository'
-import { sendScheduleProposalDecisionEmail } from '@/server/email/gateway'
+import { emailActivityEventType, sendScheduleProposalDecisionEmail } from '@/server/email/gateway'
 import { recordActivity } from '@/server/repositories/demo-activity-repository'
 
 function requiredString(formData: FormData, key: string): string {
@@ -75,8 +75,8 @@ export async function decideScheduleProposalAction(formData: FormData): Promise<
       },
     })
     await recordActivity(
-      email.status === 'sent' ? 'email_sent' : 'email_suppressed',
-      `Schedule proposal decision email ${email.status} for an allowlisted client.`,
+      emailActivityEventType(email.status),
+      `Schedule proposal decision email: ${email.status}`,
     )
   }
 

@@ -1,11 +1,11 @@
 import {
   err,
   makeError,
+  Money,
   ok,
   type AppError,
   type ConventionalLoan,
   type LocalDate,
-  type Money,
   type RatePeriod,
   type Result,
 } from '@eltizamati/domain'
@@ -19,6 +19,7 @@ export class ScheduleProposalService {
     ratePeriods: readonly RatePeriod[],
     proposedInstallment: Money,
     asOf: LocalDate,
+    paymentsTotal: Money,
   ): Result<VariableProjectionResult, AppError> {
     if (!proposedInstallment.isPositive()) {
       return err(makeError('validation', { safeMetadata: { field: 'proposedInstallment' } }))
@@ -30,6 +31,7 @@ export class ScheduleProposalService {
       proposedInstallment,
       { kind: 'unchanged' },
       asOf,
+      paymentsTotal,
     )
   }
 
@@ -37,6 +39,7 @@ export class ScheduleProposalService {
     loan: ConventionalLoan,
     ratePeriods: readonly RatePeriod[],
     asOf: LocalDate,
+    paymentsTotal: Money,
   ): Result<VariableProjectionResult, AppError> {
     return this.calculateWithPolicy(
       loan,
@@ -44,6 +47,29 @@ export class ScheduleProposalService {
       loan.loanDetails.installment.value,
       { kind: 'recalculated' },
       asOf,
+      paymentsTotal,
+    )
+  }
+
+  /**
+   * Same installment as today, but projected against the principal net of
+   * everything already paid — so an overpaying customer sees the loan finish
+   * sooner (engine's own early-payoff detection under `unchanged`) rather
+   * than a schedule that ignores their payments entirely.
+   */
+  calculateSameInstallment(
+    loan: ConventionalLoan,
+    ratePeriods: readonly RatePeriod[],
+    asOf: LocalDate,
+    paymentsTotal: Money,
+  ): Result<VariableProjectionResult, AppError> {
+    return this.calculateWithPolicy(
+      loan,
+      ratePeriods,
+      loan.loanDetails.installment.value,
+      { kind: 'unchanged' },
+      asOf,
+      paymentsTotal,
     )
   }
 
@@ -53,11 +79,13 @@ export class ScheduleProposalService {
     installment: Money,
     installmentPolicy: InstallmentPolicy,
     asOf: LocalDate,
+    paymentsTotal: Money,
   ): Result<VariableProjectionResult, AppError> {
     const formula = resolveFormula('variableProjection', 1)
     if (!formula.ok) return formula
+    const principal = loan.loanDetails.originalPrincipal.value.subtract(paymentsTotal)
     const outcome = formula.value.execute({
-      principal: loan.loanDetails.originalPrincipal.value,
+      principal: principal.isNegative() ? Money.zero(principal.currency) : principal,
       ratePeriods,
       termMonths: loan.loanDetails.termMonths.value,
       startDate: loan.loanDetails.startDate,

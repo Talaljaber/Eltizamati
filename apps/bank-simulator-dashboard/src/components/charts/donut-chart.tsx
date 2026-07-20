@@ -69,20 +69,22 @@ export function DonutChart({ data, ariaLabel, centerLabel, centerValue }: DonutC
           stroke="var(--chart-gridline)"
           strokeWidth={STROKE_WIDTH}
         />
-        {segments.map((segment) => (
-          <path
-            key={segment.label}
-            d={segment.path}
-            fill="none"
-            stroke={segment.color}
-            strokeWidth={STROKE_WIDTH}
-            strokeLinecap="round"
-          >
-            <title>
-              {segment.label}: {segment.value} ({total === 0 ? 0 : Math.round((segment.value / total) * 100)}%)
-            </title>
-          </path>
-        ))}
+        {segments.map((segment) => {
+          const percent = total === 0 ? 0 : Math.round((segment.value / total) * 100)
+          const titleText = `${segment.label}: ${segment.value} (${percent}%)`
+          return (
+            <path
+              key={segment.label}
+              d={segment.path}
+              fill="none"
+              stroke={segment.color}
+              strokeWidth={STROKE_WIDTH}
+              strokeLinecap="round"
+            >
+              <title>{titleText}</title>
+            </path>
+          )
+        })}
         <text
           x={CENTER}
           y={CENTER - 4}

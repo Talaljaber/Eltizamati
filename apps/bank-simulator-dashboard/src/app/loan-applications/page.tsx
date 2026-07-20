@@ -18,7 +18,7 @@ const DECISION_MESSAGE: Record<string, string> = {
   rejected: 'Application rejected — the client keeps the reason in their app.',
   error: 'The decision could not be completed. Check the details and try again.',
   invalid: 'Enter a positive amount, term, and rate to approve.',
-  notFound: 'That application was not found or is not allowlisted.',
+  notFound: 'That application was not found.',
 }
 
 const RISK_LABEL: Record<DemoRiskBand, string> = {
@@ -54,7 +54,7 @@ export default async function LoanApplicationsPage({
       <div>
         <h1 className="page-title">Loan applications</h1>
         <div className="card">
-          <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
+          <p>Could not load data. Check Demo Settings for configuration state.</p>
         </div>
       </div>
     )

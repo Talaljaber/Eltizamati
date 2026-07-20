@@ -10,6 +10,7 @@ import {
   type ScheduleProposalRow,
 } from '@/server/repositories/schedule-proposal-repository'
 import { decideScheduleProposalAction } from './schedule-proposal-actions'
+import { recordBankPaymentAction } from './payment-actions'
 import { maskClientName } from '@/server/masking'
 import { formatMoney } from '@/format/money'
 import { SourcedMoneyValue, SourcedRateValue } from '@/components/sourced-amount'
@@ -238,8 +239,13 @@ function ObligationCard({
   obligation: Obligation
   proposals: readonly ScheduleProposalRow[]
 }) {
+  const pendingProposal = proposals.find((proposal) => proposal.status === 'pending')
   return (
-    <div className="card" style={{ marginBlockEnd: 'var(--space-4)' }}>
+    <div
+      id={`obligation-${obligation.id}`}
+      className="card"
+      style={{ marginBlockEnd: 'var(--space-4)' }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <h3 style={{ margin: 0, fontSize: 15 }}>{obligation.nickname}</h3>
         <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
@@ -247,6 +253,13 @@ function ObligationCard({
           {obligation.closedDate !== undefined ? ' · closed' : ''}
         </span>
       </div>
+      {pendingProposal !== undefined ? (
+        <div style={{ marginBlockStart: 6 }}>
+          <span className="status-pill status-pill--missing">
+            Schedule proposal pending review
+          </span>
+        </div>
+      ) : null}
       <div style={{ marginBlockStart: 8 }}>
         <ProvenanceBadge source={obligation.provenance.source} />
         {obligation.kind === 'conventionalLoan' ? (
@@ -255,7 +268,60 @@ function ObligationCard({
         {obligation.kind === 'murabaha' ? <MurabahaFields murabaha={obligation} /> : null}
         {obligation.kind === 'creditCard' ? <CardFields card={obligation} /> : null}
       </div>
+      {obligation.connectionType === 'official' && obligation.closedDate === undefined ? (
+        <RecordPaymentForm obligationId={obligation.id} userId={obligation.userId} />
+      ) : null}
     </div>
+  )
+}
+
+function RecordPaymentForm({
+  obligationId,
+  userId,
+}: {
+  obligationId: string
+  userId: string
+}) {
+  return (
+    <form
+      action={recordBankPaymentAction}
+      style={{
+        marginBlockStart: 12,
+        borderBlockStart: '1px solid var(--color-border)',
+        paddingBlockStart: 12,
+      }}
+    >
+      <input type="hidden" name="obligationId" value={obligationId} />
+      <input type="hidden" name="userId" value={userId} />
+      <h4 style={{ margin: '0 0 8px', fontSize: 14 }}>Record a payment</h4>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <label style={{ fontSize: 13 }}>
+          Amount
+          <input
+            name="amount"
+            type="number"
+            step="0.001"
+            min="0.001"
+            required
+            className="input"
+            style={{ display: 'block', marginBlockStart: 4 }}
+          />
+        </label>
+        <label style={{ fontSize: 13 }}>
+          Paid on
+          <input
+            name="paidOn"
+            type="date"
+            required
+            className="input"
+            style={{ display: 'block', marginBlockStart: 4 }}
+          />
+        </label>
+        <button className="button button--primary" type="submit">
+          Record payment
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -296,6 +362,13 @@ function LoanFields({
         {activeRate !== undefined ? (
           <span className="figure">
             {activeRate.annualRate.toPercent().toFixed(3)}%
+            {activeRate.benchmarkRate !== undefined && activeRate.margin !== undefined ? (
+              <span style={{ color: 'var(--color-text-secondary)', fontWeight: 400 }}>
+                {' '}
+                ({activeRate.benchmarkRate.toPercent().toFixed(3)}% benchmark +{' '}
+                {activeRate.margin.toPercent().toFixed(3)}% margin)
+              </span>
+            ) : null}
             <ProvenanceBadge source={activeRate.provenance.source} />
           </span>
         ) : (
@@ -325,7 +398,18 @@ function LoanFields({
                 .map((period) => (
                   <tr key={period.id}>
                     <Td>{period.effectiveFrom}</Td>
-                    <Td className="figure">{period.annualRate.toPercent().toFixed(3)}%</Td>
+                    <Td className="figure">
+                      {period.annualRate.toPercent().toFixed(3)}%
+                      {period.benchmarkRate !== undefined && period.margin !== undefined ? (
+                        <span
+                          style={{ color: 'var(--color-text-secondary)', fontWeight: 400 }}
+                        >
+                          {' '}
+                          ({period.benchmarkRate.toPercent().toFixed(3)}% +{' '}
+                          {period.margin.toPercent().toFixed(3)}%)
+                        </span>
+                      ) : null}
+                    </Td>
                     <Td>{period.supersededBy === undefined ? 'Active' : 'Superseded'}</Td>
                   </tr>
                 ))}

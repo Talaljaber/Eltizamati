@@ -30,7 +30,7 @@ export default async function ActivityLogPage() {
 
       {!activityResult.ok ? (
         <div className="card">
-          <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
+          <p>Could not load data. Check Demo Settings for configuration state.</p>
         </div>
       ) : activityResult.value.length === 0 ? (
         <div className="card">

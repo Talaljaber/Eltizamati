@@ -12,10 +12,10 @@ const RESULT_MESSAGE: Record<string, string> = {
   sent: 'Message sent.',
   queued: 'Message queued.',
   preview: 'Message recorded as a preview (sending is disabled or not fully configured).',
-  suppressed: 'Message suppressed — that client’s email is not on the recipient allowlist.',
+  suppressed: 'Message suppressed — that client has not consented to receive emails.',
   'sending-disabled': 'Message recorded, but email sending is currently disabled.',
   failed: 'Message failed to send. Check Demo Settings and try again.',
-  noEmailOnFile: 'That client has no email on file, or is not allowlisted — nothing was sent.',
+  noEmailOnFile: 'That client has no email on file — nothing was sent.',
 }
 
 export default async function ComposeMessagePage({
@@ -37,9 +37,9 @@ export default async function ComposeMessagePage({
       </p>
       <h1 className="page-title">Compose message</h1>
       <p className="page-subtitle">
-        Send a one-off message to a single allowlisted client. Still subject to the recipient
-        allowlist and the current email mode — this cannot reach anyone outside that allowlist,
-        regardless of what is typed below.
+        Send a one-off message to a single client. Still subject to the recipient's consent and
+        the current email mode — this only ever reaches the address on file for the selected
+        account, regardless of what is typed below.
       </p>
 
       <div className="card" style={{ marginBlockEnd: 'var(--space-5)' }}>
@@ -54,7 +54,7 @@ export default async function ComposeMessagePage({
 
       {!profilesResult.ok ? (
         <div className="card">
-          <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
+          <p>Could not load data. Check Demo Settings for configuration state.</p>
         </div>
       ) : (
         <form action={sendCustomEmailAction} className="card">

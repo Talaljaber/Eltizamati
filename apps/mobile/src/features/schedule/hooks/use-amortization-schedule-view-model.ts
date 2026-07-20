@@ -11,7 +11,12 @@ import {
   applicableRatePeriods,
   projectedRemainingPayable,
   rateHistoryFingerprint,
+  totalContractualPayable,
 } from '@/features/rate-impact/projection-display'
+import {
+  computeScheduleStaleness,
+  type ScheduleStalenessReason,
+} from '@/features/schedule/schedule-staleness'
 
 /**
  * Display row for one amortization period. `CalculationRun.resultSnapshot` is
@@ -41,6 +46,10 @@ export interface AmortizationScheduleViewModel {
   projectedRemainingPayable?: string
   projectedResidualAtMaturity?: string
   approvedAgreementAt?: string
+  scheduleStale?: boolean
+  scheduleStaleReasons?: readonly ScheduleStalenessReason[]
+  /** True when a not-yet-decided proposal exists — explains an otherwise-confusing empty schedule. */
+  pendingProposalExists?: boolean
 }
 
 export function useAmortizationScheduleViewModel(
@@ -89,6 +98,16 @@ export function useAmortizationScheduleViewModel(
     refetchOnMount: 'always',
   })
 
+  const { data: payments } = useQuery({
+    queryKey: ['payments', activeUser ?? '', obligationId],
+    queryFn: async () => {
+      const res = await repos.paymentRepository.listFor(obligationId)
+      if (!res.ok) throw res.error
+      return res.value
+    },
+    enabled: !!obligation,
+  })
+
   const canRunProjection = !!activeUser && obligation?.kind === 'conventionalLoan' && !!ratePeriods
   const asOf = calculationAsOf(
     typeof repos.reset === 'function' ? 'demo' : 'personal',
@@ -97,7 +116,7 @@ export function useAmortizationScheduleViewModel(
   const rateFingerprint = rateHistoryFingerprint(ratePeriods)
 
   const { data: run, isError: isProjError } = useQuery({
-    queryKey: ['projection', obligationId, activeUser, asOf, rateFingerprint],
+    queryKey: ['projection', obligationId, activeUser, asOf, rateFingerprint, payments?.length],
     queryFn: async (): Promise<CalculationRun> => {
       if (!activeUser || obligation?.kind !== 'conventionalLoan' || !ratePeriods) {
         throw new DomainInvariantError(
@@ -140,6 +159,12 @@ export function useAmortizationScheduleViewModel(
     return { status: 'unsupported', schedule: [] }
   }
 
+  const paymentsTotal = (payments ?? []).reduce(
+    (sum, payment) => sum.add(payment.amount),
+    Money.zero(obligation.currency),
+  )
+
+  const pendingProposalExists = proposals?.some((proposal) => proposal.status === 'pending') ?? false
   const approvedAgreement = proposals?.find((proposal) => proposal.status === 'approved')
   if (approvedAgreement !== undefined) {
     let previousCost: number | undefined
@@ -166,6 +191,28 @@ export function useAmortizationScheduleViewModel(
     const rates = [...approvedAgreement.rateHistorySnapshot].sort((a, b) =>
       a.effectiveFrom < b.effectiveFrom ? 1 : -1,
     )
+    const finalBalloonApproved = Money.of(approvedAgreement.finalBalloon, obligation.currency)
+    const remainingPayableApproved = Money.of(
+      approvedAgreement.projectedRemainingPayable,
+      obligation.currency,
+    )
+    const totalPayableApproved = schedule
+      .reduce(
+        (sum, entry) => sum.add(Money.of(entry.payment, obligation.currency)),
+        Money.zero(obligation.currency),
+      )
+      .add(finalBalloonApproved)
+    const latestApplicableRate = applicableRatePeriods(ratePeriods, asOf)[0]
+    const staleness = computeScheduleStaleness({
+      paymentsTotal,
+      expectedPaidByAsOf: totalPayableApproved.subtract(remainingPayableApproved),
+      installment: obligation.loanDetails.installment.value,
+      rateDrifted:
+        latestApplicableRate !== undefined &&
+        rates[0] !== undefined &&
+        latestApplicableRate.effectiveFrom > rates[0].effectiveFrom,
+      balloonPositive: finalBalloonApproved.isPositive(),
+    })
     return {
       status: 'success',
       schedule,
@@ -176,6 +223,9 @@ export function useAmortizationScheduleViewModel(
       projectedRemainingPayable: approvedAgreement.projectedRemainingPayable,
       projectedResidualAtMaturity: approvedAgreement.finalBalloon,
       approvedAgreementAt: approvedAgreement.decidedAt ?? approvedAgreement.updatedAt,
+      scheduleStale: staleness.stale,
+      scheduleStaleReasons: staleness.reasons,
+      pendingProposalExists,
     }
   }
 
@@ -231,6 +281,18 @@ export function useAmortizationScheduleViewModel(
     )
   }
 
+  const totalPayable = totalContractualPayable(snapshot, obligation.currency)
+  const staleness = computeScheduleStaleness({
+    paymentsTotal,
+    expectedPaidByAsOf:
+      totalPayable !== undefined && remainingPayable !== undefined
+        ? totalPayable.subtract(remainingPayable)
+        : undefined,
+    installment: obligation.loanDetails.installment.value,
+    rateDrifted: applicableRates[1] !== undefined,
+    balloonPositive: finalBalloon?.isPositive() === true,
+  })
+
   return {
     status: 'success',
     schedule,
@@ -239,5 +301,8 @@ export function useAmortizationScheduleViewModel(
     previousRatePercent: applicableRates[1]?.annualRate.toPercent().toFixed(3),
     projectedRemainingPayable: remainingPayable?.toStorageString(),
     projectedResidualAtMaturity: residual,
+    scheduleStale: staleness.stale,
+    scheduleStaleReasons: staleness.reasons,
+    pendingProposalExists,
   }
 }

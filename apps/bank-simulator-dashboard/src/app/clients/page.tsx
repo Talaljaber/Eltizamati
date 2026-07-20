@@ -72,7 +72,7 @@ export default async function ClientsPage({
       <div>
         <h1 className="page-title">Clients</h1>
         <div className="card">
-          <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
+          <p>Could not load data. Check Demo Settings for configuration state.</p>
         </div>
       </div>
     )

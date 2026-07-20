@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
-import { useLocalSearchParams, Stack } from 'expo-router'
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import {
   Amount,
+  Button,
   Card,
   ExplainLink,
   InlineState,
@@ -25,6 +26,7 @@ const PROJECTION_FORMULA_ID = 'variableProjection'
 export default function AmortizationScheduleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation()
+  const router = useRouter()
   const viewModel = useAmortizationScheduleViewModel(id as Id<'obligation'>)
   const murabahaViewModel = useMurabahaScheduleViewModel(id as Id<'obligation'>)
   const [explainVisible, setExplainVisible] = useState(false)
@@ -103,11 +105,29 @@ export default function AmortizationScheduleScreen() {
             <InlineState kind="refused" message={t('error.calculationRefused')} />
           </View>
         )}
-        {viewModel.status === 'success' && viewModel.schedule.length === 0 && (
-          <View style={styles.stateContainer}>
-            <InlineState kind="empty" message={t('schedule.empty')} />
-          </View>
-        )}
+        {viewModel.status === 'success' &&
+          viewModel.schedule.length === 0 &&
+          viewModel.pendingProposalExists !== true && (
+            <View style={styles.stateContainer}>
+              <InlineState kind="empty" message={t('schedule.empty')} />
+            </View>
+          )}
+        {viewModel.status === 'success' &&
+          viewModel.schedule.length === 0 &&
+          viewModel.pendingProposalExists === true && (
+            <View style={styles.stateContainer}>
+              <InsightBanner
+                severity="attention"
+                title={t('schedule.pendingProposalTitle')}
+                body={t('schedule.pendingProposalBody')}
+              />
+              <Button
+                variant="ghost"
+                label={t('schedule.viewRecommended')}
+                onPress={() => router.push(`/obligation/${id}/schedule-proposal?mode=recommended`)}
+              />
+            </View>
+          )}
 
         {viewModel.status === 'success' && viewModel.schedule.length > 0 && (
           <>
@@ -139,6 +159,20 @@ export default function AmortizationScheduleScreen() {
                         body={t('schedule.finalBalloonNotice')}
                       />
                     )}
+                  {viewModel.scheduleStale === true && (
+                    <>
+                      <InsightBanner
+                        severity="attention"
+                        title={t('schedule.outdatedTitle')}
+                        body={t('schedule.outdatedNotice')}
+                      />
+                      <Button
+                        variant="ghost"
+                        label={t('schedule.viewRecommended')}
+                        onPress={() => router.push(`/obligation/${id}/schedule-proposal?mode=recommended`)}
+                      />
+                    </>
+                  )}
                 </View>
               </Card>
             </View>

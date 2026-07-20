@@ -7,7 +7,11 @@ import {
   listAllowlistedLoanApplications,
 } from '@/server/repositories/loan-application-repository'
 import { listAllowlistedProfiles } from '@/server/repositories/profile-repository'
-import { sendLoanApprovedEmail, sendLoanRejectedEmail } from '@/server/email/gateway'
+import {
+  emailActivityEventType,
+  sendLoanApprovedEmail,
+  sendLoanRejectedEmail,
+} from '@/server/email/gateway'
 import { recordActivity } from '@/server/repositories/demo-activity-repository'
 import { generateUuid } from '@/server/ids'
 
@@ -33,15 +37,15 @@ export async function decideLoanApplicationAction(formData: FormData): Promise<v
   const decisionInput = requiredString(formData, 'decision')
   const decision = decisionInput === 'approve' ? 'approve' : 'reject'
 
-  // Resolve the applicant's own record (allowlist-scoped) so we know who this is,
-  // their locale, and — for the email — their on-file address. Never trust a
+  // Resolve the applicant's own record so we know who this is, their locale,
+  // and — for the email — their on-file address. Never trust a
   // client-supplied user id or email.
   const applicationsResult = await listAllowlistedLoanApplications()
   const application = applicationsResult.ok
     ? applicationsResult.value.find((a) => a.id === applicationId)
     : undefined
   if (application === undefined) {
-    await recordActivity('operation_failed', 'Loan decision failed — application not found or not allowlisted.')
+    await recordActivity('operation_failed', 'Loan decision failed — application not found.')
     redirect('/loan-applications?decided=notFound')
   }
 
@@ -70,8 +74,8 @@ export async function decideLoanApplicationAction(formData: FormData): Promise<v
         params: { institutionName: application.institutionName, reason },
       })
       await recordActivity(
-        emailResult.status === 'sent' ? 'email_sent' : 'email_suppressed',
-        `Loan rejection email ${emailResult.status} for an allowlisted client.`,
+        emailActivityEventType(emailResult.status),
+        `Loan rejection email: ${emailResult.status}`,
       )
     }
     redirect('/loan-applications?decided=rejected')
@@ -123,8 +127,8 @@ export async function decideLoanApplicationAction(formData: FormData): Promise<v
       },
     })
     await recordActivity(
-      emailResult.status === 'sent' ? 'email_sent' : 'email_suppressed',
-      `Loan approval email ${emailResult.status} for an allowlisted client.`,
+      emailActivityEventType(emailResult.status),
+      `Loan approval email: ${emailResult.status}`,
     )
   }
 
