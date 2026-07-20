@@ -17,6 +17,12 @@ export function ratePeriodRowToDomain(row: RatePeriodRow): RatePeriod {
     id: brandId<'ratePeriod'>(row.id),
     obligationId: brandId<'obligation'>(row.obligation_id),
     annualRate: Rate.fromDecimal(String(row.annual_rate)),
+    ...(row.benchmark_rate !== null && row.benchmark_rate !== undefined
+      ? { benchmarkRate: Rate.fromDecimal(String(row.benchmark_rate)) }
+      : {}),
+    ...(row.margin !== null && row.margin !== undefined
+      ? { margin: Rate.fromDecimal(String(row.margin)) }
+      : {}),
     effectiveFrom: toLocalDate(row.effective_from),
     ...(row.superseded_by !== null
       ? { supersededBy: brandId<'ratePeriod'>(row.superseded_by) }
@@ -38,6 +44,8 @@ export function ratePeriodDomainToRow(period: RatePeriod, userId: string): RateP
     obligation_id: period.obligationId,
     user_id: userId,
     annual_rate: Number(period.annualRate.toStorageString()),
+    benchmark_rate: period.benchmarkRate !== undefined ? Number(period.benchmarkRate.toStorageString()) : null,
+    margin: period.margin !== undefined ? Number(period.margin.toStorageString()) : null,
     effective_from: period.effectiveFrom,
     superseded_by: period.supersededBy ?? null,
     provenance_json: provenanceToJson(period.provenance),

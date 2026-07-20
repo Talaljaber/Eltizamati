@@ -18,6 +18,8 @@ export interface PublishCampaignInput {
   readonly sourceNote: string | undefined
   readonly oldAnnualRateDecimal: string | undefined
   readonly newAnnualRateDecimal: string
+  readonly benchmarkRateDecimal: string | undefined
+  readonly marginDecimal: string | undefined
   readonly effectiveDate: string
   readonly installmentPolicy: ServicingPolicy
   readonly emailNotificationEnabled: boolean
@@ -45,6 +47,8 @@ export async function publishRateCampaign(
     p_old_annual_rate:
       input.oldAnnualRateDecimal !== undefined ? Number(input.oldAnnualRateDecimal) : null,
     p_new_annual_rate: Number(input.newAnnualRateDecimal),
+    p_benchmark_rate: input.benchmarkRateDecimal !== undefined ? Number(input.benchmarkRateDecimal) : null,
+    p_margin: input.marginDecimal !== undefined ? Number(input.marginDecimal) : null,
     p_effective_date: input.effectiveDate,
     p_installment_policy: input.installmentPolicy,
     p_email_notification_enabled: input.emailNotificationEnabled,

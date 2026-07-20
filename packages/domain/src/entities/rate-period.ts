@@ -14,6 +14,10 @@ export interface RatePeriod {
   readonly id: Id<'ratePeriod'>
   readonly obligationId: Id<'obligation'>
   readonly annualRate: Rate
+  /** CBJ benchmark component, when this period was published via the benchmark+margin flow. */
+  readonly benchmarkRate?: Rate
+  /** Bank's contractual margin component, when this period was published via the benchmark+margin flow. */
+  readonly margin?: Rate
   readonly effectiveFrom: LocalDate
   /** Set only when this period has been superseded by a correction — append-only (BR-RATE-001). */
   readonly supersededBy?: Id<'ratePeriod'>

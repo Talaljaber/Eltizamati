@@ -98,4 +98,71 @@ describe('publishCampaign', () => {
     expect(JSON.stringify(projectionRun.inputsSnapshot)).toContain('0.11')
     expect(JSON.stringify(projectionRun.inputsSnapshot)).toContain('unchanged')
   })
+
+  it('forwards benchmark and margin as decimal strings when the campaign was built from the benchmark+margin flow', async () => {
+    const base = buildDemoLoan(DEMO_DATE)
+    const original = {
+      ...base,
+      loanDetails: {
+        ...base.loanDetails,
+        outstandingBalance: userEntered(Money.of('12000', 'JOD'), `${DEMO_DATE}T00:00:00Z`),
+      },
+    }
+    mocks.listObligations.mockResolvedValue(ok([original]))
+
+    await publishCampaign({
+      campaignName: 'Rate change',
+      institutionName: original.institution.name,
+      reason: undefined,
+      sourceNote: undefined,
+      newAnnualRate: Rate.fromPercent('8.1'),
+      benchmarkRate: Rate.fromPercent('5.6'),
+      margin: Rate.fromPercent('2.5'),
+      effectiveDate: toLocalDate('2026-08-01'),
+      servicingPolicy: 'unchanged',
+      emailNotificationEnabled: false,
+      recipientEmailByUserId: new Map(),
+      asOf: toLocalDate('2026-08-01'),
+    })
+
+    expect(mocks.publishRateCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        newAnnualRateDecimal: '0.081',
+        benchmarkRateDecimal: '0.056',
+        marginDecimal: '0.025',
+      }),
+    )
+  })
+
+  it('forwards undefined benchmark/margin when the campaign was not built from that flow', async () => {
+    const base = buildDemoLoan(DEMO_DATE)
+    const original = {
+      ...base,
+      loanDetails: {
+        ...base.loanDetails,
+        outstandingBalance: userEntered(Money.of('12000', 'JOD'), `${DEMO_DATE}T00:00:00Z`),
+      },
+    }
+    mocks.listObligations.mockResolvedValue(ok([original]))
+
+    await publishCampaign({
+      campaignName: 'Rate change',
+      institutionName: original.institution.name,
+      reason: undefined,
+      sourceNote: undefined,
+      newAnnualRate: Rate.fromPercent('11'),
+      effectiveDate: toLocalDate('2026-08-01'),
+      servicingPolicy: 'unchanged',
+      emailNotificationEnabled: false,
+      recipientEmailByUserId: new Map(),
+      asOf: toLocalDate('2026-08-01'),
+    })
+
+    expect(mocks.publishRateCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        benchmarkRateDecimal: undefined,
+        marginDecimal: undefined,
+      }),
+    )
+  })
 })

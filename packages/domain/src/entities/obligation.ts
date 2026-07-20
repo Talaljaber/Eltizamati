@@ -37,6 +37,15 @@ export interface Institution {
 
 // ─── Shared base ─────────────────────────────────────────────────────────────
 
+/**
+ * Who may log payments and see this obligation:
+ *  - `personal`: only the user logs payments; the bank never sees this loan.
+ *  - `official`: bank-connected — only the bank logs payments (via its own
+ *    service-role RPC); the user is read-only on payments for this loan.
+ * Rate changes from the obligation's `institution` still apply either way.
+ */
+export type ObligationConnectionType = 'personal' | 'official'
+
 export interface ObligationBase {
   readonly id: Id<'obligation'>
   /**
@@ -47,6 +56,7 @@ export interface ObligationBase {
    */
   readonly userId: Id<'user'>
   readonly kind: ObligationKind
+  readonly connectionType: ObligationConnectionType
   readonly nickname: string
   readonly institution: Institution
   readonly currency: string // 'JOD' in MVP

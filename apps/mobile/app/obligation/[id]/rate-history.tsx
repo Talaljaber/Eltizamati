@@ -66,6 +66,14 @@ export default function RateHistoryScreen() {
                   <Text variant="bodySmall" color="secondary">
                     {t('rateHistory.effectiveFrom')}: {row.period.effectiveFrom}
                   </Text>
+                  {row.period.benchmarkRate !== undefined && row.period.margin !== undefined && (
+                    <Text variant="bodySmall" color="secondary">
+                      {t('rateHistory.breakdown', {
+                        benchmark: row.period.benchmarkRate.toPercent().toFixed(3),
+                        margin: row.period.margin.toPercent().toFixed(3),
+                      })}
+                    </Text>
+                  )}
                 </View>
               </TimelineItem>
             ))}

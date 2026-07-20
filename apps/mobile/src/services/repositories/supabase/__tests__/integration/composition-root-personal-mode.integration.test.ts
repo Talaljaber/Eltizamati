@@ -147,6 +147,7 @@ describe('createCompositionRoot(personal) — real wiring path (live local Supab
       id: oblId,
       userId: brandedUserId,
       kind: 'genericFacility',
+      connectionType: 'personal',
       nickname: 'Composition-root wiring test',
       institution: { name: 'Test Bank' },
       currency: 'JOD',

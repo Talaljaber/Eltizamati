@@ -460,6 +460,7 @@ export type Database = {
       obligations: {
         Row: {
           closed_date: string | null
+          connection_type: string
           created_at: string
           currency: string
           id: string
@@ -475,6 +476,7 @@ export type Database = {
         }
         Insert: {
           closed_date?: string | null
+          connection_type?: string
           created_at?: string
           currency?: string
           id?: string
@@ -490,6 +492,7 @@ export type Database = {
         }
         Update: {
           closed_date?: string | null
+          connection_type?: string
           created_at?: string
           currency?: string
           id?: string
@@ -604,9 +607,11 @@ export type Database = {
       rate_periods: {
         Row: {
           annual_rate: number
+          benchmark_rate: number | null
           created_at: string
           effective_from: string
           id: string
+          margin: number | null
           obligation_id: string
           provenance_json: Json
           superseded_by: string | null
@@ -614,9 +619,11 @@ export type Database = {
         }
         Insert: {
           annual_rate: number
+          benchmark_rate?: number | null
           created_at?: string
           effective_from: string
           id?: string
+          margin?: number | null
           obligation_id: string
           provenance_json: Json
           superseded_by?: string | null
@@ -624,9 +631,11 @@ export type Database = {
         }
         Update: {
           annual_rate?: number
+          benchmark_rate?: number | null
           created_at?: string
           effective_from?: string
           id?: string
+          margin?: number | null
           obligation_id?: string
           provenance_json?: Json
           superseded_by?: string | null
@@ -740,6 +749,12 @@ export type Database = {
           p_fees_json: Json | null
         }
         Returns: Database['public']['Tables']['obligations']['Row']
+      }
+      self_decide_schedule_proposal: {
+        Args: {
+          p_proposal_id: string
+        }
+        Returns: Database['public']['Tables']['loan_schedule_proposals']['Row']
       }
     }
     Enums: {

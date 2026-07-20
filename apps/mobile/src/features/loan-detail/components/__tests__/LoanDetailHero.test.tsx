@@ -116,6 +116,43 @@ describe('LoanDetailHero', () => {
     expect(pressable).toBeTruthy()
   })
 
+  it('leads with remainingToPay when available, demoting currentBalance to a supporting metric', () => {
+    const { getByText } = renderHero({
+      currentBalance: Money.of('6000', 'JOD'),
+      currentBalanceProvenance: officialProvenance,
+      currentBalancePrecision: 'official',
+      estimatedResidual: undefined,
+      estimatedResidualProvenance: undefined,
+      residualConfidence: undefined,
+      residualCalculationRunId: undefined,
+      remainingToPay: Money.of('5571', 'JOD'),
+      remainingToPayProvenance: estimateProvenance,
+      paidToDate: Money.of('1000', 'JOD'),
+    })
+    expect(getByText('loanDetail.remainingToPay')).toBeTruthy()
+    expect(getByText(/≈ 5,571/)).toBeTruthy()
+    expect(getByText('loanDetail.currentBalance')).toBeTruthy()
+    expect(getByText(/6,000/)).toBeTruthy()
+    expect(getByText('loanDetail.paidToDate')).toBeTruthy()
+    expect(getByText(/≈ 1,000/)).toBeTruthy()
+  })
+
+  it('shows the outdated-schedule banner and a link to the recommended schedule when stale', () => {
+    const { getByText } = renderHero({
+      currentBalance: Money.of('6000', 'JOD'),
+      currentBalanceProvenance: officialProvenance,
+      currentBalancePrecision: 'official',
+      estimatedResidual: undefined,
+      estimatedResidualProvenance: undefined,
+      residualConfidence: undefined,
+      residualCalculationRunId: undefined,
+      scheduleStale: true,
+      scheduleStaleReasons: ['paymentDrift'],
+    })
+    expect(getByText('loanDetail.scheduleChangeTitle')).toBeTruthy()
+    expect(getByText('schedule.viewRecommended')).toBeTruthy()
+  })
+
   it('renders "unknown" when no current balance is available', () => {
     const { getByText } = renderHero({
       currentBalance: undefined,

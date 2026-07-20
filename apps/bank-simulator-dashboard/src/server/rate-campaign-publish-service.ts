@@ -48,7 +48,7 @@ import { publishRateCampaign, recordExcludedTargets } from './repositories/demo-
 import { persistCalculationRun } from './repositories/calculation-run-repository'
 import { raiseInsight } from './repositories/insight-repository'
 import { recordActivity } from './repositories/demo-activity-repository'
-import { sendRateChangeEmail } from './email/gateway'
+import { emailActivityEventType, sendRateChangeEmail } from './email/gateway'
 import { generateUuid } from './ids'
 import { formatRate } from '@/format/money'
 
@@ -58,6 +58,9 @@ export interface PublishCampaignRequest {
   readonly reason: string | undefined
   readonly sourceNote: string | undefined
   readonly newAnnualRate: Rate
+  /** Set together when this campaign was built from the benchmark+margin flow (CBJ benchmark + bank's margin). */
+  readonly benchmarkRate?: Rate
+  readonly margin?: Rate
   readonly effectiveDate: LocalDate
   readonly servicingPolicy: ServicingPolicy
   readonly emailNotificationEnabled: boolean
@@ -117,6 +120,8 @@ export async function publishCampaign(
     sourceNote: request.sourceNote,
     oldAnnualRateDecimal: undefined,
     newAnnualRateDecimal: request.newAnnualRate.toStorageString(),
+    benchmarkRateDecimal: request.benchmarkRate?.toStorageString(),
+    marginDecimal: request.margin?.toStorageString(),
     effectiveDate: request.effectiveDate,
     installmentPolicy: servicingPolicy,
     emailNotificationEnabled: request.emailNotificationEnabled,
@@ -206,8 +211,8 @@ export async function publishCampaign(
         })
         if (result.status === 'queued' || result.status === 'sent') emailsQueued++
         await recordActivity(
-          result.status === 'suppressed' ? 'email_suppressed' : 'email_queued',
-          `Rate-change email ${result.status} for an eligible loan`,
+          emailActivityEventType(result.status),
+          `Rate-change email: ${result.status}`,
           campaignId,
         )
       }

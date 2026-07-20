@@ -8,6 +8,7 @@ function makeFacility(id: Id<'obligation'>, userId: Id<'user'>, nickname: string
     id,
     userId,
     kind: 'genericFacility',
+    connectionType: 'personal',
     nickname,
     institution: { name: 'Test Bank' },
     currency: 'JOD',

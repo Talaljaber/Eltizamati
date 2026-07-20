@@ -27,6 +27,7 @@ import {
   type MurabahaDetails,
   type Obligation,
   type ObligationBase,
+  type ObligationConnectionType,
   type RateType,
   type Sourced,
 } from '@eltizamati/domain'
@@ -95,6 +96,14 @@ function optionalSourcedRateToColumns(sourced: Sourced<Rate> | undefined): {
 
 // ─── Base fields ───────────────────────────────────────────────────────────────
 
+function toConnectionType(value: string): ObligationConnectionType {
+  if (value === 'personal' || value === 'official') return value
+  throw new DomainInvariantError(
+    'validation',
+    `Unexpected obligations.connection_type value: "${value}"`,
+  )
+}
+
 function baseFromRow(row: ObligationRow): Omit<ObligationBase, 'kind'> {
   const institution: Institution =
     row.institution_id !== null
@@ -103,6 +112,7 @@ function baseFromRow(row: ObligationRow): Omit<ObligationBase, 'kind'> {
   return {
     id: brandId<'obligation'>(row.id),
     userId: brandId<'user'>(row.user_id),
+    connectionType: toConnectionType(row.connection_type),
     nickname: row.nickname,
     institution,
     currency: row.currency,
@@ -120,6 +130,7 @@ function baseToRow(obligation: Obligation): ObligationInsert {
     id: obligation.id,
     user_id: obligation.userId,
     kind: obligation.kind,
+    connection_type: obligation.connectionType,
     nickname: obligation.nickname,
     institution_name: obligation.institution.name,
     institution_id: obligation.institution.id ?? null,

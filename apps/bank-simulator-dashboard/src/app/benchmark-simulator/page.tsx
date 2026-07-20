@@ -35,9 +35,11 @@ export default async function BenchmarkSimulatorPage({
     <div>
       <h1 className="page-title">Benchmark Simulator</h1>
       <p className="page-subtitle">
-        Record a simulated Central Bank benchmark change as its own standalone fact. It is never
-        applied to a borrower&apos;s contract automatically — no rate period is appended and no
-        installment changes as a result of this page.
+        Record a simulated Central Bank (CBJ) benchmark announcement as its own standalone fact.
+        It is never applied to a borrower&apos;s contract automatically — no rate period is
+        appended and no installment changes as a result of this page. Each bank picks up the
+        latest benchmark on the Bank Rate Simulator page, adds its own margin, and publishes at
+        the time of its choosing.
       </p>
 
       {recordedId !== undefined ? (
@@ -128,7 +130,7 @@ export default async function BenchmarkSimulatorPage({
       <div className="card" style={{ marginBlockEnd: 'var(--space-5)' }}>
         <h3 style={{ marginBlockStart: 0, fontSize: 15 }}>Contract impact</h3>
         {impact === undefined ? (
-          <p>Could not load allowlisted data. Check Demo Settings for configuration state.</p>
+          <p>Could not load data. Check Demo Settings for configuration state.</p>
         ) : (
           <>
             <p style={{ fontWeight: 600 }}>{impact.contractImpactMessage}</p>

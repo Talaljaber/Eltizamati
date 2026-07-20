@@ -11,6 +11,7 @@ import {
   applicableRatePeriods,
   projectedRemainingPayable,
   rateHistoryFingerprint,
+  totalContractualPayable,
 } from './projection-display'
 
 function period(id: string, rate: string, effectiveFrom: string): RatePeriod {
@@ -65,5 +66,21 @@ describe('projection display helpers', () => {
       toLocalDate('2026-07-01'),
     )
     expect(total?.toStorageString()).toBe('650')
+  })
+
+  it('totals every schedule entry regardless of asOf, unlike projectedRemainingPayable', () => {
+    const canonical = toCanonicalJsonValue({
+      schedule: [
+        { date: '2026-06-01', payment: Money.of('300', 'JOD') },
+        { date: '2026-08-01', payment: Money.of('300', 'JOD') },
+        { date: '2026-09-01', payment: Money.of('300', 'JOD') },
+      ],
+      projectedResidualAtMaturity: Money.of('50', 'JOD'),
+    })
+    expect(canonical.ok).toBe(true)
+    if (!canonical.ok) return
+
+    const total = totalContractualPayable(snapshotRecord(canonical.value), 'JOD')
+    expect(total?.toStorageString()).toBe('950')
   })
 })

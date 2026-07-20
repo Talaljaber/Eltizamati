@@ -1,5 +1,6 @@
 import { DomainInvariantError, Rate, localDateFromDate, toLocalDate } from '@eltizamati/domain'
 import { listAllowlistedObligations } from '@/server/repositories/obligation-repository'
+import { listBenchmarkSimulations } from '@/server/repositories/demo-benchmark-repository'
 import {
   evaluateRateCampaignEligibility,
   EXCLUSION_REASON_LABEL,
@@ -32,6 +33,13 @@ function parseRate(raw: string | undefined): Rate | undefined {
   }
 }
 
+/** Sum of two percent-form rate inputs, unbounded (a wide margin can push the effective rate past what a single Rate.fromPercent would accept). */
+function addPercent(benchmark: Rate, marginRaw: string | undefined): Rate | undefined {
+  const margin = parseRate(marginRaw)
+  if (margin === undefined) return undefined
+  return benchmark.plus(margin)
+}
+
 function parseDate(raw: string | undefined): ReturnType<typeof toLocalDate> | undefined {
   if (raw === undefined) return undefined
   try {
@@ -51,7 +59,10 @@ export default async function BankRateSimulatorPage({
   const today = localDateFromDate(new Date())
   const locale = await getLocale()
 
-  const obligationsResult = await listAllowlistedObligations()
+  const [obligationsResult, benchmarkResult] = await Promise.all([
+    listAllowlistedObligations(),
+    listBenchmarkSimulations(),
+  ])
   if (!obligationsResult.ok) {
     return (
       <div>
@@ -63,6 +74,19 @@ export default async function BankRateSimulatorPage({
     )
   }
   const obligations = obligationsResult.value
+  const latestBenchmark = benchmarkResult.ok ? benchmarkResult.value[0] : undefined
+
+  if (latestBenchmark === undefined) {
+    return (
+      <div>
+        <h1 className="page-title">{t(locale, 'bankRateSimulator.title')}</h1>
+        <div className="card">
+          <p>{t(locale, 'bankRateSimulator.noBenchmark')}</p>
+        </div>
+      </div>
+    )
+  }
+  const benchmarkRate = Rate.fromPercent(String(latestBenchmark.newRatePercent))
 
   // The full curated bank catalogue, plus any institution name already present in the
   // seeded data that isn't in it — so nothing already working (exact-string matched
@@ -75,7 +99,8 @@ export default async function BankRateSimulatorPage({
   const institutions = [...curatedNames, ...uncuratedNames]
 
   const institution = str(resolved, 'institution')
-  const newAnnualRate = parseRate(str(resolved, 'newAnnualRate'))
+  const marginInput = str(resolved, 'margin')
+  const newAnnualRate = addPercent(benchmarkRate, marginInput)
   const effectiveDate = parseDate(str(resolved, 'effectiveDate')) ?? today
   const servicingPolicy: ServicingPolicy = 'unchanged'
 
@@ -125,14 +150,30 @@ export default async function BankRateSimulatorPage({
             </select>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
-            {t(locale, 'bankRateSimulator.newAnnualRate')}
+            {t(locale, 'bankRateSimulator.currentBenchmark')}
+            <input
+              type="text"
+              readOnly
+              disabled
+              value={`${latestBenchmark.newRatePercent.toFixed(3)}% (${latestBenchmark.benchmarkName})`}
+              style={{
+                padding: 4,
+                borderRadius: 4,
+                border: '1px solid var(--color-border)',
+                width: 220,
+                color: 'var(--color-text-secondary)',
+              }}
+            />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
+            {t(locale, 'bankRateSimulator.margin')}
             <input
               type="number"
-              name="newAnnualRate"
+              name="margin"
               step="0.001"
               min="0"
               max="100"
-              defaultValue={str(resolved, 'newAnnualRate') ?? ''}
+              defaultValue={marginInput ?? ''}
               required
               style={{
                 padding: 4,
@@ -142,6 +183,12 @@ export default async function BankRateSimulatorPage({
               }}
             />
           </label>
+          {newAnnualRate !== undefined ? (
+            <p style={{ margin: 0, fontSize: 12 }}>
+              {t(locale, 'bankRateSimulator.effectiveRate')}:{' '}
+              <strong className="figure">{formatRate(newAnnualRate)}</strong>
+            </p>
+          ) : null}
           <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, gap: 2 }}>
             {t(locale, 'bankRateSimulator.effectiveDate')}
             <input
@@ -184,11 +231,7 @@ export default async function BankRateSimulatorPage({
                 {t(locale, 'bankRateSimulator.publishSection')}
               </h3>
               <input type="hidden" name="institution" value={institution} />
-              <input
-                type="hidden"
-                name="newAnnualRate"
-                value={str(resolved, 'newAnnualRate') ?? ''}
-              />
+              <input type="hidden" name="margin" value={marginInput ?? ''} />
               <input type="hidden" name="effectiveDate" value={effectiveDate} />
               <div
                 style={{

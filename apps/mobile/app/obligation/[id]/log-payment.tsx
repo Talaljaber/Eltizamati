@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Text,
   Button,
+  InlineState,
   TextField,
   SkeletonCard,
   space,
@@ -101,6 +102,14 @@ function LogPaymentInner() {
     return (
       <View style={styles.loading}>
         <SkeletonCard />
+      </View>
+    )
+  }
+
+  if (obligation.connectionType === 'official') {
+    return (
+      <View style={styles.loading}>
+        <InlineState kind="unsupported" message={t('obligationForm.officialPaymentsBlocked')} />
       </View>
     )
   }

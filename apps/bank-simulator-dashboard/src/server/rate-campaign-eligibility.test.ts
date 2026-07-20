@@ -56,6 +56,7 @@ function makeLoan(overrides: {
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
     kind: 'conventionalLoan',
+    connectionType: 'official',
     loanDetails: {
       originalPrincipal: userEntered(Money.of('20000', 'JOD'), '2026-01-01T00:00:00Z'),
       outstandingBalance:
@@ -89,6 +90,7 @@ function makeMurabaha(id: string, institution: string): MurabahaFinancing {
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
     kind: 'murabaha',
+    connectionType: 'official',
     murabahaDetails: {
       totalSalePrice: userEntered(Money.of('18600', 'JOD'), '2026-01-01T00:00:00Z'),
       assetCost: userEntered(Money.of('15000', 'JOD'), '2026-01-01T00:00:00Z'),
@@ -113,6 +115,7 @@ function makeCard(id: string, institution: string): CreditCard {
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
     kind: 'creditCard',
+    connectionType: 'official',
     cardDetails: {
       creditLimit: userEntered(Money.of('4000', 'JOD'), '2026-01-01T00:00:00Z'),
       currentBalance: userEntered(Money.of('1000', 'JOD'), '2026-01-01T00:00:00Z'),

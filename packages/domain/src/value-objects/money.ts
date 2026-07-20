@@ -228,6 +228,11 @@ export class Rate {
     return this.#value.dividedBy(periodsPerYear)
   }
 
+  /** Sum with another rate (e.g. benchmark + margin). Not bounded to [0, 1] — a wide margin can exceed it. */
+  plus(other: Rate): Rate {
+    return new Rate(this.#value.plus(other.#value))
+  }
+
   /** As a percentage (for display, not computation). 2 dp per design-system §4. */
   toPercent(): Decimal {
     return this.#value.times(100)

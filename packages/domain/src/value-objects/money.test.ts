@@ -105,4 +105,16 @@ describe('Rate', () => {
     expect(Rate.fromPercent('9.25').equals(Rate.fromPercent('9.25'))).toBe(true)
     expect(Rate.fromPercent('9.25').equals(Rate.fromPercent('7.50'))).toBe(false)
   })
+
+  it('plus: sums two rates (benchmark + margin)', () => {
+    const benchmark = Rate.fromPercent('5.6')
+    const margin = Rate.fromPercent('2.5')
+    expect(benchmark.plus(margin).toStorageString()).toBe('0.081')
+  })
+
+  it('plus: unbounded — a wide margin can push the sum past what fromPercent alone would accept', () => {
+    const benchmark = Rate.fromPercent('60')
+    const margin = Rate.fromPercent('50')
+    expect(benchmark.plus(margin).toPercent().toFixed(0)).toBe('110')
+  })
 })

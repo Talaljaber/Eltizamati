@@ -50,6 +50,7 @@ export {
 // ─── Entities ─────────────────────────────────────────────────────────────────
 export type {
   ObligationKind,
+  ObligationConnectionType,
   Institution,
   ObligationBase,
   ObligationStatus,

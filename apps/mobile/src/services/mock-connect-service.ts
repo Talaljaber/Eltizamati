@@ -66,6 +66,7 @@ export class MockConnectService {
       id: obligationId,
       userId,
       kind: 'creditCard',
+      connectionType: 'official',
       nickname: 'Mock Provider Card',
       institution: { name: record.institutionName },
       currency: record.currency,

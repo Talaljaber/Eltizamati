@@ -52,6 +52,7 @@ function makeLoan(overrides: {
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
     kind: 'conventionalLoan',
+    connectionType: 'official',
     loanDetails: {
       originalPrincipal: userEntered(Money.of('20000', 'JOD'), '2026-01-01T00:00:00Z'),
       outstandingBalance:

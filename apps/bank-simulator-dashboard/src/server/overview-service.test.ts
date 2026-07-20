@@ -18,6 +18,7 @@ function baseFields(id: string, nickname: string) {
   return {
     id: brandId<'obligation'>(id),
     userId: brandId<'user'>('user-1'),
+    connectionType: 'official' as const,
     nickname,
     institution: { name: 'Test Bank' },
     currency: 'JOD',

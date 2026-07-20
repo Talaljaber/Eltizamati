@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Amount, HeroAmount, InsightBanner, Text } from '@/core/design-system'
+import { useRouter } from 'expo-router'
+import { Amount, Button, HeroAmount, InsightBanner, Text } from '@/core/design-system'
 import type { Id } from '@eltizamati/domain'
 import type { LoanDetailHeroModel } from '../hooks/use-loan-detail-view-model'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
@@ -15,9 +16,17 @@ export function LoanDetailHero({
   hero: LoanDetailHeroModel
 }) {
   const { t } = useTranslation()
+  const router = useRouter()
   const [explainVisible, setExplainVisible] = useState(false)
 
-  if (!hero.currentBalance || !hero.currentBalanceProvenance) {
+  const mainAmount = hero.remainingToPay ?? hero.currentBalance
+  const mainProvenance =
+    hero.remainingToPay !== undefined ? hero.remainingToPayProvenance : hero.currentBalanceProvenance
+  const mainLabel =
+    hero.remainingToPay !== undefined ? t('loanDetail.remainingToPay') : t('loanDetail.currentBalance')
+  const mainPrecision = hero.remainingToPay !== undefined ? 'estimate' : hero.currentBalancePrecision
+
+  if (!mainAmount || !mainProvenance) {
     return <Text color="secondary">{t('common.unknown', 'Unknown')}</Text>
   }
 
@@ -29,11 +38,41 @@ export function LoanDetailHero({
   return (
     <>
       <HeroAmount
-        label={t('loanDetail.currentBalance', 'Current balance')}
-        money={hero.currentBalance}
-        provenance={hero.currentBalanceProvenance}
-        precision={hero.currentBalancePrecision}
+        label={mainLabel}
+        money={mainAmount}
+        provenance={mainProvenance}
+        precision={mainPrecision}
         supporting={[
+          ...(hero.remainingToPay !== undefined && hero.currentBalance && hero.currentBalanceProvenance
+            ? [
+                {
+                  label: t('loanDetail.currentBalance'),
+                  value: (
+                    <Amount
+                      variant="amountSm"
+                      money={hero.currentBalance}
+                      provenance={hero.currentBalanceProvenance}
+                      precision={hero.currentBalancePrecision}
+                    />
+                  ),
+                },
+              ]
+            : []),
+          ...(hero.paidToDate?.isPositive() === true
+            ? [
+                {
+                  label: t('loanDetail.paidToDate'),
+                  value: (
+                    <Amount
+                      variant="amountSm"
+                      money={hero.paidToDate}
+                      provenance={mainProvenance}
+                      precision="estimate"
+                    />
+                  ),
+                },
+              ]
+            : []),
           ...(hero.currentRatePercent !== undefined
             ? [
                 {
@@ -85,11 +124,18 @@ export function LoanDetailHero({
             : []),
         ]}
       />
-      {hero.estimatedResidual?.isPositive() === true && (
+      {(hero.scheduleStale === true || hero.estimatedResidual?.isPositive() === true) && (
         <InsightBanner
           severity="attention"
           title={t('loanDetail.scheduleChangeTitle')}
           body={t('loanDetail.scheduleChangeNotice')}
+        />
+      )}
+      {hero.scheduleStale === true && (
+        <Button
+          variant="ghost"
+          label={t('schedule.viewRecommended')}
+          onPress={() => router.push(`/obligation/${obligationId}/schedule-proposal?mode=recommended`)}
         />
       )}
       <ExplainSheet

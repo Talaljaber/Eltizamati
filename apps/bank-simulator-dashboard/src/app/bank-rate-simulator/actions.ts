@@ -10,6 +10,7 @@ import {
   type PublishCampaignRequest,
 } from '@/server/rate-campaign-publish-service'
 import { ALL_INSTITUTIONS } from '@/server/rate-campaign-constants'
+import { listBenchmarkSimulations } from '@/server/repositories/demo-benchmark-repository'
 
 function requiredString(formData: FormData, key: string): string {
   const value = formData.get(key)
@@ -24,7 +25,7 @@ function requiredString(formData: FormData, key: string): string {
 
 export async function publishCampaignAction(formData: FormData): Promise<void> {
   const institutionInput = requiredString(formData, 'institution')
-  const newAnnualRateInput = requiredString(formData, 'newAnnualRate')
+  const marginInput = requiredString(formData, 'margin')
   const effectiveDateInput = requiredString(formData, 'effectiveDate')
   const campaignNameInput = requiredString(formData, 'campaignName')
   const emailNotificationEnabled = formData.get('emailNotificationEnabled') === 'on'
@@ -34,6 +35,18 @@ export async function publishCampaignAction(formData: FormData): Promise<void> {
   const today = localDateFromDate(new Date())
   const effectiveDate = toLocalDate(effectiveDateInput)
   const applyToAll = institutionInput === ALL_INSTITUTIONS
+
+  // Re-fetch the CBJ benchmark server-side rather than trusting a hidden form
+  // field for it — the bank only ever chooses the margin; the benchmark
+  // itself is read-only and always the latest one the CBJ page recorded.
+  const benchmarkResult = await listBenchmarkSimulations()
+  const latestBenchmark = benchmarkResult.ok ? benchmarkResult.value[0] : undefined
+  if (latestBenchmark === undefined) {
+    redirect('/bank-rate-simulator?publishError=noBenchmark')
+  }
+  const benchmarkRate = Rate.fromPercent(String(latestBenchmark.newRatePercent))
+  const margin = Rate.fromPercent(marginInput)
+  const newAnnualRate = benchmarkRate.plus(margin)
 
   const obligationsResult = await listAllowlistedObligations()
   if (!obligationsResult.ok) {
@@ -52,7 +65,9 @@ export async function publishCampaignAction(formData: FormData): Promise<void> {
   const baseRequest: Omit<PublishCampaignRequest, 'campaignName' | 'institutionName'> = {
     reason: typeof reason === 'string' && reason.length > 0 ? reason : undefined,
     sourceNote: typeof sourceNote === 'string' && sourceNote.length > 0 ? sourceNote : undefined,
-    newAnnualRate: Rate.fromPercent(newAnnualRateInput),
+    newAnnualRate,
+    benchmarkRate,
+    margin,
     effectiveDate,
     servicingPolicy: 'unchanged',
     emailNotificationEnabled,

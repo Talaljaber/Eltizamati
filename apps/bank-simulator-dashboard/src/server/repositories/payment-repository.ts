@@ -38,3 +38,31 @@ export async function listAllowlistedPayments(
     ),
   )
 }
+
+/**
+ * The bank's only way to log a payment — official (bank-connected) loans
+ * reject direct customer writes (payments_authority_guard trigger), so this
+ * RPC is the sole path. Mirrors the mobile app's ObligationService.logPayment
+ * for personal loans.
+ */
+export async function recordBankPayment(input: {
+  readonly obligationId: string
+  readonly amount: string
+  readonly paidOn: string
+}): Promise<Result<void, AppError>> {
+  const clientResult = getServiceRoleSupabaseClient()
+  if (!clientResult.ok) return clientResult
+
+  const { error } = await clientResult.value.rpc('record_bank_payment', {
+    p_obligation_id: input.obligationId,
+    p_amount: Number(input.amount),
+    p_paid_on: input.paidOn,
+  })
+
+  if (error !== null) {
+    return err(
+      makeError('storage', { safeMetadata: { postgresErrorCode: error.code }, cause: error }),
+    )
+  }
+  return ok(undefined)
+}

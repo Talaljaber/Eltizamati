@@ -93,4 +93,9 @@ export interface LoanScheduleProposalRepository {
     userId: Id<'user'>,
     draft: LoanScheduleProposalDraft,
   ): Promise<Result<LoanScheduleProposal, AppError>>
+  /** Personal-loan-only: the customer approves their own pending proposal directly — no bank step. */
+  selfApprove(
+    userId: Id<'user'>,
+    proposalId: Id<'loanScheduleProposal'>,
+  ): Promise<Result<LoanScheduleProposal, AppError>>
 }

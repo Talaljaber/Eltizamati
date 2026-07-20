@@ -44,3 +44,25 @@ export function projectedRemainingPayable(
   const residual = snapshotMoneyAmount(snapshot.projectedResidualAtMaturity)
   return residual === undefined ? undefined : total.add(Money.of(residual, currency))
 }
+
+/**
+ * Full contractual payable over the entire term (every schedule entry, not just
+ * those after asOf) plus any projected maturity residual. Netting actual logged
+ * payments against this total — rather than against `projectedRemainingPayable`
+ * — avoids double-counting installments already paid before `asOf`.
+ */
+export function totalContractualPayable(
+  snapshot: Record<string, CanonicalJsonValue>,
+  currency: string,
+): Money | undefined {
+  let total = Money.zero(currency)
+  for (const value of snapshotArray(snapshot.schedule)) {
+    const entry = snapshotRecord(value)
+    const payment = snapshotMoneyAmount(entry.payment)
+    if (payment === undefined) return undefined
+    total = total.add(Money.of(payment, currency))
+  }
+
+  const residual = snapshotMoneyAmount(snapshot.projectedResidualAtMaturity)
+  return residual === undefined ? undefined : total.add(Money.of(residual, currency))
+}

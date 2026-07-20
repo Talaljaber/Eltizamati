@@ -20,7 +20,12 @@ import {
   applicableRatePeriods,
   projectedRemainingPayable,
   rateHistoryFingerprint,
+  totalContractualPayable,
 } from '@/features/rate-impact/projection-display'
+import {
+  computeScheduleStaleness,
+  type ScheduleStalenessReason,
+} from '@/features/schedule/schedule-staleness'
 
 export interface LoanDetailHeroModel {
   /** Undefined when neither an official balance nor an engine estimate is available — render as "unknown", never a fabricated amount. */
@@ -33,8 +38,14 @@ export interface LoanDetailHeroModel {
   residualCalculationRunId: string | undefined
   projectedRemainingPayable?: Money
   projectedRemainingPayableProvenance?: Provenance
+  /** Contractual total (all installments + residual) minus every logged payment — the headline figure. */
+  remainingToPay?: Money
+  remainingToPayProvenance?: Provenance
+  paidToDate?: Money
   currentRatePercent?: string
   previousRatePercent?: string
+  scheduleStale?: boolean
+  scheduleStaleReasons?: readonly ScheduleStalenessReason[]
 }
 
 export interface LoanDetailViewModel {
@@ -92,7 +103,7 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
 
   // Hero calculation using variableProjection.v1
   const { data: projectionRun } = useQuery({
-    queryKey: ['projection', obligationId, activeUser, asOf, rateFingerprint],
+    queryKey: ['projection', obligationId, activeUser, asOf, rateFingerprint, payments?.length],
     queryFn: async (): Promise<CalculationRun | null> => {
       if (!activeUser || !obligation || obligation.kind !== 'conventionalLoan' || !ratePeriods) {
         return null
@@ -150,6 +161,26 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
       (estimatedOutstanding === undefined
         ? undefined
         : Money.of(estimatedOutstanding, obligation.currency))
+
+    const paymentsTotal = (payments ?? []).reduce(
+      (sum, payment) => sum.add(payment.amount),
+      Money.zero(obligation.currency),
+    )
+    const totalPayable = totalContractualPayable(snapshot, obligation.currency)
+    const remainingToPay = totalPayable === undefined ? undefined : totalPayable.subtract(paymentsTotal)
+    const expectedPaidByAsOf =
+      totalPayable !== undefined && remainingPayable !== undefined
+        ? totalPayable.subtract(remainingPayable)
+        : undefined
+    const staleness = computeScheduleStaleness({
+      paymentsTotal,
+      expectedPaidByAsOf,
+      installment: obligation.loanDetails.installment.value,
+      rateDrifted: applicableRates[1] !== undefined,
+      balloonPositive:
+        estimatedResidual !== undefined &&
+        Money.of(estimatedResidual, obligation.currency).isPositive(),
+    })
     hero = {
       currentBalance,
       currentBalanceProvenance:
@@ -179,8 +210,16 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
           ? undefined
           : engineEstimate(remainingPayable, projectionRun.id, projectionRun.calculatedAt)
               .provenance,
+      remainingToPay,
+      remainingToPayProvenance:
+        remainingToPay === undefined
+          ? undefined
+          : engineEstimate(remainingToPay, projectionRun.id, projectionRun.calculatedAt).provenance,
+      paidToDate: paymentsTotal,
       currentRatePercent: applicableRates[0]?.annualRate.toPercent().toFixed(3),
       previousRatePercent: applicableRates[1]?.annualRate.toPercent().toFixed(3),
+      scheduleStale: staleness.stale,
+      scheduleStaleReasons: staleness.reasons,
     }
   }
 

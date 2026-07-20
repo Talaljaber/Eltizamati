@@ -1,5 +1,7 @@
 import {
   brandId,
+  err,
+  makeError,
   ok,
   type AppError,
   type Id,
@@ -35,6 +37,37 @@ export class DemoLoanScheduleProposalRepository implements LoanScheduleProposalR
     }
     this.#store.unshift(proposal)
     return ok(proposal)
+  }
+
+  async selfApprove(
+    userId: Id<'user'>,
+    proposalId: Id<'loanScheduleProposal'>,
+  ): Promise<Result<LoanScheduleProposal, AppError>> {
+    const index = this.#store.findIndex(
+      (item) => item.id === proposalId && item.userId === userId,
+    )
+    if (index === -1) {
+      return err(makeError('notFound', { safeMetadata: { proposalId } }))
+    }
+    const proposal = this.#store[index]
+    if (proposal === undefined || proposal.status !== 'pending') {
+      return err(makeError('validation', { safeMetadata: { reason: 'notPending' } }))
+    }
+    const now = new Date().toISOString()
+    for (let i = 0; i < this.#store.length; i += 1) {
+      const item = this.#store[i]
+      if (item !== undefined && item.obligationId === proposal.obligationId && item.status === 'approved') {
+        this.#store[i] = { ...item, status: 'superseded', decidedAt: now, updatedAt: now }
+      }
+    }
+    const approved: LoanScheduleProposal = {
+      ...proposal,
+      status: 'approved',
+      decidedAt: now,
+      updatedAt: now,
+    }
+    this.#store[index] = approved
+    return ok(approved)
   }
 
   reset(): void {

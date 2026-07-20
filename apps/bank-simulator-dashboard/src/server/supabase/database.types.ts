@@ -60,6 +60,7 @@ export interface Database {
           id: string
           user_id: string
           kind: string
+          connection_type: string
           nickname: string
           institution_name: string
           institution_id: string | null
@@ -75,6 +76,7 @@ export interface Database {
           id?: string
           user_id: string
           kind: string
+          connection_type?: string
           nickname: string
           institution_name: string
           institution_id?: string | null
@@ -245,6 +247,8 @@ export interface Database {
           obligation_id: string
           user_id: string
           annual_rate: number
+          benchmark_rate: number | null
+          margin: number | null
           effective_from: string
           superseded_by: string | null
           provenance_json: Json
@@ -255,6 +259,8 @@ export interface Database {
           obligation_id: string
           user_id: string
           annual_rate: number
+          benchmark_rate?: number | null
+          margin?: number | null
           effective_from: string
           superseded_by?: string | null
           provenance_json: Json
@@ -535,6 +541,8 @@ export interface Database {
           p_source_note: string | null
           p_old_annual_rate: number | null
           p_new_annual_rate: number
+          p_benchmark_rate: number | null
+          p_margin: number | null
           p_effective_date: string
           p_installment_policy: string
           p_email_notification_enabled: boolean
@@ -569,6 +577,14 @@ export interface Database {
           p_reason?: string | null
         }
         Returns: Database['public']['Tables']['loan_schedule_proposals']['Row']
+      }
+      record_bank_payment: {
+        Args: {
+          p_obligation_id: string
+          p_amount: number
+          p_paid_on: string
+        }
+        Returns: Database['public']['Tables']['payments']['Row']
       }
     }
     Enums: Record<string, never>

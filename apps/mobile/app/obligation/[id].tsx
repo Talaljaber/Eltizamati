@@ -205,12 +205,14 @@ function ObligationDetailInner() {
         {viewModel.hero && <LoanDetailHero obligationId={obligation.id} hero={viewModel.hero} />}
 
         <View style={styles.primaryActions}>
-          <View style={styles.primaryActionItem}>
-            <Button
-              label={t('obligationDetail.logPayment')}
-              onPress={() => router.push(`/obligation/${id}/log-payment`)}
-            />
-          </View>
+          {obligation.connectionType === 'personal' && (
+            <View style={styles.primaryActionItem}>
+              <Button
+                label={t('obligationDetail.logPayment')}
+                onPress={() => router.push(`/obligation/${id}/log-payment`)}
+              />
+            </View>
+          )}
           <View style={styles.primaryActionItem}>
             <Button
               label={t('obligationDetail.edit')}
@@ -219,6 +221,11 @@ function ObligationDetailInner() {
             />
           </View>
         </View>
+        {obligation.connectionType === 'official' && (
+          <Text variant="bodySmall" color="secondary">
+            {t('obligationDetail.officialPaymentsNotice')}
+          </Text>
+        )}
 
         {obligation.kind === 'conventionalLoan' ? (
           <NavGroup>
