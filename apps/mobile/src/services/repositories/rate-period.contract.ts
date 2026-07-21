@@ -79,5 +79,60 @@ export function runRatePeriodRepositoryContractTests(
 
       await cleanup()
     })
+
+    describe('appendIfAbsent (deterministic-id provider import retry)', () => {
+      it('inserts a fresh period', async () => {
+        const repo = repoFactory()
+        const id = brandId<'ratePeriod'>(crypto.randomUUID())
+        const period = makePeriod(id, obligationId, '2026-03-01', '6.25')
+
+        const result = await repo.appendIfAbsent(period)
+        expect(result.ok).toBe(true)
+
+        const history = await repo.historyFor(obligationId)
+        expect(history.ok && history.value.some((p) => p.id === id)).toBe(true)
+
+        await cleanup()
+      })
+
+      it('retrying the exact same period is a no-op success, not a duplicate or an error', async () => {
+        const repo = repoFactory()
+        const id = brandId<'ratePeriod'>(crypto.randomUUID())
+        const period = makePeriod(id, obligationId, '2026-04-01', '6.5')
+
+        const first = await repo.appendIfAbsent(period)
+        expect(first.ok).toBe(true)
+        const second = await repo.appendIfAbsent(period)
+        expect(second.ok).toBe(true)
+        if (second.ok) expect(second.value.id).toBe(id)
+
+        const history = await repo.historyFor(obligationId)
+        if (history.ok) {
+          expect(history.value.filter((p) => p.id === id)).toHaveLength(1)
+        }
+
+        await cleanup()
+      })
+
+      it('the same id with different data is a surfaced dataConflict, never a silent overwrite', async () => {
+        const repo = repoFactory()
+        const id = brandId<'ratePeriod'>(crypto.randomUUID())
+        const original = makePeriod(id, obligationId, '2026-05-01', '7')
+        const conflicting = makePeriod(id, obligationId, '2026-05-01', '9')
+
+        const first = await repo.appendIfAbsent(original)
+        expect(first.ok).toBe(true)
+        const second = await repo.appendIfAbsent(conflicting)
+        expect(second.ok).toBe(false)
+        if (!second.ok) expect(second.error.code).toBe('dataConflict')
+
+        const history = await repo.historyFor(obligationId)
+        const stored = history.ok ? history.value.find((p) => p.id === id) : undefined
+        // The original data was never overwritten by the conflicting attempt.
+        expect(stored?.annualRate.equals(Rate.fromPercent('7'))).toBe(true)
+
+        await cleanup()
+      })
+    })
   })
 }

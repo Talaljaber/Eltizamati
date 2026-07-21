@@ -18,6 +18,7 @@ describe('useProfileQuery', () => {
       get: jest.fn().mockResolvedValue(ok(profile)),
       save: jest.fn(),
       createIfAbsent: jest.fn(),
+      markBankConnectComplete: jest.fn(),
     } as jest.Mocked<UserProfileRepository>
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const wrapper = ({ children }: { children: ReactNode }) => (

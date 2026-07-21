@@ -37,6 +37,19 @@ export class DemoUserProfileRepository implements UserProfileRepository {
     return ok(profile)
   }
 
+  async markBankConnectComplete(
+    userId: Id<'user'>,
+    version: string,
+  ): Promise<Result<UserProfile, AppError>> {
+    const existing = this.#store.get(userId)
+    if (!existing) {
+      return err(makeError('notFound', { safeMetadata: { entity: 'UserProfile' } }))
+    }
+    const updated: UserProfile = { ...existing, bankConnectOnboardingVersion: version }
+    this.#store.set(userId, updated)
+    return ok(updated)
+  }
+
   reset(): void {
     this.#store.clear()
   }

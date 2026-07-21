@@ -20,7 +20,15 @@ describe('user-profile-mapper', () => {
     full_name: null,
     phone_number: null,
     primary_bank: null,
+    bank_connect_onboarding_version: null,
   }
+  // profileDomainToRow deliberately never serializes this column — it is
+  // written exclusively via markBankConnectComplete's column-scoped update,
+  // so a full-row write from `profile` must never include it.
+  const rowWithoutBankConnectColumn = (() => {
+    const { bank_connect_onboarding_version: _omit, ...rest } = row
+    return rest
+  })()
 
   const profile: UserProfile = {
     userId: brandId('a0000000-0000-0000-0000-00000000000a'),
@@ -40,7 +48,19 @@ describe('user-profile-mapper', () => {
   })
 
   it('profileDomainToRow maps every domain field back to its column', () => {
-    expect(profileDomainToRow(profile)).toEqual(row)
+    expect(profileDomainToRow(profile)).toEqual(rowWithoutBankConnectColumn)
+  })
+
+  it('profileDomainToRow never serializes bank_connect_onboarding_version, even when the domain object carries one', () => {
+    const withCompletion: UserProfile = { ...profile, bankConnectOnboardingVersion: 'v1' }
+    expect(profileDomainToRow(withCompletion)).not.toHaveProperty(
+      'bank_connect_onboarding_version',
+    )
+  })
+
+  it('profileRowToDomain reads an existing bank_connect_onboarding_version value', () => {
+    const domain = profileRowToDomain({ ...row, bank_connect_onboarding_version: 'v1' })
+    expect(domain.bankConnectOnboardingVersion).toBe('v1')
   })
 
   it('omits unset preference columns from initial profile inserts', () => {
@@ -56,8 +76,8 @@ describe('user-profile-mapper', () => {
     })
   })
 
-  it('round-trips row -> domain -> row without loss', () => {
-    expect(profileDomainToRow(profileRowToDomain(row))).toEqual(row)
+  it('round-trips row -> domain -> row without loss (excluding bank_connect_onboarding_version, which is read-only through this path)', () => {
+    expect(profileDomainToRow(profileRowToDomain(row))).toEqual(rowWithoutBankConnectColumn)
   })
 
   it('profileRowToDomain throws DomainInvariantError on an unexpected locale value', () => {
@@ -81,6 +101,8 @@ describe('user-profile-mapper', () => {
     const domain = profileRowToDomain(rowWithPrefs)
     expect(domain.reminderDayOfMonth).toBe(5)
     expect(domain.userThresholdAmount).toBe('150.5')
-    expect(profileDomainToRow(domain)).toEqual(rowWithPrefs)
+    const { bank_connect_onboarding_version: _omit, ...rowWithPrefsWithoutBankConnect } =
+      rowWithPrefs
+    expect(profileDomainToRow(domain)).toEqual(rowWithPrefsWithoutBankConnect)
   })
 })

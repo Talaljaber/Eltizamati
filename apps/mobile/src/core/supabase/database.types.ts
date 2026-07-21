@@ -567,6 +567,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bank_connect_onboarding_version: string | null
           created_at: string
           data_mode: string
           full_name: string | null
@@ -579,6 +580,7 @@ export type Database = {
           user_threshold_amount: number | null
         }
         Insert: {
+          bank_connect_onboarding_version?: string | null
           created_at?: string
           data_mode: string
           full_name?: string | null
@@ -591,6 +593,7 @@ export type Database = {
           user_threshold_amount?: number | null
         }
         Update: {
+          bank_connect_onboarding_version?: string | null
           created_at?: string
           data_mode?: string
           full_name?: string | null
@@ -666,6 +669,7 @@ export type Database = {
       save_conventional_loan: {
         Args: {
           p_id: string
+          p_connection_type: string
           p_nickname: string
           p_institution_name: string
           p_institution_id: string | null
@@ -696,6 +700,7 @@ export type Database = {
       save_murabaha: {
         Args: {
           p_id: string
+          p_connection_type: string
           p_nickname: string
           p_institution_name: string
           p_institution_id: string | null
@@ -723,6 +728,7 @@ export type Database = {
       save_card: {
         Args: {
           p_id: string
+          p_connection_type: string
           p_nickname: string
           p_institution_name: string
           p_institution_id: string | null

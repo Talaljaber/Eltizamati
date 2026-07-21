@@ -22,6 +22,10 @@ function makeRepository(existing?: UserProfile) {
       stored = profile
       return ok(profile)
     }),
+    markBankConnectComplete: jest.fn(async (_userId: string, version: string) => {
+      stored = stored === undefined ? stored : { ...stored, bankConnectOnboardingVersion: version }
+      return stored === undefined ? err(makeError('notFound')) : ok(stored)
+    }),
   }
 }
 
