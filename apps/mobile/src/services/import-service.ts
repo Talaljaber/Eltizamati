@@ -26,7 +26,7 @@ import { ok, err, makeError, isErr, type Result, type AppError } from '@eltizama
 import type { DemoSeed } from '@eltizamati/demo-data'
 import type { DemoRepositories } from './repositories/demo/index'
 import type { Repositories } from '@/features/repositories/hooks/use-repositories'
-import type { Obligation } from '@eltizamati/domain'
+import type { Id, Obligation } from '@eltizamati/domain'
 
 export interface ImportSummary {
   readonly obligationCount: number
@@ -36,6 +36,23 @@ export interface ImportSummary {
 
 export type ImportResult = Result<ImportSummary, AppError>
 
+/**
+ * Result of importing a batch of provider-classified obligations
+ * (connect-plan.md Phase C). `imported` and `failed` are the buckets that
+ * matter in practice: an obligation lands in `imported` once its base row
+ * AND (for loans) its initial rate period both succeed — including when
+ * they already existed from a prior attempt at the exact same ids, since
+ * both writes are idempotent no-ops in that case. `skipped` is reserved for
+ * a record recognized as a pre-existing duplicate before any write is
+ * attempted; the current single-pass import doesn't pre-check, so it stays
+ * empty today, but callers must not assume that.
+ */
+export interface ProviderImportSummary {
+  readonly imported: readonly Id<'obligation'>[]
+  readonly skipped: readonly Id<'obligation'>[]
+  readonly failed: readonly { readonly id: Id<'obligation'>; readonly error: AppError }[]
+}
+
 export class ImportService {
   /** Persists one provider-normalized obligation through the shared import boundary. */
   async importProviderObligation(
@@ -43,6 +60,56 @@ export class ImportService {
     repos: Repositories,
   ): Promise<Result<Obligation, AppError>> {
     return repos.obligationRepository.save(obligation)
+  }
+
+  /**
+   * Imports several provider-classified obligations (the "pull from bank"
+   * multi-select flow). Never all-or-nothing: each record is attempted
+   * independently and the typed summary reports exactly what happened, so
+   * the UI can never report full success on a partial write, and a caller
+   * can safely retry by passing the SAME obligations again — deterministic
+   * ids make every write here a no-op where it already landed.
+   *
+   * For conventional loans, the base obligation and its initial rate period
+   * are two separate writes (`save()` does not touch `rate_periods` —
+   * see rate-period-repository.ts). If the obligation write succeeds but the
+   * rate-period write fails (or conflicts with a different pre-existing
+   * period at the same id), the whole record is reported as `failed` even
+   * though the obligation row now exists — a retry of the same record is
+   * still safe: the obligation upsert no-ops and only the rate period is
+   * attempted again.
+   */
+  async importProviderObligations(
+    obligations: readonly Obligation[],
+    repos: Pick<Repositories, 'obligationRepository' | 'ratePeriodRepository'>,
+  ): Promise<ProviderImportSummary> {
+    const imported: Id<'obligation'>[] = []
+    const failed: { id: Id<'obligation'>; error: AppError }[] = []
+
+    for (const obligation of obligations) {
+      const saveResult = await repos.obligationRepository.save(obligation)
+      if (!saveResult.ok) {
+        failed.push({ id: obligation.id, error: saveResult.error })
+        continue
+      }
+
+      if (obligation.kind === 'conventionalLoan') {
+        let loanFailed = false
+        for (const period of obligation.loanDetails.ratePeriods) {
+          const periodResult = await repos.ratePeriodRepository.appendIfAbsent(period)
+          if (!periodResult.ok) {
+            failed.push({ id: obligation.id, error: periodResult.error })
+            loanFailed = true
+            break
+          }
+        }
+        if (loanFailed) continue
+      }
+
+      imported.push(obligation.id)
+    }
+
+    return { imported, skipped: [], failed }
   }
 
   /**
