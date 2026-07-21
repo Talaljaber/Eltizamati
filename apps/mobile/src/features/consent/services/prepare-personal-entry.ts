@@ -15,8 +15,9 @@ import {
   readLocalConsent,
 } from '@/features/consent/consent-policy'
 import { enableNotificationNavigation } from '@/services/local-notification-service'
+import { hasCompletedBankConnect } from '@/features/connect-bank/bank-connect-policy'
 
-export type PersonalEntryPreparation = 'ready' | 'consentRequired'
+export type PersonalEntryPreparation = 'ready' | 'consentRequired' | 'bankConnectRequired'
 
 export interface PreparePersonalEntryDependencies {
   readonly session: AppAuthSession
@@ -106,6 +107,16 @@ export async function preparePersonalEntry({
   await setOnboardingComplete()
   logPersonalEntry('onboarding_saved')
   enableNotificationNavigation()
+
+  // The single decision point both post-verification entry (use-entry-completion.ts)
+  // and cold start (StartupCoordinator.tsx) rely on — neither computes this
+  // independently, so an app killed mid-/connect-bank/ always resumes there
+  // instead of one path remembering the interruption and the other not.
+  if (!hasCompletedBankConnect(profileResult.value)) {
+    logPersonalEntry('bank_connect_required')
+    return ok('bankConnectRequired')
+  }
+
   logPersonalEntry('ready')
   return ok('ready')
 }

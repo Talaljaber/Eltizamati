@@ -25,3 +25,12 @@ export type { DemoSeed } from './builders.js'
 
 // ─── Fixtures (test vocabulary) ───────────────────────────────────────────────
 export { aLoan, aMurabaha, aCard, aPayment, aRatePeriod, anInsight } from './fixtures.js'
+
+// ─── Bank-connect provider catalog ─────────────────────────────────────────────
+export { buildBankCatalog } from './bank-catalog.js'
+export type {
+  RawProviderRecord,
+  RawCreditCardRecord,
+  RawConventionalLoanRecord,
+  RawMurabahaRecord,
+} from './bank-catalog.js'

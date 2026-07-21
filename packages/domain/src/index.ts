@@ -9,7 +9,7 @@
 
 // ─── Value objects ────────────────────────────────────────────────────────────
 export { Money, Rate } from './value-objects/money.js'
-export { brandId, toLocalDate, localDateFromDate } from './value-objects/id.js'
+export { brandId, toLocalDate, localDateFromDate, deterministicUuid } from './value-objects/id.js'
 export type { Id, LocalDate } from './value-objects/id.js'
 export {
   userEntered,

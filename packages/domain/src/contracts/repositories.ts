@@ -46,6 +46,14 @@ export interface RatePeriodRepository {
   historyFor(obligationId: Id<'obligation'>): Promise<Result<readonly RatePeriod[], AppError>>
   /** Append-only (BR-RATE-001) — implementations must never mutate an existing row. */
   append(period: RatePeriod): Promise<Result<RatePeriod, AppError>>
+  /**
+   * Idempotent variant for deterministic-id callers (provider import retry):
+   * inserts `period` if its id is absent; if a row with that id already
+   * exists and matches `period`'s data, returns it as a no-op success
+   * (`ok`); if a row with that id exists with *different* data, returns
+   * `err('dataConflict')` — never a silent overwrite.
+   */
+  appendIfAbsent(period: RatePeriod): Promise<Result<RatePeriod, AppError>>
 }
 
 export interface CalculationRunRepository {
@@ -72,6 +80,16 @@ export interface UserProfileRepository {
   /** Inserts only when absent and returns the existing row on a uniqueness race. */
   createIfAbsent(profile: UserProfile): Promise<Result<UserProfile, AppError>>
   save(profile: UserProfile): Promise<Result<UserProfile, AppError>>
+  /**
+   * Column-scoped write for the bank-connect onboarding flag — the only
+   * writer of `bankConnectOnboardingVersion`. Deliberately not folded into
+   * `save()`'s full-row upsert so an unrelated profile update (locale, name,
+   * preferences) can never accidentally clear it.
+   */
+  markBankConnectComplete(
+    userId: Id<'user'>,
+    version: string,
+  ): Promise<Result<UserProfile, AppError>>
 }
 
 export interface LoanApplicationRepository {

@@ -1,4 +1,5 @@
 import { DomainInvariantError } from '../errors/app-error.js'
+import { sha256Hex } from '../services/canonical-json.js'
 
 /**
  * Branded ID type — prevents mixing obligation ids with payment ids etc.
@@ -41,4 +42,23 @@ export function toLocalDate(iso: string): LocalDate {
 
 export function localDateFromDate(date: Date): LocalDate {
   return toLocalDate(date.toISOString().substring(0, 10))
+}
+
+// ─── Deterministic UUID ────────────────────────────────────────────────────
+
+/**
+ * Derives a stable, valid Postgres `uuid` from an arbitrary seed string —
+ * for provider-imported records where re-running the same import must
+ * produce the same id (idempotent re-import) instead of a fresh random one.
+ * Never use for anything requiring unpredictability (this is not a secret).
+ */
+export function deterministicUuid(seed: string): string {
+  const hex = sha256Hex(seed)
+  const timeLow = hex.slice(0, 8)
+  const timeMid = hex.slice(8, 12)
+  const version = `4${hex.slice(13, 16)}`
+  const variantNibble = ['8', '9', 'a', 'b'][parseInt(hex[16] as string, 16) % 4] as string
+  const clockSeq = `${variantNibble}${hex.slice(17, 20)}`
+  const node = hex.slice(20, 32)
+  return `${timeLow}-${timeMid}-${version}-${clockSeq}-${node}`
 }

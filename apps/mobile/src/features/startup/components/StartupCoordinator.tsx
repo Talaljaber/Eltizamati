@@ -148,11 +148,13 @@ export function StartupCoordinator({ children }: { children: ReactNode }) {
         })
         if (!preparation.ok) throw preparation.error
         if (!active) return
-        await settle(
+        const target =
           preparation.value === 'consentRequired'
             ? '/onboarding/consent?next=personal'
-            : '/(tabs)/',
-        )
+            : preparation.value === 'bankConnectRequired'
+              ? '/connect-bank'
+              : '/(tabs)/'
+        await settle(target)
       } catch (error) {
         if (!active) return
         setStartupError(asAppError(error))

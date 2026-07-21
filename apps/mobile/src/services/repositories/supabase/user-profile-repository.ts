@@ -78,4 +78,26 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
     }
     return ok(profileRowToDomain(data))
   }
+
+  /**
+   * Column-scoped update — touches `bank_connect_onboarding_version` only.
+   * Deliberately not routed through `save()`'s full-row upsert: a caller
+   * there without the current value in hand would null this column out.
+   */
+  async markBankConnectComplete(
+    userId: Id<'user'>,
+    version: string,
+  ): Promise<Result<UserProfile, AppError>> {
+    const { data, error } = await this.client
+      .from('profiles')
+      .update({ bank_connect_onboarding_version: version })
+      .eq('user_id', userId)
+      .select('*')
+      .single()
+    if (error) {
+      logProfileProviderError('save', error)
+      return err(toSupabaseAppError(error))
+    }
+    return ok(profileRowToDomain(data))
+  }
 }

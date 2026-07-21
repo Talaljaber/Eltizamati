@@ -1,6 +1,7 @@
 import { brandId, err, makeError, ok, type UserProfile } from '@eltizamati/domain'
 import { preparePersonalEntry } from '../prepare-personal-entry'
 import { __resetProfileProvisioningForTest } from '@/features/auth/services/ensure-authenticated-user-profile'
+import { CURRENT_BANK_CONNECT_VERSION } from '@/features/connect-bank/bank-connect-policy'
 
 const order: string[] = []
 const existingProfile: UserProfile = {
@@ -11,6 +12,7 @@ const existingProfile: UserProfile = {
   updatedAt: '2026-06-01T00:00:00.000Z',
   reminderDayOfMonth: 9,
   userThresholdAmount: '120',
+  bankConnectOnboardingVersion: CURRENT_BANK_CONNECT_VERSION,
 }
 
 const mockSetDataMode = jest.fn(async () => {
@@ -46,6 +48,7 @@ function makeRepositories(profile = existingProfile) {
       }),
       createIfAbsent: jest.fn(async () => ok(profile)),
       save: jest.fn(async () => ok(profile)),
+      markBankConnectComplete: jest.fn(async () => ok(profile)),
     },
     consentRepository: { status: jest.fn(), acknowledge: jest.fn() },
   }
@@ -90,6 +93,39 @@ describe('preparePersonalEntry', () => {
       'notifications',
     ])
     expect(repositories.userProfileRepository.createIfAbsent).not.toHaveBeenCalled()
+  })
+
+  it('returns bankConnectRequired when the profile has not completed the current bank-connect version', async () => {
+    const repositories = makeRepositories({
+      ...existingProfile,
+      bankConnectOnboardingVersion: undefined,
+    })
+    const bootPersonalMode = jest.fn(async () => {
+      order.push('repositories-committed')
+    })
+    const result = await preparePersonalEntry({
+      session: { user: { id: 'user-1', email: 'user@example.com' }, expiresAt: undefined },
+      locale: 'en',
+      repositories: repositories as never,
+      bootPersonalMode,
+    })
+
+    expect(result).toEqual(ok('bankConnectRequired'))
+  })
+
+  it('returns bankConnectRequired for a stale (pre-redesign) completion version', async () => {
+    const repositories = makeRepositories({
+      ...existingProfile,
+      bankConnectOnboardingVersion: 'some-old-version',
+    })
+    const result = await preparePersonalEntry({
+      session: { user: { id: 'user-1', email: 'user@example.com' }, expiresAt: undefined },
+      locale: 'en',
+      repositories: repositories as never,
+      bootPersonalMode: jest.fn(async () => undefined),
+    })
+
+    expect(result).toEqual(ok('bankConnectRequired'))
   })
 
   it('blocks consent, repository commit, and Home preparation when profile provisioning fails', async () => {

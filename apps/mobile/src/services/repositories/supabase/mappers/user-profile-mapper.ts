@@ -37,6 +37,7 @@ export function profileRowToDomain(row: ProfileRow): UserProfile {
       row.user_threshold_amount === null || row.user_threshold_amount === undefined
         ? undefined
         : String(row.user_threshold_amount),
+    bankConnectOnboardingVersion: row.bank_connect_onboarding_version ?? undefined,
   }
 }
 

@@ -27,6 +27,7 @@ import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { useQueryClient } from '@tanstack/react-query'
 import { toLocalDate, type ObligationKind } from '@eltizamati/domain'
 import { ObligationService } from '@/services/obligation-service'
+import { resetConnectBankFlow } from '@/features/connect-bank/connect-bank-flow-store'
 import { LoanFormFields } from '@/features/obligation-form/components/LoanFormFields'
 import { MurabahaFormFields } from '@/features/obligation-form/components/MurabahaFormFields'
 import { CardFormFields } from '@/features/obligation-form/components/CardFormFields'
@@ -228,8 +229,24 @@ function AddObligationInner() {
             </Text>
             <NavGroup>
               <ListRow
+                onPress={() => {
+                  resetConnectBankFlow()
+                  router.push('/connect-bank')
+                }}
+                leading={
+                  <Ionicons name="business-outline" size={20} color={theme.textSecondary} />
+                }
+                trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
+                testID="obligation-add-connect-bank"
+              >
+                <Text variant="body">{t('obligationForm.connectBank')}</Text>
+                <Text variant="bodySmall" color="secondary">
+                  {t('obligationForm.connectBankSubtitle')}
+                </Text>
+              </ListRow>
+              <ListRow
                 onPress={() => setKind('conventionalLoan')}
-                leading={<Ionicons name="business-outline" size={20} color={theme.textSecondary} />}
+                leading={<Ionicons name="document-text-outline" size={20} color={theme.textSecondary} />}
                 trailing={<Ionicons name={CHEVRON_ICON} size={18} color={theme.textTertiary} />}
               >
                 <Text variant="body">{t('obligationKind.conventionalLoan')}</Text>

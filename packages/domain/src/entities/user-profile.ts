@@ -30,4 +30,12 @@ export interface UserProfile {
   readonly reminderDayOfMonth?: number
   /** FR-INS-001 "user-defined threshold" — decimal JOD string; undefined = not set. */
   readonly userThresholdAmount?: string
+  /**
+   * Read-only projection of the bank-connect onboarding step's completion.
+   * Set exclusively via `UserProfileRepository.markBankConnectComplete` —
+   * never written through `save()`/`createIfAbsent()` (a full-row upsert
+   * from a caller that doesn't carry this field forward would null it out).
+   * `undefined` = the step has not been completed for this account.
+   */
+  readonly bankConnectOnboardingVersion?: string
 }

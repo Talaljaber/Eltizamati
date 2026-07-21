@@ -129,6 +129,7 @@ export class SupabaseObligationRepository implements ObligationRepository {
       const details = loanDetailsToRow(obligation.id, obligation.userId, obligation.loanDetails)
       const { error } = await this.client.rpc('save_conventional_loan', {
         p_id: obligation.id,
+        p_connection_type: obligation.connectionType,
         p_nickname: obligation.nickname,
         p_institution_name: obligation.institution.name,
         p_institution_id: obligation.institution.id ?? null,
@@ -163,6 +164,7 @@ export class SupabaseObligationRepository implements ObligationRepository {
       )
       const { error } = await this.client.rpc('save_murabaha', {
         p_id: obligation.id,
+        p_connection_type: obligation.connectionType,
         p_nickname: obligation.nickname,
         p_institution_name: obligation.institution.name,
         p_institution_id: obligation.institution.id ?? null,
@@ -190,6 +192,7 @@ export class SupabaseObligationRepository implements ObligationRepository {
       const details = cardDetailsToRow(obligation.id, obligation.userId, obligation.cardDetails)
       const { error } = await this.client.rpc('save_card', {
         p_id: obligation.id,
+        p_connection_type: obligation.connectionType,
         p_nickname: obligation.nickname,
         p_institution_name: obligation.institution.name,
         p_institution_id: obligation.institution.id ?? null,
