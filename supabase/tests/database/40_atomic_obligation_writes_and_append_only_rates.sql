@@ -28,7 +28,7 @@ set local request.jwt.claims to '{"sub":"a0000000-0000-0000-0000-00000000000a","
 
 select lives_ok(
   $$select public.save_conventional_loan(
-    '10000000-0000-0000-0000-000000000001', 'Personal Loan', 'Bank', null,
+    '10000000-0000-0000-0000-000000000001', 'personal', 'Personal Loan', 'Bank', null,
     '2024-01-15', null, null, '{"source":"userEntered","observedAt":"2024-01-15","recordedAt":"2024-01-15"}',
     now(), now(),
     20000, '{}', null, null, 307, '{}', 'fixed', 84, '{}', '2024-01-15', '2031-01-15', null, 'personal', null, null
@@ -49,7 +49,7 @@ select is(
 
 select throws_ok(
   $$select public.save_conventional_loan(
-    '10000000-0000-0000-0000-000000000002', 'Bad Loan', 'Bank', null,
+    '10000000-0000-0000-0000-000000000002', 'personal', 'Bad Loan', 'Bank', null,
     '2024-01-15', null, null, '{"source":"userEntered","observedAt":"2024-01-15","recordedAt":"2024-01-15"}',
     now(), now(),
     20000, '{}', null, null, 307, '{}', 'fixed', 0, '{}', '2024-01-15', '2031-01-15', null, 'personal', null, null
@@ -67,7 +67,7 @@ select is(
 
 select lives_ok(
   $$select public.save_conventional_loan(
-    '10000000-0000-0000-0000-000000000001', 'Personal Loan (renamed)', 'Bank', null,
+    '10000000-0000-0000-0000-000000000001', 'personal', 'Personal Loan (renamed)', 'Bank', null,
     '2024-01-15', null, null, '{"source":"userEntered","observedAt":"2024-01-15","recordedAt":"2024-01-15"}',
     now(), now(),
     20000, '{}', 18500, '{}', 320, '{}', 'fixed', 84, '{}', '2024-01-15', '2031-01-15', null, 'personal', null, null
@@ -87,7 +87,7 @@ select is(
 
 select throws_ok(
   $$select public.save_conventional_loan(
-    '10000000-0000-0000-0000-000000000009', 'Hijacked', 'Bank', null,
+    '10000000-0000-0000-0000-000000000009', 'personal', 'Hijacked', 'Bank', null,
     '2024-01-15', null, null, '{}', now(), now(),
     1, '{}', null, null, 1, '{}', 'fixed', 1, '{}', '2024-01-01', '2024-02-01', null, null, null, null
   )$$,
@@ -99,7 +99,7 @@ select throws_ok(
 
 select throws_ok(
   $$select public.save_murabaha(
-    '10000000-0000-0000-0000-000000000001', 'Repurposed', 'Bank', null,
+    '10000000-0000-0000-0000-000000000001', 'personal', 'Repurposed', 'Bank', null,
     '2024-01-15', null, null, '{}', now(), now(),
     15000, '{}', 3600, '{}', 18600, '{}', 221.4286, '{}', 84, '{}', '2024-01-15', null
   )$$,
