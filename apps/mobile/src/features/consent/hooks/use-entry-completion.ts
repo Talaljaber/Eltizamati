@@ -105,6 +105,11 @@ export function useEntryCompletion(): EntryCompletion {
           router.replace('/onboarding/consent?next=personal')
           return ok(false)
         }
+        if (preparation.value === 'bankConnectRequired') {
+          logEntryNavigation('replace_connect_bank')
+          router.replace('/connect-bank')
+          return ok(false)
+        }
         logEntryNavigation('replace_home')
         router.replace('/(tabs)/')
         return ok(true)

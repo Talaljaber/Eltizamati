@@ -10,6 +10,7 @@ const mockReplace = jest.fn()
 jest.mock('expo-router', () => ({
   Stack: { Screen: () => null },
   useRouter: () => ({ replace: mockReplace, back: jest.fn() }),
+  useLocalSearchParams: () => ({}),
 }))
 
 describe('MockConsentScreen', () => {
