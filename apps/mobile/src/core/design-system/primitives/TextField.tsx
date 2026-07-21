@@ -11,6 +11,8 @@ export interface TextFieldProps {
   readonly keyboardType?: 'default' | 'numeric' | 'decimal-pad'
   readonly error?: string
   readonly editable?: boolean
+  /** Masks input (dots) — for password-like fields. Also implied by the platform when true. */
+  readonly secureTextEntry?: boolean
   readonly testID?: string
 }
 
@@ -26,6 +28,7 @@ export function TextField({
   keyboardType = 'default',
   error,
   editable = true,
+  secureTextEntry = false,
   testID,
 }: TextFieldProps) {
   const theme = useTheme()
@@ -44,6 +47,7 @@ export function TextField({
         autoCapitalize="sentences"
         autoCorrect={false}
         editable={editable}
+        secureTextEntry={secureTextEntry}
         accessibilityLabel={label}
         testID={testID}
         // Manual-entry fields (amounts, nicknames, terms) are never autofill

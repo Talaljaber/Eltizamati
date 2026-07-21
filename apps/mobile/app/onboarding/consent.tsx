@@ -6,19 +6,19 @@
  */
 
 import { useState } from 'react'
-import { View, StyleSheet, Pressable } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   Text,
   Button,
+  Checkbox,
   space,
   layout,
   useTheme,
   useResponsiveLayout,
   radius,
-  minTouchTarget,
 } from '@/core/design-system'
 import { acknowledgeLocalConsent } from '@/features/consent/consent-policy'
 import { useEntryCompletion } from '@/features/consent/hooks/use-entry-completion'
@@ -78,41 +78,14 @@ export default function ConsentScreen() {
           </Text>
         </View>
 
-        <Pressable
-          onPress={() => setAcknowledged((v) => !v)}
-          style={styles.checkRow}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: acknowledged }}
-          accessibilityLabel={t(
+        <Checkbox
+          checked={acknowledged}
+          onToggle={() => setAcknowledged((v) => !v)}
+          label={t(
             personal ? 'onboarding.personalConsentAcknowledge' : 'onboarding.consentAcknowledge',
           )}
           testID="consent-checkbox"
-        >
-          <View
-            style={[
-              styles.checkbox,
-              {
-                borderColor: acknowledged ? theme.brand : theme.border,
-                backgroundColor: acknowledged ? theme.brand : 'transparent',
-              },
-            ]}
-          >
-            {acknowledged ? (
-              <Text variant="caption" color="primary" align="center">
-                {'✓'}
-              </Text>
-            ) : null}
-          </View>
-          <View style={styles.checkLabel}>
-            <Text variant="body">
-              {t(
-                personal
-                  ? 'onboarding.personalConsentAcknowledge'
-                  : 'onboarding.consentAcknowledge',
-              )}
-            </Text>
-          </View>
-        </Pressable>
+        />
 
         <Button
           variant="primary"
@@ -154,23 +127,5 @@ const styles = StyleSheet.create({
     padding: space[4],
     borderRadius: radius.lg,
     borderWidth: 1,
-  },
-  checkRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: space[3],
-    minHeight: minTouchTarget,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  checkLabel: {
-    flex: 1,
   },
 })
