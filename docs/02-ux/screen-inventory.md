@@ -33,6 +33,60 @@ All screens: RTL-mirrored, a11y per NFR-A11Y-*, one primary CTA.
 - **Purpose:** demo data vs manual entry. **Primary:** two equal cards: "Explore with demo data" / "Add my own obligations"; disabled card "Connect bank/bureau — coming soon" honestly labeled.
 - Traces: FR-ONB-004, C-07.
 
+## Bank-connect onboarding (`/connect-bank`)
+
+Runs once per personal account, right after sign-up verification and consent
+— gated by `bankConnectOnboardingVersion` on the profile (user-scoped,
+server-side; connect-plan.md Phase D), never a device-local flag. Reachable
+again later as an interrupted-flow restart (a killed app relaunches at
+SCR-CONNBANK-PICK, never mid-flow) and, in future, from an in-app
+"+ Connect bank" entry point (built reusable — connect-plan.md). Permanently
+labeled as a simulated demonstration (US-017, C-07) — no real bank connection
+is ever made or implied.
+
+### SCR-CONNBANK-PICK — Bank picker
+
+- **Purpose:** choose which (fictional-data) bank to pull obligations from.
+  **Primary:** tap a bank from the `JORDAN_BANKS` list; secondary: Skip.
+- Content: permanent mock disclosure banner, bank list, Skip (marks the step
+  complete without importing anything).
+- States: consent gate (redirects to the shared `/connect-mock/consent`
+  screen with `return=/connect-bank` if the provider consent record is
+  missing) · loading (consent check).
+- Traces: US-017, C-07, connect-plan.md Phase E.
+
+### SCR-CONNBANK-SIGNIN — Mock bank sign-in
+
+- **Purpose:** simulate authorizing access to the chosen bank. **Primary:**
+  account number + password sign-in; secondary: simulated Face ID.
+- Content: mock disclosure, account number field, password field (never
+  persisted/logged/transmitted — cleared on unmount), "Use Face ID
+  (simulated)" button labeled explicitly as simulated (no real biometric
+  API is used).
+- States: any credentials succeed (demo) · signing-in loading state on
+  whichever method was pressed.
+- Traces: US-017, C-07.
+
+### SCR-CONNBANK-SELECT — Choose obligations to import
+
+- **Purpose:** tick which pulled obligations to import. **Primary:** Import
+  selected (disabled until ≥1 ticked).
+- Content: mock disclosure, per-record checkbox list (credit card / loan /
+  murabaha), partial-import error + "Continue without them" when some
+  records fail.
+- States: L (retrieving) · E "no obligations found for this bank, pick
+  another" (a bank legitimately returning zero results, e.g. a digital-only
+  bank not in the fixture catalog) · ER partial-failure banner (retry by
+  re-pressing Import, or explicitly skip the failed records — the step is
+  never marked complete on a silent partial write).
+- Traces: US-017, connect-plan.md Phase C (idempotent multi-import).
+
+### SCR-CONNBANK-DONE — "Any other obligations?"
+
+- **Purpose:** loop back for another bank or finish. **Primary:** Yes (restart
+  at SCR-CONNBANK-PICK) / No (mark the step complete, proceed to `(tabs)`).
+- Traces: US-017, connect-plan.md Phase D.
+
 ## Tab roots
 
 ### SCR-HOME — Dashboard ⭐

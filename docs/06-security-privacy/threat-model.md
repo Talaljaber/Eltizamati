@@ -4,6 +4,8 @@
 
 **Method:** STRIDE-informed, pragmatic for a solo-dev fintech prototype maturing to production. Scope column: MVP (local-only build) vs P1 (Supabase + providers) — **read per the banner above** (auth/RLS threats now MVP). Controls are concrete and each has a verification hook (docs/06/security-controls.md holds the full control list).
 
+> **Bank-connect onboarding mock sign-in (connect-plan.md, US-017 extension):** the `/connect-bank` mock sign-in screen collects an account number and password purely as UI theater — any input is accepted, and neither field is ever persisted (AsyncStorage, logs, Sentry breadcrumbs) or transmitted anywhere; component state is cleared on unmount. The "Face ID" option is a timed UI simulation, not `expo-local-authentication` or any real biometric API — it is explicitly labeled "(simulated)" in both languages. This is not a T-06/T-07 control gap to close later; there are no real credentials or provider secrets in this flow to protect, by design.
+
 ## Assets
 
 A1 obligation/payment financial data · A2 auth tokens & sessions (P1) · A3 consent records · A4 provider credentials (P1, server-side only) · A5 calculation integrity (results users act on) · A6 the app's trust reputation.
