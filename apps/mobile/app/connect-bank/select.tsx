@@ -33,6 +33,7 @@ import {
 import {
   useRetrieveBankRecordsMutation,
   useImportSelectedMutation,
+  useMarkBankConnectCompleteMutation,
 } from '@/features/connect-bank/api/use-connect-bank'
 import { MockDisclosure } from '@/features/connect-bank/components/MockDisclosure'
 import { errorMessageKey } from '@/features/connect-bank/error-message-key'
@@ -73,8 +74,10 @@ export default function ConnectBankSelectScreen() {
   const flow = useConnectBankFlow()
   const retrieve = useRetrieveBankRecordsMutation()
   const importSelected = useImportSelectedMutation()
+  const markComplete = useMarkBankConnectCompleteMutation()
   const [lastSummary, setLastSummary] = useState<ProviderImportSummary | null>(null)
   const [importError, setImportError] = useState<AppError | undefined>(undefined)
+  const [finishError, setFinishError] = useState<AppError | undefined>(undefined)
   const [retrieveAttempt, setRetrieveAttempt] = useState(0)
 
   const bank = JORDAN_BANKS.find((candidate) => candidate.id === flow.bankId)
@@ -117,6 +120,25 @@ export default function ConnectBankSelectScreen() {
     router.push('/connect-bank/done')
   }
 
+  // Nothing to import at this bank: complete the onboarding step and enter the app (where the
+  // dashboard shows its own "no obligations yet" state) rather than bouncing the user back to
+  // the bank picker. Marking complete is what actually breaks the loop — an incomplete step is
+  // re-routed to /connect-bank on the next entry (see connect-plan.md Phase D / StartupCoordinator).
+  async function handleFinishWithoutImport(): Promise<void> {
+    if (!userId) return
+    setFinishError(undefined)
+    try {
+      await markComplete.mutateAsync({ userId, repos })
+      // Intentionally NOT resetConnectBankFlow() here: clearing flow.bankId would retrigger this
+      // screen's guard effect (below) and bounce to /connect-bank — the very loop we're fixing.
+      // The flow is fully reset on the next entry anyway (selectBank() resets it), and records is
+      // empty in this branch, so nothing meaningful lingers.
+      router.replace('/(tabs)/')
+    } catch (cause) {
+      setFinishError(cause as AppError)
+    }
+  }
+
   if (bank === undefined) return null
   const bankName = i18n.language.startsWith('ar') ? bank.nameAr : bank.name
 
@@ -136,7 +158,7 @@ export default function ConnectBankSelectScreen() {
   if (!retrieve.isPending && flow.records.length === 0 && retrieve.isSuccess) {
     const alreadyImported = retrieve.data?.allAlreadyImported ?? false
     return (
-      <Screen maxWidth="readable">
+      <Screen maxWidth="readable" gap={4}>
         <Stack.Screen options={{ title: bankName }} />
         <MockDisclosure />
         <EmptyState
@@ -145,10 +167,24 @@ export default function ConnectBankSelectScreen() {
             alreadyImported ? 'connectBank.alreadyImportedSubtitle' : 'connectBank.emptySubtitle',
             { bank: bankName },
           )}
-          ctaLabel={t('connectBank.pickAnotherBank')}
-          onCta={() => router.replace('/connect-bank')}
+          // Primary path forward: finish onboarding and enter the app. "Choose a different bank"
+          // stays available below as a secondary option for users who banked elsewhere too.
+          ctaLabel={t('common.continue')}
+          onCta={() => void handleFinishWithoutImport()}
           testID={alreadyImported ? 'connect-bank-already-imported' : 'connect-bank-empty'}
         />
+        <Button
+          variant="ghost"
+          label={t('connectBank.pickAnotherBank')}
+          onPress={() => router.replace('/connect-bank')}
+          disabled={markComplete.isPending}
+          testID="connect-bank-empty-pick-another"
+        />
+        {finishError !== undefined ? (
+          <Text variant="bodySmall" color="critical" testID="connect-bank-finish-error">
+            {t(errorMessageKey(finishError))}
+          </Text>
+        ) : null}
       </Screen>
     )
   }
