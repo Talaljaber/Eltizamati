@@ -18,6 +18,7 @@ import {
 import { logger } from '../../../core/logging/logger'
 import type { Database } from '../../../core/supabase/database.types'
 import { toSupabaseAppError } from '../../../core/supabase/supabase-error'
+import { decryptField, encryptField } from '../../../core/crypto/field-cipher'
 import {
   profileDomainToInsertRow,
   profileDomainToRow,
@@ -38,6 +39,38 @@ function logProfileProviderError(
 export class SupabaseUserProfileRepository implements UserProfileRepository {
   constructor(private readonly client: SupabaseClient<Database>) {}
 
+  /**
+   * Encrypts the three client-encrypted PII columns on a mapped insert/upsert row before it
+   * leaves the device. `email` is intentionally NOT encrypted (denormalized copy of the
+   * plaintext auth.users.email — see the encryption plan); every other column is left as-is.
+   */
+  private async encryptRow<T extends Database['public']['Tables']['profiles']['Insert']>(
+    row: T,
+  ): Promise<Result<T, AppError>> {
+    const encrypted = { ...row }
+    for (const field of ['full_name', 'phone_number', 'primary_bank'] as const) {
+      const value = row[field]
+      if (typeof value !== 'string') continue
+      const result = await encryptField(this.client, value)
+      if (!result.ok) return result
+      encrypted[field] = result.value as T[typeof field]
+    }
+    return ok(encrypted)
+  }
+
+  /** Decrypts the three client-encrypted PII fields on a mapped domain profile after any read. */
+  private async decryptProfile(profile: UserProfile): Promise<Result<UserProfile, AppError>> {
+    const decrypted = { ...profile }
+    for (const field of ['fullName', 'phoneNumber', 'primaryBank'] as const) {
+      const value = profile[field]
+      if (value === undefined) continue
+      const result = await decryptField(this.client, value)
+      if (!result.ok) return result
+      decrypted[field] = result.value
+    }
+    return ok(decrypted)
+  }
+
   async get(userId: Id<'user'>): Promise<Result<UserProfile, AppError>> {
     const { data, error } = await this.client
       .from('profiles')
@@ -49,26 +82,30 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       return err(toSupabaseAppError(error))
     }
     if (data === null) return err(makeError('notFound'))
-    return ok(profileRowToDomain(data))
+    return this.decryptProfile(profileRowToDomain(data))
   }
 
   async save(profile: UserProfile): Promise<Result<UserProfile, AppError>> {
+    const rowResult = await this.encryptRow(profileDomainToRow(profile))
+    if (!rowResult.ok) return rowResult
     const { data, error } = await this.client
       .from('profiles')
-      .upsert(profileDomainToRow(profile))
+      .upsert(rowResult.value)
       .select('*')
       .single()
     if (error) {
       logProfileProviderError('save', error)
       return err(toSupabaseAppError(error))
     }
-    return ok(profileRowToDomain(data))
+    return this.decryptProfile(profileRowToDomain(data))
   }
 
   async createIfAbsent(profile: UserProfile): Promise<Result<UserProfile, AppError>> {
+    const rowResult = await this.encryptRow(profileDomainToInsertRow(profile))
+    if (!rowResult.ok) return rowResult
     const { data, error } = await this.client
       .from('profiles')
-      .insert(profileDomainToInsertRow(profile))
+      .insert(rowResult.value)
       .select('*')
       .single()
     if (error?.code === '23505') return this.get(profile.userId)
@@ -76,7 +113,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       logProfileProviderError('create', error)
       return err(toSupabaseAppError(error))
     }
-    return ok(profileRowToDomain(data))
+    return this.decryptProfile(profileRowToDomain(data))
   }
 
   /**
@@ -98,6 +135,8 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       logProfileProviderError('save', error)
       return err(toSupabaseAppError(error))
     }
-    return ok(profileRowToDomain(data))
+    // The row read back here still carries the encrypted PII columns (this update touched only
+    // the version flag) — decrypt them so the returned profile is consistent with get()/save().
+    return this.decryptProfile(profileRowToDomain(data))
   }
 }

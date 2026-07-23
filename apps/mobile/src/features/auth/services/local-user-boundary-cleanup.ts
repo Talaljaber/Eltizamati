@@ -6,6 +6,8 @@ export interface LocalUserBoundaryCleanupDependencies {
   readonly clearLocalConsent: () => Promise<void>
   readonly cancelReminder: () => Promise<void>
   readonly clearNotificationResponse: () => Promise<void>
+  /** Drops the in-memory per-user field-encryption DEK so the next user never reuses it. */
+  readonly clearFieldEncryptionKey: () => void
 }
 
 export interface LocalUserBoundaryCleanupResult {
@@ -26,6 +28,7 @@ export async function runLocalUserBoundaryCleanup(
     ['local_consent', dependencies.clearLocalConsent],
     ['reminder', dependencies.cancelReminder],
     ['notification_response', dependencies.clearNotificationResponse],
+    ['field_encryption_key', dependencies.clearFieldEncryptionKey],
     ['runtime', dependencies.resetRuntime],
   ]
   const results = await Promise.allSettled(tasks.map(([, task]) => task()))
