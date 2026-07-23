@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { Amount, Button, HeroAmount, InsightBanner, Text } from '@/core/design-system'
 import type { Id } from '@eltizamati/domain'
+import { useCalculationAsOfOverride } from '@/services/calculation-as-of-context'
 import type { LoanDetailHeroModel } from '../hooks/use-loan-detail-view-model'
 import { ExplainSheet } from '@/features/explain/components/ExplainSheet'
 
@@ -17,8 +18,11 @@ export function LoanDetailHero({
 }) {
   const { t } = useTranslation()
   const router = useRouter()
+  const { applyAsOf, clearAsOf } = useCalculationAsOfOverride()
   const [explainVisible, setExplainVisible] = useState(false)
 
+  // Headline = "what you still need to pay". Falls back to current balance only when the
+  // engine could not produce a remaining-to-pay figure (e.g. missing schedule).
   const mainAmount = hero.remainingToPay ?? hero.currentBalance
   const mainProvenance =
     hero.remainingToPay !== undefined ? hero.remainingToPayProvenance : hero.currentBalanceProvenance
@@ -43,21 +47,9 @@ export function LoanDetailHero({
         provenance={mainProvenance}
         precision={mainPrecision}
         supporting={[
-          ...(hero.remainingToPay !== undefined && hero.currentBalance && hero.currentBalanceProvenance
-            ? [
-                {
-                  label: t('loanDetail.currentBalance'),
-                  value: (
-                    <Amount
-                      variant="amountSm"
-                      money={hero.currentBalance}
-                      provenance={hero.currentBalanceProvenance}
-                      precision={hero.currentBalancePrecision}
-                    />
-                  ),
-                },
-              ]
-            : []),
+          // Deliberately trimmed to the five figures that matter (removed "current balance" and
+          // "projected remaining payable" — the latter contradicted the headline for overdue
+          // loans): paid to date, the rate change, the recurring installment, and the balloon.
           ...(hero.paidToDate?.isPositive() === true
             ? [
                 {
@@ -87,16 +79,16 @@ export function LoanDetailHero({
                 },
               ]
             : []),
-          ...(hero.projectedRemainingPayable && hero.projectedRemainingPayableProvenance
+          ...(hero.nextInstallment && hero.nextInstallmentProvenance
             ? [
                 {
-                  label: t('loanDetail.projectedRemainingPayable'),
+                  label: t('loanDetail.nextInstallment'),
                   value: (
                     <Amount
                       variant="amountSm"
-                      money={hero.projectedRemainingPayable}
-                      provenance={hero.projectedRemainingPayableProvenance}
-                      precision="estimate"
+                      money={hero.nextInstallment}
+                      provenance={hero.nextInstallmentProvenance}
+                      precision="official"
                     />
                   ),
                 },
@@ -124,6 +116,32 @@ export function LoanDetailHero({
             : []),
         ]}
       />
+
+      {/* Demo/testing time-travel: fast-forward the calculation date so a just-published rate (or
+          the maturity balloon) shows immediately, without waiting for the real date to arrive. */}
+      {hero.asOfOverride !== undefined ? (
+        <InsightBanner
+          severity="calm"
+          title={t('loanDetail.viewingAsOfTitle')}
+          body={t('loanDetail.viewingAsOfBody', { date: hero.asOfOverride })}
+        />
+      ) : null}
+      {hero.asOfOverride !== undefined ? (
+        <Button
+          variant="ghost"
+          label={t('loanDetail.resetToToday')}
+          onPress={() => clearAsOf()}
+          testID="loan-detail-reset-asof"
+        />
+      ) : hero.fastForwardDate !== undefined ? (
+        <Button
+          variant="secondary"
+          label={t('loanDetail.applyRateNow')}
+          onPress={() => applyAsOf(hero.fastForwardDate!)}
+          testID="loan-detail-apply-rate-now"
+        />
+      ) : null}
+
       {(hero.scheduleStale === true || hero.estimatedResidual?.isPositive() === true) && (
         <InsightBanner
           severity="attention"

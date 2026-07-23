@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react-native'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-import { Money, brandId } from '@eltizamati/domain'
+import { Money, brandId, toLocalDate } from '@eltizamati/domain'
 import type { Provenance } from '@eltizamati/domain'
 import { RepositoriesProvider } from '@/features/repositories/hooks/use-repositories'
 import { LoanDetailHero } from '../LoanDetailHero'
@@ -78,15 +78,13 @@ describe('LoanDetailHero', () => {
     expect(getByText(/≈ 2,000/)).toBeTruthy()
   })
 
-  it('shows the published-rate transition, remaining payable, and non-balloon warning', () => {
-    const { getByText } = renderHero({
+  it('shows the published-rate transition and the schedule-change warning, but no "projected remaining payable" row', () => {
+    const { getByText, queryByText } = renderHero({
       currentBalance: Money.of('10000', 'JOD'),
       currentBalanceProvenance: officialProvenance,
       currentBalancePrecision: 'official',
       currentRatePercent: '9.250',
       previousRatePercent: '7.500',
-      projectedRemainingPayable: Money.of('12500', 'JOD'),
-      projectedRemainingPayableProvenance: estimateProvenance,
       estimatedResidual: Money.of('2000', 'JOD'),
       estimatedResidualProvenance: estimateProvenance,
       residualConfidence: 'medium',
@@ -94,8 +92,9 @@ describe('LoanDetailHero', () => {
     })
 
     expect(getByText('7.500% → 9.250%')).toBeTruthy()
-    expect(getByText(/≈ 12,500/)).toBeTruthy()
     expect(getByText('loanDetail.scheduleChangeTitle')).toBeTruthy()
+    // The confusing "projected remaining payable" figure was removed from the simplified hero.
+    expect(queryByText('loanDetail.projectedRemainingPayable')).toBeNull()
   })
 
   it('opens the explain sheet when the residual is pressed', () => {
@@ -116,8 +115,8 @@ describe('LoanDetailHero', () => {
     expect(pressable).toBeTruthy()
   })
 
-  it('leads with remainingToPay when available, demoting currentBalance to a supporting metric', () => {
-    const { getByText } = renderHero({
+  it('leads with remainingToPay, shows paid-to-date and next installment, and drops the current-balance row', () => {
+    const { getByText, queryByText } = renderHero({
       currentBalance: Money.of('6000', 'JOD'),
       currentBalanceProvenance: officialProvenance,
       currentBalancePrecision: 'official',
@@ -128,13 +127,43 @@ describe('LoanDetailHero', () => {
       remainingToPay: Money.of('5571', 'JOD'),
       remainingToPayProvenance: estimateProvenance,
       paidToDate: Money.of('1000', 'JOD'),
+      nextInstallment: Money.of('307', 'JOD'),
+      nextInstallmentProvenance: officialProvenance,
     })
     expect(getByText('loanDetail.remainingToPay')).toBeTruthy()
     expect(getByText(/≈ 5,571/)).toBeTruthy()
-    expect(getByText('loanDetail.currentBalance')).toBeTruthy()
-    expect(getByText(/6,000/)).toBeTruthy()
     expect(getByText('loanDetail.paidToDate')).toBeTruthy()
     expect(getByText(/≈ 1,000/)).toBeTruthy()
+    expect(getByText('loanDetail.nextInstallment')).toBeTruthy()
+    expect(getByText(/307/)).toBeTruthy()
+    // Simplified UI: current balance is no longer shown as a supporting row.
+    expect(queryByText('loanDetail.currentBalance')).toBeNull()
+  })
+
+  it('offers "Apply rate now" when a future fast-forward date exists, and swaps to the reset control once an override is active', () => {
+    const base = {
+      currentBalance: Money.of('6000', 'JOD'),
+      currentBalanceProvenance: officialProvenance,
+      currentBalancePrecision: 'official' as const,
+      estimatedResidual: undefined,
+      estimatedResidualProvenance: undefined,
+      residualConfidence: undefined,
+      residualCalculationRunId: undefined,
+      remainingToPay: Money.of('5571', 'JOD'),
+      remainingToPayProvenance: estimateProvenance,
+    }
+    const notYet = renderHero({ ...base, fastForwardDate: toLocalDate('2027-01-01') })
+    expect(notYet.getByTestId('loan-detail-apply-rate-now')).toBeTruthy()
+    expect(notYet.queryByTestId('loan-detail-reset-asof')).toBeNull()
+
+    const applied = renderHero({
+      ...base,
+      fastForwardDate: toLocalDate('2027-01-01'),
+      asOfOverride: toLocalDate('2027-01-01'),
+    })
+    expect(applied.getByText('loanDetail.viewingAsOfTitle')).toBeTruthy()
+    expect(applied.getByTestId('loan-detail-reset-asof')).toBeTruthy()
+    expect(applied.queryByTestId('loan-detail-apply-rate-now')).toBeNull()
   })
 
   it('shows the outdated-schedule banner and a link to the recommended schedule when stale', () => {

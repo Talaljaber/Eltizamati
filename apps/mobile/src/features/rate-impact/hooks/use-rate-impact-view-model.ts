@@ -13,7 +13,10 @@ import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotMoneyAmount, snapshotArray } from '@/services/calculation-snapshot'
 import { calculationAsOf } from '@/services/calculation-as-of'
-import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
+import {
+  usePersonalCalculationAsOf,
+  useCalculationAsOfOverride,
+} from '@/services/calculation-as-of-context'
 import {
   applicableRatePeriods,
   projectedRemainingPayable,
@@ -45,6 +48,7 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
   const repos = useRepositories()
   const activeUser = useActiveUser()
   const personalAsOf = usePersonalCalculationAsOf()
+  const { override: asOfOverride } = useCalculationAsOfOverride()
 
   const calcService = useMemo(
     () => new CalculationService(repos.calculationRunRepository),
@@ -76,6 +80,7 @@ export function useRateImpactViewModel(obligationId: Id<'obligation'>): RateImpa
   const asOf = calculationAsOf(
     typeof repos.reset === 'function' ? 'demo' : 'personal',
     personalAsOf,
+    asOfOverride,
   )
   const rateFingerprint = rateHistoryFingerprint(ratePeriods)
 
