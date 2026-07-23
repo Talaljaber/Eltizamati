@@ -5,6 +5,7 @@ import { type AppError, type Result } from '@eltizamati/domain'
 import type { AuthService } from '@/services/auth/auth-service'
 import { clearDataMode } from '@/features/demo/stores/demo-mode-store'
 import { clearLocalConsent } from '@/features/consent/consent-policy'
+import { clearFieldEncryptionKey } from '@/core/crypto/field-cipher'
 import { cancelLocalReminder, clearLastNotificationResponse } from '@/services/local-notification-service'
 import { useResetAppRuntimeIfAvailable } from '@/providers'
 import {
@@ -37,6 +38,7 @@ export function useAuthExitCoordinator(
       clearLocalConsent,
       cancelReminder: cancelLocalReminder,
       clearNotificationResponse: clearLastNotificationResponse,
+      clearFieldEncryptionKey,
     })
     return {
       exit: async (kind: AuthExitKind) => {

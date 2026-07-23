@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { getDataMode, clearDataMode } from '@/features/demo/stores/demo-mode-store'
 import { clearLocalConsent } from '@/features/consent/consent-policy'
+import { clearFieldEncryptionKey } from '@/core/crypto/field-cipher'
 import { useAuthServiceLazy } from '@/features/auth/hooks/use-auth-service'
 import {
   cancelLocalReminder,
@@ -36,6 +37,7 @@ export function AuthBoundaryCoordinator({ resetRuntime }: { readonly resetRuntim
           clearLocalConsent,
           cancelReminder: cancelLocalReminder,
           clearNotificationResponse: clearLastNotificationResponse,
+          clearFieldEncryptionKey,
         })
         lastUserId.current = undefined
         // On a cold start with no session, StartupCoordinator already routes to

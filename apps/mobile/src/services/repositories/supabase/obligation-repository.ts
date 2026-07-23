@@ -29,6 +29,7 @@ import {
   murabahaDetailsToRow,
 } from './mappers/obligation-mapper'
 import { toSupabaseAppError } from '../../../core/supabase/supabase-error'
+import { decryptField, encryptField } from '../../../core/crypto/field-cipher'
 
 type ObligationRow = Database['public']['Tables']['obligations']['Row']
 
@@ -37,8 +38,26 @@ const SCHEMA_BACKED_KINDS = new Set(['conventionalLoan', 'murabaha', 'creditCard
 export class SupabaseObligationRepository implements ObligationRepository {
   constructor(private readonly client: SupabaseClient<Database>) {}
 
+  /**
+   * Decrypts the two client-encrypted free-text fields (nickname, notes) on a freshly mapped
+   * base row. `institution.name` stays plaintext (see the encryption plan — needed server-side
+   * by the rate-campaign RPCs), as does every other base field.
+   */
+  private async decryptBase(
+    base: ReturnType<typeof baseFromRow>,
+  ): Promise<Result<ReturnType<typeof baseFromRow>, AppError>> {
+    const nicknameResult = await decryptField(this.client, base.nickname)
+    if (!nicknameResult.ok) return nicknameResult
+    const notesResult =
+      base.notes === undefined ? ok(undefined) : await decryptField(this.client, base.notes)
+    if (!notesResult.ok) return notesResult
+    return ok({ ...base, nickname: nicknameResult.value, notes: notesResult.value })
+  }
+
   private async assemble(row: ObligationRow): Promise<Result<Obligation, AppError>> {
-    const base = baseFromRow(row)
+    const decryptedBase = await this.decryptBase(baseFromRow(row))
+    if (!decryptedBase.ok) return decryptedBase
+    const base = decryptedBase.value
     const currency = row.currency
 
     switch (row.kind) {
@@ -125,17 +144,29 @@ export class SupabaseObligationRepository implements ObligationRepository {
    * obligation the previous two-network-call `.upsert()` sequence could produce.
    */
   async save(obligation: Obligation): Promise<Result<Obligation, AppError>> {
+    // Encrypted once up front so every write path below (three save_* RPCs, plus the generic
+    // direct-table upsert) substitutes the same ciphertext rather than re-encrypting per path.
+    const encryptedNicknameResult = await encryptField(this.client, obligation.nickname)
+    if (!encryptedNicknameResult.ok) return encryptedNicknameResult
+    const encryptedNotesResult =
+      obligation.notes === undefined
+        ? ok(undefined)
+        : await encryptField(this.client, obligation.notes)
+    if (!encryptedNotesResult.ok) return encryptedNotesResult
+    const encryptedNickname = encryptedNicknameResult.value
+    const encryptedNotes = encryptedNotesResult.value
+
     if (obligation.kind === 'conventionalLoan') {
       const details = loanDetailsToRow(obligation.id, obligation.userId, obligation.loanDetails)
       const { error } = await this.client.rpc('save_conventional_loan', {
         p_id: obligation.id,
         p_connection_type: obligation.connectionType,
-        p_nickname: obligation.nickname,
+        p_nickname: encryptedNickname,
         p_institution_name: obligation.institution.name,
         p_institution_id: obligation.institution.id ?? null,
         p_opened_date: obligation.openedDate,
         p_closed_date: obligation.closedDate ?? null,
-        p_notes: obligation.notes ?? null,
+        p_notes: encryptedNotes ?? null,
         p_provenance_json: obligation.provenance as unknown as Database['public']['Tables']['obligations']['Row']['provenance_json'],
         p_created_at: obligation.createdAt,
         p_updated_at: obligation.updatedAt,
@@ -165,12 +196,12 @@ export class SupabaseObligationRepository implements ObligationRepository {
       const { error } = await this.client.rpc('save_murabaha', {
         p_id: obligation.id,
         p_connection_type: obligation.connectionType,
-        p_nickname: obligation.nickname,
+        p_nickname: encryptedNickname,
         p_institution_name: obligation.institution.name,
         p_institution_id: obligation.institution.id ?? null,
         p_opened_date: obligation.openedDate,
         p_closed_date: obligation.closedDate ?? null,
-        p_notes: obligation.notes ?? null,
+        p_notes: encryptedNotes ?? null,
         p_provenance_json: obligation.provenance as unknown as Database['public']['Tables']['obligations']['Row']['provenance_json'],
         p_created_at: obligation.createdAt,
         p_updated_at: obligation.updatedAt,
@@ -193,12 +224,12 @@ export class SupabaseObligationRepository implements ObligationRepository {
       const { error } = await this.client.rpc('save_card', {
         p_id: obligation.id,
         p_connection_type: obligation.connectionType,
-        p_nickname: obligation.nickname,
+        p_nickname: encryptedNickname,
         p_institution_name: obligation.institution.name,
         p_institution_id: obligation.institution.id ?? null,
         p_opened_date: obligation.openedDate,
         p_closed_date: obligation.closedDate ?? null,
-        p_notes: obligation.notes ?? null,
+        p_notes: encryptedNotes ?? null,
         p_provenance_json: obligation.provenance as unknown as Database['public']['Tables']['obligations']['Row']['provenance_json'],
         p_created_at: obligation.createdAt,
         p_updated_at: obligation.updatedAt,
@@ -225,7 +256,11 @@ export class SupabaseObligationRepository implements ObligationRepository {
       // genericFacility/ijara/diminishingMusharakah: no detail table exists yet
       // (P1-scoped, see obligation-mapper.ts) — base row alone is the full
       // persisted representation, a single statement is already atomic.
-      const { error: baseError } = await this.client.from('obligations').upsert(baseToRow(obligation))
+      const { error: baseError } = await this.client.from('obligations').upsert({
+        ...baseToRow(obligation),
+        nickname: encryptedNickname,
+        notes: encryptedNotes ?? null,
+      })
       if (baseError) return err(toSupabaseAppError(baseError))
     }
 

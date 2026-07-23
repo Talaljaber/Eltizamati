@@ -4,6 +4,7 @@ import {
   Money,
   engineEstimate,
   type Id,
+  type LocalDate,
   type Obligation,
   type CalculationRun,
   type Payment,
@@ -15,7 +16,10 @@ import { useActiveUser } from '@/features/auth/hooks/use-active-user'
 import { CalculationService } from '@/services/calculation-service'
 import { snapshotRecord, snapshotMoneyAmount } from '@/services/calculation-snapshot'
 import { calculationAsOf } from '@/services/calculation-as-of'
-import { usePersonalCalculationAsOf } from '@/services/calculation-as-of-context'
+import {
+  usePersonalCalculationAsOf,
+  useCalculationAsOfOverride,
+} from '@/services/calculation-as-of-context'
 import {
   applicableRatePeriods,
   projectedRemainingPayable,
@@ -42,10 +46,21 @@ export interface LoanDetailHeroModel {
   remainingToPay?: Money
   remainingToPayProvenance?: Provenance
   paidToDate?: Money
+  /** The recurring monthly payment (fixed under the unchanged-installment policy). */
+  nextInstallment?: Money
+  nextInstallmentProvenance?: Provenance
   currentRatePercent?: string
   previousRatePercent?: string
   scheduleStale?: boolean
   scheduleStaleReasons?: readonly ScheduleStalenessReason[]
+  /**
+   * Demo fast-forward: the date the "Apply rate now" button jumps the calculation to — the
+   * newest rate period's effective date if it's still in the future, otherwise maturity (to
+   * reveal the final balloon). Undefined when there's nothing ahead to fast-forward to.
+   */
+  fastForwardDate?: LocalDate
+  /** The active time-travel override (calculation-as-of-context), so the UI can show/reset it. */
+  asOfOverride?: LocalDate
 }
 
 export interface LoanDetailViewModel {
@@ -59,6 +74,7 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
   const repos = useRepositories()
   const activeUser = useActiveUser()
   const personalAsOf = usePersonalCalculationAsOf()
+  const { override: asOfOverride } = useCalculationAsOfOverride()
 
   const calcService = useMemo(
     () => new CalculationService(repos.calculationRunRepository),
@@ -98,6 +114,7 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
   const asOf = calculationAsOf(
     typeof repos.reset === 'function' ? 'demo' : 'personal',
     personalAsOf,
+    asOfOverride,
   )
   const rateFingerprint = rateHistoryFingerprint(ratePeriods)
 
@@ -181,6 +198,22 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
         estimatedResidual !== undefined &&
         Money.of(estimatedResidual, obligation.currency).isPositive(),
     })
+    // Fast-forward target for the demo "Apply rate now" button: jump to the newest rate period's
+    // effective date if it's still ahead of the current as-of (so a just-published rate applies
+    // immediately), otherwise to maturity to reveal the final balloon. LocalDate is 'YYYY-MM-DD',
+    // so string comparison is a valid chronological comparison (same idiom as applicableRatePeriods).
+    const rateEffectiveFroms = (ratePeriods ?? []).map((period) => period.effectiveFrom)
+    const latestRateDate =
+      rateEffectiveFroms.length > 0
+        ? rateEffectiveFroms.reduce((a, b) => (b > a ? b : a))
+        : undefined
+    const maturityDate: LocalDate = obligation.loanDetails.maturityDate
+    const fastForwardDate =
+      latestRateDate !== undefined && latestRateDate > asOf
+        ? latestRateDate
+        : maturityDate > asOf
+          ? maturityDate
+          : undefined
     hero = {
       currentBalance,
       currentBalanceProvenance:
@@ -216,10 +249,14 @@ export function useLoanDetailViewModel(obligationId: Id<'obligation'>): LoanDeta
           ? undefined
           : engineEstimate(remainingToPay, projectionRun.id, projectionRun.calculatedAt).provenance,
       paidToDate: paymentsTotal,
+      nextInstallment: obligation.loanDetails.installment.value,
+      nextInstallmentProvenance: obligation.loanDetails.installment.provenance,
       currentRatePercent: applicableRates[0]?.annualRate.toPercent().toFixed(3),
       previousRatePercent: applicableRates[1]?.annualRate.toPercent().toFixed(3),
       scheduleStale: staleness.stale,
       scheduleStaleReasons: staleness.reasons,
+      fastForwardDate,
+      asOfOverride,
     }
   }
 

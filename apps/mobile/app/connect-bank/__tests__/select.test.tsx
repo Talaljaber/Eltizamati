@@ -36,6 +36,7 @@ const card = {
 }
 
 const listExisting = jest.fn()
+const markBankConnectComplete = jest.fn()
 
 function renderScreen() {
   const client = new QueryClient({
@@ -43,6 +44,7 @@ function renderScreen() {
   })
   jest.spyOn(repositoriesModule, 'useRepositories').mockReturnValue({
     obligationRepository: { list: listExisting },
+    userProfileRepository: { markBankConnectComplete },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any)
   jest.spyOn(activeUserModule, 'useActiveUser').mockReturnValue(userId)
@@ -58,6 +60,7 @@ describe('ConnectBankSelectScreen', () => {
     jest.clearAllMocks()
     __resetConnectBankFlowForTest()
     listExisting.mockResolvedValue(ok([]))
+    markBankConnectComplete.mockResolvedValue(ok({}))
   })
 
   it('redirects to the bank picker when the flow has no signed-in bank', () => {
@@ -85,6 +88,32 @@ describe('ConnectBankSelectScreen', () => {
     jest.spyOn(MockConnectService.prototype, 'retrieve').mockResolvedValue(ok([]))
     const { findByTestId } = renderScreen()
     await findByTestId('connect-bank-empty')
+  })
+
+  it('empty state: Continue completes onboarding and enters the app (no loop back to the picker)', async () => {
+    selectBank('blink')
+    markSignedIn()
+    jest.spyOn(MockConnectService.prototype, 'retrieve').mockResolvedValue(ok([]))
+    const { findByTestId, getByText } = renderScreen()
+    await findByTestId('connect-bank-empty')
+
+    fireEvent.press(getByText('common.continue'))
+
+    await waitFor(() => expect(markBankConnectComplete).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)/'))
+    expect(mockReplace).not.toHaveBeenCalledWith('/connect-bank')
+  })
+
+  it('empty state: "choose a different bank" stays available and returns to the picker', async () => {
+    selectBank('blink')
+    markSignedIn()
+    jest.spyOn(MockConnectService.prototype, 'retrieve').mockResolvedValue(ok([]))
+    const { findByTestId } = renderScreen()
+
+    fireEvent.press(await findByTestId('connect-bank-empty-pick-another'))
+
+    expect(mockReplace).toHaveBeenCalledWith('/connect-bank')
+    expect(markBankConnectComplete).not.toHaveBeenCalled()
   })
 
   it('filters out records already imported from this bank, and shows a distinct "already up to date" state when everything was', async () => {

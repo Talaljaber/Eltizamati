@@ -26,6 +26,7 @@ function makeDependencies(authService = makeAuthService()): AuthExitDependencies
     clearLocalConsent: jest.fn().mockResolvedValue(undefined),
     cancelReminder: jest.fn().mockResolvedValue(undefined),
     clearNotificationResponse: jest.fn().mockResolvedValue(undefined),
+    clearFieldEncryptionKey: jest.fn(),
   }
 }
 
