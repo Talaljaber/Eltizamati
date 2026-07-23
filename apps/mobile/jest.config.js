@@ -14,7 +14,9 @@ module.exports = {
   //   Also: .pnpm virtual store directory must be in the allowlist so the first
   //   node_modules segment doesn't stop traversal.
   transformIgnorePatterns: [
-    'node_modules[/\\\\]+(?!(\\.pnpm|(jest-)?react-native|@react-native|expo(nent)?|@expo(nent)?[/\\\\]|@expo-google-fonts|react-navigation|@react-navigation|@unimodules|unimodules|sentry-expo|native-base|react-native-svg|react-native-safe-area-context|@eltizamati|decimal\\.js))',
+    // `@noble` (ciphers) ships ESM and pnpm nests it under a second `node_modules/@noble`
+    // segment, so it must be allowlisted here to be transformed (used by src/core/crypto).
+    'node_modules[/\\\\]+(?!(\\.pnpm|(jest-)?react-native|@react-native|expo(nent)?|@expo(nent)?[/\\\\]|@expo-google-fonts|@noble|react-navigation|@react-navigation|@unimodules|unimodules|sentry-expo|native-base|react-native-svg|react-native-safe-area-context|@eltizamati|decimal\\.js))',
   ],
   moduleNameMapper: {
     // Resolve the @/ path alias (tsconfig paths → jest)
