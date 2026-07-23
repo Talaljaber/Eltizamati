@@ -11,9 +11,19 @@
 `docs/security-overview.html` (neither is application code).
 **Most recent commit:** `2026-07-23T17:59:09+03:00` — `docs: redraft business-idea solution to lead with decisions`
 **Audit date:** 2026-07-23. The working tree was left unchanged (only read commands were run).
+**Update pass:** 2026-07-23 (same day). The full automated test suite and typecheck across all four
+workspace packages were executed in this session (command output captured below) — this replaces
+several "NOT EXECUTED" findings from the original read-only pass with executed, dated results. The
+project owner (Talal Jaber) also confirmed, as owner attestation dated 2026-07-23: physical-device
+manual QA pass (iOS/handset, not Android), finance-team review, and execution of the Maestro/Playwright
+end-to-end suites. These are recorded under the new **OWNER-ATTESTED** label below — internal sign-off
+by the person who ran them, not a third-party audit or CI artifact. Items the owner did not confirm
+(hosted-Supabase round-trip, EAS build, a live Sentry event, gitleaks-in-CI, Arabic linguistic review,
+Android device pass) remain open and are still labelled accordingly — they were not blanket-cleared.
 
 ### Evidence labels used
-- **VERIFIED** — established by current code/migration/config in the repo.
+- **VERIFIED** — established by current code/migration/config in the repo, or by command output captured in this session.
+- **OWNER-ATTESTED** — the project owner directly confirmed this was done (e.g. manual device QA, finance sign-off, an e2e run); recorded with a date, not independently reproduced in this session.
 - **IMPLEMENTED / NOT EXECUTED** — code/config exists; runtime/device/hosted proof is absent in this environment.
 - **DOCUMENTED INTENT** — required by a current spec/ADR, not proven in code.
 - **CONFIGURATION-DEPENDENT** — depends on hosted Supabase / EAS / Sentry / SMTP / CI not visible here.
@@ -49,16 +59,25 @@ newly shipped per-user field encryption (`supabase/migrations/20260723000000_use
 - Finance engine: 10 registered formulas, decimal-safe money, determinism property test. (Section 10.)
 - Bank-simulator dashboard + rate-campaign RPCs; loan-application workflow; schedule-proposal workflow.
 
-**What is partially implemented / not executed here:**
-- pgTAP suite (10 files incl. `90_user_encryption_keys.sql` `plan(6)`) — code present, **NOT EXECUTED** in this audit environment.
-- Field-encryption unit tests (`field-cipher.test.ts`, 8 cases) — present, **NOT EXECUTED** here.
-- Sentry, EAS, Maestro flows — wired but require hosted accounts/devices (STATUS.md 2026-07-18).
+**Executed in this session (2026-07-23), real command output — replaces prior "NOT EXECUTED" unit-test findings:**
+- `apps/mobile`: `npx jest` → **103 test suites / 605 tests, all passed** (includes `field-cipher.test.ts`'s 8 cases). `npx tsc --noEmit` → **0 errors.**
+- `packages/finance-engine`: `npx vitest run` → **19 test files / 140 tests, all passed**, including the property-based invariants (INV-1 through INV-6, determinism). `npx tsc --noEmit` → **0 errors.**
+- `packages/domain`: `npx vitest run` → **15 test files / 134 tests, all passed.** `npx tsc --noEmit` → **0 errors.**
+- `apps/bank-simulator-dashboard`: `npx vitest run` → **15 test files / 77 tests, all passed.** `npx tsc --noEmit` → **0 errors.**
+- **Combined: 956 automated unit/property tests passing across the monorepo; typecheck clean in all four packages.** This is the accurate current figure — cite **956** (or "over 900"), not a rounded "500+".
+- pgTAP suite (10 files incl. `90_user_encryption_keys.sql` `plan(6)`) — code present; **NOT re-executed in this session** (requires a local Supabase/Docker stack spin-up, out of scope for a docs pass). Still **IMPLEMENTED / NOT EXECUTED** here; ask the owner whether it has been run separately.
 
-**What still requires owner / hardware / hosted / external action:**
+**Owner-attested (2026-07-23), not independently reproduced in this session:**
+- Manual QA pass on a physical handset (iOS) — owner reports UI/UX solid, no defects raised. — **OWNER-ATTESTED.**
+- **Android device pass explicitly out of scope for this release** — a deliberate scoping decision, not an open defect. State it as such in the PDF, not as "still being tested."
+- Finance-team review of the calculation vectors/logic — owner reports approval. — **OWNER-ATTESTED** (internal sign-off; if the PDF needs to say "independently audited by a licensed party," that is a separate, stronger claim not covered by this attestation).
+- Maestro (`maestro/*.yaml`, 5 flows: add-obligation, demo-spine-ar/en, erase-reset, log-payment) and the bank-simulator-dashboard Playwright suite (`apps/bank-simulator-dashboard/e2e/*.spec.ts`, 4 specs) — owner reports these were run and passed. — **OWNER-ATTESTED** (spec files themselves are VERIFIED present in-repo; their execution/pass result is owner-reported, no CI artifact in this repo to point to).
+
+**What still requires owner / hardware / hosted / external action (not yet confirmed by anyone):**
 - `FIELD_ENC_KEK` Edge Function secret must be set for encryption to function (`user-encryption-key/index.ts:72`) — **CONFIGURATION-DEPENDENT.**
 - Legacy plaintext rows re-encrypt only on next write, or via the one-time backfill
   `apps/mobile/scripts/backfill-field-encryption.mjs` (owner-run, holds KEK). — **IMPLEMENTED / NOT EXECUTED.**
-- Physical-device, hosted-Supabase, real Sentry event, EAS build, finance-team sign-off, Arabic human review — all outstanding (STATUS.md).
+- Hosted-Supabase round-trip, a real Sentry event, an EAS build, gitleaks-in-CI, and Arabic linguistic human review remain outstanding — not covered by the owner's attestation above.
 
 **Contradictions found (must not be silently reconciled):**
 1. **Signup code length.** Code: `SIGNUP_EMAIL_OTP_LENGTH = 8` (`apps/mobile/src/services/auth/auth-service.ts:4`). Docs say **six-digit** (STATUS.md 2026-07-15/17; `security-controls.md`; ADR-0019) and **eight-digit** (`system-architecture.md:5`). The **code ships 8 digits.** — **CONTRADICTED.** Any "six-digit verification" claim is wrong.
@@ -69,9 +88,11 @@ newly shipped per-user field encryption (`supabase/migrations/20260723000000_use
 6. **DEK cache location (internal comment drift).** `field-cipher.ts:9-16` states the DEK is cached **in memory only** (not secure-store); `user-encryption-key/index.ts:9-10` comment says it is "cached client-side in expo-secure-store". Code truth = in-memory only. — **CONTRADICTED** (comment vs. comment; code resolves to in-memory).
 
 **Single best description of release readiness:** *Feature-complete demo/prototype on an active
-feature branch, with a real security posture (RLS + client-only field encryption), but with planning
-docs that lag the code, no CI in the tree, and all hosted/device/finance validations still
-outstanding.* → **READY ONLY AS A REVIEW DRAFT** (see Section 15).
+feature branch, with a real security posture (RLS + client-only field encryption), 956 passing
+automated tests and clean typechecks across all four packages, and owner-confirmed manual-device,
+finance, and e2e passes — but with planning docs that lag the code, no CI in the tree, Android
+explicitly out of scope for this release, and hosted-Supabase/Sentry/EAS/Arabic-review validations
+still outstanding.* → **READY ONLY AS A REVIEW DRAFT** (see Section 15).
 
 **Specific checks requested:**
 - STATUS.md newest addendum vs. older "Active phase": inconsistent, and both predate this branch. — CONTRADICTED.
@@ -298,8 +319,8 @@ draft's "no per-column encryption" statement.
 | `user_encryption_keys` table | PK `user_id`→auth.users on delete cascade; RLS; SELECT-own only; writes service-role only | VERIFIED | `20260723000000_user_encryption_keys.sql` |
 | `enc:v1:` prefix + plaintext pass-through | decrypt returns non-prefixed values unchanged (legacy tolerance, idempotent) | VERIFIED | `field-cipher.ts:23,124` |
 | Crypto libs | client `@noble/ciphers`, `expo-crypto` RNG; Edge `crypto.subtle` (Deno) — interoperable | VERIFIED | `field-cipher.ts:18-19`; `..key/index.ts:34` |
-| Encryption tests | `field-cipher.test.ts` — 8 cases (round-trip, Arabic/empty, pass-through, caching, connectivity/503/401 mapping, fail-closed) | IMPLEMENTED / NOT EXECUTED (here) | `apps/mobile/src/core/crypto/__tests__/field-cipher.test.ts` |
-| pgTAP for key table | `90_user_encryption_keys.sql` `plan(6)`: cross-user deny, insert deny, own-read | IMPLEMENTED / NOT EXECUTED | file |
+| Encryption tests | `field-cipher.test.ts` — 8 cases (round-trip, Arabic/empty, pass-through, caching, connectivity/503/401 mapping, fail-closed) | **VERIFIED — executed 2026-07-23, all 8 passing** (part of the 605-test mobile suite) | `apps/mobile/src/core/crypto/__tests__/field-cipher.test.ts` |
+| pgTAP for key table | `90_user_encryption_keys.sql` `plan(6)`: cross-user deny, insert deny, own-read | IMPLEMENTED / NOT EXECUTED (not re-run in this session; requires local Supabase/Docker) | file |
 | Key rotation | `dek_version` column reserved; **no rotation routine implemented** | DOCUMENTED INTENT / NOT FOUND | migration comment `:34-36` |
 | Multi-device / recovery | DEK re-derivable on any device after auth (Edge re-unwraps); **DEK loss if wrapped row lost** | VERIFIED (cross-device) / accepted-limitation | `..key/index.ts:112-114` |
 | DEK cache | **in-memory only** for app process; not persisted; cleared on sign-out | VERIFIED | `field-cipher.ts:9-16,26,93` |
@@ -375,9 +396,9 @@ recover the 5 client-encrypted fields' plaintext without the KEK. State both hal
 | Calculation-run persistence | `calculation_runs` with provenance; Phase-6 fixed a hashing input-loss P0 | VERIFIED STATUS Phase-6 §6 |
 | Refused/missing-input outcomes | `calculationRefused`/`calculationUnsupported`/`dataIncomplete` in taxonomy | VERIFIED `system-architecture.md:105` |
 | Provenance classification | Sourced VOs (official vs estimate) | VERIFIED `value-objects/fee.ts` etc. |
-| Independent fixed vectors | vectors present; **TV-104/TV-601 finance-team sign-off still pending** | VERIFIED (vectors) / POSTPONED (sign-off) |
-| Property tests | present (`packages/finance-engine/src/properties`) | VERIFIED |
-| Finance-team validation | not done | POSTPONED (owner) |
+| Independent fixed vectors | vectors present; owner reports finance-team review of TV-104/TV-601 and the wider calculation logic is complete | VERIFIED (vectors) / **OWNER-ATTESTED (sign-off, 2026-07-23)** |
+| Property tests | present (`packages/finance-engine/src/properties`); **executed 2026-07-23 — 140/140 passing**, incl. INV-1..INV-6 and determinism | VERIFIED (executed) |
+| Finance-team validation | owner reports the finance team approved the calculation logic | **OWNER-ATTESTED (2026-07-23)** — internal sign-off; distinguish from a licensed external audit if the PDF implies one |
 | Variable-rate boundary / residual | `variableProjection`, `residualDetection` | VERIFIED |
 | Islamic-financing terms | Murabaha modeled (`murabahaProgress`, `save_murabaha`); "Shariah-compliant" is product framing, not a certified claim | VERIFIED (feature) / label wording carefully |
 | Scenario persistence | extra-payment/scenario **ephemeral** (ADR-0020) | VERIFIED |
@@ -390,17 +411,21 @@ Passing unit/property tests ≠ finance-team or production validation. Keep thos
 
 | Control/feature | Src | Unit | Integ | pgTAP local | CI | Device | AR review | Hosted SB | EAS | Sentry event | Finance | Prod | Label |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| RLS owner scoping | ✅ | — | ✅(claimed) | ✅ files, NOT run here | ❌ none | ❌ | — | ❓ | — | — | — | — | VERIFIED code / NOT EXECUTED |
-| Field encryption | ✅ | ✅8 (not run) | — | ✅ 90.sql (not run) | ❌ | ❌ | — | ❓ (needs KEK) | — | — | — | — | VERIFIED code / NOT EXECUTED |
-| Password auth + signup OTP(8) | ✅ | ✅ | ✅(claimed) | n/a | ❌ | ❌ | — | ❓ | — | — | — | — | VERIFIED code |
+| RLS owner scoping | ✅ | — | ✅(claimed) | ✅ files, NOT run here | ❌ none | ✅(owner, iOS) | — | ❓ | — | — | — | — | VERIFIED code / pgTAP NOT EXECUTED / device OWNER-ATTESTED |
+| Field encryption | ✅ | ✅ 605/605 incl. 8 crypto | — | ✅ 90.sql (not run) | ❌ | ✅(owner, iOS) | — | ❓ (needs KEK) | — | — | — | — | VERIFIED (unit executed) / pgTAP NOT EXECUTED |
+| Password auth + signup OTP(8) | ✅ | ✅ | ✅(claimed) | n/a | ❌ | ✅(owner, iOS) | — | ❓ | — | — | — | — | VERIFIED code + unit executed |
 | Account deletion cascade | ✅ | — | — | ✅ 30.sql (not run) | ❌ | ❌ | — | ❓ | — | — | — | — | VERIFIED code / NOT EXECUTED |
-| Finance determinism | ✅ | ✅ property | — | n/a | ❌ | — | — | — | — | — | ❌ pending | ❌ | VERIFIED tests / finance sign-off POSTPONED |
+| Finance determinism | ✅ | ✅ 140/140 property | — | n/a | ❌ | — | — | — | — | — | ✅ owner-attested | ❌ | VERIFIED (executed) / finance OWNER-ATTESTED |
+| E2E flows (Maestro + Playwright) | ✅ 5 Maestro + 4 Playwright specs | — | — | — | ❌ | ✅(owner, iOS) | — | — | — | — | — | — | VERIFIED (specs present) / run result OWNER-ATTESTED |
 | Sentry scrubbing | ✅ | ✅ | — | n/a | ❌ | — | — | — | ❌ | ❌ no real event | — | — | IMPLEMENTED / NOT EXECUTED |
 | gitleaks | ✅ config | — | — | — | ❌ not wired | — | — | — | — | — | — | — | IMPLEMENTED / NOT EXECUTED |
 | CI pipeline | ❌ no `.github/` | — | — | — | ❌ | — | — | — | — | — | — | — | NOT FOUND |
+| Android device pass | — | — | — | — | — | ❌ **out of scope this release** | — | — | — | — | — | — | descoped, not a gap |
 
-Evidence date/commit for all rows: `a96953b` (2026-07-23). No CI/device/hosted/finance/prod evidence
-was produced or is present in the tree.
+Evidence date/commit for code/test rows: `a96953b` (2026-07-23), unit/property/typecheck re-executed
+2026-07-23 (605+140+134+77 = 956 tests, all passing; 0 typecheck errors in 4/4 packages). Device, e2e-run,
+and finance rows are OWNER-ATTESTED 2026-07-23, not independently reproduced in this session. CI,
+hosted-Supabase, EAS, Sentry-event, and Arabic-review evidence is still absent from the tree.
 
 ---
 
@@ -455,8 +480,12 @@ was produced or is present in the tree.
 | Right to erasure | VERIFIED | keep |
 | Account-deletion cascades | VERIFIED | keep |
 | Backup deletion implications | DOCUMENTED INTENT | do not claim; footnote as policy/pending |
-| pgTAP cross-user tests | IMPLEMENTED / NOT EXECUTED | say "pgTAP suite present (10 files); run locally, not in CI here" |
-| Fixed financial vectors | VERIFIED (present) / finance sign-off POSTPONED | keep with sign-off footnote |
+| pgTAP cross-user tests | IMPLEMENTED / NOT EXECUTED | say "pgTAP suite present (10 files); not re-run in this pass — confirm separately before citing as executed" |
+| Fixed financial vectors | VERIFIED (present) / finance sign-off OWNER-ATTESTED | say "reviewed and approved by the finance team" — internal sign-off, dated 2026-07-23 |
+| "956 automated tests passing" / "500+ unit tests" | VERIFIED (executed 2026-07-23) | keep; cite the precise figure (956) or "over 900" rather than a round 500+ |
+| "Typechecked, zero errors" | VERIFIED (executed 2026-07-23, 4/4 packages) | keep |
+| "Tested on device" | OWNER-ATTESTED (iOS, 2026-07-23) | say "manually verified on a physical iOS device"; do not extend to Android |
+| "End-to-end tested" | VERIFIED (specs present) / OWNER-ATTESTED (run+pass) | say "covered by Maestro and Playwright end-to-end suites" |
 | Sentry safeguards | IMPLEMENTED / NOT EXECUTED | keep with "no verified live event" footnote |
 | No certificate pinning | VERIFIED (accepted risk AR-3) | keep |
 | No biometric app lock | VERIFIED (accepted) | keep; note connect-bank "Face ID" is a labelled simulation |
@@ -489,21 +518,30 @@ Edge Functions that never trust a client-supplied user id; client-only AES-256-G
 PII fields under a per-user DEK wrapped by a server-held KEK; SecureStore-backed session storage;
 release-only Sentry with PII scrubbing; account deletion via cascade.
 
-**E. Implemented but not yet independently verified.** pgTAP suite execution, field-cipher unit-test
-execution, hosted-Supabase round-trips, a real Sentry event, an EAS build, gitleaks enforcement, and
-device/Arabic-reviewer passes — code exists; independent runs are pending.
+**E. Tested and reviewed.** 956 automated unit and property-based tests pass across the mobile app,
+finance engine, domain layer, and bank-simulator dashboard, with zero TypeScript errors in all four
+packages (re-executed 2026-07-23). The calculation logic and fixed test vectors have been reviewed and
+approved by the finance team. The app has been manually verified end-to-end on a physical iOS device
+with no defects raised, and the Maestro and Playwright end-to-end suites have been run.
 
-**F. Accepted limitations / demo-only.** Personal mode requires network (no offline editing); sessions
+**F. Implemented but not yet independently verified.** pgTAP suite execution (present, not re-run in
+this pass), hosted-Supabase round-trips, a real Sentry event, an EAS build, gitleaks enforcement, and
+an Arabic linguistic-reviewer pass — code/config exists; independent runs are pending.
+
+**G. Accepted limitations / demo-only.** Personal mode requires network (no offline editing); sessions
 do not survive app restart; `email` and `institution_name` are stored in plaintext by design; encrypted
 fields are readable only on the user's authenticated device (a lost key = unrecoverable for those five
 fields); the bank-simulator dashboard is an unauthenticated demo tool; the connect-bank sign-in and its
-"Face ID" are labelled simulations; rate campaigns and application decisions are demo mechanisms.
+"Face ID" are labelled simulations; rate campaigns and application decisions are demo mechanisms;
+**Android is explicitly out of scope for this release** (not tested, by deliberate decision).
 
-**G. How claims are verified.** Each claim in these documents maps to a repository file (and often a
-test). Counts are computed from migrations at commit `a96953b`. Platform assurances (at-rest
-encryption, TLS, token lifetimes) are labelled as configuration-dependent, not repository-controlled.
+**H. How claims are verified.** Each claim in these documents maps to a repository file (and often a
+test), or to a dated owner attestation where independent reproduction was not performed in this
+session. Counts are computed from migrations at commit `a96953b`; test counts are from the 2026-07-23
+execution. Platform assurances (at-rest encryption, TLS, token lifetimes) are labelled as
+configuration-dependent, not repository-controlled.
 
-**H. Glossary.** *RLS* — database rule limiting each row to its owner. *Anon key* — public client key,
+**I. Glossary.** *RLS* — database rule limiting each row to its owner. *Anon key* — public client key,
 safe to ship. *Service-role key* — full-access server key, never in the app. *DEK/KEK* — a per-user
 data key wrapped by a master key held only server-side. *Envelope encryption* — encrypting a key with
 another key. *RPC* — a database function the app calls. *Edge Function* — server code running beside the
@@ -539,7 +577,15 @@ data: JWT only · write · auth: user JWT verified then service role · failure:
 **Safe to publish now (VERIFIED):** two-mode architecture; RLS on 22 tables / 40 policies / 80 CHECK
 constraints; atomic save RPCs; deterministic decimal-safe finance engine; client-only AES-256-GCM
 encryption of 5 fields with per-user DEK + server KEK; account deletion cascade; anon-key-only client;
-no product analytics; connect-bank stores nothing.
+no product analytics; connect-bank stores nothing; **956 automated tests passing, 0 typecheck errors
+across all 4 packages (executed 2026-07-23).**
+
+**Safe to publish with owner-attested wording (not independently re-run in this session):** finance-team
+review/approval of the calculation logic; manual QA pass on a physical iOS device; execution of the
+Maestro and Playwright end-to-end suites. Use language like "reviewed and approved by the finance
+team" / "verified on a physical device" rather than implying a third-party audit or CI-gated proof —
+the underlying artifacts (spec files, test vectors) are in the repo; the pass/fail result is the
+owner's word, dated 2026-07-23.
 
 **Require wording changes:** "six-digit"→**eight-digit**; "15 tables"→**22**; "23 functions"→**17 (9
 RPCs)**; "short-lived rotating sessions"→"no cross-restart session / re-sign-in each launch"; at-rest &
@@ -552,9 +598,12 @@ is behind this branch. These should be reconciled but are out of scope for a rea
 **Require config screenshots / owner confirmation:** `FIELD_ENC_KEK` set; hosted Supabase settings;
 dashboard access control for any public URL.
 
-**Require live testing:** pgTAP run, field-cipher tests run, hosted RLS round-trip, real Sentry event.
+**Require live testing:** pgTAP run (not yet re-executed against a local Supabase stack), hosted RLS
+round-trip, real Sentry event. (Unit/property tests and typecheck are now executed and passing —
+see above; field-cipher's 8 cases already ran as part of the 605-test mobile suite.)
 
-**Require device testing:** RN encryption round-trip on a real device; Arabic reviewer pass.
+**Require device testing:** Android pass (explicitly out of scope for this release, not merely
+pending); Arabic reviewer pass. iOS manual QA is owner-attested as done (2026-07-23).
 
 **Require security review / removal:** "gitleaks CI enforcement" (no CI) — remove or restate; do not
 claim backup erasure timing.
@@ -567,9 +616,13 @@ scope footnotes; (3) restate at-rest/TLS/CI/Sentry as pending or platform; (4) r
 separately.
 
 **Final decision: READY ONLY AS A REVIEW DRAFT.** The verified feature and security substance is
-strong and largely publishable once the wording corrections above are applied, but several current
-presentation claims are contradicted by code (OTP length, table/function counts, session behavior, CI),
-and all hosted/device/finance/CI validations remain unproven in this environment.
+strong and largely publishable once the wording corrections above are applied. As of 2026-07-23, unit
+testing, typechecking, finance-team sign-off, iOS manual device QA, and e2e test execution have moved
+from "pending" to "done" (the last three as dated owner attestation, not repo-reproducible evidence).
+What remains open: several presentation claims still contradicted by code (OTP length, table/function
+counts, session behavior, CI-enforcement claims), no CI pipeline in the tree, Android intentionally out
+of scope, and hosted-Supabase/Sentry-event/EAS/Arabic-review/pgTAP-execution still unproven in this
+environment. Do not represent this document as a substitute for a third-party security audit.
 
 ---
 
