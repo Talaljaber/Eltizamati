@@ -38,6 +38,7 @@ export interface RawDashboardEnv {
   readonly demoDashboardAllowRemote: string | undefined
   readonly supabaseUrl: string | undefined
   readonly supabaseSecretKey: string | undefined
+  readonly operatorDecryptToken: string | undefined
   readonly emailSendingEnabled: string | undefined
   readonly smtpHost: string | undefined
   readonly smtpPort: string | undefined
@@ -62,6 +63,7 @@ function readRawEnvFromProcess(): RawDashboardEnv {
     demoDashboardAllowRemote: process.env.DEMO_DASHBOARD_ALLOW_REMOTE,
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseSecretKey: process.env.SUPABASE_SECRET_KEY,
+    operatorDecryptToken: process.env.OPERATOR_DECRYPT_TOKEN,
     emailSendingEnabled: process.env.EMAIL_SENDING_ENABLED,
     smtpHost: process.env.SMTP_HOST,
     smtpPort: process.env.SMTP_PORT,
@@ -79,6 +81,12 @@ const dashboardEnvSchema = z
     demoDashboardAllowRemote: z.boolean(),
     supabaseUrl: z.string().url(),
     supabaseSecretKey: z.string().min(1),
+    // Shared token the dashboard presents to the operator-decrypt Edge Function
+    // (which holds the KEK) to decrypt PII for display. NOT the KEK itself — the
+    // master key never lives in this app. Optional so a dashboard configured
+    // before field encryption shipped still boots; when unset, the encrypted PII
+    // columns render as-is (ciphertext). See src/server/crypto/field-decryptor.ts.
+    operatorDecryptToken: z.string().min(1).optional(),
     emailSendingEnabled: z.boolean(),
     smtpHost: z.string().min(1),
     smtpPort: z.number().int().positive(),
@@ -130,6 +138,12 @@ export function loadDashboardEnv(
     demoDashboardAllowRemote,
     supabaseUrl: raw.supabaseUrl,
     supabaseSecretKey: raw.supabaseSecretKey,
+    // Empty string (e.g. `OPERATOR_DECRYPT_TOKEN=` in .env) is treated as unset
+    // so it doesn't trip the `.min(1)` guard and fail the whole env validation.
+    operatorDecryptToken:
+      raw.operatorDecryptToken !== undefined && raw.operatorDecryptToken.trim() !== ''
+        ? raw.operatorDecryptToken
+        : undefined,
     emailSendingEnabled: parseBoolean(raw.emailSendingEnabled, false),
     smtpHost: raw.smtpHost ?? '',
     smtpPort: Number(raw.smtpPort ?? '587'),

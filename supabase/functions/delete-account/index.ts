@@ -13,12 +13,22 @@
 // not a silent gap.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
+// Mirrors learn-assistant/index.ts. Without these the browser preflight (Expo web
+// on http://localhost:8081) is blocked before the request ever reaches the auth
+// check. Native builds don't send preflights, so this only affects web.
+const cors = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+
   const authHeader = req.headers.get('Authorization')
   if (authHeader === null) {
     return new Response(JSON.stringify({ error: 'missing Authorization header' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...cors },
     })
   }
 
@@ -36,7 +46,7 @@ Deno.serve(async (req: Request) => {
   if (getUserError !== null || user === null) {
     return new Response(JSON.stringify({ error: 'invalid session' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...cors },
     })
   }
 
@@ -49,7 +59,7 @@ Deno.serve(async (req: Request) => {
   if (deleteError !== null) {
     return new Response(JSON.stringify({ error: deleteError.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...cors },
     })
   }
 
@@ -58,6 +68,6 @@ Deno.serve(async (req: Request) => {
 
   return new Response(JSON.stringify({ deleted: true }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...cors },
   })
 })

@@ -19,6 +19,7 @@ function isTrue(value: string | undefined): boolean {
 export interface DashboardConfigStatus {
   readonly supabaseConfigured: boolean
   readonly supabaseSecretConfigured: boolean
+  readonly fieldDecryptionConfigured: boolean
   readonly gmailSmtpConfigured: boolean
   readonly emailSendingEnabled: boolean
   readonly environment: 'local' | 'demo'
@@ -33,6 +34,7 @@ export function loadDashboardConfigStatus(): DashboardConfigStatus {
   return {
     supabaseConfigured: isSet(process.env.SUPABASE_URL),
     supabaseSecretConfigured: isSet(process.env.SUPABASE_SECRET_KEY),
+    fieldDecryptionConfigured: isSet(process.env.OPERATOR_DECRYPT_TOKEN),
     gmailSmtpConfigured:
       isSet(process.env.SMTP_HOST) &&
       isSet(process.env.SMTP_USER) &&

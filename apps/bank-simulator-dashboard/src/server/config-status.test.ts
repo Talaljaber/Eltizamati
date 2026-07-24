@@ -4,6 +4,7 @@ import { loadDashboardConfigStatus } from './config-status'
 const KEYS = [
   'SUPABASE_URL',
   'SUPABASE_SECRET_KEY',
+  'OPERATOR_DECRYPT_TOKEN',
   'SMTP_HOST',
   'SMTP_USER',
   'SMTP_APP_PASSWORD',
@@ -22,6 +23,7 @@ describe('loadDashboardConfigStatus', () => {
     const status = loadDashboardConfigStatus()
     expect(status.supabaseConfigured).toBe(false)
     expect(status.supabaseSecretConfigured).toBe(false)
+    expect(status.fieldDecryptionConfigured).toBe(false)
     expect(status.gmailSmtpConfigured).toBe(false)
     expect(status.emailSendingEnabled).toBe(false)
     expect(status.remoteDeploymentAllowed).toBe(false)
@@ -35,6 +37,12 @@ describe('loadDashboardConfigStatus', () => {
     expect(loadDashboardConfigStatus().gmailSmtpConfigured).toBe(false)
     process.env.SMTP_APP_PASSWORD = 'secret'
     expect(loadDashboardConfigStatus().gmailSmtpConfigured).toBe(true)
+  })
+
+  it('reports field decryption configured only when OPERATOR_DECRYPT_TOKEN is set', () => {
+    expect(loadDashboardConfigStatus().fieldDecryptionConfigured).toBe(false)
+    process.env.OPERATOR_DECRYPT_TOKEN = 'operator-token'
+    expect(loadDashboardConfigStatus().fieldDecryptionConfigured).toBe(true)
   })
 
   it('never exposes the actual secret value, only booleans', () => {

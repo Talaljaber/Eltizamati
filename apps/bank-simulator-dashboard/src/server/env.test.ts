@@ -7,6 +7,7 @@ const validRaw: RawDashboardEnv = {
   demoDashboardAllowRemote: 'false',
   supabaseUrl: 'http://127.0.0.1:54321',
   supabaseSecretKey: 'service-role-secret',
+  operatorDecryptToken: undefined,
   emailSendingEnabled: 'false',
   smtpHost: 'smtp.gmail.com',
   smtpPort: '587',

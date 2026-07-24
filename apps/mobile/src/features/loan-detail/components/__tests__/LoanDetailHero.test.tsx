@@ -4,6 +4,10 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { Money, brandId, toLocalDate } from '@eltizamati/domain'
 import type { Provenance } from '@eltizamati/domain'
 import { RepositoriesProvider } from '@/features/repositories/hooks/use-repositories'
+import {
+  CalculationAsOfProvider,
+  useCalculationAsOfOverride,
+} from '@/services/calculation-as-of-context'
 import { LoanDetailHero } from '../LoanDetailHero'
 import type { LoanDetailHeroModel } from '../../hooks/use-loan-detail-view-model'
 
@@ -37,6 +41,50 @@ function renderHero(hero: LoanDetailHeroModel) {
     <QueryClientProvider client={client}>
       <RepositoriesProvider repositories={repos}>
         <LoanDetailHero obligationId={brandId<'obligation'>('obligation-1')} hero={hero} />
+      </RepositoriesProvider>
+    </QueryClientProvider>,
+  )
+  mounted.push({ client, unmount: view.unmount })
+  return view
+}
+
+const FAST_FORWARD_DATE = toLocalDate('2027-01-01')
+
+/**
+ * Mirrors how the real obligation detail screen wires this up: it reads the
+ * shared override from context itself and folds it into the `hero` prop it
+ * passes down (LoanDetailHero never reads asOfOverride/fastForwardDate from
+ * context directly). The earlier tests below render LoanDetailHero with a
+ * hard-coded `hero.asOfOverride`, which — because renderHero() doesn't wrap
+ * in a real CalculationAsOfProvider — exercises the button's onPress against
+ * the context default's no-op applyAsOf/clearAsOf, not the real ones. That
+ * gap can hide a real "Reset to today does nothing" regression, since it
+ * never presses both buttons in sequence against a live provider.
+ */
+function LiveHeroHarness({ baseHero }: { baseHero: Omit<LoanDetailHeroModel, 'asOfOverride'> }) {
+  const { override } = useCalculationAsOfOverride()
+  return (
+    <LoanDetailHero
+      obligationId={brandId<'obligation'>('obligation-1')}
+      hero={{ ...baseHero, asOfOverride: override }}
+    />
+  )
+}
+
+function renderLiveHero(baseHero: Omit<LoanDetailHeroModel, 'asOfOverride'>) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const repos = {
+    calculationRunRepository: {
+      latestFor: jest.fn().mockResolvedValue({ ok: true, value: undefined }),
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any
+  const view = render(
+    <QueryClientProvider client={client}>
+      <RepositoriesProvider repositories={repos}>
+        <CalculationAsOfProvider>
+          <LiveHeroHarness baseHero={baseHero} />
+        </CalculationAsOfProvider>
       </RepositoriesProvider>
     </QueryClientProvider>,
   )
@@ -164,6 +212,35 @@ describe('LoanDetailHero', () => {
     expect(applied.getByText('loanDetail.viewingAsOfTitle')).toBeTruthy()
     expect(applied.getByTestId('loan-detail-reset-asof')).toBeTruthy()
     expect(applied.queryByTestId('loan-detail-apply-rate-now')).toBeNull()
+  })
+
+  it('pressing "Apply rate now" then "Reset to today" actually round-trips through the real context (regression: reset must not be a no-op)', () => {
+    const base = {
+      currentBalance: Money.of('6000', 'JOD'),
+      currentBalanceProvenance: officialProvenance,
+      currentBalancePrecision: 'official' as const,
+      estimatedResidual: undefined,
+      estimatedResidualProvenance: undefined,
+      residualConfidence: undefined,
+      residualCalculationRunId: undefined,
+      fastForwardDate: FAST_FORWARD_DATE,
+    }
+    const view = renderLiveHero(base)
+
+    expect(view.getByTestId('loan-detail-apply-rate-now')).toBeTruthy()
+    expect(view.queryByTestId('loan-detail-reset-asof')).toBeNull()
+
+    fireEvent.press(view.getByTestId('loan-detail-apply-rate-now'))
+
+    expect(view.getByText('loanDetail.viewingAsOfTitle')).toBeTruthy()
+    expect(view.getByTestId('loan-detail-reset-asof')).toBeTruthy()
+    expect(view.queryByTestId('loan-detail-apply-rate-now')).toBeNull()
+
+    fireEvent.press(view.getByTestId('loan-detail-reset-asof'))
+
+    expect(view.queryByText('loanDetail.viewingAsOfTitle')).toBeNull()
+    expect(view.queryByTestId('loan-detail-reset-asof')).toBeNull()
+    expect(view.getByTestId('loan-detail-apply-rate-now')).toBeTruthy()
   })
 
   it('shows the outdated-schedule banner and a link to the recommended schedule when stale', () => {

@@ -43,6 +43,7 @@ export default function DemoSettingsPage() {
     { label: 'Demo dashboard enabled', value: status.demoDashboardEnabled },
     { label: 'Supabase configured', value: status.supabaseConfigured },
     { label: 'Supabase secret configured', value: status.supabaseSecretConfigured },
+    { label: 'Field decryption configured', value: status.fieldDecryptionConfigured },
     { label: 'Gmail SMTP configured', value: status.gmailSmtpConfigured },
     { label: 'Email sending enabled', value: status.emailSendingEnabled },
     { label: 'Recipient gating', value: 'Per-recipient consent (no allowlist)' },

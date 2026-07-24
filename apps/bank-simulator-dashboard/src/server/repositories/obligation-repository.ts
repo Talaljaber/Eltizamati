@@ -7,6 +7,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { err, ok, makeError, type AppError, type Obligation, type Result } from '@eltizamati/domain'
 import { getServiceRoleSupabaseClient } from '../supabase/client'
+import { createFieldDecryptor } from '../crypto/field-decryptor'
 import type { Database } from '../supabase/database.types'
 import { assembleObligation, type ObligationDetailRows } from '../mappers/obligation-mapper'
 
@@ -72,14 +73,33 @@ export async function listAllowlistedObligations(): Promise<
   const cardByObligationId = indexBy(cardResult.value)
   const ratesByObligationId = groupBy(rateResult.value)
 
-  const obligations = obligationsResult.value.map((row) => {
+  // Decrypt the client-encrypted free-text columns (nickname/notes) in one batch
+  // before assembly, so assembled obligations carry plaintext everywhere. Two
+  // fields per row, flattened in a fixed order and reassembled by index below.
+  const decryptor = createFieldDecryptor()
+  const FIELDS_PER_ROW = 2
+  const decrypted = await decryptor.decrypt(
+    obligationsResult.value.flatMap((row) => [
+      { userId: row.user_id, value: row.nickname },
+      { userId: row.user_id, value: row.notes },
+    ]),
+  )
+
+  const obligations = obligationsResult.value.map((row, index) => {
+    const decryptedRow: ObligationRow = {
+      ...row,
+      // nickname is non-null; a non-null input never decrypts to null, but fall
+      // back to the raw value to satisfy the type and stay safe.
+      nickname: decrypted[index * FIELDS_PER_ROW] ?? row.nickname,
+      notes: decrypted[index * FIELDS_PER_ROW + 1],
+    }
     const detail: ObligationDetailRows = {
       loanDetails: loanByObligationId.get(row.id),
       murabahaDetails: murabahaByObligationId.get(row.id),
       cardDetails: cardByObligationId.get(row.id),
       ratePeriods: ratesByObligationId.get(row.id) ?? [],
     }
-    return assembleObligation(row, detail)
+    return assembleObligation(decryptedRow, detail)
   })
 
   return ok(obligations)

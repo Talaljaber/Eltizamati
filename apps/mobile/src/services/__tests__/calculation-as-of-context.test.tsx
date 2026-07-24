@@ -5,6 +5,7 @@ import {
   CalculationAsOfProvider,
   usePersonalCalculationAsOf,
   useRefreshPersonalCalculationAsOf,
+  useCalculationAsOfOverride,
   type LocalDateClock,
 } from '../calculation-as-of-context'
 
@@ -29,5 +30,21 @@ describe('CalculationAsOfProvider', () => {
     act(() => result.current.refresh())
     expect(result.current.asOf).toBe('2026-07-17')
     expect(today).toHaveBeenCalledTimes(2)
+  })
+
+  it('round-trips the fast-forward override: apply sets it, clear reverts to undefined (loan-detail "Apply rate now" / "Reset to today")', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <CalculationAsOfProvider>{children}</CalculationAsOfProvider>
+    )
+
+    const { result } = renderHook(() => useCalculationAsOfOverride(), { wrapper })
+
+    expect(result.current.override).toBeUndefined()
+
+    act(() => result.current.applyAsOf(toLocalDate('2027-01-01')))
+    expect(result.current.override).toBe('2027-01-01')
+
+    act(() => result.current.clearAsOf())
+    expect(result.current.override).toBeUndefined()
   })
 })

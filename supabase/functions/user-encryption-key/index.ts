@@ -18,6 +18,14 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const NONCE_LENGTH = 12 // bytes; standard AES-GCM nonce size
 const DEK_LENGTH = 32 // bytes; AES-256 key
 
+// Mirrors learn-assistant/index.ts. Without these the browser preflight (Expo web
+// on http://localhost:8081) is blocked before the request ever reaches the auth
+// check. Native builds don't send preflights, so this only affects web.
+const cors = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 function toBase64(bytes: Uint8Array): string {
   let binary = ''
   for (const byte of bytes) binary += String.fromCharCode(byte)
@@ -59,11 +67,13 @@ async function unwrapDek(wrapped: string, kek: CryptoKey): Promise<Uint8Array> {
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...cors },
   })
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+
   const authHeader = req.headers.get('Authorization')
   if (authHeader === null) {
     return jsonResponse({ error: 'missing Authorization header' }, 401)

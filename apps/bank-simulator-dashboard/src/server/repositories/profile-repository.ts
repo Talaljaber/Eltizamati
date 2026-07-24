@@ -14,6 +14,7 @@ import {
   type UserProfile,
 } from '@eltizamati/domain'
 import { getServiceRoleSupabaseClient } from '../supabase/client'
+import { createFieldDecryptor } from '../crypto/field-decryptor'
 import { profileRowToDomain } from '../mappers/profile-mapper'
 
 /** The consent document whose acceptance carries email/notification consent. */
@@ -22,8 +23,9 @@ const CONSENT_DOC_TYPE = 'privacy-policy'
 export async function listAllowlistedProfiles(): Promise<Result<readonly UserProfile[], AppError>> {
   const clientResult = getServiceRoleSupabaseClient()
   if (!clientResult.ok) return clientResult
+  const client = clientResult.value
 
-  const { data, error } = await clientResult.value.from('profiles').select('*')
+  const { data, error } = await client.from('profiles').select('*')
 
   if (error !== null) {
     return err(
@@ -31,7 +33,30 @@ export async function listAllowlistedProfiles(): Promise<Result<readonly UserPro
     )
   }
 
-  return ok(data.map(profileRowToDomain))
+  // Decrypt the client-encrypted PII columns (full_name/phone_number/primary_bank)
+  // in one batch before mapping, so every downstream consumer sees plaintext —
+  // the same values they saw before field encryption shipped. Three fields per
+  // row, flattened in a fixed order and reassembled by index below.
+  const decryptor = createFieldDecryptor()
+  const FIELDS_PER_ROW = 3
+  const decrypted = await decryptor.decrypt(
+    data.flatMap((row) => [
+      { userId: row.user_id, value: row.full_name },
+      { userId: row.user_id, value: row.phone_number },
+      { userId: row.user_id, value: row.primary_bank },
+    ]),
+  )
+
+  const profiles = data.map((row, index) =>
+    profileRowToDomain({
+      ...row,
+      full_name: decrypted[index * FIELDS_PER_ROW],
+      phone_number: decrypted[index * FIELDS_PER_ROW + 1],
+      primary_bank: decrypted[index * FIELDS_PER_ROW + 2],
+    }),
+  )
+
+  return ok(profiles)
 }
 
 /**
